@@ -1,0 +1,149 @@
+{
+	"name": "vscode-bigquery",
+	"displayName": "vscode-bigquery",
+	"description": "Enable Google BigQuery operations and query from VS Code.",
+	"version": "0.0.1",
+	"publisher": "bstruct",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/bstruct/vscode-bigquery.git"
+	},
+	"homepage": "https://github.com/bstruct/vscode-bigquery",
+	"engines": {
+		"vscode": "^1.66.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:vscode-bigquery.run-query",
+		"onView:bigquery-main-activity-bar",
+		"onView:vscode-bigquery-query-results",
+		"onLanguage:bqsql"
+	],
+	"main": "./dist/extension.js",
+	"contributes": {
+		"languages": [
+			{
+				"id": "bqsql",
+				"aliases": [
+					"BigQuery SQL"
+				],
+				"configuration": "./bqsql-language-configuration.json",
+				"extensions": [
+					"bqsql"
+				],
+				"icon": {
+					"light": "./google-bigquery.svg",
+					"dark": "./google-bigquery.svg"
+				}
+			}
+		],
+		"grammars": [
+			{
+				"language": "bqsql",
+				"scopeName": "source.bqsql",
+				"path": "./syntaxes/bqsql.tmGrammar.json"
+			}
+		],
+		"configurationDefaults": {
+			"[bqsql]": {
+				"editor.semanticHighlighting.enabled": true
+			}
+		},
+		"commands": [
+			{
+				"command": "vscode-bigquery.run-query",
+				"title": "Biguery: Run Query",
+				"icon": "$(debug-start)"
+			}
+		],
+		"menus": {
+			"editor/title": [
+				{
+					"command": "vscode-bigquery.run-query",
+					"group": "navigation",
+					"when": "editorLangId == bqsql"
+				}
+			]
+		},
+		"views": {
+			"bigquery-main-activity-bar": [
+				{
+					"id": "bigquery-authentication",
+					"name": "Authentication",
+					"contextualTitle": "BigQuery"
+				},
+				{
+					"id": "bigquery-tree-data-provider",
+					"name": "Explorer",
+					"contextualTitle": "BigQuery"
+				}
+			],
+			"vscode-bigquery-query-results": [
+				{
+					"id": "vscode-bigquery-query-results-1",
+					"name": "bq rows",
+					"type": "webview",
+					"visibility": "visible"
+				}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "bigquery-main-activity-bar",
+					"title": "BigQuery",
+					"icon": "google-bigquery.svg"
+				}
+			],
+			"panel": [
+				{
+					"id": "vscode-bigquery-query-results",
+					"title": "bq rows",
+					"icon": "google-bigquery.svg"
+				}
+			]
+		},
+		"keybindings": [
+			{
+				"command": "vscode-bigquery.run-query",
+				"key": "Ctrl+Enter",
+				"when": "resourceLangId == bqsql || editorLangId == bqsql"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run package",
+		"compile": "webpack",
+		"watch": "webpack --watch",
+		"package": "webpack --mode production --devtool hidden-source-map",
+		"compile-tests": "tsc -p . --outDir out",
+		"watch-tests": "tsc -p . -w --outDir out",
+		"pretest": "npm run compile-tests && npm run compile && npm run lint",
+		"lint": "eslint -c .eslintrc.js --ext .ts src",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.2.0",
+		"@types/mocha": "^9.1.1",
+		"@types/node": "14.x",
+		"@types/vscode": "^1.66.0",
+		"@typescript-eslint/eslint-plugin": "^5.22.0",
+		"@typescript-eslint/parser": "^5.22.0",
+		"@vscode/test-electron": "^2.1.3",
+		"eslint": "^8.15.0",
+		"glob": "^8.0.1",
+		"mocha": "^9.2.2",
+		"ts-loader": "^9.2.8",
+		"typescript": "^4.6.4",
+		"webpack": "^5.70.0",
+		"webpack-cli": "^4.9.2"
+	},
+	"dependencies": {
+		"@google-cloud/bigquery": "^5.12.0",
+		"@google-cloud/resource-manager": "^3.2.0",
+		"@vscode/webview-ui-toolkit": "^1.0.0",
+		"google-auth-library": "^8.0.2"
+	}
+}

@@ -1,0 +1,70 @@
+{
+  "scopeName": "source.bqsql",
+  "patterns": [
+    {
+      "include": "#expression"
+    },
+    {
+      "include": "comment.line.double-dash"
+    }
+  ],
+  "repository": {
+    "expression": {
+      "patterns": [
+        {
+          "include": "#base"
+        },
+        {
+          "include": "#operators"
+        },
+        {
+          "include": "#functions"
+        },
+        {
+          "include": "#line-comment"
+        },
+        {
+          "include": "#string-single-quote"
+        },
+        {
+          "include": "#string-double-quote"
+        },
+        {
+          "include": "#table-name"
+        }
+      ]
+    },
+    "base": {
+      "match": "(?i)(\\bwith\\b)|(?i)(\\bselect\\b)|(?i)(\\bfrom\\b)|(?i)(\\bwhere\\b)|(?i)(\\blimit\\b)|(?i)(\\bhaving\\b)|(?i)(\\bgroup\\b\\W+\\bby\\b)|(?i)(\\bas\\b)",
+      "name": "support.class"
+    },
+    "operators": {
+      "match": "(?i)(\\band\\b)|(?i)(\\bor\\b)",
+      "name": "keyword.operator"
+    },
+    "functions": {
+      "match": "(?i)(\\bif\\b)|(?i)(\\bcurrent_date\\b)",
+      "name": "entity.name.function"
+    },
+    "line-comment": {
+      "begin": "--",
+      "end": "\\n",
+      "name": "comment.line.double-dash"
+    },
+    "string-single-quote": {
+      "begin": "'",
+      "end": "'",
+      "name": "string.quote.single"
+    },
+    "string-double-quote": {
+      "begin": "\"",
+      "end": "\"",
+      "name": "string.quote.double"
+    },
+    "table-name": {
+      "begin": "`",
+      "end": "`",
+      "name": "entity"
+    }
+  }
+}
