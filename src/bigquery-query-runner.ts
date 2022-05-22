@@ -6,7 +6,7 @@ export class BigQueryQueryRunner {
 	constructor() {
 	}
 
-	public async runQuery(queryText: string): Promise<bigquery.IGetQueryResultsResponse> {
+	public runQuery(queryText: string): Promise<SimpleQueryRowsResponse> {
 
 		const bqclient = new BigQuery();
 
@@ -19,14 +19,14 @@ export class BigQueryQueryRunner {
 			autoPaginate: false,
 			wrapIntegers: true,
 			//this query should only carry the information about the location of the result
-			maxResults: 0
+			maxResults: 10
 		};
 
-		const queryResult: any = await bqclient.query(query, options);
-		// const rows: RowMetadata[] = queryResult[0];
-		const job: bigquery.IGetQueryResultsResponse = queryResult[2];
+		// const queryResult: any = await bqclient.query(query, options);
+		// // const rows: RowMetadata[] = queryResult[0];
+		// const job: bigquery.IGetQueryResultsResponse = queryResult[2];
 
-		return job;
+		return bqclient.query(query, options);
 	}
 
 }
