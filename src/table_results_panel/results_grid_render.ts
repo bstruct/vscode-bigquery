@@ -2,6 +2,9 @@ import * as vscode from 'vscode';
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import { extensionUri } from '../extension';
 import { BigQueryDate, SimpleQueryRowsResponse } from '@google-cloud/bigquery';
+import { SimpleQueryRowsResponseError } from '../bigquery/simple_query_rows_response_error';
+
+//https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
 export class ResultsGridRender {
 
@@ -28,6 +31,11 @@ export class ResultsGridRender {
 
                 webView.html = this.getResultsHtml(toolkitUri, result);
 
+            })
+            .catch(exception => {
+
+                webView.html = this.getExceptionHtml(toolkitUri, exception);
+
             });
 
     }
@@ -45,6 +53,60 @@ export class ResultsGridRender {
                 <vscode-progress-ring></vscode-progress-ring>
 			</body>
 		</html>`;
+
+    }
+
+    private getExceptionHtml(toolkitUri: vscode.Uri, exception: any): string {
+
+        if (exception.errors) {
+
+            const errors = (exception as SimpleQueryRowsResponseError).errors;
+
+            const rows = JSON.stringify(errors.map(c => (
+                {
+                    "message": c.message,
+                    "reason": c.reason,
+                    "locationType": c.locationType
+                }
+            )));
+
+            return `<!DOCTYPE html>
+            <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <script type="module" src="${toolkitUri}"></script>
+                </head>
+                <body>
+                <vscode-data-grid id="basic-grid" generate-header="sticky" aria-label="Default"></vscode-data-grid>
+    
+                <script>
+                    document.getElementById('basic-grid').rowsData = ${rows};
+                </script>
+                </body>
+            </html>`;
+
+        } else {
+
+            const rows = JSON.stringify([{ message: exception.message, stack: exception.stack }]);
+
+            return `<!DOCTYPE html>
+            <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <script type="module" src="${toolkitUri}"></script>
+                </head>
+                <body>
+                <vscode-data-grid id="basic-grid" generate-header="sticky" aria-label="Default"></vscode-data-grid>
+    
+                <script>
+                    document.getElementById('basic-grid').rowsData = ${rows};
+                </script>
+                </body>
+            </html>`;
+
+        }
 
     }
 
