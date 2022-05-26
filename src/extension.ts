@@ -1,11 +1,9 @@
 import * as vscode from 'vscode';
 import { BigQueryTreeDataProvider } from './activitybar/bigquery-tree-data-provider';
-// import { BigQueryWebviewPanelSerializer } from './table_results_panel/bigquery-webview-panel-serializer';
-// import { BigQueryWebviewViewProvider } from './bigquery-webview-view-provider';
 import * as commands from './extension-commands';
+import { WebviewViewProvider } from './table_results_panel/webview-view-provider';
 
-// export const bigQueryWebviewViewProvider = new BigQueryWebviewViewProvider();
-
+export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export let extensionUri: vscode.Uri;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -26,22 +24,12 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	// context.subscriptions.push(
-	// 	vscode.window.registerWebviewViewProvider(
-	// 		"vscode-bigquery-query-results-1",
-	// 		bigQueryWebviewViewProvider,
-	// 		{ webviewOptions: { retainContextWhenHidden: true } }
-	// 	)
-	// );
-
-	// console.info(context.extensionUri);
-
-	// context.subscriptions.push(
-	// 	vscode.window.registerWebviewPanelSerializer(
-	// 		"xxx",
-	// 		new BigQueryWebviewPanelSerializer()
-	// 	)
-	// );
+	context.subscriptions.push(
+		vscode.window.registerWebviewViewProvider(
+			"vscode-bigquery-query-results-main",
+			bigqueryWebviewViewProvider
+		)
+	);
 
 }
 

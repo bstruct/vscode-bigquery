@@ -31,20 +31,21 @@
 			"group": "build"
 		},
 		{
-			"label": "tasks: watch-tests",
-			"dependsOn": [
-				"npm: watch",
-				"npm: watch-tests"
-			],
-			"problemMatcher": []
-		},
-		{
 			"type": "npm",
 			"script": "compile",
 			"group": "build",
 			"problemMatcher": [],
 			"label": "npm: compile",
 			"detail": "webpack"
+		},
+		{
+			"label": "tasks: watch-tests",
+			"dependsOn": [
+				"npm: watch",
+				"npm: watch-tests",
+				"npm: compile"
+			],
+			"problemMatcher": []
 		}
 	]
 }

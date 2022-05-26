@@ -82,8 +82,8 @@
 			],
 			"vscode-bigquery-query-results": [
 				{
-					"id": "vscode-bigquery-query-results-1",
-					"name": "bq rows",
+					"id": "vscode-bigquery-query-results-main",
+					"name": "query results",
 					"type": "webview",
 					"visibility": "visible"
 				}
@@ -100,7 +100,7 @@
 			"panel": [
 				{
 					"id": "vscode-bigquery-query-results",
-					"title": "bq rows",
+					"title": "bigquery",
 					"icon": "google-bigquery.svg"
 				}
 			]
