@@ -3,16 +3,11 @@ import bigquery from '@google-cloud/bigquery/build/src/types';
 import { extensionUri } from '../extension';
 import { BigQueryDate, SimpleQueryRowsResponse } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../bigquery/simple_query_rows_response_error';
+import { Grid } from './grid';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
 export class ResultsGridRender {
-
-    /**
-     *
-     */
-    constructor() {
-    }
 
     public render(webView: vscode.Webview, queryResponse: Promise<SimpleQueryRowsResponse>) {
 
@@ -112,23 +107,37 @@ export class ResultsGridRender {
 
     private getResultsHtml(toolkitUri: vscode.Uri, results: SimpleQueryRowsResponse) {
 
-        const rows = JSON.stringify(this.bqResultResolver(results));
+        // const rows = JSON.stringify(this.bqResultResolver(results));
+
+        // const g = (new Grid()).render();
+
+        // return `<!DOCTYPE html>
+		// <html lang="en">
+		// 	<head>
+		// 		<meta charset="UTF-8">
+		// 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		// 		<script type="module" src="${toolkitUri}"></script>
+		// 	</head>
+		// 	<body>
+        //         <vscode-data-grid id="basic-grid" generate-header="sticky" aria-label="Default"></vscode-data-grid>
+
+	 	// 		<script>
+	 	// 			document.getElementById('basic-grid').rowsData = ${rows};
+	 	// 		</script>
+		// 	</body>
+		// </html>`;
 
         return `<!DOCTYPE html>
-		<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<script type="module" src="${toolkitUri}"></script>
-			</head>
-			<body>
-                <vscode-data-grid id="basic-grid" generate-header="sticky" aria-label="Default"></vscode-data-grid>
-
-	 			<script>
-	 				document.getElementById('basic-grid').rowsData = ${rows};
-	 			</script>
-			</body>
-		</html>`;
+        <html lang="en">
+        	<head>
+        		<meta charset="UTF-8">
+        		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        		<script type="module" src="${toolkitUri}"></script>
+        	</head>
+        	<body>
+                ${(new Grid(results))}
+        	</body>
+        </html>`;
 
     }
 
