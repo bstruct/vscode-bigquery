@@ -17,6 +17,8 @@ export class Grid extends Object {
 
     private render(): preact.VNode {
 
+        //https://github.com/microsoft/vscode-webview-ui-toolkit/issues/313
+
         //remove type
         const response: any = this.simpleQueryRowsResponse;
 
