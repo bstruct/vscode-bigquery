@@ -1,7 +1,10 @@
-import { SimpleQueryRowsResponse } from '@google-cloud/bigquery';
+import { BigQueryDate, SimpleQueryRowsResponse } from '@google-cloud/bigquery';
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
+
+
+// import { DataGridCell, DataGrid } from '@vscode/webview-ui-toolkit';
 
 export class Grid extends Object {
 
@@ -17,6 +20,14 @@ export class Grid extends Object {
 
     private render(): preact.VNode {
 
+        const headerCellStyle = 'background-color: var(--list-hover-background);';
+        const firstCellWithStyle = 'width: 50px;';
+        const cellWithStyle = 'min-width: 200px;';
+
+        // const x = new DataGrid();
+
+        // x.cellType = 'rowheader'
+
         //https://github.com/microsoft/vscode-webview-ui-toolkit/issues/313
 
         //remove type
@@ -28,19 +39,56 @@ export class Grid extends Object {
         if (!schema) { throw Error('Unexpected query result'); }
 
         const fields: bigquery.ITableFieldSchema[] = schema.fields || [];
+        const fieldNames: string[] = fields?.map(c => c.name || '') || [];
 
-
-        const headerCells = [];
-        for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex++) {
-            const field: bigquery.ITableFieldSchema = fields[fieldIndex];
-            const fieldName = field.name || '';
-            const cell = preact.h('vscode-data-grid-cell', { "cell-type": "columnheader", "grid-column": (fieldIndex + 1).toString() }, [fieldName]);
-            headerCells.push(cell);
+        //cells that contain the top level schema column names
+        function getHeaderCells() {
+            const cells: preact.VNode[] = [preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle + `grid-column: 1 / auto;`, 'grid-column': '1' }, 'Row')];
+            for (let fieldIndex = 0; fieldIndex < fieldNames.length; fieldIndex++) {
+                const fieldName = fieldNames[fieldIndex];
+                const cell = preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle + `grid-column: ${fieldIndex + 2} / auto;`, 'grid-column': (fieldIndex + 2).toString() }, fieldName);
+                cells.push(cell);
+            }
+            return cells;
         }
-        const headerRow = preact.h('vscode-data-grid-row', { "row-type": "header" }, headerCells);;
 
-        return preact.h('vscode-data-grid', {}, headerRow);
+        //initialize rows array with the header column row already
+        const rows = [];
+        rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header' }, getHeaderCells()));
 
+        const results: any[] = response[0];
+        let rowNumber = 1;
+        for (let resultIndex = 0; resultIndex < results.length; resultIndex++) {
+
+            const cells = [];
+            cells.push(preact.h('vscode-data-grid-cell', { 'style': headerCellStyle + 'grid-column: 1 / auto;', 'grid-column': '1' }, (rowNumber++).toString()));
+
+            const result: any = results[resultIndex];
+            for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex++) {
+                const field = fields[fieldIndex];
+
+                let value: any = result[field.name || ''];
+
+                switch (field.type || 'STRING') {
+                    case 'DATE':
+                        if (value != null) {
+                            const date = value as BigQueryDate;
+                            value = date.value;
+                        }
+                        break;
+                    default:
+                        console.info(`field ${field.name} has type ${field.type}`);
+                        break;
+                }
+
+                const cell = preact.h('vscode-data-grid-cell', { 'style': `grid-column: ${fieldIndex + 2} / auto;`, 'grid-column': (fieldIndex + 2).toString() }, value || '');
+                cells.push(cell);
+            }
+
+            rows.push(preact.h('vscode-data-grid-row', {}, cells));
+        }
+
+        return preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': '50px' }, rows);
     }
 
     override toString(): string {
