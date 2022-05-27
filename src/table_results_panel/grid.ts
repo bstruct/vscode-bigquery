@@ -21,11 +21,8 @@ export class Grid extends Object {
     private render(): preact.VNode {
 
         const headerCellStyle = 'background-color: var(--list-hover-background);';
-        const firstCellWithStyle = 'width: 50px;';
-        const cellWithStyle = 'min-width: 200px;';
 
         // const x = new DataGrid();
-
         // x.cellType = 'rowheader'
 
         //https://github.com/microsoft/vscode-webview-ui-toolkit/issues/313
@@ -43,25 +40,41 @@ export class Grid extends Object {
 
         //cells that contain the top level schema column names
         function getHeaderCells() {
-            const cells: preact.VNode[] = [preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle + `grid-column: 1 / auto;`, 'grid-column': '1' }, 'Row')];
+            const cells: preact.VNode[] = [preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '1' }, 'Row')];
             for (let fieldIndex = 0; fieldIndex < fieldNames.length; fieldIndex++) {
                 const fieldName = fieldNames[fieldIndex];
-                const cell = preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle + `grid-column: ${fieldIndex + 2} / auto;`, 'grid-column': (fieldIndex + 2).toString() }, fieldName);
+                const cell = preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': (fieldIndex + 2).toString() }, fieldName);
                 cells.push(cell);
             }
             return cells;
         }
 
+
         //initialize rows array with the header column row already
         const rows = [];
         rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header' }, getHeaderCells()));
 
+        //widths of the columns
+        const widths: number[] = [5];
+        widths.push(...fieldNames.map(c => c.length));
+
+        //give the necessary with to columns that contain bigger values. max 50 (`em` later added)
+        function updateCellWith(widthIndex: number, valueString: string | null) {
+            if (valueString != null) {
+                const currentWidth = widths[widthIndex];
+                if (valueString?.length && valueString.length > currentWidth) {
+                    widths[widthIndex] = Math.min(50, valueString.length);
+                }
+            }
+        }
+
+        //
         const results: any[] = response[0];
         let rowNumber = 1;
         for (let resultIndex = 0; resultIndex < results.length; resultIndex++) {
 
             const cells = [];
-            cells.push(preact.h('vscode-data-grid-cell', { 'style': headerCellStyle + 'grid-column: 1 / auto;', 'grid-column': '1' }, (rowNumber++).toString()));
+            cells.push(preact.h('vscode-data-grid-cell', { 'style': headerCellStyle, 'grid-column': '1' }, (rowNumber++).toString()));
 
             const result: any = results[resultIndex];
             for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex++) {
@@ -81,14 +94,18 @@ export class Grid extends Object {
                         break;
                 }
 
-                const cell = preact.h('vscode-data-grid-cell', { 'style': `grid-column: ${fieldIndex + 2} / auto;`, 'grid-column': (fieldIndex + 2).toString() }, value || '');
+                updateCellWith(fieldIndex + 1, value);
+
+                const cell = preact.h('vscode-data-grid-cell', { 'grid-column': (fieldIndex + 2).toString() }, value || '');
                 cells.push(cell);
             }
+
+            updateCellWith(0, (rowNumber).toString());
 
             rows.push(preact.h('vscode-data-grid-row', {}, cells));
         }
 
-        return preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': '50px' }, rows);
+        return preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c}em`).join(' ') }, rows);
     }
 
     override toString(): string {
