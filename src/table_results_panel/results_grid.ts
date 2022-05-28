@@ -73,28 +73,28 @@ export class ResultsGrid extends Object {
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("first_page")' }, [
             'First page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-left' }, [])
         ]));
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("previous_page")' }, [
             'Previous page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-left' }, [])
         ]));
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("next_page")' }, [
             'Next page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-right' }, [])
         ]));
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'console.info({ command: "123" });' }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("last_page")' }, [
             'Last page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
         ]));

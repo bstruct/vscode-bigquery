@@ -3,12 +3,18 @@ import { extensionUri } from '../extension';
 import { SimpleQueryRowsResponse } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../bigquery/simple_query_rows_response_error';
 import { ResultsGrid } from './results_grid';
+import { BigQueryQueryRunner } from '../bigquery/bigquery-query-runner';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
 export class ResultsGridRender {
 
+    private _webView: vscode.Webview | null = null;
+    private _queryResponse: SimpleQueryRowsResponse | null = null;
+
     public render(webView: vscode.Webview, queryResponse: Promise<SimpleQueryRowsResponse>) {
+
+        this._webView = webView;
 
         const toolkitUri = this.getUri(webView, extensionUri, [
             "node_modules",
@@ -25,13 +31,15 @@ export class ResultsGridRender {
         queryResponse
             .then(result => {
 
+                this._queryResponse = result;
+
                 const codiconsUri = this.getUri(webView, extensionUri, [
                     'node_modules',
                     '@vscode/codicons',
                     'dist',
                     'codicon.css']
                 );
-        
+
                 webView.html = this.getResultsHtml(toolkitUri, codiconsUri, result);
 
             })
@@ -138,7 +146,32 @@ export class ResultsGridRender {
     }
 
     listenerOnDidReceiveMessage(message: any) {
+
+        if (this._webView == null) { return; }
+
+        debugger;
+
         vscode.window.showInformationMessage(message);
+
+        const bqRunner = new BigQueryQueryRunner();
+
+        switch (message) {
+            case 'first_page':
+
+                break;
+            case 'previous_page':
+
+                break;
+            case 'next_page':
+
+                // bqRunner.runQuery(, 10,)
+
+                break;
+            case 'last_page':
+
+                break;
+        }
+
     }
 
 }

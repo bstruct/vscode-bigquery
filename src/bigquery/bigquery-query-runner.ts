@@ -5,7 +5,12 @@ export class BigQueryQueryRunner {
 	constructor() {
 	}
 
-	public runQuery(queryText: string): Promise<SimpleQueryRowsResponse> {
+	public runQuery(
+		queryText: string,
+		maxResults: number = 10,
+		pageToken: string | null = null,
+		startIndex: string = '0'
+	): Promise<SimpleQueryRowsResponse> {
 
 		const bqclient = new BigQuery();
 
@@ -17,9 +22,10 @@ export class BigQueryQueryRunner {
 		const options: QueryOptions = {
 			autoPaginate: false,
 			wrapIntegers: true,
-			//this query should only carry the information about the location of the result
-			maxResults: 10
+			maxResults: maxResults,
+			startIndex: startIndex
 		};
+		if (pageToken) { options.pageToken = pageToken; }
 
 		return bqclient.query(query, options);
 	}
