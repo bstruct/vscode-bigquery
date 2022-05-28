@@ -59,10 +59,6 @@ export class ResultsGrid extends Object {
         //array of elements to create
         const elements: preact.VNode[] = [];
 
-        const paginationEventHandler = function (a: any) {
-            debugger;
-        };
-
         elements.push(preact.h('span',
             { 'style': 'padding:5px 10px; display:inline-flex; vertical-align:top;color:var(--button-secondary-foreground);background:var(--button-secondary-background)' },
             `1 - ${results.length} of ${queryResults.totalRows}`));
@@ -98,7 +94,7 @@ export class ResultsGrid extends Object {
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', onClick: paginationEventHandler }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'console.info({ command: "123" });' }, [
             'Last page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
         ]));
