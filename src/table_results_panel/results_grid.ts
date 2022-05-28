@@ -38,46 +38,7 @@ export class ResultsGrid extends Object {
         //is paging necessary?
         if (queryResults.totalRows && Number(queryResults.totalRows) != results.length) {
 
-            elements.push(preact.h('vscode-button', { disabled: true, 'appearance': 'secondary' }, [
-                `1 - ${results.length} of ${queryResults.totalRows}`,
-                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-left' }, [])
-            ]));
-
-            elements.push(preact.h('span', {}, ' '));
-
-            elements.push(preact.h('vscode-dropdown', {}, [
-                preact.h('vscode-option', {}, 'Option Label #1'),
-                preact.h('vscode-option', {}, 'Option Label #2'),
-                preact.h('vscode-option', {}, 'Option Label #3')
-            ]));
-
-            elements.push(preact.h('span', {}, ' '));
-
-            elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
-                'First page',
-                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-left' }, [])
-            ]));
-
-            elements.push(preact.h('span', {}, ' '));
-
-            elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
-                'Previous page',
-                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-left' }, [])
-            ]));
-
-            elements.push(preact.h('span', {}, ' '));
-
-            elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
-                'Next page',
-                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-right' }, [])
-            ]));
-
-            elements.push(preact.h('span', {}, ' '));
-
-            elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
-                'Last page',
-                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
-            ]));
+            elements.push(this.getPagination(results, queryResults));
 
             elements.push(preact.h('vscode-divider', {}, []));
         }
@@ -90,6 +51,58 @@ export class ResultsGrid extends Object {
         elements.push(this.getGrid(schema, results));
 
         //bundle all under a div
+        return preact.h('div', {}, elements);
+    }
+
+    private getPagination(results: any[], queryResults: bigquery.IGetQueryResultsResponse): preact.VNode {
+
+        //array of elements to create
+        const elements: preact.VNode[] = [];
+
+        const paginationEventHandler = function (a: any) {
+            debugger;
+        };
+
+        elements.push(preact.h('span',
+            { 'style': 'padding:5px 10px; display:inline-flex; vertical-align:top;color:var(--button-secondary-foreground);background:var(--button-secondary-background)' },
+            `1 - ${results.length} of ${queryResults.totalRows}`));
+
+        elements.push(preact.h('span', {}, ' '));
+
+        elements.push(preact.h('vscode-dropdown', {}, [
+            preact.h('vscode-option', {}, 'Option Label #1'),
+            preact.h('vscode-option', {}, 'Option Label #2'),
+            preact.h('vscode-option', {}, 'Option Label #3')
+        ]));
+
+        elements.push(preact.h('span', {}, ' '));
+
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
+            'First page',
+            preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-left' }, [])
+        ]));
+
+        elements.push(preact.h('span', {}, ' '));
+
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
+            'Previous page',
+            preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-left' }, [])
+        ]));
+
+        elements.push(preact.h('span', {}, ' '));
+
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
+            'Next page',
+            preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-right' }, [])
+        ]));
+
+        elements.push(preact.h('span', {}, ' '));
+
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', onClick: paginationEventHandler }, [
+            'Last page',
+            preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
+        ]));
+
         return preact.h('div', {}, elements);
     }
 

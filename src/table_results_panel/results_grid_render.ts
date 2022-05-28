@@ -18,6 +18,8 @@ export class ResultsGridRender {
             "toolkit.min.js",
         ]);
 
+        webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage);
+
         webView.html = this.getWaitingHtml(toolkitUri);
 
         queryResponse
@@ -123,6 +125,9 @@ export class ResultsGridRender {
         	</head>
         	<body>
                 ${(new ResultsGrid(results))}
+                <script>
+                    const vscode = acquireVsCodeApi();
+                </script>
         	</body>
         </html>`;
 
@@ -130,6 +135,10 @@ export class ResultsGridRender {
 
     private getUri(webview: vscode.Webview, extensionUri: vscode.Uri, pathList: string[]) {
         return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
+    }
+
+    listenerOnDidReceiveMessage(message: any) {
+        vscode.window.showInformationMessage(message);
     }
 
 }
