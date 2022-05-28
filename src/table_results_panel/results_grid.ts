@@ -3,12 +3,19 @@ import bigquery from '@google-cloud/bigquery/build/src/types';
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
 
+//---------------- @vscode/webview-ui-toolkit ----------------
+//https://github.com/microsoft/vscode-webview-ui-toolkit
+//https://microsoft.github.io/vscode-webview-ui-toolkit/?path=/story/library-badge--default
 
-// import { DataGridCell, DataGrid } from '@vscode/webview-ui-toolkit';
+
+//---------------- @vscode/codicons ----------------
+//https://microsoft.github.io/vscode-codicons/dist/codicon.html
 
 export class ResultsGrid extends Object {
 
-    private simpleQueryRowsResponse: SimpleQueryRowsResponse;
+    //make the type any from `SimpleQueryRowsResponse` 
+    // to cope with the incorrect response mapping of the BQ library
+    private simpleQueryRowsResponse: any;
 
     /**
      *
@@ -20,20 +27,75 @@ export class ResultsGrid extends Object {
 
     private render(): preact.VNode {
 
-        const headerCellStyle = 'background-color: var(--list-hover-background);';
 
-        // const x = new DataGrid();
-        // x.cellType = 'rowheader'
+        const results: any[] = this.simpleQueryRowsResponse[0];
+        // const job : bigquery.IJob = this.simpleQueryRowsResponse[1]
+        const queryResults: bigquery.IGetQueryResultsResponse = this.simpleQueryRowsResponse[2];
 
-        //https://github.com/microsoft/vscode-webview-ui-toolkit/issues/313
+        //array of elements to create
+        const elements: preact.VNode[] = [];
 
-        //remove type
-        const response: any = this.simpleQueryRowsResponse;
+        //is paging necessary?
+        if (queryResults.totalRows && Number(queryResults.totalRows) != results.length) {
 
-        const queryResults: bigquery.IGetQueryResultsResponse = response[2];
+            elements.push(preact.h('vscode-button', { disabled: true, 'appearance': 'secondary' }, [
+                `1 - ${results.length} of ${queryResults.totalRows}`,
+                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-left' }, [])
+            ]));
 
+            elements.push(preact.h('span', {}, ' '));
+
+            elements.push(preact.h('vscode-dropdown', {}, [
+                preact.h('vscode-option', {}, 'Option Label #1'),
+                preact.h('vscode-option', {}, 'Option Label #2'),
+                preact.h('vscode-option', {}, 'Option Label #3')
+            ]));
+
+            elements.push(preact.h('span', {}, ' '));
+
+            elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
+                'First page',
+                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-left' }, [])
+            ]));
+
+            elements.push(preact.h('span', {}, ' '));
+
+            elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
+                'Previous page',
+                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-left' }, [])
+            ]));
+
+            elements.push(preact.h('span', {}, ' '));
+
+            elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
+                'Next page',
+                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-right' }, [])
+            ]));
+
+            elements.push(preact.h('span', {}, ' '));
+
+            elements.push(preact.h('vscode-button', { 'appearance': 'secondary' }, [
+                'Last page',
+                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
+            ]));
+
+            elements.push(preact.h('vscode-divider', {}, []));
+        }
+
+        //grid
         const schema: bigquery.ITableSchema | null = queryResults.schema || null;
+        //error unlikely to happen, that's why is lower in the code
         if (!schema) { throw Error('Unexpected query result'); }
+
+        elements.push(this.getGrid(schema, results));
+
+        //bundle all under a div
+        return preact.h('div', {}, elements);
+    }
+
+    private getGrid(schema: bigquery.ITableSchema, results: any[]): preact.VNode {
+
+        const headerCellStyle = 'background-color: var(--list-hover-background);';
 
         const fields: bigquery.ITableFieldSchema[] = schema.fields || [];
         const fieldNames: string[] = fields?.map(c => c.name || '') || [];
@@ -49,7 +111,6 @@ export class ResultsGrid extends Object {
             return cells;
         }
 
-
         //initialize rows array with the header column row already
         const rows = [];
         rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header' }, getHeaderCells()));
@@ -58,7 +119,7 @@ export class ResultsGrid extends Object {
         const widths: number[] = [5];
         widths.push(...fieldNames.map(c => c.length));
 
-        //give the necessary with to columns that contain bigger values. max 50 (`em` later added)
+        //give the necessary with to columns that contain bigger values. max 80 (`.8 * x em` later)
         function updateCellWith(widthIndex: number, valueString: string | null) {
             if (valueString != null) {
                 const currentWidth = widths[widthIndex];
@@ -69,7 +130,6 @@ export class ResultsGrid extends Object {
         }
 
         //
-        const results: any[] = response[0];
         let rowNumber = 1;
         for (let resultIndex = 0; resultIndex < results.length; resultIndex++) {
 

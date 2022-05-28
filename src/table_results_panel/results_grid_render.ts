@@ -23,7 +23,14 @@ export class ResultsGridRender {
         queryResponse
             .then(result => {
 
-                webView.html = this.getResultsHtml(toolkitUri, result);
+                const codiconsUri = this.getUri(webView, extensionUri, [
+                    'node_modules',
+                    '@vscode/codicons',
+                    'dist',
+                    'codicon.css']
+                );
+        
+                webView.html = this.getResultsHtml(toolkitUri, codiconsUri, result);
 
             })
             .catch(exception => {
@@ -104,7 +111,7 @@ export class ResultsGridRender {
 
     }
 
-    private getResultsHtml(toolkitUri: vscode.Uri, results: SimpleQueryRowsResponse) {
+    private getResultsHtml(toolkitUri: vscode.Uri, codiconsUri: vscode.Uri, results: SimpleQueryRowsResponse) {
 
         return `<!DOCTYPE html>
         <html lang="en">
@@ -112,6 +119,7 @@ export class ResultsGridRender {
         		<meta charset="UTF-8">
         		<meta name="viewport" content="width=device-width, initial-scale=1.0">
         		<script type="module" src="${toolkitUri}"></script>
+                <link href="${codiconsUri}" rel="stylesheet" />
         	</head>
         	<body>
                 ${(new ResultsGrid(results))}
