@@ -6,7 +6,7 @@ import * as p from 'preact-render-to-string';
 
 // import { DataGridCell, DataGrid } from '@vscode/webview-ui-toolkit';
 
-export class Grid extends Object {
+export class ResultsGrid extends Object {
 
     private simpleQueryRowsResponse: SimpleQueryRowsResponse;
 
@@ -63,7 +63,7 @@ export class Grid extends Object {
             if (valueString != null) {
                 const currentWidth = widths[widthIndex];
                 if (valueString?.length && valueString.length > currentWidth) {
-                    widths[widthIndex] = Math.min(50, valueString.length);
+                    widths[widthIndex] = Math.min(80, valueString.length);
                 }
             }
         }
@@ -105,7 +105,7 @@ export class Grid extends Object {
             rows.push(preact.h('vscode-data-grid-row', {}, cells));
         }
 
-        return preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c}em`).join(' ') }, rows);
+        return preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .8}em`).join(' ') }, rows);
     }
 
     override toString(): string {

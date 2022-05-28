@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { extensionUri } from '../extension';
 import { SimpleQueryRowsResponse } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../bigquery/simple_query_rows_response_error';
-import { Grid } from './grid';
+import { ResultsGrid } from './results_grid';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
@@ -114,7 +114,7 @@ export class ResultsGridRender {
         		<script type="module" src="${toolkitUri}"></script>
         	</head>
         	<body>
-                ${(new Grid(results))}
+                ${(new ResultsGrid(results))}
         	</body>
         </html>`;
 
