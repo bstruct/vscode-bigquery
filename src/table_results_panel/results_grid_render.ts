@@ -1,22 +1,27 @@
 import * as vscode from 'vscode';
 import { extensionUri } from '../extension';
-import { SimpleQueryRowsResponse } from '@google-cloud/bigquery';
+import { JobResponse, QueryResultsOptions } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../bigquery/simple_query_rows_response_error';
 import { ResultsGrid } from './results_grid';
-import { BigQueryQueryRunner } from '../bigquery/bigquery-query-runner';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
 export class ResultsGridRender {
 
-    private _webView: vscode.Webview | null = null;
-    private _queryResponse: SimpleQueryRowsResponse | null = null;
+    private webView: vscode.Webview;
 
-    public render(webView: vscode.Webview, queryResponse: Promise<SimpleQueryRowsResponse>) {
+    constructor(webView: vscode.Webview) {
+        this.webView = webView;
+    }
 
-        this._webView = webView;
+    public render(
+        jobResponse: Promise<JobResponse>,
+        maxResults: number = 10,
+        startIndex: number = 0,
+        setEventListener: boolean = true
+    ) {
 
-        const toolkitUri = this.getUri(webView, extensionUri, [
+        const toolkitUri = this.getUri(this.webView, extensionUri, [
             "node_modules",
             "@vscode",
             "webview-ui-toolkit",
@@ -24,28 +29,29 @@ export class ResultsGridRender {
             "toolkit.min.js",
         ]);
 
-        webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage);
+        // this.webView.onDidReceiveMessage.
+        if(setEventListener){
+            this.webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage, [this, jobResponse]);
+        }
 
-        webView.html = this.getWaitingHtml(toolkitUri);
+        this.webView.html = this.getWaitingHtml(toolkitUri);
 
-        queryResponse
-            .then(result => {
+        jobResponse
+            .then(async (result) => {
 
-                this._queryResponse = result;
-
-                const codiconsUri = this.getUri(webView, extensionUri, [
+                const codiconsUri = this.getUri(this.webView, extensionUri, [
                     'node_modules',
                     '@vscode/codicons',
                     'dist',
                     'codicon.css']
                 );
 
-                webView.html = this.getResultsHtml(toolkitUri, codiconsUri, result);
+                this.webView.html = await this.getResultsHtml(toolkitUri, codiconsUri, result, startIndex, maxResults);
 
             })
             .catch(exception => {
 
-                webView.html = this.getExceptionHtml(toolkitUri, exception);
+                this.webView.html = this.getExceptionHtml(toolkitUri, exception);
 
             });
 
@@ -121,7 +127,16 @@ export class ResultsGridRender {
 
     }
 
-    private getResultsHtml(toolkitUri: vscode.Uri, codiconsUri: vscode.Uri, results: SimpleQueryRowsResponse) {
+    private async getResultsHtml(
+        toolkitUri: vscode.Uri,
+        codiconsUri: vscode.Uri,
+        jobResponse: JobResponse,
+        startIndex: number = 0,
+        maxResults: number = 10,
+    ) {
+
+        const queryResultOptions: QueryResultsOptions = { startIndex: startIndex.toString(), maxResults: maxResults };
+        const queryRowsResponse = await jobResponse[0].getQueryResults(queryResultOptions);
 
         return `<!DOCTYPE html>
         <html lang="en">
@@ -132,7 +147,7 @@ export class ResultsGridRender {
                 <link href="${codiconsUri}" rel="stylesheet" />
         	</head>
         	<body>
-                ${(new ResultsGrid(results))}
+                ${(new ResultsGrid(queryRowsResponse))}
                 <script>
                     const vscode = acquireVsCodeApi();
                 </script>
@@ -145,18 +160,25 @@ export class ResultsGridRender {
         return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
     }
 
-    listenerOnDidReceiveMessage(message: any) {
+    /* This function will run as an event triggered when the JS on the webview triggers
+     * the `postMessage` method
+    */
+    async listenerOnDidReceiveMessage(message: any): Promise<void> {
 
-        if (this._webView == null) { return; }
+        const resultsGridRender: ResultsGridRender = (this as any)[0];
+        const jobResponsePromise: Promise<JobResponse> = (this as any)[1];
+        const jobResponse: JobResponse = await jobResponsePromise;
+        
+        // const job: bigquery.IJob = jobResponse[1]
+        // const queryResults: bigquery.IGetQueryResultsResponse = jobResponse[1];
 
-        debugger;
+        // vscode.window.showInformationMessage(message);
 
-        vscode.window.showInformationMessage(message);
-
-        const bqRunner = new BigQueryQueryRunner();
 
         switch (message) {
             case 'first_page':
+
+                resultsGridRender.render(jobResponsePromise, 10, 0, false);
 
                 break;
             case 'previous_page':
@@ -164,8 +186,8 @@ export class ResultsGridRender {
                 break;
             case 'next_page':
 
-                // bqRunner.runQuery(, 10,)
-
+                resultsGridRender.render(jobResponsePromise, 10, 10, false);
+        
                 break;
             case 'last_page':
 

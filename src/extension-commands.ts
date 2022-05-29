@@ -26,6 +26,6 @@ export const command_runQuery = async function (...args: any[]) {
 	if (panel == null) { return; }
 	else { if (!panel.visible) { panel.show(); } }
 
-	const _ = new ResultsGridRender().render(panel.webview, queryResponse);
+	const _ = new ResultsGridRender(panel.webview).render(queryResponse);
 
 }

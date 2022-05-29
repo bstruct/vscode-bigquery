@@ -1,4 +1,4 @@
-import { BigQueryDate, SimpleQueryRowsResponse } from '@google-cloud/bigquery';
+import { BigQueryDate, QueryRowsResponse, SimpleQueryRowsResponse } from '@google-cloud/bigquery';
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
@@ -13,24 +13,24 @@ import * as p from 'preact-render-to-string';
 
 export class ResultsGrid extends Object {
 
-    //make the type any from `SimpleQueryRowsResponse` 
-    // to cope with the incorrect response mapping of the BQ library
-    private simpleQueryRowsResponse: any;
+    private queryRowsResponse: QueryRowsResponse;
 
     /**
      *
      */
-    constructor(simpleQueryRowsResponse: SimpleQueryRowsResponse) {
+    constructor(queryRowsResponse: QueryRowsResponse) {
         super();
-        this.simpleQueryRowsResponse = simpleQueryRowsResponse;
+        this.queryRowsResponse = queryRowsResponse;
     }
 
     private render(): preact.VNode {
 
 
-        const results: any[] = this.simpleQueryRowsResponse[0];
-        // const job : bigquery.IJob = this.simpleQueryRowsResponse[1]
-        const queryResults: bigquery.IGetQueryResultsResponse = this.simpleQueryRowsResponse[2];
+        const results: any[] = this.queryRowsResponse[0];
+        const startIndex: number = Number((this.queryRowsResponse[1] as any).startIndex);
+        const maxResults: number = (this.queryRowsResponse[1] as any).maxResults;
+        const queryResults: bigquery.IGetQueryResultsResponse = this.queryRowsResponse[2] || {};
+
 
         //array of elements to create
         const elements: preact.VNode[] = [];
@@ -48,7 +48,7 @@ export class ResultsGrid extends Object {
         //error unlikely to happen, that's why is lower in the code
         if (!schema) { throw Error('Unexpected query result'); }
 
-        elements.push(this.getGrid(schema, results));
+        elements.push(this.getGrid(schema, results, startIndex + 1));
 
         //bundle all under a div
         return preact.h('div', {}, elements);
@@ -102,7 +102,7 @@ export class ResultsGrid extends Object {
         return preact.h('div', {}, elements);
     }
 
-    private getGrid(schema: bigquery.ITableSchema, results: any[]): preact.VNode {
+    private getGrid(schema: bigquery.ITableSchema, results: any[], startRowNumber: number): preact.VNode {
 
         const headerCellStyle = 'background-color: var(--list-hover-background);';
 
@@ -139,11 +139,10 @@ export class ResultsGrid extends Object {
         }
 
         //
-        let rowNumber = 1;
         for (let resultIndex = 0; resultIndex < results.length; resultIndex++) {
 
             const cells = [];
-            cells.push(preact.h('vscode-data-grid-cell', { 'style': headerCellStyle, 'grid-column': '1' }, (rowNumber++).toString()));
+            cells.push(preact.h('vscode-data-grid-cell', { 'style': headerCellStyle, 'grid-column': '1' }, (startRowNumber++).toString()));
 
             const result: any = results[resultIndex];
             for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex++) {
@@ -169,7 +168,7 @@ export class ResultsGrid extends Object {
                 cells.push(cell);
             }
 
-            updateCellWith(0, (rowNumber).toString());
+            updateCellWith(0, (startRowNumber).toString());
 
             rows.push(preact.h('vscode-data-grid-row', {}, cells));
         }

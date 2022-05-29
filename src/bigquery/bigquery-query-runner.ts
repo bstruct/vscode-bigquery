@@ -1,16 +1,8 @@
-import { BigQuery, Query, QueryOptions, SimpleQueryRowsResponse } from '@google-cloud/bigquery';
+import { BigQuery, JobResponse, Query } from '@google-cloud/bigquery';
 
 export class BigQueryQueryRunner {
 
-	constructor() {
-	}
-
-	public runQuery(
-		queryText: string,
-		maxResults: number = 10,
-		pageToken: string | null = null,
-		startIndex: string = '0'
-	): Promise<SimpleQueryRowsResponse> {
+	public runQuery(queryText: string): Promise<JobResponse> {
 
 		const bqclient = new BigQuery();
 
@@ -19,15 +11,17 @@ export class BigQueryQueryRunner {
 			query: queryText
 		};
 
-		const options: QueryOptions = {
-			autoPaginate: false,
-			wrapIntegers: true,
-			maxResults: maxResults,
-			startIndex: startIndex
-		};
-		if (pageToken) { options.pageToken = pageToken; }
+		// const options: QueryOptions = {
+		// 	autoPaginate: false,
+		// 	wrapIntegers: true,
+		// 	maxResults: maxResults,
+		// 	startIndex: startIndex
+		// };
+		// if (pageToken) { options.pageToken = pageToken; }
 
-		return bqclient.query(query, options);
+		// return bqclient.query(query, options);
+
+		return bqclient.createQueryJob(query);
 	}
 
 }
