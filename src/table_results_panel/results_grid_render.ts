@@ -10,6 +10,8 @@ export class ResultsGridRender {
 
     private webView: vscode.Webview;
 
+    private disposableEvent: vscode.Disposable | null = null;
+
     constructor(webView: vscode.Webview) {
         this.webView = webView;
     }
@@ -17,8 +19,7 @@ export class ResultsGridRender {
     public render(
         jobResponse: Promise<JobResponse>,
         maxResults: number = 10,
-        startIndex: number = 0,
-        setEventListener: boolean = true
+        startIndex: number = 0
     ) {
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
@@ -29,11 +30,11 @@ export class ResultsGridRender {
             "toolkit.min.js",
         ]);
 
-        // this.webView.onDidReceiveMessage.
-        if(setEventListener){
-            this.webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage, [this, jobResponse]);
-        }
+        //onDidReceiveMessage
+        if (this.disposableEvent) { this.disposableEvent.dispose(); }
+        this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage, [this, jobResponse]);
 
+        //set waiting gif
         this.webView.html = this.getWaitingHtml(toolkitUri);
 
         jobResponse
@@ -168,7 +169,7 @@ export class ResultsGridRender {
         const resultsGridRender: ResultsGridRender = (this as any)[0];
         const jobResponsePromise: Promise<JobResponse> = (this as any)[1];
         const jobResponse: JobResponse = await jobResponsePromise;
-        
+
         // const job: bigquery.IJob = jobResponse[1]
         // const queryResults: bigquery.IGetQueryResultsResponse = jobResponse[1];
 
@@ -178,7 +179,7 @@ export class ResultsGridRender {
         switch (message) {
             case 'first_page':
 
-                resultsGridRender.render(jobResponsePromise, 10, 0, false);
+                resultsGridRender.render(jobResponsePromise, 10, 0);
 
                 break;
             case 'previous_page':
@@ -186,8 +187,8 @@ export class ResultsGridRender {
                 break;
             case 'next_page':
 
-                resultsGridRender.render(jobResponsePromise, 10, 10, false);
-        
+                resultsGridRender.render(jobResponsePromise, 10, 10);
+
                 break;
             case 'last_page':
 
