@@ -1,4 +1,4 @@
-import { BigQueryDate, QueryRowsResponse, SimpleQueryRowsResponse } from '@google-cloud/bigquery';
+import { BigQueryDate, Query, QueryRowsResponse, SimpleQueryRowsResponse } from '@google-cloud/bigquery';
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
@@ -14,23 +14,24 @@ import * as p from 'preact-render-to-string';
 export class ResultsGrid extends Object {
 
     private queryRowsResponse: QueryRowsResponse;
+    private startIndex: number;
+    private maxResults: number;
 
     /**
      *
      */
-    constructor(queryRowsResponse: QueryRowsResponse) {
+    constructor(queryRowsResponse: QueryRowsResponse, startIndex: number, maxResults: number) {
         super();
         this.queryRowsResponse = queryRowsResponse;
+        this.startIndex = startIndex;
+        this.maxResults = maxResults;
     }
 
     private render(): preact.VNode {
 
-
         const results: any[] = this.queryRowsResponse[0];
-        const startIndex: number = Number((this.queryRowsResponse[1] as any).startIndex);
-        const maxResults: number = (this.queryRowsResponse[1] as any).maxResults;
+        // const paging: BigqueryQueryPaging | null = (this.queryRowsResponse[1] as any || null);
         const queryResults: bigquery.IGetQueryResultsResponse = this.queryRowsResponse[2] || {};
-
 
         //array of elements to create
         const elements: preact.VNode[] = [];
@@ -38,9 +39,14 @@ export class ResultsGrid extends Object {
         //is paging necessary?
         if (queryResults.totalRows && Number(queryResults.totalRows) != results.length) {
 
-            elements.push(this.getPagination(results, queryResults));
+            const totalRows: number = Number(queryResults.totalRows || 0);
+
+            const resultsSize: number = results.length;
+
+            elements.push(this.getPagination(this.startIndex, this.maxResults, totalRows, resultsSize));
 
             elements.push(preact.h('vscode-divider', {}, []));
+
         }
 
         //grid
@@ -48,20 +54,20 @@ export class ResultsGrid extends Object {
         //error unlikely to happen, that's why is lower in the code
         if (!schema) { throw Error('Unexpected query result'); }
 
-        elements.push(this.getGrid(schema, results, startIndex + 1));
+        elements.push(this.getGrid(schema, results, this.startIndex + 1));
 
         //bundle all under a div
         return preact.h('div', {}, elements);
     }
 
-    private getPagination(results: any[], queryResults: bigquery.IGetQueryResultsResponse): preact.VNode {
+    private getPagination(startIndex: number, maxResults: number, totalRows: number, resultsSize: number): preact.VNode {
 
         //array of elements to create
         const elements: preact.VNode[] = [];
 
         elements.push(preact.h('span',
             { 'style': 'padding:5px 10px; display:inline-flex; vertical-align:top;color:var(--button-secondary-foreground);background:var(--button-secondary-background)' },
-            `1 - ${results.length} of ${queryResults.totalRows}`));
+            `${startIndex + 1} - ${startIndex + resultsSize} of ${totalRows}`));
 
         elements.push(preact.h('span', {}, ' '));
 
@@ -73,28 +79,32 @@ export class ResultsGrid extends Object {
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("first_page")' }, [
+        const firstAndPreviousPageEnabled = startIndex >= maxResults;
+
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("first_page")', disabled: !firstAndPreviousPageEnabled }, [
             'First page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-left' }, [])
         ]));
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("previous_page")' }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("previous_page")', disabled: !firstAndPreviousPageEnabled }, [
             'Previous page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-left' }, [])
         ]));
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("next_page")' }, [
+        const nextAndLastPageEnabled = startIndex + resultsSize < totalRows;
+
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("next_page")', disabled: !nextAndLastPageEnabled }, [
             'Next page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-right' }, [])
         ]));
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("last_page")' }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("last_page")', disabled: !nextAndLastPageEnabled }, [
             'Last page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
         ]));

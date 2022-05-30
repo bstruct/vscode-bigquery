@@ -18,8 +18,8 @@ export class ResultsGridRender {
 
     public render(
         jobResponse: Promise<JobResponse>,
-        maxResults: number = 10,
-        startIndex: number = 0
+        startIndex: number = 0,
+        maxResults: number = 10
     ) {
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
@@ -30,9 +30,8 @@ export class ResultsGridRender {
             "toolkit.min.js",
         ]);
 
-        //onDidReceiveMessage
+        //dispose event regardless of successful query or not
         if (this.disposableEvent) { this.disposableEvent.dispose(); }
-        this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage, [this, jobResponse]);
 
         //set waiting gif
         this.webView.html = this.getWaitingHtml(toolkitUri);
@@ -47,7 +46,11 @@ export class ResultsGridRender {
                     'codicon.css']
                 );
 
-                this.webView.html = await this.getResultsHtml(toolkitUri, codiconsUri, result, startIndex, maxResults);
+                const [html, totalRows] = await this.getResultsHtml(toolkitUri, codiconsUri, result, startIndex);
+                this.webView.html = html;
+
+                //in case that the search result needs pagination, this event is enabled
+                this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage, [this, jobResponse, startIndex, maxResults, totalRows]);
 
             })
             .catch(exception => {
@@ -128,18 +131,23 @@ export class ResultsGridRender {
 
     }
 
+    /* 
+    * weird response because the total rows are only known in the `getQueryResults` response
+    */
     private async getResultsHtml(
         toolkitUri: vscode.Uri,
         codiconsUri: vscode.Uri,
         jobResponse: JobResponse,
         startIndex: number = 0,
         maxResults: number = 10,
-    ) {
+    ): Promise<[string, number]> {
 
         const queryResultOptions: QueryResultsOptions = { startIndex: startIndex.toString(), maxResults: maxResults };
         const queryRowsResponse = await jobResponse[0].getQueryResults(queryResultOptions);
 
-        return `<!DOCTYPE html>
+        const totalRows: number = Number(queryRowsResponse[2]?.totalRows || 0);
+
+        return [`<!DOCTYPE html>
         <html lang="en">
         	<head>
         		<meta charset="UTF-8">
@@ -148,12 +156,14 @@ export class ResultsGridRender {
                 <link href="${codiconsUri}" rel="stylesheet" />
         	</head>
         	<body>
-                ${(new ResultsGrid(queryRowsResponse))}
+                ${(new ResultsGrid(queryRowsResponse, startIndex, maxResults))}
                 <script>
                     const vscode = acquireVsCodeApi();
                 </script>
         	</body>
-        </html>`;
+        </html>`,
+            totalRows
+        ];
 
     }
 
@@ -164,11 +174,15 @@ export class ResultsGridRender {
     /* This function will run as an event triggered when the JS on the webview triggers
      * the `postMessage` method
     */
-    async listenerOnDidReceiveMessage(message: any): Promise<void> {
+    listenerOnDidReceiveMessage(message: any): void {
 
         const resultsGridRender: ResultsGridRender = (this as any)[0];
         const jobResponsePromise: Promise<JobResponse> = (this as any)[1];
-        const jobResponse: JobResponse = await jobResponsePromise;
+        // const jobResponse: JobResponse = await jobResponsePromise;
+
+        const startIndex: number = (this as any)[2];
+        const maxResults: number = (this as any)[3];
+        const totalRows: number = (this as any)[3];
 
         // const job: bigquery.IJob = jobResponse[1]
         // const queryResults: bigquery.IGetQueryResultsResponse = jobResponse[1];
@@ -178,19 +192,16 @@ export class ResultsGridRender {
 
         switch (message) {
             case 'first_page':
-
-                resultsGridRender.render(jobResponsePromise, 10, 0);
-
+                resultsGridRender.render(jobResponsePromise, 0, maxResults);
                 break;
             case 'previous_page':
-
+                resultsGridRender.render(jobResponsePromise, startIndex - maxResults, maxResults);
                 break;
             case 'next_page':
-
-                resultsGridRender.render(jobResponsePromise, 10, 10);
-
+                resultsGridRender.render(jobResponsePromise, startIndex + maxResults, maxResults);
                 break;
             case 'last_page':
+                // const lastPageStartIndex = totalRows
 
                 break;
         }
