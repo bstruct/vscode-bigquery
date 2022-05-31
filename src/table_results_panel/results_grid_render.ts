@@ -19,7 +19,7 @@ export class ResultsGridRender {
     public render(
         jobResponse: Promise<JobResponse>,
         startIndex: number = 0,
-        maxResults: number = 10
+        maxResults: number = 50
     ) {
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
@@ -46,7 +46,7 @@ export class ResultsGridRender {
                     'codicon.css']
                 );
 
-                const [html, totalRows] = await this.getResultsHtml(toolkitUri, codiconsUri, result, startIndex);
+                const [html, totalRows] = await this.getResultsHtml(toolkitUri, codiconsUri, result, startIndex, maxResults);
                 this.webView.html = html;
 
                 //in case that the search result needs pagination, this event is enabled
@@ -138,8 +138,8 @@ export class ResultsGridRender {
         toolkitUri: vscode.Uri,
         codiconsUri: vscode.Uri,
         jobResponse: JobResponse,
-        startIndex: number = 0,
-        maxResults: number = 10,
+        startIndex: number,
+        maxResults: number,
     ): Promise<[string, number]> {
 
         const queryResultOptions: QueryResultsOptions = { startIndex: startIndex.toString(), maxResults: maxResults };
