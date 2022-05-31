@@ -6,8 +6,6 @@ export class WebviewViewProvider implements vscode.WebviewViewProvider {
 
     resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext<unknown>, token: vscode.CancellationToken): void | Thenable<void> {
 
-        console.info(context);
-
         webviewView.webview.options = { enableScripts: true };
 
         this.webviewView = webviewView;

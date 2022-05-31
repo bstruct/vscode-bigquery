@@ -167,6 +167,8 @@ export class ResultsGrid extends Object {
                             value = date.value;
                         }
                         break;
+                    case 'STRING':
+                        break;
                     default:
                         console.info(`field ${field.name} has type ${field.type}`);
                         break;
