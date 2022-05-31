@@ -37,7 +37,8 @@ export class ResultsGrid extends Object {
         const elements: preact.VNode[] = [];
 
         //is paging necessary?
-        if (queryResults.totalRows && Number(queryResults.totalRows) != results.length) {
+        // if (queryResults.totalRows && Number(queryResults.totalRows) != results.length) 
+        {
 
             const totalRows: number = Number(queryResults.totalRows || 0);
 
@@ -69,7 +70,7 @@ export class ResultsGrid extends Object {
 
         elements.push(preact.h('span',
             { 'style': 'padding:5px 10px; display:inline-flex; vertical-align:top;color:var(--button-secondary-foreground);background:var(--button-secondary-background)' },
-            `${startIndex + 1} - ${startIndex + resultsSize} of ${totalRows}`));
+            `${Math.min(startIndex + 1, totalRows)} - ${startIndex + resultsSize} of ${totalRows}`));
 
         elements.push(preact.h('span', {}, ' '));
 
@@ -165,15 +166,27 @@ export class ResultsGrid extends Object {
 
                 if (field.mode == 'REPEATED') {
 
-                    const fieldName: string = field.name || '';
+                    let innerSchema: bigquery.ITableSchema = {};
+                    let innerResults: any[] = [];
 
-                    const field1: bigquery.ITableFieldSchema = { name: field.name, type: field.type, mode: 'NULLABLE' };
-                    const innerSchema: bigquery.ITableSchema = { fields: [field1] };
-                    const innerResults: any[] = (result[field.name || ''] as any[]).map(c => {
-                        const item: any = {};
-                        item[fieldName] = c;
-                        return item;
-                    });
+                    if (field.type == 'RECORD') {
+
+                        innerSchema = { fields: field.fields || [] };
+                        innerResults = result[field.name || ''];
+
+                    } else {
+
+                        const fieldName: string = field.name || '';
+
+                        const field1: bigquery.ITableFieldSchema = { name: field.name, type: field.type, mode: 'NULLABLE' };
+                        innerSchema = { fields: [field1] };
+                        innerResults = (result[field.name || ''] as any[]).map(c => {
+                            const item: any = {};
+                            item[fieldName] = c;
+                            return item;
+                        });
+
+                    }
 
                     let totalWidth: number = 0;
                     [value, totalWidth] = this.getGrid(innerSchema, innerResults, 1);

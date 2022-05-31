@@ -35,7 +35,7 @@
       ]
     },
     "base": {
-      "match": "(?i)(\\bwith\\b)|(?i)(\\bselect\\b)|(?i)(\\bfrom\\b)|(?i)(\\bwhere\\b)|(?i)(\\blimit\\b)|(?i)(\\bhaving\\b)|(?i)(\\bgroup\\b\\W+\\bby\\b)|(?i)(\\bas\\b)|(?i)(\\border\\b\\W+\\bby\\b)|(?i)(\\blimit\\b)|(?i)(\\basc\\b)|(?i)(\\bdesc\\b)",
+      "match": "(?i)(\\bwith\\b)|(?i)(\\bselect\\b)|(?i)(\\bfrom\\b)|(?i)(\\bwhere\\b)|(?i)(\\blimit\\b)|(?i)(\\bhaving\\b)|(?i)(\\bgroup\\b\\W+\\bby\\b)|(?i)(\\bas\\b)|(?i)(\\border\\b\\W+\\bby\\b)|(?i)(\\blimit\\b)|(?i)(\\basc\\b)|(?i)(\\bdesc\\b)|(?i)(\\bleft\\b\\W+\\bjoin\\b)|(?i)(\\bright\\b\\W+\\bjoin\\b)|(?i)(\\busing\\b)",
       "name": "support.class"
     },
     "operators": {
