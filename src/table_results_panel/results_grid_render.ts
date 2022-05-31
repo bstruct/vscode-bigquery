@@ -178,17 +178,10 @@ export class ResultsGridRender {
 
         const resultsGridRender: ResultsGridRender = (this as any)[0];
         const jobResponsePromise: Promise<JobResponse> = (this as any)[1];
-        // const jobResponse: JobResponse = await jobResponsePromise;
 
         const startIndex: number = (this as any)[2];
         const maxResults: number = (this as any)[3];
-        const totalRows: number = (this as any)[3];
-
-        // const job: bigquery.IJob = jobResponse[1]
-        // const queryResults: bigquery.IGetQueryResultsResponse = jobResponse[1];
-
-        // vscode.window.showInformationMessage(message);
-
+        const totalRows: number = (this as any)[4];
 
         switch (message) {
             case 'first_page':
@@ -201,8 +194,8 @@ export class ResultsGridRender {
                 resultsGridRender.render(jobResponsePromise, startIndex + maxResults, maxResults);
                 break;
             case 'last_page':
-                // const lastPageStartIndex = totalRows
-
+                const lastPageStartIndex = (Math.ceil(totalRows / maxResults) - 1) * maxResults;
+                resultsGridRender.render(jobResponsePromise, lastPageStartIndex, maxResults);
                 break;
         }
 
