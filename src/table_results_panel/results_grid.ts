@@ -54,7 +54,9 @@ export class ResultsGrid extends Object {
         //error unlikely to happen, that's why is lower in the code
         if (!schema) { throw Error('Unexpected query result'); }
 
-        elements.push(this.getGrid(schema, results, this.startIndex + 1));
+        const [gridNode, _] = this.getGrid(schema, results, this.startIndex + 1);
+
+        elements.push(gridNode);
 
         //bundle all under a div
         return preact.h('div', {}, elements);
@@ -176,7 +178,7 @@ export class ResultsGrid extends Object {
                     let totalWidth: number = 0;
                     [value, totalWidth] = this.getGrid(innerSchema, innerResults, 1);
 
-                    widths[fieldIndex + 1] = totalWidth;
+                    widths[fieldIndex + 1] = Math.max(widths[fieldIndex + 1], totalWidth);
 
                 } else {
 
@@ -211,7 +213,7 @@ export class ResultsGrid extends Object {
         const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .8}em`).join(' ') }, rows);
         const totalWidth: number = widths.reduce((previous, current, index) => previous + current);
 
-        return [table, totalWidth];
+        return [table, totalWidth + 2];
     }
 
     override toString(): string {

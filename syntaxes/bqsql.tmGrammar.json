@@ -35,7 +35,7 @@
       ]
     },
     "base": {
-      "match": "(?i)(\\bwith\\b)|(?i)(\\bselect\\b)|(?i)(\\bfrom\\b)|(?i)(\\bwhere\\b)|(?i)(\\blimit\\b)|(?i)(\\bhaving\\b)|(?i)(\\bgroup\\b\\W+\\bby\\b)|(?i)(\\bas\\b)",
+      "match": "(?i)(\\bwith\\b)|(?i)(\\bselect\\b)|(?i)(\\bfrom\\b)|(?i)(\\bwhere\\b)|(?i)(\\blimit\\b)|(?i)(\\bhaving\\b)|(?i)(\\bgroup\\b\\W+\\bby\\b)|(?i)(\\bas\\b)|(?i)(\\border\\b\\W+\\bby\\b)|(?i)(\\blimit\\b)|(?i)(\\basc\\b)|(?i)(\\bdesc\\b)",
       "name": "support.class"
     },
     "operators": {
@@ -43,7 +43,7 @@
       "name": "keyword.operator"
     },
     "functions": {
-      "match": "(?i)(\\bif\\b)|(?i)(\\bcurrent_date\\b)",
+      "match": "(?i)(\\bif\\b)|(?i)(\\bcurrent_date\\b)|(?i)(\\bmax\\b)|(?i)(\\barray_agg\\b)",
       "name": "entity.name.function"
     },
     "line-comment": {

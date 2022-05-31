@@ -11,16 +11,6 @@ export class BigQueryQueryRunner {
 			query: queryText
 		};
 
-		// const options: QueryOptions = {
-		// 	autoPaginate: false,
-		// 	wrapIntegers: true,
-		// 	maxResults: maxResults,
-		// 	startIndex: startIndex
-		// };
-		// if (pageToken) { options.pageToken = pageToken; }
-
-		// return bqclient.query(query, options);
-
 		return bqclient.createQueryJob(query);
 	}
 
