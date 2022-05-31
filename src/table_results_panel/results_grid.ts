@@ -71,13 +71,14 @@ export class ResultsGrid extends Object {
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-dropdown', {}, [
-            preact.h('vscode-option', {}, 'Option Label #1'),
-            preact.h('vscode-option', {}, 'Option Label #2'),
-            preact.h('vscode-option', {}, 'Option Label #3')
-        ]));
+        //TODO: implement possibility to change page size
+        // elements.push(preact.h('vscode-dropdown', {}, [
+        //     preact.h('vscode-option', {}, 'Option Label #1'),
+        //     preact.h('vscode-option', {}, 'Option Label #2'),
+        //     preact.h('vscode-option', {}, 'Option Label #3')
+        // ]));
 
-        elements.push(preact.h('span', {}, ' '));
+        // elements.push(preact.h('span', {}, ' '));
 
         const firstAndPreviousPageEnabled = startIndex >= maxResults;
 
@@ -112,7 +113,7 @@ export class ResultsGrid extends Object {
         return preact.h('div', {}, elements);
     }
 
-    private getGrid(schema: bigquery.ITableSchema, results: any[], startRowNumber: number): preact.VNode {
+    private getGrid(schema: bigquery.ITableSchema, results: any[], startRowNumber: number): [preact.VNode, number] {
 
         const headerCellStyle = 'background-color: var(--list-hover-background);';
 
@@ -158,23 +159,45 @@ export class ResultsGrid extends Object {
             for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex++) {
                 const field = fields[fieldIndex];
 
-                let value: any = result[field.name || ''];
+                let value: any = null;
 
-                switch (field.type || 'STRING') {
-                    case 'DATE':
-                        if (value != null) {
-                            const date = value as BigQueryDate;
-                            value = date.value;
-                        }
-                        break;
-                    case 'STRING':
-                        break;
-                    default:
-                        console.info(`field ${field.name} has type ${field.type}`);
-                        break;
+                if (field.mode == 'REPEATED') {
+
+                    const fieldName: string = field.name || '';
+
+                    const field1: bigquery.ITableFieldSchema = { name: field.name, type: field.type, mode: 'NULLABLE' };
+                    const innerSchema: bigquery.ITableSchema = { fields: [field1] };
+                    const innerResults: any[] = (result[field.name || ''] as any[]).map(c => {
+                        const item: any = {};
+                        item[fieldName] = c;
+                        return item;
+                    });
+
+                    let totalWidth: number = 0;
+                    [value, totalWidth] = this.getGrid(innerSchema, innerResults, 1);
+
+                    widths[fieldIndex + 1] = totalWidth;
+
+                } else {
+
+                    value = result[field.name || ''];
+
+                    switch (field.type || 'STRING') {
+                        case 'DATE':
+                            if (value != null) {
+                                const date = value as BigQueryDate;
+                                value = date.value;
+                            }
+                            break;
+                        case 'STRING':
+                            break;
+                        default:
+                            console.info(`field ${field.name} has type ${field.type}`);
+                            break;
+                    }
+
+                    updateCellWith(fieldIndex + 1, value);
                 }
-
-                updateCellWith(fieldIndex + 1, value);
 
                 const cell = preact.h('vscode-data-grid-cell', { 'grid-column': (fieldIndex + 2).toString() }, value || '');
                 cells.push(cell);
@@ -185,7 +208,10 @@ export class ResultsGrid extends Object {
             rows.push(preact.h('vscode-data-grid-row', {}, cells));
         }
 
-        return preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .8}em`).join(' ') }, rows);
+        const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .8}em`).join(' ') }, rows);
+        const totalWidth: number = widths.reduce((previous, current, index) => previous + current);
+
+        return [table, totalWidth];
     }
 
     override toString(): string {
