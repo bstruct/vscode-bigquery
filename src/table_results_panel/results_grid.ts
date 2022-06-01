@@ -1,4 +1,4 @@
-import { BigQueryDate, Query, QueryRowsResponse, SimpleQueryRowsResponse } from '@google-cloud/bigquery';
+import { Geography, QueryRowsResponse } from '@google-cloud/bigquery';
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
@@ -60,7 +60,7 @@ export class ResultsGrid extends Object {
         elements.push(gridNode);
 
         //bundle all under a div
-        return preact.h('div', {}, elements);
+        return preact.h('div', { }, elements);
     }
 
     private getPagination(startIndex: number, maxResults: number, totalRows: number, resultsSize: number): preact.VNode {
@@ -139,8 +139,8 @@ export class ResultsGrid extends Object {
         rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header' }, getHeaderCells()));
 
         //widths of the columns
-        const widths: number[] = [5];
-        widths.push(...fieldNames.map(c => c.length));
+        const widths: number[] = [4];
+        widths.push(...fieldNames.map(c => Math.max(c.length, 5)));//min with of 5
 
         //give the necessary with to columns that contain bigger values. max 80 (`.8 * x em` later)
         function updateCellWith(widthIndex: number, valueString: string | null) {
@@ -198,13 +198,29 @@ export class ResultsGrid extends Object {
                     value = result[field.name || ''];
 
                     switch (field.type || 'STRING') {
+                        case 'DATETIME':
                         case 'DATE':
+                        case 'TIME':
+                        case 'TIMESTAMP':
                             if (value != null) {
-                                const date = value as BigQueryDate;
+                                const date = value as any;
                                 value = date.value;
                             }
                             break;
+                        case 'NUMERIC':
+                            if (value != null) {
+                                const date = value as any;
+                                value = date.toString();
+                            }
+                            break;
                         case 'STRING':
+                        case 'INTEGER':
+                            break;
+                        case 'GEOGRAPHY':
+                            if (value != null) {
+                                const geo = value as Geography;
+                                value = geo.value;
+                            }
                             break;
                         default:
                             console.info(`field ${field.name} has type ${field.type}`);
@@ -223,7 +239,7 @@ export class ResultsGrid extends Object {
             rows.push(preact.h('vscode-data-grid-row', {}, cells));
         }
 
-        const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .8}em`).join(' ') }, rows);
+        const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .9}em`).join(' ') }, rows);
         const totalWidth: number = widths.reduce((previous, current, index) => previous + current);
 
         return [table, totalWidth + 2];
