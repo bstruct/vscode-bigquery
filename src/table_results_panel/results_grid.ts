@@ -140,7 +140,7 @@ export class ResultsGrid extends Object {
 
         //widths of the columns
         const widths: number[] = [4];
-        widths.push(...fieldNames.map(c => Math.max(c.length, 5)));//min with of 5
+        widths.push(...fieldNames.map(c => Math.max(c.length, 6)));//min with of 5
 
         //give the necessary with to columns that contain bigger values. max 80 (`.8 * x em` later)
         function updateCellWith(widthIndex: number, valueString: string | null) {
@@ -243,7 +243,7 @@ export class ResultsGrid extends Object {
             rows.push(preact.h('vscode-data-grid-row', {}, cells));
         }
 
-        const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .85}em`).join(' ') }, rows);
+        const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .8}em`).join(' ') }, rows);
         const totalWidth: number = widths.reduce((previous, current, index) => previous + current);
 
         return [table, totalWidth + 2];

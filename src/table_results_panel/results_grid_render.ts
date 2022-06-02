@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { extensionUri } from '../extension';
-import { JobResponse, QueryResultsOptions } from '@google-cloud/bigquery';
+import { Job, JobResponse, QueryResultsOptions } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../bigquery/simple_query_rows_response_error';
 import { ResultsGrid } from './results_grid';
 
@@ -17,7 +17,7 @@ export class ResultsGridRender {
     }
 
     public render(
-        jobResponse: Promise<JobResponse>,
+        jobsPromise: Promise<Job[]>,
         startIndex: number = 0,
         maxResults: number = 50
     ) {
@@ -36,8 +36,12 @@ export class ResultsGridRender {
         //set waiting gif
         this.webView.html = this.getWaitingHtml(toolkitUri);
 
-        jobResponse
-            .then(async (result) => {
+        jobsPromise
+            .then(async (jobs) => {
+
+                const job1 = jobs[0];
+
+                // jobs[0].getQueryResults
 
                 const codiconsUri = this.getUri(this.webView, extensionUri, [
                     'node_modules',
@@ -46,11 +50,11 @@ export class ResultsGridRender {
                     'codicon.css']
                 );
 
-                const [html, totalRows] = await this.getResultsHtml(toolkitUri, codiconsUri, result, startIndex, maxResults);
+                const [html, totalRows] = await this.getResultsHtml(toolkitUri, codiconsUri, job1, startIndex, maxResults);
                 this.webView.html = html;
 
                 //in case that the search result needs pagination, this event is enabled
-                this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage, [this, jobResponse, startIndex, maxResults, totalRows]);
+                this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage, [this, jobsPromise, startIndex, maxResults, totalRows]);
 
             })
             .catch(exception => {
@@ -137,13 +141,13 @@ export class ResultsGridRender {
     private async getResultsHtml(
         toolkitUri: vscode.Uri,
         codiconsUri: vscode.Uri,
-        jobResponse: JobResponse,
+        job: Job,
         startIndex: number,
         maxResults: number,
     ): Promise<[string, number]> {
 
         const queryResultOptions: QueryResultsOptions = { startIndex: startIndex.toString(), maxResults: maxResults };
-        const queryRowsResponse = await jobResponse[0].getQueryResults(queryResultOptions);
+        const queryRowsResponse = await job.getQueryResults(queryResultOptions);
 
         const totalRows: number = Number(queryRowsResponse[2]?.totalRows || 0);
 
@@ -177,7 +181,7 @@ export class ResultsGridRender {
     listenerOnDidReceiveMessage(message: any): void {
 
         const resultsGridRender: ResultsGridRender = (this as any)[0];
-        const jobResponsePromise: Promise<JobResponse> = (this as any)[1];
+        const jobResponsePromise: Promise<Job[]> = (this as any)[1];
 
         const startIndex: number = (this as any)[2];
         const maxResults: number = (this as any)[3];
