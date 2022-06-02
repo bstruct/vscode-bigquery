@@ -1,4 +1,4 @@
-import { Geography, QueryRowsResponse } from '@google-cloud/bigquery';
+import { QueryRowsResponse } from '@google-cloud/bigquery';
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
@@ -60,7 +60,7 @@ export class ResultsGrid extends Object {
         elements.push(gridNode);
 
         //bundle all under a div
-        return preact.h('div', { }, elements);
+        return preact.h('div', {}, elements);
     }
 
     private getPagination(startIndex: number, maxResults: number, totalRows: number, resultsSize: number): preact.VNode {
@@ -164,7 +164,7 @@ export class ResultsGrid extends Object {
 
                 let value: any = null;
 
-                if (field.mode == 'REPEATED') {
+                if (field.mode == 'REPEATED' || field.type == 'RECORD') {
 
                     let innerSchema: bigquery.ITableSchema = {};
                     let innerResults: any[] = [];
@@ -172,7 +172,11 @@ export class ResultsGrid extends Object {
                     if (field.type == 'RECORD') {
 
                         innerSchema = { fields: field.fields || [] };
-                        innerResults = result[field.name || ''];
+                        if (field.mode == 'REPEATED') {
+                            innerResults = result[field.name || ''];
+                        } else {
+                            innerResults = [result[field.name || '']];
+                        }
 
                     } else {
 
@@ -202,25 +206,25 @@ export class ResultsGrid extends Object {
                         case 'DATE':
                         case 'TIME':
                         case 'TIMESTAMP':
+                        case 'GEOGRAPHY':
                             if (value != null) {
-                                const date = value as any;
-                                value = date.value;
+                                value = value.value;
                             }
                             break;
                         case 'NUMERIC':
+                        case 'FLOAT':
+                        case 'INTEGER':
                             if (value != null) {
-                                const date = value as any;
-                                value = date.toString();
+                                value = value.toString();
+                            }
+                            break;
+                        case 'BYTES':
+                            if (value != null) {
+                                value = value.toString('base64');
                             }
                             break;
                         case 'STRING':
-                        case 'INTEGER':
-                            break;
-                        case 'GEOGRAPHY':
-                            if (value != null) {
-                                const geo = value as Geography;
-                                value = geo.value;
-                            }
+                        case 'INTERVAL':
                             break;
                         default:
                             console.info(`field ${field.name} has type ${field.type}`);
@@ -239,7 +243,7 @@ export class ResultsGrid extends Object {
             rows.push(preact.h('vscode-data-grid-row', {}, cells));
         }
 
-        const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .9}em`).join(' ') }, rows);
+        const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .85}em`).join(' ') }, rows);
         const totalWidth: number = widths.reduce((previous, current, index) => previous + current);
 
         return [table, totalWidth + 2];
