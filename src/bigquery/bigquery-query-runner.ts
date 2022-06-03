@@ -32,8 +32,10 @@ export class BigQueryQueryRunner {
 							const jobId = jobMeta.jobReference?.jobId || '';
 
 							// in this case, only after the parent jobs is 'DONE', it constains the list 
-							// of all the jobs involved
-							const _ = bqclient.getJobs({ parentJobId: jobId })
+							// of all the jobs involved.
+							// jobs will have id's postfixed
+							bqclient
+								.getJobs({ parentJobId: jobId })
 								.then((getJobsResponse) => {
 
 									const jobs: Job[] = getJobsResponse[0];

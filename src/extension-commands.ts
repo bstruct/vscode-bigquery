@@ -28,7 +28,7 @@ export const command_runQuery = async function (...args: any[]) {
 			panel = bigqueryWebviewViewProvider.webviewView;
 		}
 		if (panel == null) { return; }
-		else { if (!panel.visible) { panel.show(); } }
+		if (!panel.visible) { panel.show(); }
 
 		resultsGridRender = new ResultsGridRender(panel.webview);
 	}

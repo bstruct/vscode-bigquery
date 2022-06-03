@@ -39,10 +39,6 @@ export class ResultsGridRender {
         jobsPromise
             .then(async (jobs) => {
 
-                const job1 = jobs[0];
-
-                // jobs[0].getQueryResults
-
                 const codiconsUri = this.getUri(this.webView, extensionUri, [
                     'node_modules',
                     '@vscode/codicons',
@@ -50,7 +46,7 @@ export class ResultsGridRender {
                     'codicon.css']
                 );
 
-                const [html, totalRows] = await this.getResultsHtml(toolkitUri, codiconsUri, job1, startIndex, maxResults);
+                const [html, totalRows] = await this.getResultsHtml(toolkitUri, codiconsUri, jobs, startIndex, maxResults);
                 this.webView.html = html;
 
                 //in case that the search result needs pagination, this event is enabled
@@ -141,10 +137,12 @@ export class ResultsGridRender {
     private async getResultsHtml(
         toolkitUri: vscode.Uri,
         codiconsUri: vscode.Uri,
-        job: Job,
+        jobs : Job[],
         startIndex: number,
         maxResults: number,
     ): Promise<[string, number]> {
+
+        const job = jobs[0];
 
         const queryResultOptions: QueryResultsOptions = { startIndex: startIndex.toString(), maxResults: maxResults };
         const queryRowsResponse = await job.getQueryResults(queryResultOptions);
