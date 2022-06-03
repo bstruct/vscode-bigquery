@@ -137,12 +137,14 @@ export class ResultsGridRender {
     private async getResultsHtml(
         toolkitUri: vscode.Uri,
         codiconsUri: vscode.Uri,
-        jobs : Job[],
+        jobs: Job[],
         startIndex: number,
         maxResults: number,
     ): Promise<[string, number]> {
 
-        const job = jobs[0];
+        const jobIndex = 0;
+        const job = jobs[jobIndex];
+        const jobCount = jobs.length;
 
         const queryResultOptions: QueryResultsOptions = { startIndex: startIndex.toString(), maxResults: maxResults };
         const queryRowsResponse = await job.getQueryResults(queryResultOptions);
@@ -158,7 +160,7 @@ export class ResultsGridRender {
                 <link href="${codiconsUri}" rel="stylesheet" />
         	</head>
         	<body>
-                ${(new ResultsGrid(queryRowsResponse, startIndex, maxResults))}
+                ${(new ResultsGrid(queryRowsResponse, startIndex, maxResults, jobCount, jobIndex))}
                 <script>
                     const vscode = acquireVsCodeApi();
                 </script>

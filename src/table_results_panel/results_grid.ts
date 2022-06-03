@@ -16,15 +16,25 @@ export class ResultsGrid extends Object {
     private queryRowsResponse: QueryRowsResponse;
     private startIndex: number;
     private maxResults: number;
+    private queryCount: number;
+    private queryIndex: number
 
     /**
      *
      */
-    constructor(queryRowsResponse: QueryRowsResponse, startIndex: number, maxResults: number) {
+    constructor(
+        queryRowsResponse: QueryRowsResponse,
+        startIndex: number,
+        maxResults: number,
+        queryCount: number,
+        queryIndex: number) {
+
         super();
         this.queryRowsResponse = queryRowsResponse;
         this.startIndex = startIndex;
         this.maxResults = maxResults;
+        this.queryCount = queryCount;
+        this.queryIndex = queryIndex;
     }
 
     private render(): preact.VNode {
@@ -67,6 +77,18 @@ export class ResultsGrid extends Object {
 
         //array of elements to create
         const elements: preact.VNode[] = [];
+
+        if (this.queryCount > 1) {
+
+            const options = [];
+            for (let index = 0; index < this.queryCount; index++) {
+                options.push(preact.h('vscode-option', {}, `Query result ${index + 1}`));
+            }
+
+            elements.push(preact.h('vscode-dropdown', {}, options));
+
+            elements.push(preact.h('span', {}, ' '));
+        }
 
         elements.push(preact.h('span',
             { 'style': 'padding:5px 10px; display:inline-flex; vertical-align:top;color:var(--button-secondary-foreground);background:var(--button-secondary-background)' },
