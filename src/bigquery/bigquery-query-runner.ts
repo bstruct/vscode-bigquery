@@ -38,9 +38,18 @@ export class BigQueryQueryRunner {
 
 									const jobs: Job[] = getJobsResponse[0];
 
-									// jobs.sort()
+									const sortedJobs = jobs.sort((a: Job, b: Job) => {
 
-									resolve(jobs);
+										const id1 = a.id || '';
+										const id2 = b.id || '';
+
+										const n1 = Number(id1.substring(id1.lastIndexOf('_') + 1));
+										const n2 = Number(id2.substring(id2.lastIndexOf('_') + 1));
+
+										return n1 > n2 ? 1 : -1;
+									});
+
+									resolve(sortedJobs);
 								})
 								.catch((err) => { reject(err); });
 
