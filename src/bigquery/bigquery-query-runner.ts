@@ -14,31 +14,46 @@ export class BigQueryQueryRunner {
 
 		return bqclient
 			.createQueryJob(query)
-			.then(async (jobResponse) => {
+			.then((jobResponse: JobResponse) => {
 
-				const jobId = jobResponse[1].jobReference?.jobId || '';
+				const job = jobResponse[0];
 
-				const statementType: string = jobResponse[1].statistics?.query?.statementType || '';
+				return new Promise((resolve, reject) => {
 
-				//If the query is a 'SCRIPT', means that there's multiple jobs involved.
-				// Can be multiple select statements, but also declaring variables is another `job`
-				if (statementType === 'SCRIPT') {
+					job.on('complete', (metadata) => {
 
-					// in this case, only after the parent jobs is 'DONE', it constains the list 
-					// of all the jobs involved
+						const jobMeta = jobResponse[1];
+						const statementType: string = jobMeta.statistics?.query?.statementType || '';
 
-					// jobResponse[0].get()
-					// const j = bqclient.job('');
-					
-					const jobsResponse = await bqclient.getJobs({ parentJobId: jobId });
+						//If the query is a 'SCRIPT', means that there's multiple jobs involved.
+						// Can be multiple select statements, but also declaring variables is another `job`
+						if (statementType === 'SCRIPT') {
 
-					const jobs: Job[] = jobsResponse[0];
+							const jobId = jobMeta.jobReference?.jobId || '';
 
-					return jobs;
+							// in this case, only after the parent jobs is 'DONE', it constains the list 
+							// of all the jobs involved
+							const _ = bqclient.getJobs({ parentJobId: jobId })
+								.then((getJobsResponse) => {
 
-				} else {
-					return [jobResponse[0]];
-				}
+									const jobs: Job[] = getJobsResponse[0];
+
+									// jobs.sort()
+
+									resolve(jobs);
+								})
+								.catch((err) => { reject(err); });
+
+						} else {
+							resolve([job]);
+						}
+					});
+
+					job.on('error', (error) => {
+						reject(error);
+					});
+
+				});
 
 			});
 
