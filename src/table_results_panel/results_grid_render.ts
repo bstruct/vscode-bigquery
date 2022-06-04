@@ -19,7 +19,8 @@ export class ResultsGridRender {
     public render(
         jobsPromise: Promise<Job[]>,
         startIndex: number = 0,
-        maxResults: number = 50
+        maxResults: number = 50,
+        jobIndex: number = 0
     ) {
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
@@ -46,11 +47,11 @@ export class ResultsGridRender {
                     'codicon.css']
                 );
 
-                const [html, totalRows] = await this.getResultsHtml(toolkitUri, codiconsUri, jobs, startIndex, maxResults);
+                const [html, totalRows] = await this.getResultsHtml(toolkitUri, codiconsUri, jobs, startIndex, maxResults, jobIndex);
                 this.webView.html = html;
 
                 //in case that the search result needs pagination, this event is enabled
-                this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage, [this, jobsPromise, startIndex, maxResults, totalRows]);
+                this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerOnDidReceiveMessage, [this, jobsPromise, startIndex, maxResults, totalRows, jobIndex]);
 
             })
             .catch(exception => {
@@ -140,9 +141,9 @@ export class ResultsGridRender {
         jobs: Job[],
         startIndex: number,
         maxResults: number,
+        jobIndex: number
     ): Promise<[string, number]> {
 
-        const jobIndex = 0;
         const job = jobs[jobIndex];
         const jobCount = jobs.length;
 
@@ -186,23 +187,29 @@ export class ResultsGridRender {
         const startIndex: number = (this as any)[2];
         const maxResults: number = (this as any)[3];
         const totalRows: number = (this as any)[4];
+        const jobIndex: number = (this as any)[5];
 
-        switch (message) {
+        switch (message.command || message) {
             case 'first_page':
-                resultsGridRender.render(jobResponsePromise, 0, maxResults);
+                resultsGridRender.render(jobResponsePromise, 0, maxResults, jobIndex);
                 break;
             case 'previous_page':
-                resultsGridRender.render(jobResponsePromise, startIndex - maxResults, maxResults);
+                resultsGridRender.render(jobResponsePromise, startIndex - maxResults, maxResults, jobIndex);
                 break;
             case 'next_page':
-                resultsGridRender.render(jobResponsePromise, startIndex + maxResults, maxResults);
+                resultsGridRender.render(jobResponsePromise, startIndex + maxResults, maxResults, jobIndex);
                 break;
             case 'last_page':
                 const lastPageStartIndex = (Math.ceil(totalRows / maxResults) - 1) * maxResults;
-                resultsGridRender.render(jobResponsePromise, lastPageStartIndex, maxResults);
+                resultsGridRender.render(jobResponsePromise, lastPageStartIndex, maxResults, jobIndex);
                 break;
+            case 'query_index_change':
+                const newIndex = Number(message.value || 0);
+                resultsGridRender.render(jobResponsePromise, 0, maxResults, newIndex);
+                break;
+            default:
+                console.error(`Unexpected message "${message}"`);
         }
 
     }
-
 }

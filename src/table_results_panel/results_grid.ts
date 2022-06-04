@@ -82,10 +82,10 @@ export class ResultsGrid extends Object {
 
             const options = [];
             for (let index = 0; index < this.queryCount; index++) {
-                options.push(preact.h('vscode-option', {}, `Query result ${index + 1}`));
+                options.push(preact.h('vscode-option', { selected: this.queryIndex === index, value: index }, `Result query ${index + 1}`));
             }
 
-            elements.push(preact.h('vscode-dropdown', {}, options));
+            elements.push(preact.h('vscode-dropdown', { 'onchange': 'vscode.postMessage({"command":"query_index_change", "value": this.value})' }, options));
 
             elements.push(preact.h('span', {}, ' '));
         }
