@@ -161,7 +161,7 @@ export class ResultsGrid extends Object {
         rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header' }, getHeaderCells()));
 
         //widths of the columns
-        const widths: number[] = [4];
+        const widths: number[] = [5];
         widths.push(...fieldNames.map(c => Math.max(c.length, 6)));//min with of 5
 
         //give the necessary with to columns that contain bigger values. max 80 (`.8 * x em` later)
