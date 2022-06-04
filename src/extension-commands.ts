@@ -19,19 +19,21 @@ export const command_runQuery = async function (...args: any[]) {
 
 	const queryResponse = bqRunner.runQuery(queryText);
 
+	let panel = bigqueryWebviewViewProvider.webviewView;
+
 	if (resultsGridRender == null) {
 
-		let panel = bigqueryWebviewViewProvider.webviewView;
 		if (panel == null) {
 			//https://www.eliostruyf.com/devhack-open-custom-vscode-webview-panel-focus-input/
 			await vscode.commands.executeCommand('workbench.view.extension.vscode-bigquery-query-results');
 			panel = bigqueryWebviewViewProvider.webviewView;
 		}
 		if (panel == null) { return; }
-		if (!panel.visible) { panel.show(); }
 
 		resultsGridRender = new ResultsGridRender(panel.webview);
 	}
+
+	if (panel && !panel.visible) { panel.show(); }
 
 	resultsGridRender.render(queryResponse);
 
