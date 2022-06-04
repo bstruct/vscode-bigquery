@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { extensionUri } from '../extension';
-import { Job, JobResponse, QueryResultsOptions } from '@google-cloud/bigquery';
+import { Job, QueryResultsOptions } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../bigquery/simple_query_rows_response_error';
 import { ResultsGrid } from './results_grid';
 
@@ -206,6 +206,12 @@ export class ResultsGridRender {
             case 'query_index_change':
                 const newIndex = Number(message.value || 0);
                 resultsGridRender.render(jobResponsePromise, 0, maxResults, newIndex);
+                break;
+            case 'open_in_tab':
+                const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel("viewType", "Query_1", { viewColumn: vscode.ViewColumn.Active });
+                panel.webview.options = { enableScripts: true };
+                const newresultsGridRender: ResultsGridRender = new ResultsGridRender(panel.webview);
+                newresultsGridRender.render(jobResponsePromise, startIndex, maxResults, jobIndex);
                 break;
             default:
                 console.error(`Unexpected message "${message}"`);

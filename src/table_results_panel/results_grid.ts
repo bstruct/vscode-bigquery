@@ -46,22 +46,18 @@ export class ResultsGrid extends Object {
         //array of elements to create
         const elements: preact.VNode[] = [];
 
-        //is paging necessary?
-        // if (queryResults.totalRows && Number(queryResults.totalRows) != results.length) 
-        {
+        //controls
+        const totalRows: number = Number(queryResults.totalRows || 0);
 
-            const totalRows: number = Number(queryResults.totalRows || 0);
+        const resultsSize: number = results.length;
 
-            const resultsSize: number = results.length;
+        elements.push(this.getControls(this.startIndex, this.maxResults, totalRows, resultsSize));
 
-            elements.push(this.getPagination(this.startIndex, this.maxResults, totalRows, resultsSize));
-
-            elements.push(preact.h('vscode-divider', {}, []));
-
-        }
+        elements.push(preact.h('vscode-divider', {}, []));
 
         //grid
         const schema: bigquery.ITableSchema | null = queryResults.schema || null;
+
         //error unlikely to happen, that's why is lower in the code
         if (!schema) { throw Error('Unexpected query result'); }
 
@@ -73,7 +69,7 @@ export class ResultsGrid extends Object {
         return preact.h('div', {}, elements);
     }
 
-    private getPagination(startIndex: number, maxResults: number, totalRows: number, resultsSize: number): preact.VNode {
+    private getControls(startIndex: number, maxResults: number, totalRows: number, resultsSize: number): preact.VNode {
 
         //array of elements to create
         const elements: preact.VNode[] = [];
@@ -135,6 +131,12 @@ export class ResultsGrid extends Object {
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
         ]));
 
+        elements.push(preact.h('span', {}, ' '));
+
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("open_in_tab")' }, [
+            'Open in tab',
+            preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-open-preview' }, [])
+        ]));
         return preact.h('div', {}, elements);
     }
 
