@@ -17,8 +17,13 @@
 	],
 	"activationEvents": [
 		"onCommand:vscode-bigquery.run-query",
+
 		"onView:bigquery-main-activity-bar",
+		"onView:bigquery-authentication",
+		"onView:bigquery-tree-data-provider",
+		
 		"onView:vscode-bigquery-query-results",
+		
 		"onLanguage:bqsql"
 	],
 	"main": "./dist/extension.js",

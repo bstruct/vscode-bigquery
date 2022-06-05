@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { BigQueryTreeDataProvider } from './activitybar/bigquery-tree-data-provider';
+import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authentication-webview-view-provider';
+import { BigQueryTreeDataProvider } from './activitybar/tree-data-provider';
 import * as commands from './extension-commands';
 import { WebviewViewProvider } from './table_results_panel/webview-view-provider';
 
@@ -10,6 +11,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	extensionUri = context.extensionUri;
 
+	//vscode-bigquery.run-query
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			'vscode-bigquery.run-query',
@@ -17,6 +19,15 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
+	//bigquery-authentication
+	context.subscriptions.push(
+		vscode.window.registerWebviewViewProvider(
+			"bigquery-authentication",
+			new BigqueryAuthenticationWebviewViewProvider()
+		)
+	);
+
+	//bigquery-tree-data-provider
 	context.subscriptions.push(
 		vscode.window.registerTreeDataProvider(
 			'bigquery-tree-data-provider',
@@ -24,6 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
+	//vscode-bigquery-query-results-main
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(
 			"vscode-bigquery-query-results-main",
