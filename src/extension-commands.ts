@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { BigQueryQueryRunner } from './bigquery/bigquery-query-runner';
 import { bigqueryWebviewViewProvider } from './extension';
 import { ResultsGridRender } from './table_results_panel/results_grid_render';
+import { ResultsGridRenderRequest } from './table_results_panel/results_grid_render_request';
 
 let resultsGridRender: ResultsGridRender | null = null;
 
@@ -35,6 +36,14 @@ export const command_runQuery = async function (...args: any[]) {
 
 	if (panel && !panel.visible) { panel.show(); }
 
-	resultsGridRender.render(queryResponse);
+	const request = {
+		jobsPromise: queryResponse,
+		startIndex: 0,
+		maxResults: 50,
+		jobIndex: 0,
+		openInTabVisible: true
+	} as ResultsGridRenderRequest;
+
+	resultsGridRender.render(request);
 
 }

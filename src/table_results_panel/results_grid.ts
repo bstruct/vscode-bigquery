@@ -17,7 +17,8 @@ export class ResultsGrid extends Object {
     private startIndex: number;
     private maxResults: number;
     private queryCount: number;
-    private queryIndex: number
+    private queryIndex: number;
+    private openInTabVisible: boolean;
 
     /**
      *
@@ -27,7 +28,8 @@ export class ResultsGrid extends Object {
         startIndex: number,
         maxResults: number,
         queryCount: number,
-        queryIndex: number) {
+        queryIndex: number,
+        openInTabVisible: boolean) {
 
         super();
         this.queryRowsResponse = queryRowsResponse;
@@ -35,6 +37,7 @@ export class ResultsGrid extends Object {
         this.maxResults = maxResults;
         this.queryCount = queryCount;
         this.queryIndex = queryIndex;
+        this.openInTabVisible = openInTabVisible;
     }
 
     private render(): preact.VNode {
@@ -131,12 +134,17 @@ export class ResultsGrid extends Object {
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
         ]));
 
-        elements.push(preact.h('span', {}, ' '));
+        if (this.openInTabVisible) {
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("open_in_tab")' }, [
-            'Open in tab',
-            preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-open-preview' }, [])
-        ]));
+            elements.push(preact.h('span', {}, ' '));
+
+            elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("open_in_tab")' }, [
+                'Open in tab',
+                preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-open-preview' }, [])
+            ]));
+
+        }
+
         return preact.h('div', {}, elements);
     }
 
