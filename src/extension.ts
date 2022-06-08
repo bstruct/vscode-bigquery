@@ -19,11 +19,12 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	//bigquery-authentication
+	// bigquery-authentication
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(
 			"bigquery-authentication",
-			new BigqueryAuthenticationWebviewViewProvider()
+			new BigqueryAuthenticationWebviewViewProvider(),
+			{ webviewOptions: { retainContextWhenHidden: true } }
 		)
 	);
 

@@ -17,13 +17,10 @@
 	],
 	"activationEvents": [
 		"onCommand:vscode-bigquery.run-query",
-
 		"onView:bigquery-main-activity-bar",
 		"onView:bigquery-authentication",
 		"onView:bigquery-tree-data-provider",
-		
 		"onView:vscode-bigquery-query-results",
-		
 		"onLanguage:bqsql"
 	],
 	"main": "./dist/extension.js",
@@ -77,12 +74,14 @@
 				{
 					"id": "bigquery-authentication",
 					"name": "Authentication",
-					"contextualTitle": "BigQuery"
+					"contextualTitle": "BigQuery",
+					"type": "webview"
 				},
 				{
 					"id": "bigquery-tree-data-provider",
 					"name": "Explorer",
-					"contextualTitle": "BigQuery"
+					"contextualTitle": "BigQuery",
+					"type": "tree"
 				}
 			],
 			"vscode-bigquery-query-results": [
