@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { extensionUri } from '../extension';
 import { Job, QueryResultsOptions } from '@google-cloud/bigquery';
-import { SimpleQueryRowsResponseError } from '../bigquery/simple_query_rows_response_error';
+import { SimpleQueryRowsResponseError } from '../services/simple_query_rows_response_error';
 import { ResultsGrid } from './results_grid';
 import { ResultsGridRenderRequest } from './results_grid_render_request';
 

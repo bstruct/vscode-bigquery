@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import { BigQueryQueryRunner } from './bigquery/bigquery-query-runner';
+import { BigQueryQueryRunner } from './services/bigquery-query-runner';
 import { bigqueryWebviewViewProvider } from './extension';
 import { ResultsGridRender } from './table_results_panel/results_grid_render';
 import { ResultsGridRenderRequest } from './table_results_panel/results_grid_render_request';
+import { Authentication } from './services/authentication';
 
 let resultsGridRender: ResultsGridRender | null = null;
 
@@ -45,5 +46,11 @@ export const command_runQuery = async function (...args: any[]) {
 	} as ResultsGridRenderRequest;
 
 	resultsGridRender.render(request);
+
+}
+
+export const command_authenticationUserLogin = function (...args: any[]) {
+
+	Authentication.userLogin();
 
 }
