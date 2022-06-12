@@ -1,11 +1,15 @@
 import * as vscode from 'vscode';
 import { BigQueryQueryRunner } from './services/bigquery-query-runner';
-import { bigqueryWebviewViewProvider } from './extension';
+import { authenticationWebviewProvider, bigqueryWebviewViewProvider } from './extension';
 import { ResultsGridRender } from './table_results_panel/results_grid_render';
 import { ResultsGridRenderRequest } from './table_results_panel/results_grid_render_request';
 import { Authentication } from './services/authentication';
 
 let resultsGridRender: ResultsGridRender | null = null;
+
+export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
+export const COMMAND_USER_LOGIN = "vscode-bigquery.user-login";
+export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-refresh";
 
 export const command_runQuery = async function (...args: any[]) {
 
@@ -49,8 +53,18 @@ export const command_runQuery = async function (...args: any[]) {
 
 }
 
-export const command_authenticationUserLogin = function (...args: any[]) {
+export const command_userLogin = function (...args: any[]) {
+	Authentication.userLogin()
+		.then(result => {
+			if (result.valid) {
+				vscode.window.showInformationMessage('Bigquery: User login - successful');
+				vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
+			} else {
+				vscode.window.showErrorMessage('Bigquery: User login - had invalid response');
+			}
+		});
+}
 
-	Authentication.userLogin();
-
+export const command_authenticationRefresh = function (...args: any[]) {
+	authenticationWebviewProvider.refresh();
 }

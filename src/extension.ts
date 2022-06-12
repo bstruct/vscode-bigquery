@@ -5,6 +5,7 @@ import * as commands from './extension-commands';
 import { WebviewViewProvider } from './table_results_panel/webview-view-provider';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
+export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
 export let extensionUri: vscode.Uri;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -14,8 +15,16 @@ export function activate(context: vscode.ExtensionContext) {
 	//vscode-bigquery.run-query
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
-			'vscode-bigquery.run-query',
+			commands.COMMAND_RUN_QUERY,
 			commands.command_runQuery
+		)
+	);
+
+	//vscode-bigquery.user-login
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_USER_LOGIN,
+			commands.command_userLogin
 		)
 	);
 
@@ -23,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(
 			"bigquery-authentication",
-			new BigqueryAuthenticationWebviewViewProvider(),
+			authenticationWebviewProvider,
 			{ webviewOptions: { retainContextWhenHidden: true } }
 		)
 	);

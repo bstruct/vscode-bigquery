@@ -58,6 +58,15 @@
 				"command": "vscode-bigquery.run-query",
 				"title": "Biguery: Run Query",
 				"icon": "$(debug-start)"
+			},
+			{
+				"command": "vscode-bigquery.user-login",
+				"title": "Biguery: User login"
+			},
+			{
+				"command": "vscode-bigquery.authentication-refresh",
+				"title": "Bigquery: Authentication refresh",
+				"icon": "$(refresh)"
 			}
 		],
 		"menus": {
@@ -66,6 +75,11 @@
 					"command": "vscode-bigquery.run-query",
 					"group": "navigation",
 					"when": "editorLangId == bqsql"
+				},
+				{
+					"command": "vscode-bigquery.authentication-refresh",
+					"group": "navigation",
+					"when": "view == 'bigquery-authentication'"
 				}
 			]
 		},
