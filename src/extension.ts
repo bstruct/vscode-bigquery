@@ -6,13 +6,13 @@ import { WebviewViewProvider } from './table_results_panel/webview-view-provider
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
+export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
 export let extensionUri: vscode.Uri;
 
 export function activate(context: vscode.ExtensionContext) {
 
 	extensionUri = context.extensionUri;
 
-	//vscode-bigquery.run-query
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_RUN_QUERY,
@@ -20,11 +20,18 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	//vscode-bigquery.user-login
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_USER_LOGIN,
 			commands.command_userLogin
+		)
+	);
+
+	//https://code.visualstudio.com/api/references/when-clause-contexts
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_AUTHENTICATION_REFRESH,
+			commands.command_authenticationRefresh
 		)
 	);
 
@@ -41,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.window.registerTreeDataProvider(
 			'bigquery-tree-data-provider',
-			new BigQueryTreeDataProvider()
+			bigQueryTreeDataProvider
 		)
 	);
 

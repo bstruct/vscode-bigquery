@@ -10,6 +10,7 @@ let resultsGridRender: ResultsGridRender | null = null;
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_USER_LOGIN = "vscode-bigquery.user-login";
 export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-refresh";
+export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
 
 export const command_runQuery = async function (...args: any[]) {
 
@@ -67,4 +68,8 @@ export const command_userLogin = function (...args: any[]) {
 
 export const command_authenticationRefresh = function (...args: any[]) {
 	authenticationWebviewProvider.refresh();
+}
+
+export const command_explorerRefresh = function (...args: any[]) {
+	vscode.commands.executeCommand('workbench.view.extension.bigquery-tree-data-provider');
 }

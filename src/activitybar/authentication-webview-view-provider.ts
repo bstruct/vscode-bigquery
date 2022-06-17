@@ -14,6 +14,7 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
 
         this.webviewView = webviewView;
         this.context = context;
+        this.token = token;
 
         webviewView.webview.options = { enableScripts: true };
 

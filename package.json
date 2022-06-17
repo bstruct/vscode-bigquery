@@ -67,6 +67,11 @@
 				"command": "vscode-bigquery.authentication-refresh",
 				"title": "Bigquery: Authentication refresh",
 				"icon": "$(refresh)"
+			},
+			{
+				"command": "vscode-bigquery.explorer-refresh",
+				"title": "Bigquery: Explorer refresh",
+				"icon": "$(refresh)"
 			}
 		],
 		"menus": {
@@ -75,11 +80,16 @@
 					"command": "vscode-bigquery.run-query",
 					"group": "navigation",
 					"when": "editorLangId == bqsql"
-				},
+				}				
+			],
+			"view/title": [
 				{
 					"command": "vscode-bigquery.authentication-refresh",
-					"group": "navigation",
-					"when": "view == 'bigquery-authentication'"
+					"when": "view == 'bigquery-authentication'"					
+				},
+				{
+					"command": "vscode-bigquery.explorer-refresh",
+					"when": "view == 'bigquery-tree-data-provider'"					
 				}
 			]
 		},

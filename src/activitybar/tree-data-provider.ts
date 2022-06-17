@@ -1,11 +1,10 @@
 import * as vscode from 'vscode';
 import { BigqueryTreeItem, TreeItemType } from './tree-item';
 import { BigQuery } from '@google-cloud/bigquery';
-
 import { ProjectsClient } from '@google-cloud/resource-manager';
 
 export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<BigqueryTreeItem> {
-
+	
     constructor() {
     }
 
