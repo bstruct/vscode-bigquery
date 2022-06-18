@@ -71,5 +71,5 @@ export const command_authenticationRefresh = function (...args: any[]) {
 }
 
 export const command_explorerRefresh = function (...args: any[]) {
-	vscode.commands.executeCommand('workbench.view.extension.bigquery-tree-data-provider');
+	vscode.commands.executeCommand('workbench.actions.treeView.bigquery-tree-data-provider.refresh');
 }
