@@ -1,4 +1,6 @@
+import path = require('path');
 import * as vscode from 'vscode';
+import { ThemeIcons } from 'vscode-ext-codicons';
 
 export enum TreeItemType {
     None,
@@ -27,19 +29,17 @@ export class BigqueryTreeItem extends vscode.TreeItem {
 
         // vscode.workspace.
 
-        this.iconPath = new vscode.ThemeIcon('my-icon-id');
+        this.iconPath = new vscode.ThemeIcon('pencil');
 
         // this.iconPath = {
         //     light: path.join(__filename, '..', '..', 'resources', 'light', 'dependency.svg'),
         //     dark: path.join(__filename, '..', '..', 'resources', 'dark', 'dependency.svg')
         // };
 
-
         // this.iconPath = {
         //     light: path.join('resources', 'light', 'dependency.svg'),
         //     dark: path.join('resources', 'dark', 'dependency.svg')
         // };
-
 
         this.description = this.version;
     }
