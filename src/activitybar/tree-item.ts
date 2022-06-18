@@ -1,6 +1,5 @@
 import path = require('path');
 import * as vscode from 'vscode';
-import { ThemeIcons } from 'vscode-ext-codicons';
 
 export enum TreeItemType {
     None,
