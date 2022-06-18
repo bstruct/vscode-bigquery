@@ -64,6 +64,10 @@
 				"title": "Biguery: User login"
 			},
 			{
+				"command": "vscode-bigquery.service-account-login",
+				"title": "Biguery: Service account login"
+			},
+			{
 				"command": "vscode-bigquery.authentication-refresh",
 				"title": "Bigquery: Authentication refresh",
 				"icon": "$(refresh)"
@@ -80,16 +84,16 @@
 					"command": "vscode-bigquery.run-query",
 					"group": "navigation",
 					"when": "editorLangId == bqsql"
-				}				
+				}
 			],
 			"view/title": [
 				{
 					"command": "vscode-bigquery.authentication-refresh",
-					"when": "view == 'bigquery-authentication'"					
+					"when": "view == 'bigquery-authentication'"
 				},
 				{
 					"command": "vscode-bigquery.explorer-refresh",
-					"when": "view == 'bigquery-tree-data-provider'"					
+					"when": "view == 'bigquery-tree-data-provider'"
 				}
 			]
 		},

@@ -9,6 +9,7 @@ let resultsGridRender: ResultsGridRender | null = null;
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_USER_LOGIN = "vscode-bigquery.user-login";
+export const COMMAND_SERVICE_ACCOUNT_LOGIN = "vscode-bigquery.service-account-login";
 export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-refresh";
 export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
 
@@ -64,6 +65,27 @@ export const command_userLogin = function (...args: any[]) {
 				vscode.window.showErrorMessage('Bigquery: User login - had invalid response');
 			}
 		});
+}
+
+export const command_serviceAccountLogin = function (...args: any[]) {
+
+	vscode.window.showOpenDialog({ canSelectFiles: true, canSelectMany: false, canSelectFolders: false })
+		.then(file => {
+
+			if (file) {
+				Authentication.serviceAccountLogin(file[0].path)
+					.then(result => {
+						if (result.valid) {
+							vscode.window.showInformationMessage('Bigquery: Service account login - successful');
+							vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
+						} else {
+							vscode.window.showErrorMessage('Bigquery: Service account login - had invalid response');
+						}
+					});
+			}
+
+		});
+
 }
 
 export const command_authenticationRefresh = function (...args: any[]) {

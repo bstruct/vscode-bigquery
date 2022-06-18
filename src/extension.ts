@@ -26,6 +26,13 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_SERVICE_ACCOUNT_LOGIN,
+			commands.command_serviceAccountLogin
+		)
+	);
+
 	//https://code.visualstudio.com/api/references/when-clause-contexts
 	context.subscriptions.push(
 		vscode.commands.registerCommand(

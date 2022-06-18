@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { extensionUri } from '../extension';
 import * as commands from '../extension-commands';
 import { Authentication } from '../services/authentication';
+import { AuthenticationGrid } from './authentication_grid';
 
 export class BigqueryAuthenticationWebviewViewProvider implements vscode.WebviewViewProvider {
 
@@ -44,18 +45,16 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
                         <script type="module" src="${toolkitUri}"></script>
                     </head>
                     <body>
-                        <vscode-data-grid id="basic-grid" generate-header="sticky" aria-label="Default"></vscode-data-grid>
+                        ${(new AuthenticationGrid(result))}
                         <div>&nbsp;</div>
                         <div>
                             <div>New authentication via:</div>
                             <vscode-button appearance="secondary" onclick="vscode.postMessage('user_login')">User login</vscode-button>
-                            <vscode-button appearance="secondary">Service account</vscode-button>
+                            <vscode-button appearance="secondary" onclick="vscode.postMessage('service_account_login')">Service account</vscode-button>
                         </div>
                         <div>&nbsp;</div>
                         <div>Authentication is based on the <a href="https://cloud.google.com/sdk/docs/install">gcloud CLI</a>.</div>
-            
                         <script>
-                            document.getElementById('basic-grid').rowsData = ${JSON.stringify(result)};
                             const vscode = acquireVsCodeApi();
                         </script>
                     </body>
@@ -72,7 +71,7 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
                         <script type="module" src="${toolkitUri}"></script>
                     </head>
                     <body>
-                        <div>Authentication is based on the <a href="https://cloud.google.com/sdk/docs/install">gcloud CLI</a>b, therefore, it must be installed in this computer.</div>
+                        <div>Authentication is based on the <a href="https://cloud.google.com/sdk/docs/install">gcloud CLI</a>, therefore, it must be installed in this computer.</div>
                         <div>Error:</div>
                         <div>${error.stderr}</div>
                     </body>
@@ -94,6 +93,21 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
         switch (message.command || message) {
             case 'user_login':
                 vscode.commands.executeCommand(commands.COMMAND_USER_LOGIN);
+                break;
+            case 'service_account_login':
+                vscode.commands.executeCommand(commands.COMMAND_SERVICE_ACCOUNT_LOGIN);
+                break;
+            case 'activate':
+                Authentication.activate(message.value)
+                    .then(result => {
+                        vscode.commands.executeCommand(commands.COMMAND_AUTHENTICATION_REFRESH);
+                    });
+                break;
+            case 'revoke':
+                Authentication.revoke(message.value)
+                    .then(result => {
+                        vscode.commands.executeCommand(commands.COMMAND_AUTHENTICATION_REFRESH);
+                    });
                 break;
             default:
                 console.error(`Unexpected message "${message}"`);
