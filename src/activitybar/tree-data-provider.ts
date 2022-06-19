@@ -2,21 +2,17 @@ import * as vscode from 'vscode';
 import { BigqueryTreeItem, TreeItemType } from './tree-item';
 import { BigQuery } from '@google-cloud/bigquery';
 import { ProjectsClient } from '@google-cloud/resource-manager';
+import path = require('path');
 
 export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<BigqueryTreeItem> {
-	
+
     constructor() {
     }
 
     onDidChangeTreeData?: vscode.Event<void | BigqueryTreeItem | BigqueryTreeItem[] | null | undefined> | undefined;
 
     getTreeItem(element: BigqueryTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
-
-
-        const treeItem = new vscode.TreeItem(element.label, element.collapsibleState);
-
-
-        return treeItem;
+        return element;
     }
 
     getChildren(element?: BigqueryTreeItem): vscode.ProviderResult<BigqueryTreeItem[]> {

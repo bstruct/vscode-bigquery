@@ -12,6 +12,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	extensionUri = context.extensionUri;
 
+	vscode.workspace.onDidChangeConfiguration(event => {
+		if (event.affectsConfiguration('workbench.colorTheme')) {
+			vscode.commands.executeCommand(commands.COMMAND_EXPLORER_REFRESH);
+		}
+	});
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_RUN_QUERY,

@@ -1,5 +1,7 @@
 import path = require('path');
 import * as vscode from 'vscode';
+import { BigqueryIcons } from '../bigquery-icons';
+import { extensionUri } from '../extension';
 
 export enum TreeItemType {
     None,
@@ -24,21 +26,21 @@ export class BigqueryTreeItem extends vscode.TreeItem {
     ) {
         super(label, collapsibleState);
 
-        this.tooltip = `${this.label}-${this.version}`;
+        // this.tooltip = `${this.label}-${this.version}`;
 
         // vscode.workspace.
 
-        this.iconPath = new vscode.ThemeIcon('pencil');
+        const bigqueryIcons = new BigqueryIcons();
 
-        // this.iconPath = {
-        //     light: path.join(__filename, '..', '..', 'resources', 'light', 'dependency.svg'),
-        //     dark: path.join(__filename, '..', '..', 'resources', 'dark', 'dependency.svg')
-        // };
-
-        // this.iconPath = {
-        //     light: path.join('resources', 'light', 'dependency.svg'),
-        //     dark: path.join('resources', 'dark', 'dependency.svg')
-        // };
+        //https://code.visualstudio.com/api/references/icons-in-labels#icon-listing
+        switch (treeItemType) {
+            case TreeItemType.Table:
+                this.iconPath = bigqueryIcons.Table;
+                break;
+            case TreeItemType.Dataset:
+                this.iconPath = bigqueryIcons.Dataset;
+                break;
+        }
 
         this.description = this.version;
     }
