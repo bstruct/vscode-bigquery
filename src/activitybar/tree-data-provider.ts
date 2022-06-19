@@ -6,6 +6,8 @@ import path = require('path');
 
 export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<BigqueryTreeItem> {
 
+    private routineTreeItems: BigqueryTreeItem[] = [];
+
     constructor() {
     }
 
@@ -35,7 +37,33 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
                     if (element.datasetId === null) { resolve([]); return; }
 
-                    resolve(this.getTables(projectId, datasetId));
+                    const routinesPromise = this.getRoutines(projectId, datasetId);
+                    const tablesPromise = this.getTables(projectId, datasetId);
+
+                    await Promise.all([routinesPromise, tablesPromise]);
+
+                    const routines = await routinesPromise;
+
+                    const treeItems = [];
+                    if (routines.length > 0) {
+                        this.routineTreeItems.push(...routines);
+                        const routinesTreeItem = new BigqueryTreeItem(TreeItemType.Routine, projectId, datasetId, null, `Routines (${routines.length})`, "", vscode.TreeItemCollapsibleState.Collapsed);
+                        treeItems.push(routinesTreeItem);
+                    }
+
+                    treeItems.push(...(await tablesPromise));
+
+                    resolve(treeItems);
+
+                case TreeItemType.Routine:
+
+                    const qRoutines = this.routineTreeItems
+                        .filter(c => c.projectId === projectId && c.datasetId === datasetId)
+                        .sort((a, b) => (a.description || '').toString().localeCompare((b.description || '').toString()));
+
+                    resolve(qRoutines);
+
+                    break;
                 default:
                     resolve([]);
             }
@@ -89,7 +117,34 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
             .filter(c => c.id !== null && (!c.id?.startsWith('_')))
             .map(c => {
                 const tableId = c.id ?? 'xxx';
-                return new BigqueryTreeItem(TreeItemType.Table, projectId, datasetId, tableId, tableId, "", vscode.TreeItemCollapsibleState.None);
+
+                let treeItemType = TreeItemType.Table;
+                if (c.metadata.timePartitioning) {
+                    treeItemType = TreeItemType.PartitionedTable;
+                } else {
+                    if (c.metadata.type === 'VIEW') {
+                        treeItemType = TreeItemType.TableView;
+                    }
+                }
+                return new BigqueryTreeItem(treeItemType, projectId, datasetId, tableId, tableId, "", vscode.TreeItemCollapsibleState.None);
+            });
+
+    }
+
+    private async getRoutines(projectId: string, datasetId: string) {
+
+        const bigqueryClient = new BigQuery({ projectId: projectId });
+
+        const dataset = bigqueryClient.dataset(datasetId);
+        const routines = await dataset.getRoutines();
+
+        return routines[0]
+            // .filter(c => c.id !== null && (!c.id?.startsWith('_')))
+            .map(c => {
+
+                const routineId = c.id ?? 'xxx';
+
+                return new BigqueryTreeItem(TreeItemType.Routine, projectId, datasetId, routineId, routineId, "", vscode.TreeItemCollapsibleState.None);
             });
 
     }

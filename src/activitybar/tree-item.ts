@@ -3,11 +3,21 @@ import * as vscode from 'vscode';
 import { BigqueryIcons } from '../bigquery-icons';
 import { extensionUri } from '../extension';
 
+
+
+
+
+
+
+
 export enum TreeItemType {
     None,
     Project,
     Dataset,
     Table,
+    PartitionedTable,
+    TableView,
+    Routine
 }
 
 export class BigqueryTreeItem extends vscode.TreeItem {
@@ -26,19 +36,23 @@ export class BigqueryTreeItem extends vscode.TreeItem {
     ) {
         super(label, collapsibleState);
 
-        // this.tooltip = `${this.label}-${this.version}`;
-
-        // vscode.workspace.
-
         const bigqueryIcons = new BigqueryIcons();
 
-        //https://code.visualstudio.com/api/references/icons-in-labels#icon-listing
         switch (treeItemType) {
             case TreeItemType.Table:
                 this.iconPath = bigqueryIcons.Table;
                 break;
+            case TreeItemType.PartitionedTable:
+                this.iconPath = bigqueryIcons.TablePartitioned;
+                break;
+            case TreeItemType.TableView:
+                this.iconPath = bigqueryIcons.TableView;
+                break;
             case TreeItemType.Dataset:
                 this.iconPath = bigqueryIcons.Dataset;
+                break;
+            case TreeItemType.Routine:
+                this.iconPath = bigqueryIcons.Routine;
                 break;
         }
 
