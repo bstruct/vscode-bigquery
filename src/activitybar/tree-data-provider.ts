@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { BigqueryTreeItem, TreeItemType } from './tree-item';
 import { BigQuery } from '@google-cloud/bigquery';
 import { ProjectsClient } from '@google-cloud/resource-manager';
-import path = require('path');
 
 export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<BigqueryTreeItem> {
 
@@ -177,7 +176,6 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
         const routines = await dataset.getRoutines();
 
         return routines[0]
-            // .filter(c => c.id !== null && (!c.id?.startsWith('_')))
             .map(c => {
 
                 const routineId = c.id ?? 'xxx';
@@ -195,7 +193,6 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
         const models = await dataset.getModels();
 
         return models[0]
-            // .filter(c => c.id !== null && (!c.id?.startsWith('_')))
             .map(c => {
 
                 const modelId = c.id ?? 'xxx';
