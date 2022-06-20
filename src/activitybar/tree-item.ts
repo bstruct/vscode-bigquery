@@ -1,38 +1,5 @@
-import path = require('path');
 import * as vscode from 'vscode';
 import { BigqueryIcons } from '../bigquery-icons';
-import { extensionUri } from '../extension';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export enum TreeItemType {
     None,
