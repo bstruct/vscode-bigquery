@@ -10,6 +10,30 @@ import { extensionUri } from '../extension';
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export enum TreeItemType {
     None,
     Project,
@@ -17,7 +41,9 @@ export enum TreeItemType {
     Table,
     PartitionedTable,
     TableView,
-    Routine
+    Routine,
+    DatasetLink,
+    Model
 }
 
 export class BigqueryTreeItem extends vscode.TreeItem {
@@ -51,8 +77,14 @@ export class BigqueryTreeItem extends vscode.TreeItem {
             case TreeItemType.Dataset:
                 this.iconPath = bigqueryIcons.Dataset;
                 break;
+            case TreeItemType.DatasetLink:
+                this.iconPath = bigqueryIcons.DatasetLink;
+                break;
             case TreeItemType.Routine:
                 this.iconPath = bigqueryIcons.Routine;
+                break;
+            case TreeItemType.Model:
+                this.iconPath = bigqueryIcons.Model;
                 break;
         }
 

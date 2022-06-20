@@ -40,9 +40,9 @@ export class AuthenticationGrid extends Object {
 
             const actions: preact.VNode[] = [];
             if (item.status === '') {
-                actions.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick':`vscode.postMessage({'command':'activate', 'value': '${item.account}'})` }, 'activate'));
+                actions.push(preact.h('vscode-button', { 'appearance': 'secondary', style:'width:75px;margin-bottom:2px;', 'onclick':`vscode.postMessage({'command':'activate', 'value': '${item.account}'})` }, 'activate'));
             }
-            actions.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick':`vscode.postMessage({'command':'revoke', 'value': '${item.account}'})` }, 'revoke'));
+            actions.push(preact.h('vscode-button', { 'appearance': 'secondary', style:'width:75px', 'onclick':`vscode.postMessage({'command':'revoke', 'value': '${item.account}'})` }, 'revoke'));
 
             cells.push(preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '3' }, actions));
 
