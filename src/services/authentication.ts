@@ -8,7 +8,7 @@ export class Authentication {
 
     //https://cloud.google.com/sdk/gcloud/reference/auth/login
     public static async userLogin(): Promise<AuthenticationUserLoginResponse> {
-        const result = await this.runCommand('gcloud auth login --format="json"');
+        const result = await this.runCommand('gcloud auth login --update-adc --format="json"');
         return JSON.parse(result) as AuthenticationUserLoginResponse;
     }
 
