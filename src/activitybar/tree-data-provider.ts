@@ -3,6 +3,9 @@ import { BigqueryTreeItem, TreeItemType } from './tree-item';
 import { BigQuery } from '@google-cloud/bigquery';
 import { ProjectsClient } from '@google-cloud/resource-manager';
 
+// const { google } = require('googleapis');
+// const vault = google.vault('v1');
+
 export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<BigqueryTreeItem> {
 
     private routineTreeItems: BigqueryTreeItem[] = [];
@@ -32,6 +35,10 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
             switch (treeItemType) {
                 case TreeItemType.Project:
+
+                    // const savedQueries = await this.getSavedQueries(projectId)
+                    //     .catch(err => console.error(err));
+
                     const datasets = (await this.getDatasets(projectId));
                     resolve(datasets);
 
@@ -201,5 +208,54 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
             });
 
     }
+
+    // private async getSavedQueries(projectId: string) {
+
+    //     const auth = new google.auth.GoogleAuth({
+    //         // Scopes can be specified either as an array or as a single, space-delimited string.
+    //         scopes: [
+    //             'https://www.googleapis.com/auth/ediscovery',
+    //             'https://www.googleapis.com/auth/ediscovery.readonly',
+    //         ],
+    //     });
+
+    //     debugger;
+
+    //     const authClient = await auth.getClient();
+    //     google.options({ auth: authClient });
+    //     // const { google } = require('googleapis');
+    //     // const vault = google.vault('v1');
+
+    //     // const res = await vault.matters.savedQueries.list({});
+    //     const res = await vault.matters.list({
+    //         // The ID of the matter to get the saved queries for.
+    //         // matterId: '',
+    //         // // The maximum number of saved queries to return.
+    //         // pageSize: 'placeholder-value',
+    //         // // The pagination token as returned in the previous response. An empty token means start from the beginning.
+    //         // pageToken: 'placeholder-value',
+    //     });
+    //     console.log(res.data);
+
+    //     // const v = new vault.vault_v1.Vault({});
+    //     // const x = await v.matters.list();
+
+    //     debugger;
+
+    //     // const bigqueryClient = new BigQuery({ projectId: projectId });
+
+    //     // const dataset = bigqueryClient.dataset(datasetId);
+    //     // const models = await dataset.getModels();
+
+    //     // return models[0]
+    //     //     .map(c => {
+
+    //     //         const modelId = c.id ?? 'xxx';
+
+    //     //         return new BigqueryTreeItem(TreeItemType.Model, projectId, datasetId, modelId, modelId, "", vscode.TreeItemCollapsibleState.None);
+    //     //     });
+
+    // }
+
 
 }
