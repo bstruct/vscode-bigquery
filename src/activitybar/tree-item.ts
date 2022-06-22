@@ -33,9 +33,11 @@ export class BigqueryTreeItem extends vscode.TreeItem {
         switch (treeItemType) {
             case TreeItemType.Table:
                 this.iconPath = bigqueryIcons.Table;
+                this.contextValue = 'bq-table';
                 break;
             case TreeItemType.PartitionedTable:
                 this.iconPath = bigqueryIcons.TablePartitioned;
+                this.contextValue = 'bq-table';
                 break;
             case TreeItemType.TableView:
                 this.iconPath = bigqueryIcons.TableView;
@@ -57,5 +59,4 @@ export class BigqueryTreeItem extends vscode.TreeItem {
         this.description = this.version;
     }
 
-    contextValue = 'dependency';
 }

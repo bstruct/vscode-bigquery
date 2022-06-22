@@ -76,6 +76,11 @@
 				"command": "vscode-bigquery.explorer-refresh",
 				"title": "Bigquery: Explorer refresh",
 				"icon": "$(refresh)"
+			},
+			{
+				"command": "vscode-bigquery.preview-table",
+				"title": "Bigquery: Preview table",
+				"icon": "$(link-external)"
 			}
 		],
 		"menus": {
@@ -94,6 +99,12 @@
 				{
 					"command": "vscode-bigquery.explorer-refresh",
 					"when": "view == 'bigquery-tree-data-provider'"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "vscode-bigquery.preview-table",
+					"when": "viewItem == 'bq-table'"
 				}
 			]
 		},

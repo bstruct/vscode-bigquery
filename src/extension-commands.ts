@@ -12,6 +12,7 @@ export const COMMAND_USER_LOGIN = "vscode-bigquery.user-login";
 export const COMMAND_SERVICE_ACCOUNT_LOGIN = "vscode-bigquery.service-account-login";
 export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-refresh";
 export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
+export const COMMAND_PREVIEW_TABLE = "vscode-bigquery.preview-table";
 
 export const command_runQuery = async function (...args: any[]) {
 
@@ -94,4 +95,8 @@ export const command_authenticationRefresh = function (...args: any[]) {
 
 export const command_explorerRefresh = function (...args: any[]) {
 	vscode.commands.executeCommand('workbench.actions.treeView.bigquery-tree-data-provider.refresh');
+}
+
+export const command_previewTable = function (...args: any[]) {
+	debugger;
 }
