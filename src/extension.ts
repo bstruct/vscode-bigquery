@@ -1,16 +1,20 @@
 import * as vscode from 'vscode';
 import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authentication-webview-view-provider';
 import { BigQueryTreeDataProvider } from './activitybar/tree-data-provider';
+import { BigqueryIcons } from './bigquery-icons';
 import * as commands from './extension-commands';
 import { WebviewViewProvider } from './table_results_panel/webview-view-provider';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
 export let extensionUri: vscode.Uri;
+export let bigqueryIcons : BigqueryIcons;
 
 export function activate(context: vscode.ExtensionContext) {
 
 	extensionUri = context.extensionUri;
+
+	bigqueryIcons = new BigqueryIcons();
 
 	vscode.workspace.onDidChangeConfiguration(event => {
 		if (event.affectsConfiguration('workbench.colorTheme')) {

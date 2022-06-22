@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { BigqueryIcons } from '../bigquery-icons';
+import { bigqueryIcons } from '../extension';
 
 export enum TreeItemType {
     None,
@@ -29,8 +30,6 @@ export class BigqueryTreeItem extends vscode.TreeItem {
     ) {
         super(label, collapsibleState);
 
-        const bigqueryIcons = new BigqueryIcons();
-
         switch (treeItemType) {
             case TreeItemType.Table:
                 this.iconPath = bigqueryIcons.Table;
@@ -57,7 +56,6 @@ export class BigqueryTreeItem extends vscode.TreeItem {
 
         this.description = this.version;
     }
-
 
     contextValue = 'dependency';
 }
