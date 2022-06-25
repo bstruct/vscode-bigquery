@@ -59,7 +59,7 @@ export class ResultsGrid extends Object {
 
         elements.push(preact.h('vscode-divider', {}, []));
 
-        const [gridNode, _] = this.getGrid(this.schema, this.rows, this.startIndex + 1);
+        const [gridNode, _] = this.getGrid(this.schema, this.rows, this.startIndex + 1, false);
 
         elements.push(gridNode);
 
@@ -143,7 +143,16 @@ export class ResultsGrid extends Object {
         return preact.h('div', {}, elements);
     }
 
-    private getGrid(schema: bigquery.ITableSchema, results: any[], startRowNumber: number): [preact.VNode, number] {
+    /**
+     * 
+     * @param schema 
+     * @param results 
+     * @param startRowNumber 
+     * @param innerGrid
+     * If this grid to be generated is meant to be inside another grid. Basically, at the moment, to put a max height on the wrapping div 
+     * @returns 
+     */
+    private getGrid(schema: bigquery.ITableSchema, results: any[], startRowNumber: number, innerGrid: boolean): [preact.VNode, number] {
 
         const headerCellStyle = 'background-color: var(--list-hover-background);';
 
@@ -167,7 +176,7 @@ export class ResultsGrid extends Object {
 
         //widths of the columns
         const widths: number[] = [5];
-        widths.push(...fieldNames.map(c => Math.max(c.length, 6)));//min with of 5
+        widths.push(...fieldNames.map(c => Math.max(c.length, 6)));//min with of 6
 
         //give the necessary with to columns that contain bigger values. max 80 (`.8 * x em` later)
         function updateCellWith(widthIndex: number, valueString: string | null) {
@@ -183,13 +192,15 @@ export class ResultsGrid extends Object {
         for (let resultIndex = 0; resultIndex < results.length; resultIndex++) {
 
             const cells = [];
-            cells.push(preact.h('vscode-data-grid-cell', { 'style': headerCellStyle, 'grid-column': '1' }, (startRowNumber++).toString()));
+            cells.push(preact.h('vscode-data-grid-cell', { 'style': headerCellStyle, 'cell-type': 'columnheader', 'grid-column': '1' }, (startRowNumber++).toString()));
 
             const result: any = results[resultIndex];
             for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex++) {
                 const field = fields[fieldIndex];
 
                 let value: any = null;
+
+                let cellProperties: any = { 'grid-column': (fieldIndex + 2).toString() };
 
                 if (field.mode == 'REPEATED' || field.type == 'RECORD') {
 
@@ -220,9 +231,11 @@ export class ResultsGrid extends Object {
                     }
 
                     let totalWidth: number = 0;
-                    [value, totalWidth] = this.getGrid(innerSchema, innerResults, 1);
+                    [value, totalWidth] = this.getGrid(innerSchema, innerResults, 1, true);
 
-                    widths[fieldIndex + 1] = Math.max(widths[fieldIndex + 1], totalWidth);
+                    cellProperties.class = 'disableFocus';
+
+                    widths[fieldIndex + 1] = Math.max(widths[fieldIndex + 1], totalWidth + 4);
 
                 } else {
 
@@ -261,7 +274,7 @@ export class ResultsGrid extends Object {
                     updateCellWith(fieldIndex + 1, value);
                 }
 
-                const cell = preact.h('vscode-data-grid-cell', { 'grid-column': (fieldIndex + 2).toString() }, value || '');
+                const cell = preact.h('vscode-data-grid-cell', cellProperties, value || '');
                 cells.push(cell);
             }
 
@@ -271,9 +284,16 @@ export class ResultsGrid extends Object {
         }
 
         const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${Math.ceil(c * .85)}em`).join(' ') }, rows);
+        let props: any = {};
+        if (innerGrid) {
+            props.style = 'max-height: 20em;overflow-y:scroll;overflow-x:visible;';
+        }
+
+        const wrappingDiv = preact.h('div', props, table);
+
         const totalWidth: number = widths.reduce((previous, current, index) => previous + current);
 
-        return [table, totalWidth + 2];
+        return [wrappingDiv, totalWidth + 2];
     }
 
     override toString(): string {

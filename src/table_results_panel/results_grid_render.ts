@@ -33,19 +33,12 @@ export class ResultsGridRender {
         if (this.disposableEvent) { this.disposableEvent.dispose(); }
 
         //set waiting gif
-        this.webView.html = this.getWaitingHtml(toolkitUri);
+        this.webView.html = this.getWaitingHtml();
 
         request.jobsPromise
             .then(async (jobs) => {
 
-                const codiconsUri = this.getUri(this.webView, extensionUri, [
-                    'node_modules',
-                    '@vscode/codicons',
-                    'dist',
-                    'codicon.css']
-                );
-
-                const [html, totalRows] = await this.getResultsHtml(toolkitUri, codiconsUri, jobs, request.startIndex, request.maxResults, request.jobIndex, request.openInTabVisible);
+                const [html, totalRows] = await this.getResultsHtml(jobs, request.startIndex, request.maxResults, request.jobIndex, request.openInTabVisible);
                 this.webView.html = html;
 
                 //in case that the search result needs pagination, this event is enabled
@@ -54,7 +47,7 @@ export class ResultsGridRender {
             })
             .catch(exception => {
 
-                this.webView.html = this.getExceptionHtml(toolkitUri, exception);
+                this.webView.html = this.getExceptionHtml(exception);
 
             });
 
@@ -62,19 +55,11 @@ export class ResultsGridRender {
 
     public async renderTable(request: TableGridRenderRequest) {
 
-        const toolkitUri = this.getUri(this.webView, extensionUri, [
-            "node_modules",
-            "@vscode",
-            "webview-ui-toolkit",
-            "dist",
-            "toolkit.min.js",
-        ]);
-
         //dispose event regardless of successful query or not
         if (this.disposableEvent) { this.disposableEvent.dispose(); }
 
         //set waiting gif
-        this.webView.html = this.getWaitingHtml(toolkitUri);
+        this.webView.html = this.getWaitingHtml();
 
         const codiconsUri = this.getUri(this.webView, extensionUri, [
             'node_modules',
@@ -83,7 +68,7 @@ export class ResultsGridRender {
             'codicon.css']
         );
 
-        const [html, totalRows] = await this.getTableHtml(toolkitUri, codiconsUri, request.table, request.startIndex, request.maxResults, request.openInTabVisible);
+        const [html, totalRows] = await this.getTableHtml(request.table, request.startIndex, request.maxResults, request.openInTabVisible);
         this.webView.html = html;
 
         //in case that the search result needs pagination, this event is enabled
@@ -91,7 +76,15 @@ export class ResultsGridRender {
 
     }
 
-    private getWaitingHtml(toolkitUri: vscode.Uri): string {
+    private getWaitingHtml(): string {
+
+        const toolkitUri = this.getUri(this.webView, extensionUri, [
+            "node_modules",
+            "@vscode",
+            "webview-ui-toolkit",
+            "dist",
+            "toolkit.min.js",
+        ]);
 
         return `<!DOCTYPE html>
 		<html lang="en">
@@ -107,7 +100,15 @@ export class ResultsGridRender {
 
     }
 
-    private getExceptionHtml(toolkitUri: vscode.Uri, exception: any): string {
+    private getExceptionHtml(exception: any): string {
+
+        const toolkitUri = this.getUri(this.webView, extensionUri, [
+            "node_modules",
+            "@vscode",
+            "webview-ui-toolkit",
+            "dist",
+            "toolkit.min.js",
+        ]);
 
         if (exception.errors) {
 
@@ -163,8 +164,6 @@ export class ResultsGridRender {
     * weird response because the total rows are only known in the `getQueryResults` response
     */
     private async getResultsHtml(
-        toolkitUri: vscode.Uri,
-        codiconsUri: vscode.Uri,
         jobs: Job[],
         startIndex: number,
         maxResults: number,
@@ -181,12 +180,33 @@ export class ResultsGridRender {
 
         const totalRows: number = Number(queryRowsResponse[2]?.totalRows || 0);
 
+        const toolkitUri = this.getUri(this.webView, extensionUri, [
+            "node_modules",
+            "@vscode",
+            "webview-ui-toolkit",
+            "dist",
+            "toolkit.min.js",
+        ]);
+
+        const codiconsUri = this.getUri(this.webView, extensionUri, [
+            'node_modules',
+            '@vscode/codicons',
+            'dist',
+            'codicon.css']
+        );
+
+        const gridCss = this.getUri(this.webView, extensionUri, [
+            'resources',
+            'grid.css']
+        );
+
         return [`<!DOCTYPE html>
         <html lang="en" style="display:flex;">
         	<head>
         		<meta charset="UTF-8">
         		<script type="module" src="${toolkitUri}"></script>
                 <link href="${codiconsUri}" rel="stylesheet" />
+                <link href="${gridCss}" rel="stylesheet" />
         	</head>
         	<body>
                 ${(new ResultsGrid(schema, queryRowsResponse[0], totalRows, startIndex, maxResults, jobCount, jobIndex, openInTabVisible))}
@@ -201,8 +221,6 @@ export class ResultsGridRender {
     }
 
     private async getTableHtml(
-        toolkitUri: vscode.Uri,
-        codiconsUri: vscode.Uri,
         table: Table,
         startIndex: number,
         maxResults: number,
@@ -214,12 +232,32 @@ export class ResultsGridRender {
         const tableStream = await table.getRows({ startIndex: startIndex.toString(), maxResults: maxResults });
         const totalRows: number = Number(metadata[0].numRows || 0);
 
+        const toolkitUri = this.getUri(this.webView, extensionUri, [
+            "node_modules",
+            "@vscode",
+            "webview-ui-toolkit",
+            "dist",
+            "toolkit.min.js",
+        ]);
+
+        const codiconsUri = this.getUri(this.webView, extensionUri, [
+            'node_modules',
+            '@vscode/codicons',
+            'dist',
+            'codicon.css']
+        );
+
+        const gridCss = this.getUri(this.webView, extensionUri, [
+            'resources',
+            'grid.css']
+        );
         return [`<!DOCTYPE html>
         <html lang="en" style="display:flex;">
         	<head>
         		<meta charset="UTF-8">
         		<script type="module" src="${toolkitUri}"></script>
                 <link href="${codiconsUri}" rel="stylesheet" />
+                <link href="${gridCss}" rel="stylesheet" />
         	</head>
         	<body>
                 ${(new ResultsGrid(schema, tableStream[0], totalRows, startIndex, maxResults, 1, 1, openInTabVisible))}
