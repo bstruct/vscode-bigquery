@@ -212,9 +212,9 @@ export class ResultsGrid extends Object {
 
                         innerSchema = { fields: field.fields || [] };
                         if (field.mode == 'REPEATED') {
-                            innerResults = result[field.name || ''];
+                            innerResults = result ? result[field.name || ''] : '';
                         } else {
-                            innerResults = [result[field.name || '']];
+                            innerResults = [result ? result[field.name || ''] : ''];
                         }
 
                     } else {
@@ -240,7 +240,7 @@ export class ResultsGrid extends Object {
 
                 } else {
 
-                    value = result[field.name || ''];
+                    value = result ? result[field.name || ''] : '';
 
                     switch (field.type || 'STRING') {
                         case 'DATETIME':
@@ -264,8 +264,14 @@ export class ResultsGrid extends Object {
                                 value = value.toString('base64');
                             }
                             break;
+                        case 'BOOLEAN':
+                            if (value != null) {
+                                value = value ? 'true' : 'false';
+                            }
+                            break;
                         case 'STRING':
                         case 'INTERVAL':
+                        case 'JSON':
                             break;
                         default:
                             console.info(`field ${field.name} has type ${field.type}`);
@@ -275,7 +281,7 @@ export class ResultsGrid extends Object {
                     updateCellWith(fieldIndex + 1, value);
                 }
 
-                const cell = preact.h('vscode-data-grid-cell', cellProperties, value || '');
+                const cell = preact.h('vscode-data-grid-cell', cellProperties, value || preact.h('span', { class: 'nullValue' }, 'null'));
                 cells.push(cell);
             }
 

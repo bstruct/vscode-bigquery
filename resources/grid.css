@@ -4,3 +4,8 @@
     color: inherit;
     outline: inherit;
 }
+
+.nullValue {
+    font-style: italic;
+    color: var(--vscode-inputValidation-warningBorder) !important;
+}

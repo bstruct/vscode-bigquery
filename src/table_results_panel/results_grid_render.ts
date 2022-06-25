@@ -21,59 +21,51 @@ export class ResultsGridRender {
 
     public render(request: ResultsGridRenderRequest) {
 
-        const toolkitUri = this.getUri(this.webView, extensionUri, [
-            "node_modules",
-            "@vscode",
-            "webview-ui-toolkit",
-            "dist",
-            "toolkit.min.js",
-        ]);
+        try {
+            //dispose event regardless of successful query or not
+            if (this.disposableEvent) { this.disposableEvent.dispose(); }
 
-        //dispose event regardless of successful query or not
-        if (this.disposableEvent) { this.disposableEvent.dispose(); }
+            //set waiting gif
+            this.webView.html = this.getWaitingHtml();
 
-        //set waiting gif
-        this.webView.html = this.getWaitingHtml();
+            request.jobsPromise
+                .then(async (jobs) => {
 
-        request.jobsPromise
-            .then(async (jobs) => {
+                    const [html, totalRows] = await this.getResultsHtml(jobs, request.startIndex, request.maxResults, request.jobIndex, request.openInTabVisible);
+                    this.webView.html = html;
 
-                const [html, totalRows] = await this.getResultsHtml(jobs, request.startIndex, request.maxResults, request.jobIndex, request.openInTabVisible);
-                this.webView.html = html;
+                    //in case that the search result needs pagination, this event is enabled
+                    this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerResultsOnDidReceiveMessage, [this, request.jobsPromise, request.startIndex, request.maxResults, totalRows, request.jobIndex, request.openInTabVisible]);
 
-                //in case that the search result needs pagination, this event is enabled
-                this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerResultsOnDidReceiveMessage, [this, request.jobsPromise, request.startIndex, request.maxResults, totalRows, request.jobIndex, request.openInTabVisible]);
+                })
+                .catch(exception => {
+                    this.webView.html = this.getExceptionHtml(exception);
+                });
 
-            })
-            .catch(exception => {
-
-                this.webView.html = this.getExceptionHtml(exception);
-
-            });
-
+        } catch (error: any) {
+            vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
+        }
     }
 
     public async renderTable(request: TableGridRenderRequest) {
 
-        //dispose event regardless of successful query or not
-        if (this.disposableEvent) { this.disposableEvent.dispose(); }
+        try {
 
-        //set waiting gif
-        this.webView.html = this.getWaitingHtml();
+            //dispose event regardless of successful query or not
+            if (this.disposableEvent) { this.disposableEvent.dispose(); }
 
-        const codiconsUri = this.getUri(this.webView, extensionUri, [
-            'node_modules',
-            '@vscode/codicons',
-            'dist',
-            'codicon.css']
-        );
+            //set waiting gif
+            this.webView.html = this.getWaitingHtml();
 
-        const [html, totalRows] = await this.getTableHtml(request.table, request.startIndex, request.maxResults, request.openInTabVisible);
-        this.webView.html = html;
+            const [html, totalRows] = await this.getTableHtml(request.table, request.startIndex, request.maxResults, request.openInTabVisible);
+            this.webView.html = html;
 
-        //in case that the search result needs pagination, this event is enabled
-        this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerTableOnDidReceiveMessage, [this, request.table, request.startIndex, request.maxResults, totalRows, request.jobIndex, request.openInTabVisible]);
+            //in case that the search result needs pagination, this event is enabled
+            this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerTableOnDidReceiveMessage, [this, request.table, request.startIndex, request.maxResults, totalRows, request.jobIndex, request.openInTabVisible]);
 
+        } catch (error: any) {
+            vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
+        }
     }
 
     private getWaitingHtml(): string {
@@ -251,6 +243,7 @@ export class ResultsGridRender {
             'resources',
             'grid.css']
         );
+
         return [`<!DOCTYPE html>
         <html lang="en" style="display:flex;">
         	<head>
@@ -260,7 +253,7 @@ export class ResultsGridRender {
                 <link href="${gridCss}" rel="stylesheet" />
         	</head>
         	<body>
-                ${(new ResultsGrid(schema, tableStream[0], totalRows, startIndex, maxResults, 1, 1, openInTabVisible))}
+                ${new ResultsGrid(schema, tableStream[0], totalRows, startIndex, maxResults, 1, 1, openInTabVisible)}
                 <script>
                     const vscode = acquireVsCodeApi();
                 </script>

@@ -78,8 +78,8 @@
 				"icon": "$(refresh)"
 			},
 			{
-				"command": "vscode-bigquery.preview-table",
-				"title": "Bigquery: Preview table",
+				"command": "vscode-bigquery.view-table",
+				"title": "Bigquery: View table",
 				"icon": "$(link-external)"
 			}
 		],
@@ -103,7 +103,7 @@
 			],
 			"view/item/context": [
 				{
-					"command": "vscode-bigquery.preview-table",
+					"command": "vscode-bigquery.view-table",
 					"when": "viewItem == 'bq-table'"
 				}
 			]

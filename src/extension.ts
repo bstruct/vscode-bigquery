@@ -45,8 +45,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
-			commands.COMMAND_PREVIEW_TABLE,
-			commands.command_previewTable
+			commands.COMMAND_VIEW_TABLE,
+			commands.command_viewTable
 		)
 	);
 
