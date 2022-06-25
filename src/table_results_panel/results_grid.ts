@@ -48,7 +48,7 @@ export class ResultsGrid extends Object {
         this.openInTabVisible = openInTabVisible;
     }
 
-    private render(): preact.VNode {
+    private render(): preact.VNode[] {
 
         const resultsSize: number = this.rows.length;
 
@@ -64,7 +64,8 @@ export class ResultsGrid extends Object {
         elements.push(gridNode);
 
         //bundle all under a div
-        return preact.h('div', {}, elements);
+        // return preact.h('div', {}, elements);
+        return elements;
     }
 
     private getControls(startIndex: number, maxResults: number, totalRows: number, resultsSize: number): preact.VNode {
@@ -297,7 +298,7 @@ export class ResultsGrid extends Object {
     }
 
     override toString(): string {
-        return p.render(this.render());
+        return this.render().map(c => p.render(c)).join('');
     }
 
 }
