@@ -1,10 +1,12 @@
-import { BigQuery, Job, JobResponse, Query } from '@google-cloud/bigquery';
+import { BigQuery, Job, JobResponse, Query, Table } from '@google-cloud/bigquery';
 
-export class BigQueryQueryRunner {
+export class BigQueryClient {
 
-	public runQuery(queryText: string): Promise<Job[]> {
+	public static runQuery(queryText: string): Promise<Job[]> {
 
 		const bqclient = new BigQuery();
+
+		// bqclient.dataset('', {projectId:''}).table('').createReadStream({})
 
 		const query: Query = {
 			dryRun: false,
@@ -68,6 +70,13 @@ export class BigQueryQueryRunner {
 
 			});
 
+	}
+
+	public static getTable(projectId: string, datasetId: string, tableId: string): Table {
+
+		const bqclient = new BigQuery();
+
+		return bqclient.dataset(datasetId, { projectId: projectId }).table(tableId);
 	}
 
 }

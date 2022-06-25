@@ -13,7 +13,10 @@ import * as p from 'preact-render-to-string';
 
 export class ResultsGrid extends Object {
 
-    private queryRowsResponse: QueryRowsResponse;
+    // private queryRowsResponse: QueryRowsResponse;
+    private schema: bigquery.ITableSchema;
+    private rows: any[];
+    private totalRows: number;
     private startIndex: number;
     private maxResults: number;
     private queryCount: number;
@@ -24,7 +27,9 @@ export class ResultsGrid extends Object {
      *
      */
     constructor(
-        queryRowsResponse: QueryRowsResponse,
+        schema: bigquery.ITableSchema,
+        rows: any[],
+        totalRows: number,
         startIndex: number,
         maxResults: number,
         queryCount: number,
@@ -32,7 +37,10 @@ export class ResultsGrid extends Object {
         openInTabVisible: boolean) {
 
         super();
-        this.queryRowsResponse = queryRowsResponse;
+        // this.queryRowsResponse = queryRowsResponse;
+        this.schema = schema;
+        this.rows = rows;
+        this.totalRows = totalRows;
         this.startIndex = startIndex;
         this.maxResults = maxResults;
         this.queryCount = queryCount;
@@ -42,29 +50,16 @@ export class ResultsGrid extends Object {
 
     private render(): preact.VNode {
 
-        const results: any[] = this.queryRowsResponse[0];
-        // const paging: BigqueryQueryPaging | null = (this.queryRowsResponse[1] as any || null);
-        const queryResults: bigquery.IGetQueryResultsResponse = this.queryRowsResponse[2] || {};
+        const resultsSize: number = this.rows.length;
 
         //array of elements to create
         const elements: preact.VNode[] = [];
 
-        //controls
-        const totalRows: number = Number(queryResults.totalRows || 0);
-
-        const resultsSize: number = results.length;
-
-        elements.push(this.getControls(this.startIndex, this.maxResults, totalRows, resultsSize));
+        elements.push(this.getControls(this.startIndex, this.maxResults, this.totalRows, resultsSize));
 
         elements.push(preact.h('vscode-divider', {}, []));
 
-        //grid
-        const schema: bigquery.ITableSchema | null = queryResults.schema || null;
-
-        //error unlikely to happen, that's why is lower in the code
-        if (!schema) { throw Error('Unexpected query result'); }
-
-        const [gridNode, _] = this.getGrid(schema, results, this.startIndex + 1);
+        const [gridNode, _] = this.getGrid(this.schema, this.rows, this.startIndex + 1);
 
         elements.push(gridNode);
 
@@ -275,7 +270,7 @@ export class ResultsGrid extends Object {
             rows.push(preact.h('vscode-data-grid-row', {}, cells));
         }
 
-        const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${c * .8}em`).join(' ') }, rows);
+        const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${Math.ceil(c * .85)}em`).join(' ') }, rows);
         const totalWidth: number = widths.reduce((previous, current, index) => previous + current);
 
         return [table, totalWidth + 2];

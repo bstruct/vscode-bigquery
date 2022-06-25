@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-import { BigqueryIcons } from '../bigquery-icons';
+// import { BigqueryIcons } from '../bigquery-icons';
 import { bigqueryIcons } from '../extension';
+import * as commands from '../extension-commands';
 
 export enum TreeItemType {
     None,
@@ -34,10 +35,12 @@ export class BigqueryTreeItem extends vscode.TreeItem {
             case TreeItemType.Table:
                 this.iconPath = bigqueryIcons.Table;
                 this.contextValue = 'bq-table';
+                this.command = { command: commands.COMMAND_PREVIEW_TABLE, arguments: [this] } as vscode.Command;
                 break;
             case TreeItemType.PartitionedTable:
                 this.iconPath = bigqueryIcons.TablePartitioned;
                 this.contextValue = 'bq-table';
+                this.command = { command: commands.COMMAND_PREVIEW_TABLE, arguments: [this] } as vscode.Command;
                 break;
             case TreeItemType.TableView:
                 this.iconPath = bigqueryIcons.TableView;

@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
-import { BigQueryQueryRunner } from './services/bigquery-query-runner';
+import { BigQueryClient } from './services/bigquery-client';
 import { authenticationWebviewProvider, bigqueryWebviewViewProvider } from './extension';
 import { ResultsGridRender } from './table_results_panel/results_grid_render';
 import { ResultsGridRenderRequest } from './table_results_panel/results_grid_render_request';
 import { Authentication } from './services/authentication';
+import { BigqueryTreeItem } from './activitybar/tree-item';
+import { TableGridRenderRequest } from './table_results_panel/table_grid_render_request';
 
 let resultsGridRender: ResultsGridRender | null = null;
 
@@ -22,11 +24,9 @@ export const command_runQuery = async function (...args: any[]) {
 
 	const textEditor = vscode.window.activeTextEditor;
 
-	const bqRunner = new BigQueryQueryRunner();
-
 	const queryText: string = textEditor.document.getText() ?? '';
 
-	const queryResponse = bqRunner.runQuery(queryText);
+	const queryResponse = BigQueryClient.runQuery(queryText);
 
 	let panel = bigqueryWebviewViewProvider.webviewView;
 
@@ -98,5 +98,30 @@ export const command_explorerRefresh = function (...args: any[]) {
 }
 
 export const command_previewTable = function (...args: any[]) {
-	debugger;
+
+	const item = args[0] as BigqueryTreeItem;
+
+	const title = `${item.projectId}.${item.datasetId}.${item.tableId}`;
+
+	if (item.projectId === null || item.datasetId === null || item.tableId === null) {
+		return;
+	}
+
+	const table = BigQueryClient.getTable(item.projectId, item.datasetId, item.tableId);
+
+	const request = {
+		table: table,
+		startIndex: 0,
+		maxResults: 50,
+		jobIndex: 0,
+		openInTabVisible: false
+	} as TableGridRenderRequest;
+
+	const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results", title, { viewColumn: vscode.ViewColumn.Active });
+	panel.webview.options = { enableScripts: true };
+	const newresultsGridRender = new ResultsGridRender(panel.webview);
+
+	request.openInTabVisible = false;
+	newresultsGridRender.renderTable(request);
+
 }

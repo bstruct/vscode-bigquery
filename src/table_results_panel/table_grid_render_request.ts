@@ -1,7 +1,7 @@
-import { Job } from "@google-cloud/bigquery";
+import { Table } from "@google-cloud/bigquery";
 
-export interface ResultsGridRenderRequest {
-    jobsPromise: Promise<Job[]>;
+export interface TableGridRenderRequest {
+    table: Table;
     startIndex: number;
     maxResults: number;
     jobIndex: number;
