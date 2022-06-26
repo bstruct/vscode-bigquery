@@ -14,7 +14,8 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
     constructor() {
     }
 
-    onDidChangeTreeData?: vscode.Event<void | BigqueryTreeItem | BigqueryTreeItem[] | null | undefined> | undefined;
+    private _onDidChangeTreeData = new vscode.EventEmitter<void | BigqueryTreeItem | BigqueryTreeItem[] | null | undefined>();
+    readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
     getTreeItem(element: BigqueryTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
@@ -209,6 +210,9 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
     }
 
+    refresh(): void {
+        this._onDidChangeTreeData.fire();
+    }
     // private async getSavedQueries(projectId: string) {
 
     //     const auth = new google.auth.GoogleAuth({

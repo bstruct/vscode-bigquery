@@ -7,6 +7,7 @@ import { WebviewViewProvider } from './table_results_panel/webview-view-provider
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
+export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
 export let extensionUri: vscode.Uri;
 export let bigqueryIcons : BigqueryIcons;
 
@@ -78,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.window.registerTreeDataProvider(
 			'bigquery-tree-data-provider',
-			new BigQueryTreeDataProvider()
+			bigQueryTreeDataProvider
 		)
 	);
 

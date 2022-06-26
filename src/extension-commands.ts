@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigquery-client';
-import { authenticationWebviewProvider, bigqueryWebviewViewProvider } from './extension';
+import { authenticationWebviewProvider, bigQueryTreeDataProvider, bigqueryWebviewViewProvider } from './extension';
 import { ResultsGridRender } from './table_results_panel/results_grid_render';
 import { ResultsGridRenderRequest } from './table_results_panel/results_grid_render_request';
 import { Authentication } from './services/authentication';
@@ -94,7 +94,7 @@ export const command_authenticationRefresh = function (...args: any[]) {
 }
 
 export const command_explorerRefresh = function (...args: any[]) {
-	vscode.commands.executeCommand('workbench.actions.treeView.bigquery-tree-data-provider.refresh');
+	bigQueryTreeDataProvider.refresh();
 }
 
 export const command_viewTable = function (...args: any[]) {
