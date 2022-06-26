@@ -98,10 +98,12 @@
 			"view/title": [
 				{
 					"command": "vscode-bigquery.authentication-refresh",
+					"group": "navigation",
 					"when": "view == 'bigquery-authentication'"
 				},
 				{
 					"command": "vscode-bigquery.explorer-refresh",
+					"group": "navigation",
 					"when": "view == 'bigquery-tree-data-provider'"
 				}
 			],
