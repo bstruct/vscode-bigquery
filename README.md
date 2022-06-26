@@ -26,12 +26,13 @@ Interaction with views, functions and ML models is still not implemented. Will b
 <img src="documentation/explorer_tree_table.png" alt="explorer tree" width="600"/>
 
 ## Run queries
-
 This extension responds to files with extension `.bqsql`. The querie(s) in the editor can be run using the key `Ctrl+Enter` ( same as in the Google Cloud portal ), executing the command `Biguery: Run Query` or pressing the dedicated button in the file editor.
 
 <img src="documentation/file_explorer_query_result.png" alt="file explorer" width="900"/>
 
 After the query returns a response, the bottom panel of Visual Studio code will be made visible with the selected tab `Bigquery: Query results`. There, the query results are displayed with the usual pagination functionality. For convinience, is possible to open the same query results in another tab for side-by-side comparisons or further persistance. The results in the bottom panel will only represent the latest query execution.
+
+As visible in the image above, syntax highlight is very poor at the moment. Intellisence is not implemented at all. This will be the next improvements biggest area. 
 
 <!-- ### Known Issues -->
 
@@ -39,10 +40,8 @@ After the query returns a response, the bottom panel of Visual Studio code will 
 
 <!-- ### Generate a bug report -->
 
-### Project board
+## Project board
 Available in github: https://github.com/orgs/bstruct/projects/1/views/2.
 
-
-### Report a bug
-
+## Report a bug
 Please file an issue most descriptive as possible in https://github.com/bstruct/vscode-bigquery/issues.
