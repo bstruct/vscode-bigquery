@@ -1,7 +1,7 @@
 {
 	"name": "vscode-bigquery",
 	"displayName": "vscode-bigquery",
-	"description": "Enable Google BigQuery operations and query from VS Code.",
+	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
 	"version": "0.0.1",
 	"publisher": "bstruct",
 	"repository": {
@@ -9,6 +9,9 @@
 		"url": "https://github.com/bstruct/vscode-bigquery.git"
 	},
 	"homepage": "https://github.com/bstruct/vscode-bigquery",
+	"bugs": {
+		"url": "https://github.com/bstruct/vscode-bigquery/issues"
+	},
 	"engines": {
 		"vscode": "^1.66.0"
 	},
