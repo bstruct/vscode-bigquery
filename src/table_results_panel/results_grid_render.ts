@@ -311,8 +311,7 @@ export class ResultsGridRender {
                             jobName = jobs[0].id?.replace(RegExp('_\\d+$'), '') || '';
                         }
 
-                        const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results", jobName, { viewColumn: vscode.ViewColumn.Active });
-                        panel.webview.options = { enableScripts: true };
+                        const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results", jobName, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
                         const newresultsGridRender = new ResultsGridRender(panel.webview);
 
                         request.openInTabVisible = false;
