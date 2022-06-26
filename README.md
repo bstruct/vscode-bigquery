@@ -36,7 +36,8 @@ As visible in the image above, syntax highlight is very poor at the moment. Inte
 
 <!-- ### Known Issues -->
 
-<!-- ### Troubleshooting -->
+### Troubleshooting
+Sometimes, after this extension is installed, the command `Bigquery: Run query` is not able to force open the bottom panel to display the results. Please restart Visual Studio Code when that happens.
 
 <!-- ### Generate a bug report -->
 
