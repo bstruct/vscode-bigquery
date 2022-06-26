@@ -61,14 +61,16 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                         const routines = await routinesPromise;
 
                         if (routines.length > 0) {
-                            this.routineTreeItems.push(...routines);
+                            this.routineTreeItems = this.deduplicate(projectId, datasetId, this.routineTreeItems, routines);
+
                             const routinesTreeItem = new BigqueryTreeItem(TreeItemType.Routine, projectId, datasetId, null, `Routines (${routines.length})`, "", vscode.TreeItemCollapsibleState.Collapsed);
                             treeItems.push(routinesTreeItem);
                         }
 
                         const models = await modelsPromise;
                         if (models.length > 0) {
-                            this.modelTreeItems.push(...models);
+                            this.modelTreeItems = this.deduplicate(projectId, datasetId, this.modelTreeItems, models);
+
                             const modelTreeItem = new BigqueryTreeItem(TreeItemType.Model, projectId, datasetId, null, `Models (${models.length})`, "", vscode.TreeItemCollapsibleState.Collapsed);
                             treeItems.push(modelTreeItem);
                         }
@@ -210,9 +212,16 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
     }
 
+    private deduplicate(projectId: string, datasetId: string, treeItems: BigqueryTreeItem[], newItems: BigqueryTreeItem[]): BigqueryTreeItem[] {
+        const list = treeItems.filter(c => c.projectId !== projectId && c.datasetId !== datasetId);
+        list.push(...newItems);
+        return list;
+    }
+
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
+
     // private async getSavedQueries(projectId: string) {
 
     //     const auth = new google.auth.GoogleAuth({
@@ -260,6 +269,5 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
     //     //     });
 
     // }
-
 
 }
