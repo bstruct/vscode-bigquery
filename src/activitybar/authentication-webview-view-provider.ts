@@ -23,10 +23,7 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
         if (this.disposableEvent) { this.disposableEvent.dispose(); }
 
         const toolkitUri = this.getUri(webviewView.webview, extensionUri, [
-            'node_modules',
-            '@vscode',
-            'webview-ui-toolkit',
-            'dist',
+            'resources',
             'toolkit.min.js',
         ]);
 

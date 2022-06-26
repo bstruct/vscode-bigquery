@@ -71,10 +71,7 @@ export class ResultsGridRender {
     private getWaitingHtml(): string {
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
-            "node_modules",
-            "@vscode",
-            "webview-ui-toolkit",
-            "dist",
+            "resources",
             "toolkit.min.js",
         ]);
 
@@ -95,10 +92,7 @@ export class ResultsGridRender {
     private getExceptionHtml(exception: any): string {
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
-            "node_modules",
-            "@vscode",
-            "webview-ui-toolkit",
-            "dist",
+            "resources",
             "toolkit.min.js",
         ]);
 
@@ -173,17 +167,12 @@ export class ResultsGridRender {
         const totalRows: number = Number(queryRowsResponse[2]?.totalRows || 0);
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
-            "node_modules",
-            "@vscode",
-            "webview-ui-toolkit",
-            "dist",
+            "resources",
             "toolkit.min.js",
         ]);
 
         const codiconsUri = this.getUri(this.webView, extensionUri, [
-            'node_modules',
-            '@vscode/codicons',
-            'dist',
+            'resources',
             'codicon.css']
         );
 
@@ -225,17 +214,12 @@ export class ResultsGridRender {
         const totalRows: number = Number(metadata[0].numRows || 0);
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
-            "node_modules",
-            "@vscode",
-            "webview-ui-toolkit",
-            "dist",
+            "resources",
             "toolkit.min.js",
         ]);
 
         const codiconsUri = this.getUri(this.webView, extensionUri, [
-            'node_modules',
-            '@vscode/codicons',
-            'dist',
+            'resources',
             'codicon.css']
         );
 
