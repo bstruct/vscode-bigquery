@@ -74,7 +74,13 @@ export const command_serviceAccountLogin = function (...args: any[]) {
 		.then(file => {
 
 			if (file) {
-				Authentication.serviceAccountLogin(file[0].path)
+
+				let path = file[0].path;
+				if (process.platform === 'win32') {
+					path = path.substring(1);
+				}
+
+				Authentication.serviceAccountLogin(path)
 					.then(result => {
 						if (result.valid) {
 							vscode.window.showInformationMessage('Bigquery: Service account login - successful');
