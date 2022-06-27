@@ -13,7 +13,7 @@ export class Authentication {
     }
 
     public static async serviceAccountLogin(filePath: string): Promise<AuthenticationUserLoginResponse> {
-        const result = await this.runCommand(`gcloud auth activate-service-account --key-file=${filePath} --format="json"`);
+        const result = await this.runCommand(`gcloud auth activate-service-account --key-file="${filePath}" --format="json"`);
 
         const typedResult = JSON.parse(result) as string[];
         if (typedResult.length === 0) {

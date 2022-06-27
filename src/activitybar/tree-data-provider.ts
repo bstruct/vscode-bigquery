@@ -40,15 +40,17 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                     // const savedQueries = await this.getSavedQueries(projectId)
                     //     .catch(err => console.error(err));
 
-                    const datasets = (await this.getDatasets(projectId));
-                    resolve(datasets);
+                    await
+                        this.getDatasets(projectId)
+                            .then(datasets => resolve(datasets))
+                            .catch(e => reject(e));
 
                 case TreeItemType.Dataset:
                 case TreeItemType.DatasetLink:
 
                     if (element.datasetId === null) { resolve([]); return; }
 
-                    const treeItems = [];
+                    const treeItems: BigqueryTreeItem[] = [];
 
                     const tablesPromise = this.getTables(projectId, datasetId);
 
@@ -56,7 +58,9 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                         const routinesPromise = this.getRoutines(projectId, datasetId);
                         const modelsPromise = this.getModels(projectId, datasetId);
 
-                        await Promise.all([routinesPromise, modelsPromise, tablesPromise]);
+                        await
+                            Promise.all([routinesPromise, modelsPromise, tablesPromise])
+                                .catch(e => reject(e));
 
                         const routines = await routinesPromise;
 
@@ -76,9 +80,13 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                         }
                     }
 
-                    treeItems.push(...(await tablesPromise));
+                    await tablesPromise
+                        .then(tables => {
+                            treeItems.push(...tables);
+                            resolve(treeItems);
+                        })
+                        .catch(e => reject(e));
 
-                    resolve(treeItems);
 
                 case TreeItemType.Routine:
 
