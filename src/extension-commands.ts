@@ -6,6 +6,7 @@ import { ResultsGridRenderRequest } from './table_results_panel/results_grid_ren
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/tree-item';
 import { TableGridRenderRequest } from './table_results_panel/table_grid_render_request';
+import { SchemaRender } from './table_results_panel/schema_render';
 
 let resultsGridRender: ResultsGridRender | null = null;
 
@@ -15,6 +16,7 @@ export const COMMAND_SERVICE_ACCOUNT_LOGIN = "vscode-bigquery.service-account-lo
 export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-refresh";
 export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
 export const COMMAND_VIEW_TABLE = "vscode-bigquery.view-table";
+export const COMMAND_VIEW_TABLE_SCHEMA = "vscode-bigquery.view-table-schema";
 
 export const commandRunQuery = async function (...args: any[]) {
 
@@ -128,5 +130,24 @@ export const commandViewTable = function (...args: any[]) {
 
 	request.openInTabVisible = false;
 	newresultsGridRender.renderTable(request);
+
+};
+
+
+export const commandViewTableSchema = function (...args: any[]) {
+
+	const item = args[0] as BigqueryTreeItem;
+
+	const title = `Schema: ${item.projectId}.${item.datasetId}.${item.tableId}`;
+
+	if (item.projectId === null || item.datasetId === null || item.tableId === null) {
+		return;
+	}
+
+	const table = BigQueryClient.getTable(item.projectId, item.datasetId, item.tableId);
+	const panel = vscode.window.createWebviewPanel("vscode-bigquery-table-schema", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
+	const schemaRender = new SchemaRender(panel.webview);
+
+	schemaRender.render(table);
 
 };
