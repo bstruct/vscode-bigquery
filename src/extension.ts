@@ -26,28 +26,28 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_RUN_QUERY,
-			commands.command_runQuery
+			commands.commandRunQuery
 		)
 	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_USER_LOGIN,
-			commands.command_userLogin
+			commands.commandUserLogin
 		)
 	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_SERVICE_ACCOUNT_LOGIN,
-			commands.command_serviceAccountLogin
+			commands.commandServiceAccountLogin
 		)
 	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_VIEW_TABLE,
-			commands.command_viewTable
+			commands.commandViewTable
 		)
 	);
 
@@ -55,14 +55,14 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_AUTHENTICATION_REFRESH,
-			commands.command_authenticationRefresh
+			commands.commandAuthenticationRefresh
 		)
 	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_EXPLORER_REFRESH,
-			commands.command_explorerRefresh
+			commands.commandExplorerRefresh
 		)
 	);
 

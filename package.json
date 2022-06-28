@@ -171,7 +171,7 @@
 		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
-		"lint": "eslint -c .eslintrc.js --ext .ts src",
+		"lint": "eslint -c .eslintrc.js --ext .ts src --fix",
 		"test": "node ./out/test/runTest.js"
 	},
 	"devDependencies": {

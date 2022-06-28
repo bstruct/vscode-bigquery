@@ -152,7 +152,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                         }
 
                         const datasetId = c.id ?? 'xxx';
-                        return new BigqueryTreeItem(treeItemType, projectId, datasetId, null, datasetId, "", vscode.TreeItemCollapsibleState.Collapsed)
+                        return new BigqueryTreeItem(treeItemType, projectId, datasetId, null, datasetId, "", vscode.TreeItemCollapsibleState.Collapsed);
 
                     });
             });

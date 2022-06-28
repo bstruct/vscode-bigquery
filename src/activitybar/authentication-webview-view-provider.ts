@@ -113,7 +113,7 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
     }
 
     refresh() {
-        if (this.webviewView != null && this.context != null && this.token != null) {
+        if (this.webviewView !== null && this.context !== null && this.token !== null) {
             this.resolveWebviewView(this.webviewView, this.context, this.token);
         }
     }

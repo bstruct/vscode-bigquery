@@ -181,7 +181,7 @@ export class ResultsGrid extends Object {
 
         //give the necessary with to columns that contain bigger values. max 80 (`.8 * x em` later)
         function updateCellWith(widthIndex: number, valueString: string | null) {
-            if (valueString != null) {
+            if (valueString !== null) {
                 const currentWidth = widths[widthIndex];
                 if (valueString?.length && valueString.length > currentWidth) {
                     widths[widthIndex] = Math.min(80, valueString.length);
@@ -203,15 +203,15 @@ export class ResultsGrid extends Object {
 
                 let cellProperties: any = { 'grid-column': (fieldIndex + 2).toString() };
 
-                if (field.mode == 'REPEATED' || field.type == 'RECORD') {
+                if (field.mode === 'REPEATED' || field.type === 'RECORD') {
 
                     let innerSchema: bigquery.ITableSchema = {};
                     let innerResults: any[] = [];
 
-                    if (field.type == 'RECORD') {
+                    if (field.type === 'RECORD') {
 
                         innerSchema = { fields: field.fields || [] };
-                        if (field.mode == 'REPEATED') {
+                        if (field.mode === 'REPEATED') {
                             innerResults = result ? result[field.name || ''] : '';
                         } else {
                             innerResults = [result ? result[field.name || ''] : ''];
@@ -248,24 +248,24 @@ export class ResultsGrid extends Object {
                         case 'TIME':
                         case 'TIMESTAMP':
                         case 'GEOGRAPHY':
-                            if (value != null) {
+                            if (value !== null) {
                                 value = value.value;
                             }
                             break;
                         case 'NUMERIC':
                         case 'FLOAT':
                         case 'INTEGER':
-                            if (value != null) {
+                            if (value !== null) {
                                 value = value.toString();
                             }
                             break;
                         case 'BYTES':
-                            if (value != null) {
+                            if (value !== null) {
                                 value = value.toString('base64');
                             }
                             break;
                         case 'BOOLEAN':
-                            if (value != null) {
+                            if (value !== null) {
                                 value = value ? 'true' : 'false';
                             }
                             break;

@@ -16,7 +16,7 @@ export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-re
 export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
 export const COMMAND_VIEW_TABLE = "vscode-bigquery.view-table";
 
-export const command_runQuery = async function (...args: any[]) {
+export const commandRunQuery = async function (...args: any[]) {
 
 	if (vscode.window.activeTextEditor === undefined) {
 		return;
@@ -30,14 +30,14 @@ export const command_runQuery = async function (...args: any[]) {
 
 	let panel = bigqueryWebviewViewProvider.webviewView;
 
-	if (resultsGridRender == null) {
+	if (resultsGridRender === null) {
 
-		if (panel == null) {
+		if (panel === null) {
 			//https://www.eliostruyf.com/devhack-open-custom-vscode-webview-panel-focus-input/
 			await vscode.commands.executeCommand('workbench.view.extension.vscode-bigquery-query-results');
 			panel = bigqueryWebviewViewProvider.webviewView;
 		}
-		if (panel == null) { return; }
+		if (panel === null) { return; }
 
 		resultsGridRender = new ResultsGridRender(panel.webview);
 	}
@@ -54,9 +54,9 @@ export const command_runQuery = async function (...args: any[]) {
 
 	resultsGridRender.render(request);
 
-}
+};
 
-export const command_userLogin = function (...args: any[]) {
+export const commandUserLogin = function (...args: any[]) {
 	Authentication.userLogin()
 		.then(result => {
 			if (result.valid) {
@@ -66,9 +66,9 @@ export const command_userLogin = function (...args: any[]) {
 				vscode.window.showErrorMessage('Bigquery: User login - had invalid response');
 			}
 		});
-}
+};
 
-export const command_serviceAccountLogin = function (...args: any[]) {
+export const commandServiceAccountLogin = function (...args: any[]) {
 
 	vscode.window.showOpenDialog({ canSelectFiles: true, canSelectMany: false, canSelectFolders: false })
 		.then(file => {
@@ -93,17 +93,17 @@ export const command_serviceAccountLogin = function (...args: any[]) {
 
 		});
 
-}
+};
 
-export const command_authenticationRefresh = function (...args: any[]) {
+export const commandAuthenticationRefresh = function (...args: any[]) {
 	authenticationWebviewProvider.refresh();
-}
+};
 
-export const command_explorerRefresh = function (...args: any[]) {
+export const commandExplorerRefresh = function (...args: any[]) {
 	bigQueryTreeDataProvider.refresh();
-}
+};
 
-export const command_viewTable = function (...args: any[]) {
+export const commandViewTable = function (...args: any[]) {
 
 	const item = args[0] as BigqueryTreeItem;
 
@@ -129,4 +129,4 @@ export const command_viewTable = function (...args: any[]) {
 	request.openInTabVisible = false;
 	newresultsGridRender.renderTable(request);
 
-}
+};
