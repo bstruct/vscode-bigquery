@@ -1,12 +1,9 @@
 import * as vscode from 'vscode';
-import bigquery from '@google-cloud/bigquery/build/src/types';
 import { extensionUri } from '../extension';
-import { Job, QueryResultsOptions, Table } from '@google-cloud/bigquery';
+import { Table } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../services/simple_query_rows_response_error';
-import { ResultsGrid } from './results_grid';
-import { ResultsGridRenderRequest } from './results_grid_render_request';
-import { TableGridRenderRequest } from './table_grid_render_request';
 import { MetadataResponse } from '@google-cloud/common';
+import { BigQueryClient } from '../services/bigquery-client';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
@@ -24,6 +21,19 @@ export class SchemaRender {
 
             //set waiting gif
             this.webView.html = this.getWaitingHtml();
+
+            //put this logic in BigQueryClient
+
+
+            // 	SELECT
+            //     field_path, collation_name, description
+            //   FROM
+            //     `damiao-project-1.PvhTest`.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS
+            //   WHERE
+            //     table_name = 'PimExportLatest';
+
+            const querySchemaPlus = BigQueryClient.runQuery('');
+
 
             // table.metadata({});
 
