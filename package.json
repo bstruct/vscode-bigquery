@@ -158,7 +158,7 @@
 			{
 				"command": "vscode-bigquery.run-query",
 				"key": "Ctrl+Enter",
-				"when": "resourceLangId == bqsql || editorLangId == bqsql"
+				"when": "editorLangId == bqsql"
 			}
 		]
 	},
