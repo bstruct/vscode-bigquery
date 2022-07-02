@@ -142,11 +142,20 @@ export class SchemaRender {
                 <link href="${gridCss}" rel="stylesheet" />
         	</head>
         	<body>
-                ${new SchemaGrid(tableMetadata)}
-                        
-                <script>                       
-                    const vscode = acquireVsCodeApi();
-                </script>
+
+                <div class="labelValue"><span class="label">Project Id</span><span class="value">${tableMetadata.tableReference.projectId}</span></div>
+                <div class="labelValue"><span class="label">Dataset Id</span><span class="value">${tableMetadata.tableReference.datasetId}</span></div>
+                <div class="labelValue"><span class="label">Table Id</span><span class="value">${tableMetadata.tableReference.tableId}</span></div>
+                
+                <div class="labelValue"><span class="label">Location</span><span class="value">${tableMetadata.location}</span></div>
+                <div class="labelValue"><span class="label">Number of rows</span><span class="value">${tableMetadata.numRows}</span></div>
+
+                <div class="labelValue"><span class="label">Creation time</span><span class="value">${new Date(Number(tableMetadata.creationTime))}</span></div>
+                <div class="labelValue"><span class="label">Last modified time</span><span class="value">${new Date(Number(tableMetadata.lastModifiedTime))}</span></div>
+
+
+                <div class="spacer"></div>
+                ${new SchemaGrid(tableMetadata)}     
         	</body>
         </html>`;
 

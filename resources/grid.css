@@ -9,3 +9,31 @@
     font-style: italic;
     color: var(--vscode-inputValidation-warningBorder) !important;
 }
+
+div.spacer {
+    height: 1.9em;
+}
+
+div.labelValue {
+    font-family: var(--font-family);
+    font-size: var(--type-ramp-base-font-size);
+    line-height: 1.9em;
+    display: inline-block;
+    margin-top: .2em;
+    color: var(--foreground);
+}
+
+div.labelValue span.label {
+    border: var(--list-hover-background) 1px solid;
+    background-color: var(--list-hover-background);
+    display: inline-block;
+    width: 10em;
+    padding: 0.1em .5em;
+}
+
+div.labelValue span.value {
+    border: var(--list-hover-background) 1px solid;
+    display: inline-block;
+    min-width: 15em;
+    padding: 0.1em .5em;
+}

@@ -1,35 +1,36 @@
 interface TableMetadata {
 
+    // '1642435677331'
     creationTime: string;
-    // '1642435677331'
-    etag: string;
     // '1GXriUdGTuQwsMyvm81arw=='
-    id: string;
+    etag: string;
     // 'damiao-project-1:PvhTest.MetapackProofOfDeliveryWithICSInformation'
-    kind: string;
+    id: string;
     // 'bigquery#table'
-    lastModifiedTime: string;
+    kind: string;
     // '1642435677331'
-    location: string;
+    lastModifiedTime: string;
     // 'EU'
-    numActiveLogicalBytes: string;
+    location: string;
     // '0'
+    numActiveLogicalBytes: string;
+    // '33190086'
     numBytes: string;
     // '33190086'
     numLongTermBytes: string;
     // '33190086'
     numLongTermLogicalBytes: string;
-    // '33190086'
-    numRows: string;
     // '115621'
-    numTotalLogicalBytes: string;
+    numRows: string;
     // '33190086'
-    schema: { fields: SchemaField[] };
+    numTotalLogicalBytes: string;
     // {fields: Array(19)}
-    selfLink: string;
+    schema: { fields: SchemaField[] };
     // 'https://bigquery.googleapis.com/bigquery/v2/projects/damiao-project-1/datasets/PvhTest/tables/MetapackProofOfDeliveryWithICSInformation'
+    selfLink: string;
+    
     tableReference: TableReference;
-
+    
     type: string;
 
 }

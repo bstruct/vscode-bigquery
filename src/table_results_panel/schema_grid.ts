@@ -26,6 +26,35 @@ export class SchemaGrid extends Object {
 
     private getGrid(schemaFields: SchemaField[]): [preact.VNode, number] {
 
+
+        function getRows(level: number, fields: SchemaField[]): preact.VNode[] {
+
+            const innerRows: preact.VNode[] = [];
+
+            for (let index = 0; index < fields.length; index++) {
+
+                const schemaField: SchemaField = fields[index];
+
+                const cells = [];
+                cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '1', style: `padding-left:${level === 0 ? 0 : level + 1}em` }, schemaField.name));
+                cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '2' }, schemaField.type));
+                cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '3' }, schemaField.mode));
+                cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '4' }, schemaField.collation));
+                cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '5' }, schemaField.description));
+
+                updateCellWith(0, schemaField.name);
+
+                innerRows.push(preact.h('vscode-data-grid-row', { style: 'border-bottom: var(--list-hover-background) 1px solid' }, cells));
+
+                if (schemaField.fields && schemaField.fields.length > 0) {
+                    innerRows.push(...getRows(level + 1, schemaField.fields));
+                }
+
+            }
+
+            return innerRows;
+        }
+
         const headerCellStyle = 'background-color: var(--list-hover-background);';
 
         //initialize rows array with the header column row already
@@ -52,22 +81,7 @@ export class SchemaGrid extends Object {
         }
 
         //
-        for (let index = 0; index < schemaFields.length; index++) {
-
-            
-            const schemaField: SchemaField = schemaFields[index];
-            
-            const cells = [];
-            cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '1' }, schemaField.name));
-            cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '2' }, schemaField.type));
-            cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '3' }, schemaField.mode));
-            cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '4' }, schemaField.collation));
-            cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '5' }, schemaField.description));
-
-            updateCellWith(0, schemaField.name);
-
-            rows.push(preact.h('vscode-data-grid-row', {}, cells));
-        }
+        rows.push(...getRows(0, schemaFields));
 
         const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${Math.ceil(c * .85)}em`).join(' ') }, rows);
         let props: any = {};
@@ -80,6 +94,7 @@ export class SchemaGrid extends Object {
         const totalWidth: number = widths.reduce((previous, current, index) => previous + current);
 
         return [wrappingDiv, totalWidth];
+
     }
 
     override toString(): string {
