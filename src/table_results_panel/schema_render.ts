@@ -153,7 +153,6 @@ export class SchemaRender {
                 <div class="labelValue"><span class="label">Creation time</span><span class="value">${new Date(Number(tableMetadata.creationTime))}</span></div>
                 <div class="labelValue"><span class="label">Last modified time</span><span class="value">${new Date(Number(tableMetadata.lastModifiedTime))}</span></div>
 
-
                 <div class="spacer"></div>
                 ${new SchemaGrid(tableMetadata)}     
         	</body>

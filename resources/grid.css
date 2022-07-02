@@ -37,3 +37,7 @@ div.labelValue span.value {
     min-width: 15em;
     padding: 0.1em .5em;
 }
+
+/* vscode-data-grid-cell {
+    border-bottom: var(--list-hover-background) 1px solid;
+} */
