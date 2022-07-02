@@ -1,9 +1,7 @@
 import * as vscode from 'vscode';
 import { extensionUri } from '../extension';
-import { Table } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../services/simple_query_rows_response_error';
-import { MetadataResponse } from '@google-cloud/common';
-import { BigQueryClient } from '../services/bigquery-client';
+import { SchemaGrid } from './schema_grid';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
@@ -116,9 +114,6 @@ export class SchemaRender {
         }
     }
 
-    /* 
-    * weird response because the total rows are only known in the `getQueryResults` response
-    */
     private async getResultsHtml(tableMetadata: TableMetadata): Promise<string> {
 
         const schema = JSON.stringify(tableMetadata.schema.fields);
@@ -147,10 +142,9 @@ export class SchemaRender {
                 <link href="${gridCss}" rel="stylesheet" />
         	</head>
         	<body>
-                <vscode-data-grid id="basic-grid" generate-header="sticky" aria-label="Default"></vscode-data-grid>
+                ${new SchemaGrid(tableMetadata)}
                         
-                <script>
-                    document.getElementById('basic-grid').rowsData = ${schema};                           
+                <script>                       
                     const vscode = acquireVsCodeApi();
                 </script>
         	</body>

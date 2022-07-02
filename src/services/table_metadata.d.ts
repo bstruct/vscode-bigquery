@@ -48,7 +48,7 @@ interface SchemaField {
     name: string;
     mode: string;
     type: string;
-    collationName: string;
+    collation: string;
     description: string;
     fields: SchemaField[];
 }

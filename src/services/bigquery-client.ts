@@ -128,7 +128,7 @@ export class BigQueryClient {
 			const fieldPath = `${prefix ? prefix : ''}${prefix ? '.' : ''}${schemaItem.name}`;
 			const extra = extraInformation.find(c => c.fieldPath === fieldPath);
 			if (extra) {
-				schemaItem.collationName = extra.collationName === 'NULL' ? '' : extra.collationName;
+				schemaItem.collation = extra.collationName === 'NULL' ? '' : extra.collationName;
 				schemaItem.description = extra.description;
 			}
 
