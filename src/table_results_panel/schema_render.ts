@@ -15,32 +15,17 @@ export class SchemaRender {
         this.webView = webView;
     }
 
-    public render(table: Table) {
+    public render(metadataPromise: Promise<any>) {
 
         try {
 
             //set waiting gif
             this.webView.html = this.getWaitingHtml();
 
-            //put this logic in BigQueryClient
+            metadataPromise
+                .then(async (metadata: TableMetadata) => {
 
-
-            // 	SELECT
-            //     field_path, collation_name, description
-            //   FROM
-            //     `damiao-project-1.PvhTest`.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS
-            //   WHERE
-            //     table_name = 'PimExportLatest';
-
-            const querySchemaPlus = BigQueryClient.runQuery('');
-
-
-            // table.metadata({});
-
-            table.getMetadata()
-                .then(async (tableMetadata) => {
-
-                    const html = await this.getResultsHtml(tableMetadata);
+                    const html = await this.getResultsHtml(metadata);
                     this.webView.html = html;
 
                 })
@@ -134,9 +119,9 @@ export class SchemaRender {
     /* 
     * weird response because the total rows are only known in the `getQueryResults` response
     */
-    private async getResultsHtml(tableMetadata: MetadataResponse): Promise<string> {
+    private async getResultsHtml(tableMetadata: TableMetadata): Promise<string> {
 
-        const schema = JSON.stringify(tableMetadata[0].schema.fields);
+        const schema = JSON.stringify(tableMetadata.schema.fields);
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
             "resources",

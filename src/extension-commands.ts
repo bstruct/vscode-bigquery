@@ -144,10 +144,10 @@ export const commandViewTableSchema = function (...args: any[]) {
 		return;
 	}
 
-	const table = BigQueryClient.getTable(item.projectId, item.datasetId, item.tableId);
+	const metadataPromise = BigQueryClient.getMetadata(item.projectId, item.datasetId, item.tableId);
 	const panel = vscode.window.createWebviewPanel("vscode-bigquery-table-schema", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
 	const schemaRender = new SchemaRender(panel.webview);
 
-	schemaRender.render(table);
+	schemaRender.render(metadataPromise);
 
 };

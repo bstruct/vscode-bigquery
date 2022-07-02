@@ -79,4 +79,67 @@ export class BigQueryClient {
 		return bqclient.dataset(datasetId, { projectId: projectId }).table(tableId);
 	}
 
+	public static getMetadata(projectId: string, datasetId: string, tableId: string): Promise<TableMetadata> {
+
+		const bqclient = new BigQuery();
+
+		const metadataPromise = bqclient
+			.dataset(datasetId, { projectId: projectId })
+			.table(tableId)
+			.getMetadata();
+
+		const fullSchema = BigQueryClient.runQuery(`
+		SELECT 
+			field_path AS fieldPath, 
+			collation_name AS collationName, 
+			description 
+		FROM \`${projectId}.${datasetId}\`.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS 
+		WHERE table_name = '${tableId}';
+		`).then(jobs => {
+			return jobs[0].getQueryResults();
+		});
+
+		return Promise.all([metadataPromise, fullSchema])
+			.then(BigQueryClient.onfulfilled);
+
+	}
+
+	private static onfulfilled(value: [any, any]): TableMetadata {
+
+		const metadata = value[0][0] as TableMetadata;
+
+		const extraInformation = value[1][0] as [{ fieldPath: string, collationName: string, description: string }];
+
+		const fields = BigQueryClient.schemaEnrich(null, metadata.schema.fields, extraInformation);
+
+		metadata.schema = { fields: fields };
+
+		return metadata;
+	}
+
+	private static schemaEnrich(prefix: string | null, schemaItems: SchemaField[], extraInformation: [{ fieldPath: string, collationName: string, description: string }]): SchemaField[] {
+
+		const newSchemaItems: SchemaField[] = [];
+
+		for (let schemaItemIndex = 0; schemaItemIndex < schemaItems.length; schemaItemIndex++) {
+
+			const schemaItem = schemaItems[schemaItemIndex];
+
+			const fieldPath = `${prefix ? prefix : ''}${prefix ? '.' : ''}${schemaItem.name}`;
+			const extra = extraInformation.find(c => c.fieldPath === fieldPath);
+			if (extra) {
+				schemaItem.collationName = extra.collationName === 'NULL' ? '' : extra.collationName;
+				schemaItem.description = extra.description;
+			}
+
+			if (schemaItem.fields && schemaItem.fields.length > 0) {
+				schemaItem.fields = BigQueryClient.schemaEnrich(fieldPath, schemaItem.fields, extraInformation);
+			}
+
+			newSchemaItems.push(schemaItem);
+		}
+
+		return newSchemaItems;
+	}
+
 }
