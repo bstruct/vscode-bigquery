@@ -3,9 +3,6 @@
   "patterns": [
     {
       "include": "#expression"
-    },
-    {
-      "include": "comment.line.double-dash"
     }
   ],
   "repository": {
@@ -35,7 +32,7 @@
       ]
     },
     "base": {
-      "match": "(?i)(\\bwith\\b)|(?i)(\\bselect\\b)|(?i)(\\bfrom\\b)|(?i)(\\bwhere\\b)|(?i)(\\blimit\\b)|(?i)(\\bhaving\\b)|(?i)(\\bgroup\\b\\W+\\bby\\b)|(?i)(\\bas\\b)|(?i)(\\border\\b\\W+\\bby\\b)|(?i)(\\blimit\\b)|(?i)(\\basc\\b)|(?i)(\\bdesc\\b)|(?i)(\\bleft\\b\\W+\\bjoin\\b)|(?i)(\\bright\\b\\W+\\bjoin\\b)|(?i)(\\busing\\b)",
+      "match": "(?i)(\\bwith\\b)|(?i)(\\bselect\\b)|(?i)(\\bfrom\\b)|(?i)(\\bwhere\\b)|(?i)(\\blimit\\b)|(?i)(\\bhaving\\b)|(?i)(\\bgroup\\b\\W+\\bby\\b)|(?i)(\\bas\\b)|(?i)(\\border\\b\\W+\\bby\\b)|(?i)(\\blimit\\b)|(?i)(\\basc\\b)|(?i)(\\bdesc\\b)|(?i)(\\bleft\\b\\W+\\bjoin\\b)|(?i)(\\bjoin\\b)|(?i)(\\bright\\b\\W+\\bjoin\\b)|(?i)(\\busing\\b)|(?i)(\\bon\\b)",
       "name": "support.class"
     },
     "operators": {
@@ -43,7 +40,7 @@
       "name": "keyword.operator"
     },
     "functions": {
-      "match": "(?i)(\\bif\\b)|(?i)(\\bcurrent_date\\b)|(?i)(\\bmax\\b)|(?i)(\\barray_agg\\b)",
+      "match": "(?i)(\\bif\\b)|(?i)(\\bcurrent_date\\b)|(?i)(\\bmax\\b)|(?i)(\\bavg\\b)|(?i)(\\bmin\\b)|(?i)(\\bcount\\b)|(?i)(\\barray_agg\\b)",
       "name": "entity.name.function"
     },
     "line-comment": {
