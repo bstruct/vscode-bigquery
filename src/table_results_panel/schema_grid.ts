@@ -26,7 +26,6 @@ export class SchemaGrid extends Object {
 
     private getGrid(schemaFields: SchemaField[]): [preact.VNode, number] {
 
-
         function getRows(level: number, fields: SchemaField[]): preact.VNode[] {
 
             const innerRows: preact.VNode[] = [];
@@ -84,12 +83,8 @@ export class SchemaGrid extends Object {
         rows.push(...getRows(0, schemaFields));
 
         const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${Math.ceil(c * .85)}em`).join(' ') }, rows);
-        let props: any = {};
-        // if (innerGrid) {
-        //     props.style = 'max-height: 20em;overflow-y:scroll;overflow-x:visible;';
-        // }
 
-        const wrappingDiv = preact.h('div', props, table);
+        const wrappingDiv = preact.h('div', {}, table);
 
         const totalWidth: number = widths.reduce((previous, current, index) => previous + current);
 

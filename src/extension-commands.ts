@@ -133,7 +133,6 @@ export const commandViewTable = function (...args: any[]) {
 
 };
 
-
 export const commandViewTableSchema = function (...args: any[]) {
 
 	const item = args[0] as BigqueryTreeItem;
