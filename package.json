@@ -202,7 +202,7 @@
 		"webpack-cli": "^4.9.2"
 	},
 	"dependencies": {
-		"@google-cloud/bigquery": "^6.0.0",
+		"@google-cloud/bigquery": "^6.0.1",
 		"@google-cloud/resource-manager": "^4.0.0",
 		"@vscode/codicons": "^0.0.31",
 		"@vscode/webview-ui-toolkit": "^1.0.0",
