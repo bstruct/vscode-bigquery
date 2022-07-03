@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigquery-client';
-import { authenticationWebviewProvider, bigQueryTreeDataProvider, bigqueryWebviewViewProvider } from './extension';
+import { authenticationWebviewProvider, bigQueryTreeDataProvider, bigqueryWebviewViewProvider, reporter } from './extension';
 import { ResultsGridRender } from './table_results_panel/results_grid_render';
 import { ResultsGridRenderRequest } from './table_results_panel/results_grid_render_request';
 import { Authentication } from './services/authentication';
@@ -19,6 +19,8 @@ export const COMMAND_VIEW_TABLE = "vscode-bigquery.view-table";
 export const COMMAND_VIEW_TABLE_SCHEMA = "vscode-bigquery.view-table-schema";
 
 export const commandRunQuery = async function (...args: any[]) {
+
+	const t1 = Date.now();
 
 	if (vscode.window.activeTextEditor === undefined) {
 		return;
@@ -56,6 +58,10 @@ export const commandRunQuery = async function (...args: any[]) {
 
 	resultsGridRender.render(request);
 
+	const numberOfJobs = (await queryResponse).length;
+
+	reporter.sendTelemetryEvent('commandRunQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+
 };
 
 export const commandUserLogin = function (...args: any[]) {
@@ -68,6 +74,8 @@ export const commandUserLogin = function (...args: any[]) {
 				vscode.window.showErrorMessage('Bigquery: User login - had invalid response');
 			}
 		});
+
+	reporter.sendTelemetryEvent('commandUserLogin', {});
 };
 
 export const commandServiceAccountLogin = function (...args: any[]) {
@@ -95,17 +103,31 @@ export const commandServiceAccountLogin = function (...args: any[]) {
 
 		});
 
+	reporter.sendTelemetryEvent('commandServiceAccountLogin', {});
+
 };
 
 export const commandAuthenticationRefresh = function (...args: any[]) {
+
+	const t1 = Date.now();
+
 	authenticationWebviewProvider.refresh();
+
+	reporter.sendTelemetryEvent('commandAuthenticationRefresh', {}, { elapsedMs: Date.now() - t1 });
 };
 
 export const commandExplorerRefresh = function (...args: any[]) {
+
+	const t1 = Date.now();
+
 	bigQueryTreeDataProvider.refresh();
+
+	reporter.sendTelemetryEvent('commandExplorerRefresh', {}, { elapsedMs: Date.now() - t1 });
 };
 
 export const commandViewTable = function (...args: any[]) {
+
+	const t1 = Date.now();
 
 	const item = args[0] as BigqueryTreeItem;
 
@@ -131,9 +153,13 @@ export const commandViewTable = function (...args: any[]) {
 	request.openInTabVisible = false;
 	newresultsGridRender.renderTable(request);
 
+	reporter.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
+
 };
 
 export const commandViewTableSchema = function (...args: any[]) {
+
+	const t1 = Date.now();
 
 	const item = args[0] as BigqueryTreeItem;
 
@@ -148,5 +174,7 @@ export const commandViewTableSchema = function (...args: any[]) {
 	const schemaRender = new SchemaRender(panel.webview);
 
 	schemaRender.render(metadataPromise);
+
+	reporter.sendTelemetryEvent('commandViewTableSchema', {}, { elapsedMs: Date.now() - t1 });
 
 };
