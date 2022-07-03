@@ -1,4 +1,3 @@
-import { QueryRowsResponse } from '@google-cloud/bigquery';
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';

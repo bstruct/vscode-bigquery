@@ -34,6 +34,17 @@ After the query returns a response, the bottom panel of Visual Studio code will 
 
 As visible in the image above, syntax highlight is very poor at the moment. Intellisence is not implemented at all. This will be the next improvements biggest area. 
 
+## View table schema
+
+When exploring the tree of projects, dataset and its contents, the table items have the possibility of opening a schema page in the context menu (right-click). `Bigquery: View table schema` 
+
+<img src="documentation/table_schema_menu.png" alt="file explorer" width="600"/>
+
+This command will open a page containg some information about the table and it's schema.
+
+<img src="documentation/schema_view.png" alt="file explorer" width="900"/>
+
+
 <!-- ### Known Issues -->
 
 ### Troubleshooting
