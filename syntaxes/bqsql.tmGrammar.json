@@ -51,12 +51,24 @@
     "string-single-quote": {
       "begin": "'",
       "end": "'",
-      "name": "string.quote.single"
+      "name": "string.quote.single",
+      "patterns": [
+        {
+          "name":"constant.character.escape.archsimc",
+          "match": "\\\\."
+        }
+      ]
     },
     "string-double-quote": {
       "begin": "\"",
       "end": "\"",
-      "name": "string.quote.double"
+      "name": "string.quote.double",
+      "patterns": [
+        {
+          "name":"constant.character.escape.archsimc",
+          "match": "\\\\."
+        }
+      ]
     },
     "table-name": {
       "begin": "`",
