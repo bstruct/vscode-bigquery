@@ -2,19 +2,18 @@ import { BigQuery, Job, JobResponse, Query, Table } from '@google-cloud/bigquery
 
 export class BigQueryClient {
 
-	public static runQuery(queryText: string): Promise<Job[]> {
+	private bqclient = new BigQuery();
 
-		const bqclient = new BigQuery();
-
-		// bqclient.dataset('', {projectId:''}).table('').createReadStream({})
+	public runQuery(queryText: string): Promise<Job[]> {
 
 		const query: Query = {
 			dryRun: false,
 			query: queryText,
 			useLegacySql: false,
+			useQueryCache: true
 		};
 
-		return bqclient
+		return this.bqclient
 			.createQueryJob(query)
 			.then((jobResponse: JobResponse) => {
 
@@ -36,7 +35,7 @@ export class BigQueryClient {
 							// in this case, only after the parent jobs is 'DONE', it constains the list 
 							// of all the jobs involved.
 							// jobs will have id's postfixed
-							bqclient
+							this.bqclient
 								.getJobs({ parentJobId: jobId })
 								.then((getJobsResponse) => {
 
@@ -72,23 +71,18 @@ export class BigQueryClient {
 
 	}
 
-	public static getTable(projectId: string, datasetId: string, tableId: string): Table {
-
-		const bqclient = new BigQuery();
-
-		return bqclient.dataset(datasetId, { projectId: projectId }).table(tableId);
+	public getTable(projectId: string, datasetId: string, tableId: string): Table {
+		return this.bqclient.dataset(datasetId, { projectId: projectId }).table(tableId);
 	}
 
-	public static getMetadata(projectId: string, datasetId: string, tableId: string): Promise<TableMetadata> {
+	public getMetadata(projectId: string, datasetId: string, tableId: string): Promise<TableMetadata> {
 
-		const bqclient = new BigQuery();
-
-		const metadataPromise = bqclient
+		const metadataPromise = this.bqclient
 			.dataset(datasetId, { projectId: projectId })
 			.table(tableId)
 			.getMetadata();
 
-		const fullSchema = BigQueryClient.runQuery(`
+		const fullSchema = this.runQuery(`
 		SELECT 
 			field_path AS fieldPath, 
 			collation_name AS collationName, 
@@ -100,24 +94,24 @@ export class BigQueryClient {
 		});
 
 		return Promise.all([metadataPromise, fullSchema])
-			.then(BigQueryClient.onfulfilled);
+			.then(this.onfulfilled);
 
 	}
 
-	private static onfulfilled(value: [any, any]): TableMetadata {
+	private onfulfilled(value: [any, any]): TableMetadata {
 
 		const metadata = value[0][0] as TableMetadata;
 
 		const extraInformation = value[1][0] as [{ fieldPath: string, collationName: string, description: string }];
 
-		const fields = BigQueryClient.schemaEnrich(null, metadata.schema.fields, extraInformation);
+		const fields = this.schemaEnrich(null, metadata.schema.fields, extraInformation);
 
 		metadata.schema = { fields: fields };
 
 		return metadata;
 	}
 
-	private static schemaEnrich(prefix: string | null, schemaItems: SchemaField[], extraInformation: [{ fieldPath: string, collationName: string, description: string }]): SchemaField[] {
+	private schemaEnrich(prefix: string | null, schemaItems: SchemaField[], extraInformation: [{ fieldPath: string, collationName: string, description: string }]): SchemaField[] {
 
 		const newSchemaItems: SchemaField[] = [];
 
@@ -133,7 +127,7 @@ export class BigQueryClient {
 			}
 
 			if (schemaItem.fields && schemaItem.fields.length > 0) {
-				schemaItem.fields = BigQueryClient.schemaEnrich(fieldPath, schemaItem.fields, extraInformation);
+				schemaItem.fields = this.schemaEnrich(fieldPath, schemaItem.fields, extraInformation);
 			}
 
 			newSchemaItems.push(schemaItem);

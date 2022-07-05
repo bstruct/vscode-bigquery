@@ -30,7 +30,7 @@ export const commandRunQuery = async function (...args: any[]) {
 
 	const queryText: string = textEditor.document.getText() ?? '';
 
-	const queryResponse = BigQueryClient.runQuery(queryText);
+	const queryResponse = getBigQueryClient().runQuery(queryText);
 
 	let panel = bigqueryWebviewViewProvider.webviewView;
 
@@ -60,11 +60,17 @@ export const commandRunQuery = async function (...args: any[]) {
 
 	const numberOfJobs = (await queryResponse).length;
 
-	reporter.sendTelemetryEvent('commandRunQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+	const elapsed = Date.now() - t1;
+	console.info(`commandRunQuery took ${elapsed}ms`);
+
+	reporter?.sendTelemetryEvent('commandRunQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
 };
 
 export const commandUserLogin = function (...args: any[]) {
+
+	resetBigQueryClient();
+
 	Authentication.userLogin()
 		.then(result => {
 			if (result.valid) {
@@ -75,10 +81,12 @@ export const commandUserLogin = function (...args: any[]) {
 			}
 		});
 
-	reporter.sendTelemetryEvent('commandUserLogin', {});
+	reporter?.sendTelemetryEvent('commandUserLogin', {});
 };
 
 export const commandServiceAccountLogin = function (...args: any[]) {
+
+	resetBigQueryClient();
 
 	vscode.window.showOpenDialog({ canSelectFiles: true, canSelectMany: false, canSelectFolders: false })
 		.then(file => {
@@ -103,17 +111,19 @@ export const commandServiceAccountLogin = function (...args: any[]) {
 
 		});
 
-	reporter.sendTelemetryEvent('commandServiceAccountLogin', {});
+	reporter?.sendTelemetryEvent('commandServiceAccountLogin', {});
 
 };
 
 export const commandAuthenticationRefresh = function (...args: any[]) {
+	
+	resetBigQueryClient();
 
 	const t1 = Date.now();
 
 	authenticationWebviewProvider.refresh();
 
-	reporter.sendTelemetryEvent('commandAuthenticationRefresh', {}, { elapsedMs: Date.now() - t1 });
+	reporter?.sendTelemetryEvent('commandAuthenticationRefresh', {}, { elapsedMs: Date.now() - t1 });
 };
 
 export const commandExplorerRefresh = function (...args: any[]) {
@@ -122,7 +132,7 @@ export const commandExplorerRefresh = function (...args: any[]) {
 
 	bigQueryTreeDataProvider.refresh();
 
-	reporter.sendTelemetryEvent('commandExplorerRefresh', {}, { elapsedMs: Date.now() - t1 });
+	reporter?.sendTelemetryEvent('commandExplorerRefresh', {}, { elapsedMs: Date.now() - t1 });
 };
 
 export const commandViewTable = function (...args: any[]) {
@@ -137,7 +147,7 @@ export const commandViewTable = function (...args: any[]) {
 		return;
 	}
 
-	const table = BigQueryClient.getTable(item.projectId, item.datasetId, item.tableId);
+	const table = getBigQueryClient().getTable(item.projectId, item.datasetId, item.tableId);
 
 	const request = {
 		table: table,
@@ -153,7 +163,7 @@ export const commandViewTable = function (...args: any[]) {
 	request.openInTabVisible = false;
 	newresultsGridRender.renderTable(request);
 
-	reporter.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
+	reporter?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
 
 };
 
@@ -169,12 +179,26 @@ export const commandViewTableSchema = function (...args: any[]) {
 		return;
 	}
 
-	const metadataPromise = BigQueryClient.getMetadata(item.projectId, item.datasetId, item.tableId);
+	const metadataPromise = getBigQueryClient().getMetadata(item.projectId, item.datasetId, item.tableId);
 	const panel = vscode.window.createWebviewPanel("vscode-bigquery-table-schema", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
 	const schemaRender = new SchemaRender(panel.webview);
 
 	schemaRender.render(metadataPromise);
 
-	reporter.sendTelemetryEvent('commandViewTableSchema', {}, { elapsedMs: Date.now() - t1 });
+	reporter?.sendTelemetryEvent('commandViewTableSchema', {}, { elapsedMs: Date.now() - t1 });
 
+};
+
+let bigQueryClient: BigQueryClient | null;
+
+const getBigQueryClient = function (): BigQueryClient {
+	if (!bigQueryClient) {
+		bigQueryClient = new BigQueryClient();
+	}
+
+	return bigQueryClient;
+};
+
+const resetBigQueryClient = function () {
+	bigQueryClient = null;
 };

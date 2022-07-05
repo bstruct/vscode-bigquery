@@ -11,11 +11,7 @@ export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewVi
 export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
 export let extensionUri: vscode.Uri;
 export let bigqueryIcons: BigqueryIcons;
-export let reporter: TelemetryReporter;
-
-
-export const EXTENSION_ID: string = 'bstruct.vscode-bigquery';
-export const EXTENSION_VERSION: string = '0.0.4';
+export let reporter: TelemetryReporter | null;
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -34,9 +30,12 @@ export function activate(context: vscode.ExtensionContext) {
 	// const c = vscode.UIKind[vscode.env.uiKind];
 
 
+	try {
 
-	reporter = new TelemetryReporter(EXTENSION_ID, EXTENSION_VERSION, '10f4da7d-e729-4526-8d9b-92529b10cb32');
-	context.subscriptions.push(reporter);
+		reporter = new TelemetryReporter(context.extension.id, context.extension.packageJSON.version, '10f4da7d-e729-4526-8d9b-92529b10cb32');
+		context.subscriptions.push(reporter);
+
+	} catch (e) { console.error(e); }
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
@@ -116,7 +115,7 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.workspace.onDidChangeConfiguration(event => {
 		if (event.affectsConfiguration('workbench.colorTheme')) {
 			vscode.commands.executeCommand(commands.COMMAND_EXPLORER_REFRESH);
-			reporter.sendTelemetryEvent('onDidChangeActiveColorTheme', { activeColorThemeKind: vscode.ColorThemeKind[vscode.window.activeColorTheme.kind] });
+			reporter?.sendTelemetryEvent('onDidChangeActiveColorTheme', { activeColorThemeKind: vscode.ColorThemeKind[vscode.window.activeColorTheme.kind] });
 		}
 	});
 
