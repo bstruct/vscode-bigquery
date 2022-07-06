@@ -78,6 +78,7 @@ export const commandUserLogin = function (...args: any[]) {
 				vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
 			} else {
 				vscode.window.showErrorMessage('Bigquery: User login - had invalid response');
+				reporter?.sendTelemetryErrorEvent('commandUserLogin', { error: 'Bigquery: User login - had invalid response' });
 			}
 		});
 
@@ -105,6 +106,7 @@ export const commandServiceAccountLogin = function (...args: any[]) {
 							vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
 						} else {
 							vscode.window.showErrorMessage('Bigquery: Service account login - had invalid response');
+							reporter?.sendTelemetryErrorEvent('commandUserLogin', { error: 'Bigquery: Service account login - had invalid response' });
 						}
 					});
 			}
@@ -116,10 +118,10 @@ export const commandServiceAccountLogin = function (...args: any[]) {
 };
 
 export const commandAuthenticationRefresh = function (...args: any[]) {
-	
-	resetBigQueryClient();
 
 	const t1 = Date.now();
+	
+	resetBigQueryClient();
 
 	authenticationWebviewProvider.refresh();
 
