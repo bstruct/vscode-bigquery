@@ -104,14 +104,14 @@ export class BigQueryClient {
 
 		const extraInformation = value[1][0] as [{ fieldPath: string, collationName: string, description: string }];
 
-		const fields = this.schemaEnrich(null, metadata.schema.fields, extraInformation);
+		const fields = BigQueryClient.schemaEnrich(null, metadata.schema.fields, extraInformation);
 
 		metadata.schema = { fields: fields };
 
 		return metadata;
 	}
 
-	private schemaEnrich(prefix: string | null, schemaItems: SchemaField[], extraInformation: [{ fieldPath: string, collationName: string, description: string }]): SchemaField[] {
+	private static schemaEnrich(prefix: string | null, schemaItems: SchemaField[], extraInformation: [{ fieldPath: string, collationName: string, description: string }]): SchemaField[] {
 
 		const newSchemaItems: SchemaField[] = [];
 
