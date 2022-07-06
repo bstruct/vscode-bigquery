@@ -205,6 +205,7 @@
 		"@google-cloud/bigquery": "^6.0.1",
 		"@google-cloud/resource-manager": "^4.0.0",
 		"@vscode/codicons": "^0.0.31",
+		"@vscode/extension-telemetry": "^0.6.2",
 		"@vscode/webview-ui-toolkit": "^1.0.0",
 		"preact": "^10.8.2",
 		"preact-render-to-string": "^5.2.0"
