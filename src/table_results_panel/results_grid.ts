@@ -280,7 +280,9 @@ export class ResultsGrid extends Object {
                     updateCellWith(fieldIndex + 1, value);
                 }
 
-                const cell = preact.h('vscode-data-grid-cell', cellProperties, value || preact.h('span', { class: 'nullValue' }, 'null'));
+                const valueDisplay = value === '' ? '' : value || preact.h('span', { class: 'nullValue' }, 'null');
+
+                const cell = preact.h('vscode-data-grid-cell', cellProperties, valueDisplay);
                 cells.push(cell);
             }
 
