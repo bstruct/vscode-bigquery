@@ -46,6 +46,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_RUN_SELECTED_QUERY,
+			commands.commandRunSelectedQuery
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_USER_LOGIN,
 			commands.commandUserLogin
 		)

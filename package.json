@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -21,6 +21,7 @@
 	],
 	"activationEvents": [
 		"onCommand:vscode-bigquery.run-query",
+		"onCommand:vscode-bigquery.run-selected-query",
 		"onView:bigquery-main-activity-bar",
 		"onView:bigquery-authentication",
 		"onView:bigquery-tree-data-provider",
@@ -64,6 +65,11 @@
 				"icon": "$(debug-start)"
 			},
 			{
+				"command": "vscode-bigquery.run-selected-query",
+				"title": "Biguery: Run Selected Query",
+				"icon": "$(debug-line-by-line)"
+			},
+			{
 				"command": "vscode-bigquery.user-login",
 				"title": "Biguery: User login"
 			},
@@ -96,6 +102,11 @@
 			"editor/title": [
 				{
 					"command": "vscode-bigquery.run-query",
+					"group": "navigation",
+					"when": "editorLangId == bqsql"
+				},
+				{
+					"command": "vscode-bigquery.run-selected-query",
 					"group": "navigation",
 					"when": "editorLangId == bqsql"
 				}
@@ -167,6 +178,11 @@
 			{
 				"command": "vscode-bigquery.run-query",
 				"key": "Ctrl+Enter",
+				"when": "editorLangId == bqsql"
+			},
+			{
+				"command": "vscode-bigquery.run-selected-query",
+				"key": "Ctrl+E",
 				"when": "editorLangId == bqsql"
 			}
 		]

@@ -11,6 +11,7 @@ import { SchemaRender } from './table_results_panel/schema_render';
 let resultsGridRender: ResultsGridRender | null = null;
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
+export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
 export const COMMAND_USER_LOGIN = "vscode-bigquery.user-login";
 export const COMMAND_SERVICE_ACCOUNT_LOGIN = "vscode-bigquery.service-account-login";
 export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-refresh";
@@ -30,6 +31,37 @@ export const commandRunQuery = async function (...args: any[]) {
 
 	const queryText: string = textEditor.document.getText() ?? '';
 
+	const numberOfJobs = await runQuery(queryText);
+
+	reporter?.sendTelemetryEvent('commandRunQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+
+};
+
+export const commandRunSelectedQuery = async function (...args: any[]) {
+
+	const t1 = Date.now();
+
+	if (vscode.window.activeTextEditor === undefined) {
+		return;
+	}
+
+	const textEditor = vscode.window.activeTextEditor;
+
+	const queryText: string = textEditor.document.getText(textEditor.selection) ?? '';
+
+	if (queryText.length === 0) {
+		vscode.window.showErrorMessage('No text selected');
+		return;
+	}
+
+	const numberOfJobs = await runQuery(queryText);
+
+	reporter?.sendTelemetryEvent('commandRunSelectedQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+
+};
+
+const runQuery = async function (queryText: string): Promise<number> {
+
 	const queryResponse = getBigQueryClient().runQuery(queryText);
 
 	let panel = bigqueryWebviewViewProvider.webviewView;
@@ -41,7 +73,7 @@ export const commandRunQuery = async function (...args: any[]) {
 			await vscode.commands.executeCommand('workbench.view.extension.vscode-bigquery-query-results');
 			panel = bigqueryWebviewViewProvider.webviewView;
 		}
-		if (panel === null) { return; }
+		if (panel === null) { return 0; }
 
 		resultsGridRender = new ResultsGridRender(panel.webview);
 	}
@@ -58,12 +90,7 @@ export const commandRunQuery = async function (...args: any[]) {
 
 	resultsGridRender.render(request);
 
-	const numberOfJobs = (await queryResponse).length;
-
-	const elapsed = Date.now() - t1;
-	console.info(`commandRunQuery took ${elapsed}ms`);
-
-	reporter?.sendTelemetryEvent('commandRunQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+	return (await queryResponse).length;
 
 };
 
@@ -120,7 +147,7 @@ export const commandServiceAccountLogin = function (...args: any[]) {
 export const commandAuthenticationRefresh = function (...args: any[]) {
 
 	const t1 = Date.now();
-	
+
 	resetBigQueryClient();
 
 	authenticationWebviewProvider.refresh();
