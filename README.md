@@ -21,12 +21,14 @@ In the Bigquery side panel, sub panel "explorer", a tree of projects, datasets, 
 
 To refresh the explorer screen, can be done my executing the command `Bigquery: Explorer refresh`.
 
-Interaction with views, functions and ML models is still not implemented. Will be available in future releases of this extension. At the moment, only tables have `View Table` functionality. This is accessible by right-click on the table name on that tree, or a single click. Any of these actions will open a visualization of the content of the selected table.
+Interaction with views, functions and ML models is still not implemented. Will be available in future releases of this extension. At the moment, only tables have `View Table` and `View Schema` functionality. This is accessible by right-click on the table name on that tree. A single click on the table item open a visualization of the content of the selected table (`View Table` command).
 
 <img src="documentation/explorer_tree_table.png" alt="explorer tree" width="600"/>
 
 ## Run queries
 This extension responds to files with extension `.bqsql`. The querie(s) in the editor can be run using the key `Ctrl+Enter` ( same as in the Google Cloud portal ), executing the command `Biguery: Run Query` or pressing the dedicated button in the file editor.
+
+To run only the query selected in the text, can be done by the key combination `Ctrl+E`, using the command `Biguery: Run Selected Query` or pressing the dedicated button in the editor window. (<img src="documentation/run_selected_query_icon.png" alt="" width="20"/>)
 
 <img src="documentation/file_explorer_query_result.png" alt="file explorer" width="900"/>
 
