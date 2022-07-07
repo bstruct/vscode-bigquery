@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import bigquery from '@google-cloud/bigquery/build/src/types';
-import { extensionUri } from '../extension';
+import { extensionUri, reporter } from '../extension';
 import { Job, QueryResultsOptions, Table } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../services/simple_query_rows_response_error';
 import { ResultsGrid } from './results_grid';
@@ -278,25 +278,41 @@ export class ResultsGridRender {
             case 'first_page':
                 request.startIndex = 0;
                 resultsGridRender.render(request);
+
+                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_first_page', {});
+
                 break;
             case 'previous_page':
                 request.startIndex = startIndex - maxResults;
                 resultsGridRender.render(request);
+
+                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_previous_page', {});
+
                 break;
             case 'next_page':
                 request.startIndex = startIndex + maxResults;
                 resultsGridRender.render(request);
+
+                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_next_page', {});
+
                 break;
             case 'last_page':
                 const lastPageStartIndex = (Math.ceil(totalRows / maxResults) - 1) * maxResults;
                 request.startIndex = lastPageStartIndex;
                 resultsGridRender.render(request);
+
+                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_last_page', {});
+
                 break;
             case 'query_index_change':
                 const newIndex = Number(message.value || 0);
                 request.startIndex = 0;
                 request.jobIndex = newIndex;
                 resultsGridRender.render(request);
+
+
+                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_query_index_change', {});
+
                 break;
             case 'open_in_tab':
 
@@ -321,6 +337,8 @@ export class ResultsGridRender {
                         vscode.commands.executeCommand('workbench.action.closePanel');
 
                     });
+
+                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_open_in_tab', {});
 
                 break;
             default:
@@ -355,25 +373,40 @@ export class ResultsGridRender {
             case 'first_page':
                 request.startIndex = 0;
                 resultsGridRender.renderTable(request);
+
+                reporter?.sendTelemetryEvent('listenerTableOnDidReceiveMessage_first_page', {});
+
                 break;
             case 'previous_page':
                 request.startIndex = startIndex - maxResults;
                 resultsGridRender.renderTable(request);
+
+                reporter?.sendTelemetryEvent('listenerTableOnDidReceiveMessage_previous_page', {});
+
                 break;
             case 'next_page':
                 request.startIndex = startIndex + maxResults;
                 resultsGridRender.renderTable(request);
+
+                reporter?.sendTelemetryEvent('listenerTableOnDidReceiveMessage_next_page', {});
+
                 break;
             case 'last_page':
                 const lastPageStartIndex = (Math.ceil(totalRows / maxResults) - 1) * maxResults;
                 request.startIndex = lastPageStartIndex;
                 resultsGridRender.renderTable(request);
+
+                reporter?.sendTelemetryEvent('listenerTableOnDidReceiveMessage_last_page', {});
+
                 break;
             case 'query_index_change':
                 const newIndex = Number(message.value || 0);
                 request.startIndex = 0;
                 request.jobIndex = newIndex;
                 resultsGridRender.renderTable(request);
+
+                reporter?.sendTelemetryEvent('listenerTableOnDidReceiveMessage_query_index_change', {});
+
                 break;
             case 'open_in_tab':
                 break;
