@@ -51,6 +51,7 @@ export const commandRunSelectedQuery = async function (...args: any[]) {
 
 	if (queryText.length === 0) {
 		vscode.window.showErrorMessage('No text selected');
+		return;
 	}
 
 	const numberOfJobs = await runQuery(queryText);
