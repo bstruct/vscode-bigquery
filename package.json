@@ -4,7 +4,7 @@
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
 	"version": "0.0.8",
 	"publisher": "bstruct",
-	"icon": "logo.png",
+	"icon": "./resources/logo.png",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/bstruct/vscode-bigquery.git"
@@ -41,8 +41,8 @@
 					"bqsql"
 				],
 				"icon": {
-					"light": "./google-bigquery.svg",
-					"dark": "./google-bigquery.svg"
+					"light": "./resources/google-bigquery.svg",
+					"dark": "./resources/google-bigquery.svg"
 				}
 			}
 		],
@@ -163,14 +163,14 @@
 				{
 					"id": "bigquery-main-activity-bar",
 					"title": "BigQuery",
-					"icon": "google-bigquery.svg"
+					"icon": "./resources/google-bigquery.svg"
 				}
 			],
 			"panel": [
 				{
 					"id": "vscode-bigquery-query-results",
 					"title": "bigquery",
-					"icon": "google-bigquery.svg"
+					"icon": "./resources/google-bigquery.svg"
 				}
 			]
 		},
