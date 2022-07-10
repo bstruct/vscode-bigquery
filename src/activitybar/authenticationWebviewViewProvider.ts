@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { extensionUri } from '../extension';
-import * as commands from '../extension-commands';
+import * as commands from '../extensionCommands';
 import { Authentication } from '../services/authentication';
-import { AuthenticationGrid } from './authentication_grid';
+import { AuthenticationGrid } from './authenticationGrid';
 
 export class BigqueryAuthenticationWebviewViewProvider implements vscode.WebviewViewProvider {
 

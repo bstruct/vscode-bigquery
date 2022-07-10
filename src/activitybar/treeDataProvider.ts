@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { BigqueryTreeItem, TreeItemType } from './tree-item';
+import { BigqueryTreeItem, TreeItemType } from './treeItem';
 import { BigQuery } from '@google-cloud/bigquery';
 import { ProjectsClient } from '@google-cloud/resource-manager';
 

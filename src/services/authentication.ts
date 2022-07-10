@@ -1,6 +1,6 @@
 import * as cp from 'child_process';
-import { AuthenticationListItem } from './authentication-list-item';
-import { AuthenticationUserLoginResponse } from './authentication-user-login-response';
+import { AuthenticationListItem } from './authenticationListItem';
+import { AuthenticationUserLoginResponse } from './authenticationUserLoginResponse';
 
 //https://cloud.google.com/sdk/docs/cheatsheet#credentials
 

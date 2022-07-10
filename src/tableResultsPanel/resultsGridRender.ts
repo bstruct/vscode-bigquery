@@ -2,10 +2,10 @@ import * as vscode from 'vscode';
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import { extensionUri, reporter } from '../extension';
 import { Job, QueryResultsOptions, Table } from '@google-cloud/bigquery';
-import { SimpleQueryRowsResponseError } from '../services/simple_query_rows_response_error';
-import { ResultsGrid } from './results_grid';
-import { ResultsGridRenderRequest } from './results_grid_render_request';
-import { TableGridRenderRequest } from './table_grid_render_request';
+import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
+import { ResultsGrid } from './resultsGrid';
+import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
+import { TableGridRenderRequest } from './tableGridRenderRequest';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 

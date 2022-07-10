@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 // import { BigqueryIcons } from '../bigquery-icons';
 import { bigqueryIcons } from '../extension';
-import * as commands from '../extension-commands';
+import * as commands from '../extensionCommands';
 
 export enum TreeItemType {
     None,

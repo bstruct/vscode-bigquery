@@ -36,7 +36,7 @@
 				"aliases": [
 					"BigQuery SQL"
 				],
-				"configuration": "./bqsql-language-configuration.json",
+				"configuration": "./src/language/bqsql-language-configuration.json",
 				"extensions": [
 					"bqsql"
 				],
@@ -50,7 +50,7 @@
 			{
 				"language": "bqsql",
 				"scopeName": "source.bqsql",
-				"path": "./syntaxes/bqsql.tmGrammar.json"
+				"path": "./src/language/bqsql.tmGrammar.json"
 			}
 		],
 		"configurationDefaults": {
@@ -197,6 +197,7 @@
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
 		"lint": "eslint -c .eslintrc.js --ext .ts src --fix",
+		"unit-test": "mocha ./out/unitTests/language/bqsqlCompletionItemProviderUnitTests.js",
 		"test": "node ./out/test/runTest.js"
 	},
 	"devDependencies": {

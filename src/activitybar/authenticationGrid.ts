@@ -1,7 +1,7 @@
 
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
-import { AuthenticationListItem } from '../services/authentication-list-item';
+import { AuthenticationListItem } from '../services/authenticationListItem';
 
 export class AuthenticationGrid extends Object {
 
