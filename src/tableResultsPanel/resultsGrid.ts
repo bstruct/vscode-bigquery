@@ -161,9 +161,11 @@ export class ResultsGrid extends Object {
 
         //cells that contain the top level schema column names
         function getHeaderCells() {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             const cells: preact.VNode[] = [preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '1' }, 'Row')];
             for (let fieldIndex = 0; fieldIndex < fieldNames.length; fieldIndex++) {
                 const fieldName = fieldNames[fieldIndex];
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 const cell = preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': (fieldIndex + 2).toString() }, fieldName);
                 cells.push(cell);
             }
@@ -172,6 +174,7 @@ export class ResultsGrid extends Object {
 
         //initialize rows array with the header column row already
         const rows = [];
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header' }, getHeaderCells()));
 
         //widths of the columns
@@ -192,6 +195,7 @@ export class ResultsGrid extends Object {
         for (let resultIndex = 0; resultIndex < results.length; resultIndex++) {
 
             const cells = [];
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             cells.push(preact.h('vscode-data-grid-cell', { 'style': headerCellStyle, 'cell-type': 'columnheader', 'grid-column': '1' }, (startRowNumber++).toString()));
 
             const result: any = results[resultIndex];
@@ -200,6 +204,7 @@ export class ResultsGrid extends Object {
 
                 let value: any = null;
 
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 let cellProperties: any = { 'grid-column': (fieldIndex + 2).toString() };
 
                 if (field.mode === 'REPEATED' || field.type === 'RECORD') {
@@ -291,7 +296,8 @@ export class ResultsGrid extends Object {
             rows.push(preact.h('vscode-data-grid-row', {}, cells));
         }
 
-        const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${Math.ceil(c * .85)}em`).join(' ') }, rows);
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        const table = preact.h('vscode-data-grid', { 'sgenerate-header': 'sticky', 'grid-template-columns': widths.map(c => `${Math.ceil(c * .85)}em`).join(' ') }, rows);
         let props: any = {};
         if (innerGrid) {
             props.style = 'max-height: 20em;overflow-y:scroll;overflow-x:visible;';

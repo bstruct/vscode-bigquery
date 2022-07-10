@@ -35,10 +35,15 @@ export class SchemaGrid extends Object {
                 const schemaField: SchemaField = fields[index];
 
                 const cells = [];
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '1', style: `padding-left:${level === 0 ? 0 : level + 1}em` }, schemaField.name));
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '2' }, schemaField.type));
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '3' }, schemaField.mode));
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '4' }, schemaField.collation));
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 cells.push(preact.h('vscode-data-grid-cell', { 'grid-column': '5' }, schemaField.description));
 
                 updateCellWith(0, schemaField.name);
@@ -58,11 +63,17 @@ export class SchemaGrid extends Object {
 
         //initialize rows array with the header column row already
         const rows = [];
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header' }, [
+        // eslint-disable-next-line @typescript-eslint/naming-convention
             preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '1' }, 'Field name'),
+        // eslint-disable-next-line @typescript-eslint/naming-convention
             preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '2' }, 'Type'),
+        // eslint-disable-next-line @typescript-eslint/naming-convention
             preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '3' }, 'Mode'),
+        // eslint-disable-next-line @typescript-eslint/naming-convention
             preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '4' }, 'Collation'),
+        // eslint-disable-next-line @typescript-eslint/naming-convention
             preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '5' }, 'Description'),
         ]));
 
@@ -82,6 +93,7 @@ export class SchemaGrid extends Object {
         //
         rows.push(...getRows(0, schemaFields));
 
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         const table = preact.h('vscode-data-grid', { 'generate-header': 'sticky', 'grid-template-columns': widths.map(c => `${Math.ceil(c * .85)}em`).join(' ') }, rows);
 
         const wrappingDiv = preact.h('div', {}, table);
