@@ -6,6 +6,9 @@ import * as commands from './extensionCommands';
 import { WebviewViewProvider } from './tableResultsPanel/webviewViewProvider';
 import TelemetryReporter from '@vscode/extension-telemetry';
 import { BqsqlCompletionItemProvider } from './language/bqsqlCompletionItemProvider';
+import { BqsqlDocumentSemanticTokensProvider } from './language/bqsqlDocumentSemanticTokensProvider';
+import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
+import { BqsqlInlineCompletionItemProvider } from './language/bqsqlInlineCompletionItemProvider';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -114,6 +117,29 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.languages.registerCompletionItemProvider(
 			{ language: 'bqsql' },
 			new BqsqlCompletionItemProvider()
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.languages.registerInlineCompletionItemProvider(
+			{ language: 'bqsql' },
+			new BqsqlInlineCompletionItemProvider()
+		)
+	);
+
+
+	context.subscriptions.push(
+		vscode.languages.registerDocumentSemanticTokensProvider(
+			{ language: 'bqsql' },
+			new BqsqlDocumentSemanticTokensProvider(),
+			BqsqlDocumentSemanticTokensProvider.getSemanticTokensLegend()
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.languages.registerInlayHintsProvider(
+			{ language: 'bqsql' },
+			new BqsqlInlayHintsProvider()
 		)
 	);
 

@@ -1,0 +1,25 @@
+SELECT
+    * EXCEPT(is_generated, generation_expression, is_stored, is_updatable)
+FROM
+  `damiao-project-1`.ChiGau.INFORMATION_SCHEMA.COLUMNS
+-- WHERE
+--   table_name = 'Events'
+  ;
+
+SELECT
+    *
+  FROM
+    `damiao-project-1`.PvhTest.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS
+  -- WHERE
+  --   table_name = 'PimExport'
+    ;
+
+SELECT
+    * 
+FROM `damiao-project-1`.ChiGau.INFORMATION_SCHEMA.TABLES
+--WHERE table_name = 'Events'
+;
+
+SELECT * 
+FROM `damiao-project-1`.ChiGau.INFORMATION_SCHEMA.TABLE_OPTIONS
+WHERE table_name = 'Events';
