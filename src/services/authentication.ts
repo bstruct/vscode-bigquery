@@ -38,6 +38,11 @@ export class Authentication {
         return (JSON.parse(result) as string[]).indexOf(account) >= 0;
     }
 
+    public static async getDefaultProjectId(): Promise<string> {
+        const result = await this.runCommand(`gcloud config get-value project`);
+        return result.trim();
+    }
+
     //https://cloud.google.com/sdk/gcloud/reference/auth/revoke
 
     private static runCommand(command: string): Promise<string> {

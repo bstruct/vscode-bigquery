@@ -216,7 +216,7 @@
 		"webpack-cli": "^4.10.0"
 	},
 	"dependencies": {
-		"@bstruct/bqsql-parser": "^0.1.2",
+		"@bstruct/bqsql-parser": "^0.1.4",
 		"@google-cloud/bigquery": "^6.0.1",
 		"@google-cloud/resource-manager": "^4.1.0",
 		"@vscode/codicons": "^0.0.31",

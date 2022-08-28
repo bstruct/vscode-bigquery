@@ -8,11 +8,12 @@ import TelemetryReporter from '@vscode/extension-telemetry';
 import { BqsqlCompletionItemProvider } from './language/bqsqlCompletionItemProvider';
 import { BqsqlDocumentSemanticTokensProvider } from './language/bqsqlDocumentSemanticTokensProvider';
 import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
-import { BqsqlInlineCompletionItemProvider } from './language/bqsqlInlineCompletionItemProvider';
+import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaService';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
 export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
+export const bigqueryTableSchemaService = new BigqueryTableSchemaService();
 export let extensionUri: vscode.Uri;
 export let bigqueryIcons: BigqueryIcons;
 export let reporter: TelemetryReporter | null;
@@ -119,14 +120,6 @@ export function activate(context: vscode.ExtensionContext) {
 			new BqsqlCompletionItemProvider()
 		)
 	);
-
-	context.subscriptions.push(
-		vscode.languages.registerInlineCompletionItemProvider(
-			{ language: 'bqsql' },
-			new BqsqlInlineCompletionItemProvider()
-		)
-	);
-
 
 	context.subscriptions.push(
 		vscode.languages.registerDocumentSemanticTokensProvider(

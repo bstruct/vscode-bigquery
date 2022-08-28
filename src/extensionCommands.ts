@@ -220,7 +220,7 @@ export const commandViewTableSchema = function (...args: any[]) {
 
 let bigQueryClient: BigQueryClient | null;
 
-const getBigQueryClient = function (): BigQueryClient {
+export const getBigQueryClient = function (): BigQueryClient {
 	if (!bigQueryClient) {
 		bigQueryClient = new BigQueryClient();
 	}

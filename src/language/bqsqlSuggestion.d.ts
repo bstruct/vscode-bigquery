@@ -2,7 +2,7 @@ import { BqsqlDocumentItem } from "./bqsqlDocument";
 
 export interface BqsqlSuggestion {
     suggestion_type: string;
-    table_identifier: BqsqlDocumentItem[];
+    table_identifier: BqsqlDocumentItem;
     snippets: BqsqlSnippet[]
 }
 
