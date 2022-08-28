@@ -1,4 +1,5 @@
 import { BigQuery, Job, JobResponse, Query, Table } from '@google-cloud/bigquery';
+import { BigqueryJobError } from './bigqueryJobError';
 import { BigqueryTableSchema } from './bigqueryTableSchema';
 
 export class BigQueryClient {
@@ -70,6 +71,27 @@ export class BigQueryClient {
 
 			});
 
+	}
+
+	public async validateQuery(queryText: string): Promise<BigqueryJobError | null> {
+
+		const query: Query = {
+			dryRun: true,
+			query: queryText,
+			useLegacySql: false,
+			useQueryCache: true
+		};
+
+		let error: BigqueryJobError | null = null;
+
+		try {
+			const queryJob = await this.bqclient.createQueryJob(query);
+
+		} catch (err) {
+			error = err as BigqueryJobError;
+		}
+
+		return error;
 	}
 
 	public getTable(projectId: string, datasetId: string, tableId: string): Table {

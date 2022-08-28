@@ -9,6 +9,7 @@ import { BqsqlCompletionItemProvider } from './language/bqsqlCompletionItemProvi
 import { BqsqlDocumentSemanticTokensProvider } from './language/bqsqlDocumentSemanticTokensProvider';
 import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
 import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaService';
+import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -114,6 +115,10 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	//language
+	const baseDiagnostics = vscode.languages.createDiagnosticCollection('base_diagnostics');
+	context.subscriptions.push(baseDiagnostics);
+	BqsqlDiagnostics.subscribeToDocumentChanges(context, baseDiagnostics);
+
 	context.subscriptions.push(
 		vscode.languages.registerCompletionItemProvider(
 			{ language: 'bqsql' },
