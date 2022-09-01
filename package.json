@@ -36,7 +36,7 @@
 				"aliases": [
 					"BigQuery SQL"
 				],
-				"configuration": "./src/language/bqsql-language-configuration.json",
+				"configuration": "./resources/language/bqsql-language-configuration.json",
 				"extensions": [
 					"bqsql"
 				],
@@ -50,7 +50,7 @@
 			{
 				"language": "bqsql",
 				"scopeName": "source.bqsql",
-				"path": "./src/language/bqsql.tmGrammar.json"
+				"path": "./resources/language/bqsql.tmGrammar.json"
 			}
 		],
 		"configurationDefaults": {
@@ -203,7 +203,7 @@
 		"@types/glob": "^7.2.0",
 		"@types/mocha": "^9.1.1",
 		"@types/node": "16.x",
-		"@types/vscode": "^1.69.0",
+		"@types/vscode": "^1.66.0",
 		"@typescript-eslint/eslint-plugin": "^5.30.0",
 		"@typescript-eslint/parser": "^5.30.0",
 		"@vscode/test-electron": "^2.1.5",
@@ -216,13 +216,13 @@
 		"webpack-cli": "^4.10.0"
 	},
 	"dependencies": {
-		"@bstruct/bqsql-parser": "^0.1.6",
-		"@google-cloud/bigquery": "^6.0.1",
+		"@bstruct/bqsql-parser": "0.1.5",
+		"@google-cloud/bigquery": "^6.0.2",
 		"@google-cloud/resource-manager": "^4.1.0",
-		"@vscode/codicons": "^0.0.31",
+		"@vscode/codicons": "^0.0.32",
 		"@vscode/extension-telemetry": "^0.6.2",
-		"@vscode/webview-ui-toolkit": "^1.0.0",
-		"preact": "^10.8.2",
-		"preact-render-to-string": "^5.2.0"
+		"@vscode/webview-ui-toolkit": "^1.0.1",
+		"preact": "^10.10.6",
+		"preact-render-to-string": "^5.2.2"
 	}
 }
