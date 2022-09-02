@@ -6,7 +6,7 @@ import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderR
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/treeItem';
 import { TableGridRenderRequest } from './tableResultsPanel/tableGridRenderRequest';
-import { SchemaRender } from './tableResultsPanel/schema_render';
+import { SchemaRender } from './tableResultsPanel/schemaRender';
 
 let resultsGridRender: ResultsGridRender | null = null;
 
@@ -164,7 +164,7 @@ export const commandExplorerRefresh = function (...args: any[]) {
 	reporter?.sendTelemetryEvent('commandExplorerRefresh', {}, { elapsedMs: Date.now() - t1 });
 };
 
-export const commandViewTable = function (...args: any[]) {
+export const commandViewTable = async function (...args: any[]) {
 
 	const t1 = Date.now();
 
@@ -177,20 +177,38 @@ export const commandViewTable = function (...args: any[]) {
 	}
 
 	const table = getBigQueryClient().getTable(item.projectId, item.datasetId, item.tableId);
-
-	const request = {
-		table: table,
-		startIndex: 0,
-		maxResults: 50,
-		jobIndex: 0,
-		openInTabVisible: false
-	} as TableGridRenderRequest;
+	const metadata = await table.getMetadata();
 
 	const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
 	const newresultsGridRender = new ResultsGridRender(panel.webview);
 
-	request.openInTabVisible = false;
-	newresultsGridRender.renderTable(request);
+	if (metadata[0].type === 'EXTERNAL') {
+
+		const queryResponse = getBigQueryClient().runQuery(
+			`SELECT * FROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``);
+
+		const request = {
+			jobsPromise: queryResponse,
+			startIndex: 0,
+			maxResults: 50,
+			jobIndex: 0,
+			openInTabVisible: false
+		} as ResultsGridRenderRequest;
+
+		newresultsGridRender.render(request);
+
+	} else {
+
+		const request = {
+			table: table,
+			startIndex: 0,
+			maxResults: 50,
+			jobIndex: 0,
+			openInTabVisible: false
+		} as TableGridRenderRequest;
+
+		newresultsGridRender.renderTable(request);
+	}
 
 	reporter?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
 
