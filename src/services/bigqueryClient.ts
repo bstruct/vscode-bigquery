@@ -1,4 +1,6 @@
 import { BigQuery, Job, JobResponse, Query, Table } from '@google-cloud/bigquery';
+import { BigqueryJobError } from './bigqueryJobError';
+import { BigqueryTableSchema } from './bigqueryTableSchema';
 
 export class BigQueryClient {
 
@@ -71,6 +73,27 @@ export class BigQueryClient {
 
 	}
 
+	public async validateQuery(queryText: string): Promise<BigqueryJobError | null> {
+
+		const query: Query = {
+			dryRun: true,
+			query: queryText,
+			useLegacySql: false,
+			useQueryCache: true
+		};
+
+		let error: BigqueryJobError | null = null;
+
+		try {
+			const queryJob = await this.bqclient.createQueryJob(query);
+
+		} catch (err) {
+			error = err as BigqueryJobError;
+		}
+
+		return error;
+	}
+
 	public getTable(projectId: string, datasetId: string, tableId: string): Table {
 		return this.bqclient.dataset(datasetId, { projectId: projectId }).table(tableId);
 	}
@@ -95,6 +118,31 @@ export class BigQueryClient {
 
 		return Promise.all([metadataPromise, fullSchema])
 			.then(this.onfulfilled);
+
+	}
+
+	public async getTableSchema(projectId: string, datasetName: string, tableName: string): Promise<BigqueryTableSchema[]> {
+
+		const query = `
+SELECT 
+	colums.table_catalog AS project_id,
+	colums.table_schema AS dataset_name,
+	colums.table_name,
+	colums.column_name,
+	colums.ordinal_position,
+	colums.data_type,
+  	colums.is_partitioning_column,
+  	paths.description,
+FROM \`${projectId}.${datasetName}\`.INFORMATION_SCHEMA.COLUMNS colums
+  LEFT JOIN \`${projectId}.${datasetName}\`.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS paths USING(table_catalog, table_schema, table_name, column_name)
+WHERE table_name = '${tableName}' AND is_hidden = 'NO';
+`;
+
+		const q = await this.runQuery(query);
+
+		const results = await q[0].getQueryResults();
+
+		return results[0].map(c => c as BigqueryTableSchema);
 
 	}
 

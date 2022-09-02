@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import { BigQueryClient } from './services/bigquery-client';
+import { BigQueryClient } from './services/bigqueryClient';
 import { authenticationWebviewProvider, bigQueryTreeDataProvider, bigqueryWebviewViewProvider, reporter } from './extension';
-import { ResultsGridRender } from './table_results_panel/results_grid_render';
-import { ResultsGridRenderRequest } from './table_results_panel/results_grid_render_request';
+import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
+import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
-import { BigqueryTreeItem } from './activitybar/tree-item';
-import { TableGridRenderRequest } from './table_results_panel/table_grid_render_request';
-import { SchemaRender } from './table_results_panel/schema_render';
+import { BigqueryTreeItem } from './activitybar/treeItem';
+import { TableGridRenderRequest } from './tableResultsPanel/tableGridRenderRequest';
+import { SchemaRender } from './tableResultsPanel/schema_render';
 
 let resultsGridRender: ResultsGridRender | null = null;
 
@@ -220,7 +220,7 @@ export const commandViewTableSchema = function (...args: any[]) {
 
 let bigQueryClient: BigQueryClient | null;
 
-const getBigQueryClient = function (): BigQueryClient {
+export const getBigQueryClient = function (): BigQueryClient {
 	if (!bigQueryClient) {
 		bigQueryClient = new BigQueryClient();
 	}

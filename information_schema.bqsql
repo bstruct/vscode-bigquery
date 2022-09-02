@@ -1,0 +1,20 @@
+SELECT
+  colums.table_catalog AS project_id,
+  colums.table_schema AS dataset_name,
+  colums.table_name,
+  colums.column_name,
+  colums.ordinal_position,
+  colums.data_type,
+  colums.is_partitioning_column,
+  paths.description,
+FROM `damiao-project-1`.ChiGau.INFORMATION_SCHEMA.COLUMNS colums
+  LEFT JOIN `damiao-project-1`.PvhTest.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS paths USING(table_catalog, table_schema, table_name, column_name)
+WHERE
+  table_name = 'Events'
+  AND is_hidden = 'NO'
+  ;
+
+SELECT * FROM `damiao-project-1`.PvhTest.INFORMATION_SCHEMA.COLUMNS;
+SELECT * FROM `damiao-project-1`.PvhTest.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS;
+SELECT * FROM `damiao-project-1`.ChiGau.INFORMATION_SCHEMA.TABLES;
+SELECT * FROM `damiao-project-1`.ChiGau.INFORMATION_SCHEMA.TABLE_OPTIONS;

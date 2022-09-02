@@ -1,6 +1,6 @@
 import * as cp from 'child_process';
-import { AuthenticationListItem } from './authentication-list-item';
-import { AuthenticationUserLoginResponse } from './authentication-user-login-response';
+import { AuthenticationListItem } from './authenticationListItem';
+import { AuthenticationUserLoginResponse } from './authenticationUserLoginResponse';
 
 //https://cloud.google.com/sdk/docs/cheatsheet#credentials
 
@@ -36,6 +36,11 @@ export class Authentication {
     public static async revoke(account: string): Promise<boolean> {
         const result = await this.runCommand(`gcloud auth revoke "${account}" --format="json"`);
         return (JSON.parse(result) as string[]).indexOf(account) >= 0;
+    }
+
+    public static async getDefaultProjectId(): Promise<string> {
+        const result = await this.runCommand(`gcloud config get-value project`);
+        return result.trim();
     }
 
     //https://cloud.google.com/sdk/gcloud/reference/auth/revoke

@@ -1,14 +1,20 @@
 import * as vscode from 'vscode';
-import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authentication-webview-view-provider';
-import { BigQueryTreeDataProvider } from './activitybar/tree-data-provider';
-import { BigqueryIcons } from './bigquery-icons';
-import * as commands from './extension-commands';
-import { WebviewViewProvider } from './table_results_panel/webview-view-provider';
+import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authenticationWebviewViewProvider';
+import { BigQueryTreeDataProvider } from './activitybar/treeDataProvider';
+import { BigqueryIcons } from './bigqueryIcons';
+import * as commands from './extensionCommands';
+import { WebviewViewProvider } from './tableResultsPanel/webviewViewProvider';
 import TelemetryReporter from '@vscode/extension-telemetry';
+import { BqsqlCompletionItemProvider } from './language/bqsqlCompletionItemProvider';
+import { BqsqlDocumentSemanticTokensProvider } from './language/bqsqlDocumentSemanticTokensProvider';
+import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
+import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaService';
+import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
 export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
+export const bigqueryTableSchemaService = new BigqueryTableSchemaService();
 export let extensionUri: vscode.Uri;
 export let bigqueryIcons: BigqueryIcons;
 export let reporter: TelemetryReporter | null;
@@ -18,17 +24,6 @@ export function activate(context: vscode.ExtensionContext) {
 	extensionUri = context.extensionUri;
 
 	bigqueryIcons = new BigqueryIcons();
-
-	//vscode.env.appHost - desktop
-	//vscode.env.appName - 'Visual Studio Code'
-	//vscode.env.isNewAppInstall - False
-	//vscode.env.isTelemetryEnabled - True
-	//vscode.env.language - en
-	//vscode.env.machineId - d2f43aff5df41dbeb13da3933848166e6baeae1de1a555c46ed5f044a23f53d5
-	//vscode.env.sessionId - a3bdc4eb-a72f-492e-9255-994b55530cf91656861468776
-	//vscode.env.uiKind - 1
-	// const c = vscode.UIKind[vscode.env.uiKind];
-
 
 	try {
 
@@ -119,6 +114,34 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
+	//language
+	const baseDiagnostics = vscode.languages.createDiagnosticCollection('base_diagnostics');
+	context.subscriptions.push(baseDiagnostics);
+	BqsqlDiagnostics.subscribeToDocumentChanges(context, baseDiagnostics);
+
+	context.subscriptions.push(
+		vscode.languages.registerCompletionItemProvider(
+			{ language: 'bqsql' },
+			new BqsqlCompletionItemProvider()
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.languages.registerDocumentSemanticTokensProvider(
+			{ language: 'bqsql' },
+			new BqsqlDocumentSemanticTokensProvider(),
+			BqsqlDocumentSemanticTokensProvider.getSemanticTokensLegend()
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.languages.registerInlayHintsProvider(
+			{ language: 'bqsql' },
+			new BqsqlInlayHintsProvider()
+		)
+	);
+
+	//check if the theme has changed and the tree icons need to change colour
 	vscode.workspace.onDidChangeConfiguration(event => {
 		if (event.affectsConfiguration('workbench.colorTheme')) {
 			vscode.commands.executeCommand(commands.COMMAND_EXPLORER_REFRESH);

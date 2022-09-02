@@ -6,9 +6,7 @@
 		{
 			"type": "npm",
 			"script": "watch",
-			"problemMatcher": [
-				"$eslint-stylish"
-			],
+			"problemMatcher": "$ts-webpack-watch",
 			"isBackground": true,
 			"presentation": {
 				"reveal": "never",
@@ -31,19 +29,10 @@
 			"group": "build"
 		},
 		{
-			"type": "npm",
-			"script": "compile",
-			"group": "build",
-			"problemMatcher": [],
-			"label": "npm: compile",
-			"detail": "webpack"
-		},
-		{
 			"label": "tasks: watch-tests",
 			"dependsOn": [
 				"npm: watch",
-				"npm: watch-tests",
-				"npm: compile"
+				"npm: watch-tests"
 			],
 			"problemMatcher": []
 		}
