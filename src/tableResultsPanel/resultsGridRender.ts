@@ -210,6 +210,7 @@ export class ResultsGridRender {
 
         const metadata = await table.getMetadata();
         const schema: bigquery.ITableSchema = metadata[0].schema;
+
         const tableStream = await table.getRows({ startIndex: startIndex.toString(), maxResults: maxResults });
         const totalRows: number = Number(metadata[0].numRows || 0);
 
