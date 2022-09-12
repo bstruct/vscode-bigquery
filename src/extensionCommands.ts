@@ -13,6 +13,8 @@ let resultsGridRender: ResultsGridRender | null = null;
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
 export const COMMAND_USER_LOGIN = "vscode-bigquery.user-login";
+export const COMMAND_USER_LOGIN_WITH_DRIVE = "vscode-bigquery.user-login-drive";
+export const COMMAND_GCLOUD_INIT = "vscode-bigquery.gcloud-init";
 export const COMMAND_SERVICE_ACCOUNT_LOGIN = "vscode-bigquery.service-account-login";
 export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-refresh";
 export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
@@ -112,6 +114,24 @@ export const commandUserLogin = function (...args: any[]) {
 	reporter?.sendTelemetryEvent('commandUserLogin', {});
 };
 
+export const commandUserLoginWithDrive = function (...args: any[]) {
+
+	resetBigQueryClient();
+
+	Authentication.userLoginWithDrive()
+		.then(result => {
+			if (result.valid) {
+				vscode.window.showInformationMessage('Bigquery: User login - successful');
+				vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
+			} else {
+				vscode.window.showErrorMessage('Bigquery: User login - had invalid response');
+				reporter?.sendTelemetryErrorEvent('commandUserLoginWithDrive', { error: 'Bigquery: User login - had invalid response' });
+			}
+		});
+
+	reporter?.sendTelemetryEvent('commandUserLoginWithDrive', {});
+};
+
 export const commandServiceAccountLogin = function (...args: any[]) {
 
 	resetBigQueryClient();
@@ -141,6 +161,20 @@ export const commandServiceAccountLogin = function (...args: any[]) {
 		});
 
 	reporter?.sendTelemetryEvent('commandServiceAccountLogin', {});
+
+};
+
+export const commandGCloudInit = function (...args: any[]) {
+
+	reporter?.sendTelemetryEvent('commandGCloudInit', {});
+
+	resetBigQueryClient();
+
+	const terminal = vscode.window.createTerminal("gcloud");
+
+	terminal.show();
+
+	terminal.sendText('gcloud init');
 
 };
 

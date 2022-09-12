@@ -55,8 +55,22 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_USER_LOGIN_WITH_DRIVE,
+			commands.commandUserLoginWithDrive
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_SERVICE_ACCOUNT_LOGIN,
 			commands.commandServiceAccountLogin
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_GCLOUD_INIT,
+			commands.commandGCloudInit
 		)
 	);
 
