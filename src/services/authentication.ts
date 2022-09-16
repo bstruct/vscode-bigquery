@@ -55,7 +55,6 @@ export class Authentication {
     private static runCommand(command: string, forceShow: boolean): Promise<string> {
 
         const terminalName = 'gcloud authentication';
-        let keyPressClose = false;
 
         const qTerminal = vscode.window.terminals.find(c => c.name === terminalName);
         let terminal: vscode.Terminal;
@@ -73,11 +72,18 @@ export class Authentication {
 
             terminal = vscode.window.createTerminal(terminalOptions);
 
-            customTerminal.onDidWrite((c) => {
-                // if (keyPressClose) {
-                //     terminal.dispose();
-                // }
-            });
+            // customTerminal.onDidWrite((c) => {
+
+            //     if (keyPressClose) 
+            //     {
+            //         // terminal.dispose();
+            //     }
+
+            //     if (c === '\r\n') {
+            //         keyPressClose = true;
+            //     }
+
+            // });
 
         }
 
@@ -108,7 +114,6 @@ export class Authentication {
                 }
 
                 terminal.sendText(stdout);
-                keyPressClose = true;
 
                 resolve(stdout);
             });
