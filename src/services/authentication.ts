@@ -71,20 +71,6 @@ export class Authentication {
             } as vscode.ExtensionTerminalOptions;
 
             terminal = vscode.window.createTerminal(terminalOptions);
-
-            // customTerminal.onDidWrite((c) => {
-
-            //     if (keyPressClose) 
-            //     {
-            //         // terminal.dispose();
-            //     }
-
-            //     if (c === '\r\n') {
-            //         keyPressClose = true;
-            //     }
-
-            // });
-
         }
 
         // Black: 30
@@ -108,7 +94,6 @@ export class Authentication {
                 if (error) {
 
                     terminal.sendText(stderr);
-                    keyPressClose = true;
 
                     reject({ error, stdout, stderr });
                 }

@@ -109,6 +109,9 @@ export const commandUserLogin = function (...args: any[]) {
 				vscode.window.showErrorMessage('Bigquery: User login - had invalid response');
 				reporter?.sendTelemetryErrorEvent('commandUserLogin', { error: 'Bigquery: User login - had invalid response' });
 			}
+
+			resetBigQueryClient();
+
 		});
 
 	reporter?.sendTelemetryEvent('commandUserLogin', {});
@@ -127,6 +130,9 @@ export const commandUserLoginWithDrive = function (...args: any[]) {
 				vscode.window.showErrorMessage('Bigquery: User login - had invalid response');
 				reporter?.sendTelemetryErrorEvent('commandUserLoginWithDrive', { error: 'Bigquery: User login - had invalid response' });
 			}
+
+			resetBigQueryClient();
+
 		});
 
 	reporter?.sendTelemetryEvent('commandUserLoginWithDrive', {});
@@ -155,6 +161,9 @@ export const commandServiceAccountLogin = function (...args: any[]) {
 							vscode.window.showErrorMessage('Bigquery: Service account login - had invalid response');
 							reporter?.sendTelemetryErrorEvent('commandUserLogin', { error: 'Bigquery: Service account login - had invalid response' });
 						}
+
+						resetBigQueryClient();
+
 					});
 			}
 
@@ -274,7 +283,9 @@ let bigQueryClient: BigQueryClient | null;
 
 export const getBigQueryClient = function (): BigQueryClient {
 	if (!bigQueryClient) {
+		const t1 = Date.now();
 		bigQueryClient = new BigQueryClient();
+		reporter?.sendTelemetryEvent('CreateBigQueryClient', {}, { elapsedMs: Date.now() - t1 });
 	}
 
 	return bigQueryClient;
