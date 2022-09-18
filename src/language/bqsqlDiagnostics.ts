@@ -4,10 +4,16 @@ import * as vscode from 'vscode';
 import { BigqueryJobErrorItem } from "../services/bigqueryJobError";
 import { parse } from "@bstruct/bqsql-parser";
 import { BqsqlDocument, BqsqlDocumentItem } from "./bqsqlDocument";
+import { statusBarInfo } from "../extension";
 
 export class BqsqlDiagnostics {
 
     private static refreshDiagnostics(document: vscode.TextDocument, bqsqlDiagnostics: vscode.DiagnosticCollection): void {
+
+        if (statusBarInfo) {
+            statusBarInfo.text = '';
+            statusBarInfo.hide();
+        }
 
         const parsed = parse(document.getText()) as BqsqlDocument;
 
@@ -38,8 +44,19 @@ export class BqsqlDiagnostics {
 
         //trigger query validation
         let _ = getBigQueryClient().validateQuery(document.getText())
-            .then(error => {
+            .then(response => {
                 const diagnostics: vscode.Diagnostic[] = [];
+
+                const totalBytesProcessed = response[0];
+                const error = response[1];
+
+                if (totalBytesProcessed) {
+                    const mb = Math.round(totalBytesProcessed / 1024 / 1024);
+                    if (statusBarInfo) {
+                        statusBarInfo.text = `This query will process ${mb} MB when run.`;
+                        statusBarInfo.show();
+                    }
+                }
 
                 if (error && error.errors && error.errors.length > 0) {
 
@@ -52,6 +69,8 @@ export class BqsqlDiagnostics {
 
                 bqsqlDiagnostics.set(document.uri, diagnostics);
             });
+
+        //statusBarInfo
 
     }
 
