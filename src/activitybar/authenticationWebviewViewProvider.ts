@@ -11,7 +11,7 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
     private context: vscode.WebviewViewResolveContext<unknown> | null = null;
     private token: vscode.CancellationToken | null = null;
 
-    resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext<unknown>, token: vscode.CancellationToken): Thenable<void> | void {
+    resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext<unknown>, token: vscode.CancellationToken, forceShowConsole: boolean = false): Thenable<void> | void {
 
         this.webviewView = webviewView;
         this.context = context;
@@ -31,7 +31,7 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
         this.disposableEvent = webviewView.webview.onDidReceiveMessage(this.listenerOnDidReceiveMessage);
 
         Authentication
-            .list()
+            .list(forceShowConsole)
             .then(result => {
 
                 webviewView.webview.html = `<!DOCTYPE html>
@@ -47,10 +47,16 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
                         <div>
                             <div>New authentication via:</div>
                             <vscode-button appearance="secondary" onclick="vscode.postMessage('user_login')">User login</vscode-button>
+                            <vscode-button appearance="secondary" onclick="vscode.postMessage('user_login_drive')">User login + GDrive</vscode-button>
                             <vscode-button appearance="secondary" onclick="vscode.postMessage('service_account_login')">Service account</vscode-button>
                         </div>
                         <div>&nbsp;</div>
                         <div>Authentication is based on the <a href="https://cloud.google.com/sdk/docs/install">gcloud CLI</a>.</div>
+                        <div>&nbsp;</div>
+                        <div>
+                            <div>Still running into authentication issues? Please run: </div>
+                            <vscode-button appearance="secondary" onclick="vscode.postMessage('gcloud_init')">gcloud init</vscode-button>
+                        </div>
                         <script>
                             const vscode = acquireVsCodeApi();
                         </script>
@@ -91,6 +97,12 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
             case 'user_login':
                 vscode.commands.executeCommand(commands.COMMAND_USER_LOGIN);
                 break;
+            case 'user_login_drive':
+                vscode.commands.executeCommand(commands.COMMAND_USER_LOGIN_WITH_DRIVE);
+                break;
+            case 'gcloud_init':
+                vscode.commands.executeCommand(commands.COMMAND_GCLOUD_INIT);
+                break;
             case 'service_account_login':
                 vscode.commands.executeCommand(commands.COMMAND_SERVICE_ACCOUNT_LOGIN);
                 break;
@@ -114,7 +126,7 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
 
     refresh() {
         if (this.webviewView !== null && this.context !== null && this.token !== null) {
-            this.resolveWebviewView(this.webviewView, this.context, this.token);
+            this.resolveWebviewView(this.webviewView, this.context, this.token, true);
         }
     }
 
