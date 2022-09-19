@@ -19,23 +19,28 @@ export class BqsqlDiagnostics {
 
         function createDiagnostic(errorItem: BigqueryJobErrorItem): vscode.Diagnostic | null {
 
-            const reg = new RegExp(/at \[(\d+):(\d+)\]$/g);
-            const matches = errorItem.message.matchAll(reg);
-            let item = matches.next();
-            if ((!item.done) && item.value) {
-                const p1 = Number.parseInt(item.value[1]);
-                const p2 = Number.parseInt(item.value[2]);
+            if (errorItem.reason === 'notFound') {
 
-                const errorDocumentItem = findDocumentItem(parsed.items, p1, p2);
-                if (errorDocumentItem !== null) {
-                    let diagnostic = new vscode.Diagnostic(
-                        new vscode.Range(errorDocumentItem.range[0], errorDocumentItem.range[1], errorDocumentItem.range[0], errorDocumentItem.range[2]),
-                        errorItem.message,
-                        vscode.DiagnosticSeverity.Error
-                    );
+                debugger;
 
-                    return diagnostic;
+            } else {
+                const reg = new RegExp(/at \[(\d+):(\d+)\]$/g);
+                const matches = errorItem.message.matchAll(reg);
+                let item = matches.next();
+                if ((!item.done) && item.value) {
+                    const p1 = Number.parseInt(item.value[1]);
+                    const p2 = Number.parseInt(item.value[2]);
 
+                    const errorDocumentItem = findDocumentItem(parsed.items, p1, p2);
+                    if (errorDocumentItem !== null) {
+                        let diagnostic = new vscode.Diagnostic(
+                            new vscode.Range(errorDocumentItem.range[0], errorDocumentItem.range[1], errorDocumentItem.range[0], errorDocumentItem.range[2]),
+                            errorItem.message,
+                            vscode.DiagnosticSeverity.Error
+                        );
+
+                        return diagnostic;
+                    }
                 }
             }
 
@@ -51,7 +56,7 @@ export class BqsqlDiagnostics {
                 const error = response[1];
 
                 if (totalBytesProcessed) {
-                    const mb = Math.round(totalBytesProcessed / 1024 / 1024);
+                    const mb = (totalBytesProcessed / 1024 / 1024).toFixed(2);
                     if (statusBarInfo) {
                         statusBarInfo.text = `This query will process ${mb} MB when run.`;
                         statusBarInfo.show();
@@ -119,3 +124,8 @@ function findDocumentItem(items: BqsqlDocumentItem[], p1: number, p2: number): B
     return null;
 }
 
+function findTableIdentifier(items: BqsqlDocumentItem[]): BqsqlDocumentItem | null {
+    //Not found: Table damiao-project-1:PvhTest.PimExportw was not found in location EU'
+
+    return null;
+}
