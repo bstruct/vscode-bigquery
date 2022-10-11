@@ -52,7 +52,7 @@
     "table-name": {
       "begin": "`",
       "end": "`",
-      "name": "entity"
+      "name": "string.identity"
     }
   }
 }
