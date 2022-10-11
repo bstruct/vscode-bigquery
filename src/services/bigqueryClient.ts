@@ -73,7 +73,7 @@ export class BigQueryClient {
 
 	}
 
-	public async validateQuery(queryText: string): Promise<BigqueryJobError | null> {
+	public async validateQuery(queryText: string): Promise<[number | null, BigqueryJobError | null]> {
 
 		const query: Query = {
 			dryRun: true,
@@ -87,11 +87,18 @@ export class BigQueryClient {
 		try {
 			const queryJob = await this.bqclient.createQueryJob(query);
 
+			if (queryJob[1] && queryJob[1].statistics && queryJob[1].statistics.totalBytesProcessed) {
+				const totalBytesProcessed = queryJob[1].statistics.totalBytesProcessed;
+				if (Number.parseInt(totalBytesProcessed)) {
+					return [Number.parseInt(totalBytesProcessed), null];
+				}
+			}
+
 		} catch (err) {
 			error = err as BigqueryJobError;
 		}
 
-		return error;
+		return [null, error];
 	}
 
 	public getTable(projectId: string, datasetId: string, tableId: string): Table {

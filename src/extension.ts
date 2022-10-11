@@ -18,6 +18,7 @@ export const bigqueryTableSchemaService = new BigqueryTableSchemaService();
 export let extensionUri: vscode.Uri;
 export let bigqueryIcons: BigqueryIcons;
 export let reporter: TelemetryReporter | null;
+export let statusBarInfo: vscode.StatusBarItem | null;
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -31,6 +32,11 @@ export function activate(context: vscode.ExtensionContext) {
 		context.subscriptions.push(reporter);
 
 	} catch (e) { console.error(e); }
+
+	//statusBarInfo
+	statusBarInfo = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
+	context.subscriptions.push(statusBarInfo);
+
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
