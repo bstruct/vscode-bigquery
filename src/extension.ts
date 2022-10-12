@@ -109,6 +109,13 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_SET_DEFAULT_PROJECT,
+			commands.commandSetDefaultProject
+		)
+	);
+
 	// bigquery-authentication
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(

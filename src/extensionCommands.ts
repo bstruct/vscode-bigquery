@@ -20,6 +20,8 @@ export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-re
 export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
 export const COMMAND_VIEW_TABLE = "vscode-bigquery.view-table";
 export const COMMAND_VIEW_TABLE_SCHEMA = "vscode-bigquery.view-table-schema";
+export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
+export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 
 export const commandRunQuery = async function (...args: any[]) {
 
@@ -277,6 +279,22 @@ export const commandViewTableSchema = function (...args: any[]) {
 
 	reporter?.sendTelemetryEvent('commandViewTableSchema', {}, { elapsedMs: Date.now() - t1 });
 
+};
+
+export const commandSetDefaultProject = function (...args: any[]) {
+
+	resetBigQueryClient();
+
+	const item = args[0] as BigqueryTreeItem;
+
+	Authentication.setDefaultProjectId(item.projectId || 'xxx')
+		.then(result => {
+			vscode.commands.executeCommand(COMMAND_EXPLORER_REFRESH);
+
+			resetBigQueryClient();
+		});
+
+	reporter?.sendTelemetryEvent('setDefaultProjectId', {});
 };
 
 let bigQueryClient: BigQueryClient | null;

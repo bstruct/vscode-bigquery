@@ -32,6 +32,9 @@ export class BigqueryTreeItem extends vscode.TreeItem {
         super(label, collapsibleState);
 
         switch (treeItemType) {
+            case TreeItemType.project:
+                this.contextValue = 'bq-gcp-project';
+                break;
             case TreeItemType.table:
                 this.iconPath = bigqueryIcons.table;
                 this.contextValue = 'bq-table';

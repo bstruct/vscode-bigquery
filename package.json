@@ -96,6 +96,16 @@
 				"command": "vscode-bigquery.view-table-schema",
 				"title": "Bigquery: View table schema",
 				"icon": "$(link-external)"
+			},
+			{
+				"command": "vscode-bigquery.set-default-project",
+				"title": "Set as default project",
+				"icon": "$(issue-closed)"
+			},
+			{
+				"command": "vscode-bigquery.project-pin",
+				"title": "Pin or unpin project",
+				"icon": "$(pin)"
 			}
 		],
 		"menus": {
@@ -131,6 +141,16 @@
 				{
 					"command": "vscode-bigquery.view-table-schema",
 					"when": "viewItem == 'bq-table'"
+				},
+				{
+					"command": "vscode-bigquery.set-default-project",
+					"when": "viewItem == 'bq-gcp-project'",
+					"group": "inline"
+				},
+				{
+					"command": "vscode-bigquery.project-pin",
+					"when": "viewItem == 'bq-gcp-project'",
+					"group": "inline"
 				}
 			]
 		},
@@ -217,11 +237,11 @@
 	},
 	"dependencies": {
 		"@bstruct/bqsql-parser": "0.1.5",
-		"@google-cloud/bigquery": "^6.0.2",
-		"@google-cloud/resource-manager": "^4.1.0",
+		"@google-cloud/bigquery": "^6.0.3",
+		"@google-cloud/resource-manager": "^4.1.1",
 		"@vscode/codicons": "^0.0.32",
 		"@vscode/extension-telemetry": "^0.6.2",
-		"@vscode/webview-ui-toolkit": "^1.0.1",
+		"@vscode/webview-ui-toolkit": "^1.1.0",
 		"preact": "^10.10.6",
 		"preact-render-to-string": "^5.2.2"
 	}

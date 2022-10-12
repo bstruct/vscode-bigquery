@@ -50,6 +50,10 @@ export class Authentication {
         return result.trim();
     }
 
+    public static async setDefaultProjectId(projectId: string): Promise<void> {
+        await this.runCommand(`gcloud config set project ${projectId}`, true);
+    }
+
     //https://cloud.google.com/sdk/gcloud/reference/auth/revoke
 
     private static runCommand(command: string, forceShow: boolean): Promise<string> {
