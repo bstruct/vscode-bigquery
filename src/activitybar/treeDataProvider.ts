@@ -140,7 +140,19 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                 .filter(c => c.state === 'ACTIVE')
                 .map(c => c.projectId || 'xxx')
                 .sort((a, b) =>
-                    pinnedProjects.indexOf(a) >= 0 ? a.localeCompare(b) : (100 + a.localeCompare(b))
+                    (
+                        pinnedProjects.indexOf(a) >= 0
+                        &&
+                        pinnedProjects.indexOf(b) >= 0
+                    ) ? a.localeCompare(b) : (
+                        pinnedProjects.indexOf(a) >= 0
+                        &&
+                        pinnedProjects.indexOf(b) < 0
+                    ) ? -10 : (
+                        pinnedProjects.indexOf(a) < 0
+                        &&
+                        pinnedProjects.indexOf(b) < 0
+                    ) ? a.localeCompare(b) : 0
                 )
             ;
 
