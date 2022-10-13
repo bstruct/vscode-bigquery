@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -30,6 +30,18 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
+		"configuration": {
+			"title": "Bigquery Data View",
+			"properties": {
+				"vscode-bigquery.pinned-projects": {
+					"type": "array",
+					"default": [],
+					"scope": "application",
+					"title": "Pinned projects",
+					"description": "Pinned GCP projects id's in the explorer tree in the Bigquery extension"
+				}
+			}
+		},
 		"languages": [
 			{
 				"id": "bqsql",
