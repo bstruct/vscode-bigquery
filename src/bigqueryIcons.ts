@@ -53,4 +53,9 @@ export class BigqueryIcons {
         dark: path.join(extensionUri.path, 'resources', 'dark', 'table.svg')
     };
 
+    public pinned: { light: string; dark: string } = {
+        light: path.join(extensionUri.path, 'resources', 'light', 'pinned.svg'),
+        dark: path.join(extensionUri.path, 'resources', 'dark', 'pinned.svg')
+    };
+
 }

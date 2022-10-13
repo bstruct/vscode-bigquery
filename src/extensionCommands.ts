@@ -20,6 +20,9 @@ export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-re
 export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
 export const COMMAND_VIEW_TABLE = "vscode-bigquery.view-table";
 export const COMMAND_VIEW_TABLE_SCHEMA = "vscode-bigquery.view-table-schema";
+export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
+export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
+export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 
 export const commandRunQuery = async function (...args: any[]) {
 
@@ -277,6 +280,47 @@ export const commandViewTableSchema = function (...args: any[]) {
 
 	reporter?.sendTelemetryEvent('commandViewTableSchema', {}, { elapsedMs: Date.now() - t1 });
 
+};
+
+export const commandSetDefaultProject = function (...args: any[]) {
+
+	resetBigQueryClient();
+
+	const item = args[0] as BigqueryTreeItem;
+
+	Authentication.setDefaultProjectId(item.projectId || 'xxx')
+		.then(result => {
+			vscode.commands.executeCommand(COMMAND_EXPLORER_REFRESH);
+
+			resetBigQueryClient();
+		});
+
+	reporter?.sendTelemetryEvent('setDefaultProjectId', {});
+};
+
+export const commandPinOrUnpinProject = function (...args: any[]) {
+
+	const item = args[0] as BigqueryTreeItem;
+	const projectId = item.projectId || 'xxx';
+
+	let pinnedProjects = vscode.workspace
+		.getConfiguration()
+		.get(SETTING_PINNED_PROJECTS) as string[] || [];
+
+	// let split = pinnedProjects.split(';');
+	if (pinnedProjects.indexOf(projectId) >= 0) {
+		pinnedProjects = pinnedProjects.filter(c => c && c !== projectId);
+	} else {
+		pinnedProjects.push(projectId);
+	}
+
+	vscode.workspace
+		.getConfiguration()
+		.update(SETTING_PINNED_PROJECTS, pinnedProjects);
+
+	vscode.commands.executeCommand(COMMAND_EXPLORER_REFRESH);
+
+	reporter?.sendTelemetryEvent('commandPinOrUnpinProject', {});
 };
 
 let bigQueryClient: BigQueryClient | null;
