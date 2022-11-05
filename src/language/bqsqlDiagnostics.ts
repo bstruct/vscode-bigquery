@@ -269,6 +269,32 @@ function findMissingTableIdentifier(documentContent: string, items: BqsqlDocumen
                     vscode.DiagnosticSeverity.Error
                 );
 
+            } else {
+
+                //parsing did not help, try to find via text
+
+                const tableIndentifier = `${datasetId}.${tableId}`;
+                const indexTableText = documentContent.indexOf(tableIndentifier);
+                let l0 = 0;
+                let c0 = 0;
+                let c1 = 1;
+                if (indexTableText >= 0) {
+
+                    const lines: string[] = documentContent.split('\n');
+                    const lineIndex = lines.findIndex(l => l.indexOf(tableIndentifier) > 0);
+                    const charIndex = lines[lineIndex].indexOf(tableIndentifier);
+
+                    l0 = lineIndex;
+                    c0 = charIndex;
+                    c1 = charIndex + tableIndentifier.length;
+                }
+
+                return new vscode.Diagnostic(
+                    new vscode.Range(l0, c0, l0, c1),
+                    errorItem.message,
+                    vscode.DiagnosticSeverity.Error
+                );
+
             }
 
         }
