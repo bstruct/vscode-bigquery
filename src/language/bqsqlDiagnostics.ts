@@ -15,6 +15,8 @@ export class BqsqlDiagnostics {
             statusBarInfo.hide();
         }
 
+        if (document.languageId !== 'bqsql') { return; }
+
         const documentContent = document.getText();
         const parsed = parse(documentContent) as BqsqlDocument;
 
@@ -76,25 +78,28 @@ export class BqsqlDiagnostics {
 
     }
 
-    static subscribeToDocumentChanges(context: ExtensionContext, emojiDiagnostics: DiagnosticCollection): void {
+    static subscribeToDocumentChanges(context: ExtensionContext, diagnosticsCollection: DiagnosticCollection): void {
 
         if (vscode.window.activeTextEditor) {
-            BqsqlDiagnostics.refreshDiagnostics(vscode.window.activeTextEditor.document, emojiDiagnostics);
+            if (vscode.window.activeTextEditor.document
+                && vscode.window.activeTextEditor.document.languageId === 'bqsql') {
+                BqsqlDiagnostics.refreshDiagnostics(vscode.window.activeTextEditor.document, diagnosticsCollection);
+            }
         }
         context.subscriptions.push(
             vscode.window.onDidChangeActiveTextEditor(editor => {
-                if (editor) {
-                    BqsqlDiagnostics.refreshDiagnostics(editor.document, emojiDiagnostics);
+                if (editor && editor.document && editor.document.languageId === 'bqsql') {
+                    BqsqlDiagnostics.refreshDiagnostics(editor.document, diagnosticsCollection);
                 }
             })
         );
 
         context.subscriptions.push(
-            vscode.workspace.onDidChangeTextDocument(e => BqsqlDiagnostics.refreshDiagnostics(e.document, emojiDiagnostics))
+            vscode.workspace.onDidChangeTextDocument(e => BqsqlDiagnostics.refreshDiagnostics(e.document, diagnosticsCollection))
         );
 
         context.subscriptions.push(
-            vscode.workspace.onDidCloseTextDocument(doc => emojiDiagnostics.delete(doc.uri))
+            vscode.workspace.onDidCloseTextDocument(doc => diagnosticsCollection.delete(doc.uri))
         );
 
     }

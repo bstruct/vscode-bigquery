@@ -1,5 +1,6 @@
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
+import { SchemaField, TableMetadata } from '../services/tableMetadata';
 
 export class SchemaGrid extends Object {
 
