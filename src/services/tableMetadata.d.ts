@@ -1,4 +1,4 @@
-interface TableMetadata {
+export interface TableMetadata {
 
     // '1642435677331'
     creationTime: string;

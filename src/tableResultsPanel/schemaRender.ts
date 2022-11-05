@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { extensionUri } from '../extension';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
+import { TableMetadata } from '../services/tableMetadata';
 import { SchemaGrid } from './schemaGrid';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md

@@ -1,6 +1,7 @@
 import { BigQuery, Job, JobResponse, Query, Table } from '@google-cloud/bigquery';
 import { BigqueryJobError } from './bigqueryJobError';
 import { BigqueryTableSchema } from './bigqueryTableSchema';
+import { SchemaField, TableMetadata } from './tableMetadata';
 
 export class BigQueryClient {
 

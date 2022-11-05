@@ -15,6 +15,8 @@ export class BqsqlDiagnostics {
             statusBarInfo.hide();
         }
 
+        if (document.languageId !== 'bqsql') { return; }
+
         const documentContent = document.getText();
         const parsed = parse(documentContent) as BqsqlDocument;
 
@@ -33,7 +35,14 @@ export class BqsqlDiagnostics {
                     const p2 = Number.parseInt(item.value[2]);
 
                     const errorDocumentItem = findDocumentItem(parsed.items, p1, p2);
-                    if (errorDocumentItem !== null) {
+                    if (errorDocumentItem === null) {
+                        return new vscode.Diagnostic(
+                            new vscode.Range(p1 - 1, p2 - 1, p1 - 1, p2 + 4),
+                            errorItem.message,
+                            vscode.DiagnosticSeverity.Error
+                        );
+
+                    } else {
                         return new vscode.Diagnostic(
                             new vscode.Range(errorDocumentItem.range[0], errorDocumentItem.range[1], errorDocumentItem.range[0], errorDocumentItem.range[2]),
                             errorItem.message,
@@ -76,25 +85,28 @@ export class BqsqlDiagnostics {
 
     }
 
-    static subscribeToDocumentChanges(context: ExtensionContext, emojiDiagnostics: DiagnosticCollection): void {
+    static subscribeToDocumentChanges(context: ExtensionContext, diagnosticsCollection: DiagnosticCollection): void {
 
         if (vscode.window.activeTextEditor) {
-            BqsqlDiagnostics.refreshDiagnostics(vscode.window.activeTextEditor.document, emojiDiagnostics);
+            if (vscode.window.activeTextEditor.document
+                && vscode.window.activeTextEditor.document.languageId === 'bqsql') {
+                BqsqlDiagnostics.refreshDiagnostics(vscode.window.activeTextEditor.document, diagnosticsCollection);
+            }
         }
         context.subscriptions.push(
             vscode.window.onDidChangeActiveTextEditor(editor => {
-                if (editor) {
-                    BqsqlDiagnostics.refreshDiagnostics(editor.document, emojiDiagnostics);
+                if (editor && editor.document && editor.document.languageId === 'bqsql') {
+                    BqsqlDiagnostics.refreshDiagnostics(editor.document, diagnosticsCollection);
                 }
             })
         );
 
         context.subscriptions.push(
-            vscode.workspace.onDidChangeTextDocument(e => BqsqlDiagnostics.refreshDiagnostics(e.document, emojiDiagnostics))
+            vscode.workspace.onDidChangeTextDocument(e => BqsqlDiagnostics.refreshDiagnostics(e.document, diagnosticsCollection))
         );
 
         context.subscriptions.push(
-            vscode.workspace.onDidCloseTextDocument(doc => emojiDiagnostics.delete(doc.uri))
+            vscode.workspace.onDidCloseTextDocument(doc => diagnosticsCollection.delete(doc.uri))
         );
 
     }
@@ -253,6 +265,32 @@ function findMissingTableIdentifier(documentContent: string, items: BqsqlDocumen
 
                 return new vscode.Diagnostic(
                     new vscode.Range(line, char1, line, char2),
+                    errorItem.message,
+                    vscode.DiagnosticSeverity.Error
+                );
+
+            } else {
+
+                //parsing did not help, try to find via text
+
+                const tableIndentifier = `${datasetId}.${tableId}`;
+                const indexTableText = documentContent.indexOf(tableIndentifier);
+                let l0 = 0;
+                let c0 = 0;
+                let c1 = 1;
+                if (indexTableText >= 0) {
+
+                    const lines: string[] = documentContent.split('\n');
+                    const lineIndex = lines.findIndex(l => l.indexOf(tableIndentifier) > 0);
+                    const charIndex = lines[lineIndex].indexOf(tableIndentifier);
+
+                    l0 = lineIndex;
+                    c0 = charIndex;
+                    c1 = charIndex + tableIndentifier.length;
+                }
+
+                return new vscode.Diagnostic(
+                    new vscode.Range(l0, c0, l0, c1),
                     errorItem.message,
                     vscode.DiagnosticSeverity.Error
                 );
