@@ -35,7 +35,14 @@ export class BqsqlDiagnostics {
                     const p2 = Number.parseInt(item.value[2]);
 
                     const errorDocumentItem = findDocumentItem(parsed.items, p1, p2);
-                    if (errorDocumentItem !== null) {
+                    if (errorDocumentItem === null) {
+                        return new vscode.Diagnostic(
+                            new vscode.Range(p1 - 1, p2 - 1, p1 - 1, p2 + 4),
+                            errorItem.message,
+                            vscode.DiagnosticSeverity.Error
+                        );
+
+                    } else {
                         return new vscode.Diagnostic(
                             new vscode.Range(errorDocumentItem.range[0], errorDocumentItem.range[1], errorDocumentItem.range[0], errorDocumentItem.range[2]),
                             errorItem.message,
