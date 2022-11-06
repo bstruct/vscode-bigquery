@@ -117,7 +117,7 @@ export class SchemaRender {
 
     private async getResultsHtml(tableMetadata: TableMetadata): Promise<string> {
 
-        const schema = JSON.stringify(tableMetadata.schema.fields);
+        // const schema = JSON.stringify(tableMetadata.schema.fields);
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
             "resources",

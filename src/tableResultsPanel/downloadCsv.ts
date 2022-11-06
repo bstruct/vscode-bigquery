@@ -34,19 +34,35 @@ export class DownloadCsv {
                         },
                         defaultUri: defaultUri
                     }
-                ).then((uri: vscode.Uri | undefined) => {
+                ).then(async (uri: vscode.Uri | undefined) => {
 
                     if (uri !== undefined) {
 
                         vscode.window.showInformationMessage(`Initiated downloading into the file:\n${filename}`);
 
                         const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
+
+                        // job.metadata
+                        const queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000 });
+                        
+                        // const rows = stream.read(1000);
+                        // const queryRowsResponse = await job.getQueryResults(queryResultOptions);
+                        // const schema: bigquery.ITableSchema = queryRowsResponse[2]?.schema || {};
+
+                        // const totalRows: number = Number(queryRowsResponse[2]?.totalRows || 0);
+
+
+                        debugger;
+
+
                         const csvStringifier = createCsvStringifier({
                             header: [
                                 { id: 'name', title: 'NAME' },
                                 { id: 'lang', title: 'LANGUAGE' }
                             ]
                         });
+
+                        job.getMetadata();
 
 
                         fs.writeFile(uri.path, csvStringifier.getHeaderString(), (err: any) => {
