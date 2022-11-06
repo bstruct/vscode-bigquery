@@ -140,6 +140,14 @@ export class ResultsGrid extends Object {
 
         }
 
+        //download csv
+        elements.push(preact.h('span', {}, ' '));
+
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("download_csv")' }, [
+            'Download CSV',
+            preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-cloud-download' }, [])
+        ]));
+
         return preact.h('div', {}, elements);
     }
 

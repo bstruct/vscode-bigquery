@@ -1,0 +1,84 @@
+import * as vscode from 'vscode';
+import { DownloadCsvRequest } from "./downloadCsvRequest";
+import * as fs from 'fs';
+
+export class DownloadCsv {
+
+    // constructor(webView: vscode.Webview) {
+    //     this.webView = webView;
+    // }
+
+    public static download(downloadCsvRequest: DownloadCsvRequest) {
+
+        try {
+
+            downloadCsvRequest.jobsPromise.then(jobs => {
+
+                const job = jobs[downloadCsvRequest.jobIndex];
+                const date = new Date();
+                const filename = `${date.getFullYear()}${(date.getMonth() + 1).toString(2)}${date.getDay()}${date.toLocaleTimeString().replace(/:/g, '')}_${job.id}.csv`;
+
+                //download start
+                let defaultUri: vscode.Uri | undefined;
+                if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+                    defaultUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, filename);
+                }
+                // const baseUri= vscode.workspace.workspaceFolders[0].uri;
+                // const path = vscode.workspace.asRelativePath('test.csv', true);
+
+                vscode.window.showSaveDialog(
+                    {
+                        title: 'Save export',
+                        filters: {
+                            'csv': ['csv']
+                        },
+                        defaultUri: defaultUri
+                    }
+                ).then((uri: vscode.Uri | undefined) => {
+
+                    if (uri !== undefined) {
+
+                        vscode.window.showInformationMessage(`Initiated downloading into the file:\n${filename}`);
+
+                        const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
+                        const csvStringifier = createCsvStringifier({
+                            header: [
+                                { id: 'name', title: 'NAME' },
+                                { id: 'lang', title: 'LANGUAGE' }
+                            ]
+                        });
+
+
+                        fs.writeFile(uri.path, csvStringifier.getHeaderString(), (err: any) => {
+                            if (err) {
+                                console.error(err);
+                            }
+                        });
+
+
+                        // const records = [
+                        //     { name: 'Bob', lang: 'French, English' },
+                        //     { name: 'Mary', lang: 'English' }
+                        // ];
+
+
+                        // fs.appendFile(uri.path, csvStringifier.stringifyRecords(records), (err: any) => {
+                        //     if (err) {
+                        //         console.error(err);
+                        //     }
+                        // });
+
+                        //success message
+                        vscode.window.showInformationMessage(`Download concluded:\n${filename}`);
+                    }
+                });
+
+            });
+
+        } catch (error: any) {
+            vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
+        }
+    }
+
+
+}
