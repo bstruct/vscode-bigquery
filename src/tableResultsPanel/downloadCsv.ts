@@ -43,27 +43,11 @@ export class DownloadCsv {
                         const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
 
                         // job.metadata
-                        const queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000 });
-                        
-                        // const rows = stream.read(1000);
-                        // const queryRowsResponse = await job.getQueryResults(queryResultOptions);
-                        // const schema: bigquery.ITableSchema = queryRowsResponse[2]?.schema || {};
+                        let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000 });
+                        const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
 
-                        // const totalRows: number = Number(queryRowsResponse[2]?.totalRows || 0);
-
-
-                        debugger;
-
-
-                        const csvStringifier = createCsvStringifier({
-                            header: [
-                                { id: 'name', title: 'NAME' },
-                                { id: 'lang', title: 'LANGUAGE' }
-                            ]
-                        });
-
-                        job.getMetadata();
-
+                        const columnNames = queryResults[2]?.schema?.fields?.filter(c => c.name && c.name.length > 0).map(c => { return { id: c.name as string, title: c.name as string }; });
+                        const csvStringifier = createCsvStringifier({ header: columnNames });
 
                         fs.writeFile(uri.path, csvStringifier.getHeaderString(), (err: any) => {
                             if (err) {
@@ -72,17 +56,26 @@ export class DownloadCsv {
                         });
 
 
-                        // const records = [
-                        //     { name: 'Bob', lang: 'French, English' },
-                        //     { name: 'Mary', lang: 'English' }
-                        // ];
+                        let records = queryResults[0];
+                        let totalDownloadedRows = 0;
 
+                        while (true) {
+                            fs.appendFile(uri.path, csvStringifier.stringifyRecords(records), (err: any) => {
+                                if (err) {
+                                    console.error(err);
+                                }
+                            });
 
-                        // fs.appendFile(uri.path, csvStringifier.stringifyRecords(records), (err: any) => {
-                        //     if (err) {
-                        //         console.error(err);
-                        //     }
-                        // });
+                            totalDownloadedRows += records.length;
+                            const pageToken = queryResults[1]?.pageToken;
+
+                            if (totalDownloadedRows >= totalRows || (!pageToken)) {
+                                break;
+                            }
+
+                            queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000, pageToken: pageToken });
+                            records = queryResults[0];
+                        }
 
                         //success message
                         vscode.window.showInformationMessage(`Download concluded:\n${filename}`);
