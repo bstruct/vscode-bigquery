@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { DownloadCsvRequest } from "./downloadCsvRequest";
 import * as fs from 'fs';
+import * as csv_writer from 'csv-writer';
+import { ObjectCsvStringifierParams } from 'csv-writer/src/lib/csv-stringifier-factory';
 
 export class DownloadCsv {
 
@@ -40,16 +42,16 @@ export class DownloadCsv {
 
                         vscode.window.showInformationMessage(`Initiated downloading into the file:\n${filename}`);
 
-                        const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
+                        const createCsvStringifier = csv_writer.createObjectCsvStringifier;
 
                         // job.metadata
                         let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000 });
                         const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
 
                         const columnNames = queryResults[2]?.schema?.fields?.filter(c => c.name && c.name.length > 0).map(c => { return { id: c.name as string, title: c.name as string }; });
-                        const csvStringifier = createCsvStringifier({ header: columnNames });
+                        const csvStringifier = createCsvStringifier({ header: columnNames } as ObjectCsvStringifierParams);
 
-                        fs.writeFile(uri.path, csvStringifier.getHeaderString(), (err: any) => {
+                        fs.writeFile(uri.path, csvStringifier.getHeaderString() as string, (err: any) => {
                             if (err) {
                                 console.error(err);
                             }
@@ -60,7 +62,11 @@ export class DownloadCsv {
                         let totalDownloadedRows = 0;
 
                         while (true) {
-                            fs.appendFile(uri.path, csvStringifier.stringifyRecords(records), (err: any) => {
+
+                            //transform complex objects into string
+                            let adjustedRecords = DownloadCsv.objectsToString(records);
+
+                            fs.appendFile(uri.path, csvStringifier.stringifyRecords(adjustedRecords), (err: any) => {
                                 if (err) {
                                     console.error(err);
                                 }
@@ -90,4 +96,28 @@ export class DownloadCsv {
     }
 
 
+
+    private static objectsToString(records: any[]): any[] {
+
+        let adjustedRecords = [];
+
+        for (let i = 0; i < records.length; i++) {
+            const iItem = records[i];
+            let newItem: any = {};
+            for (const [key, value] of Object.entries(iItem)) {
+                if (value && (value as any).value) {
+                    newItem[key] = (value as any).value;
+                } else {
+                    if (value && typeof (value) === 'object') {
+                        newItem[key] = (value as Buffer).toString('base64');
+                    } else {
+                        newItem[key] = value;
+                    }
+                }
+            }
+            adjustedRecords.push(newItem);
+        }
+
+        return adjustedRecords;
+    }
 }
