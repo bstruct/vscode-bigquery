@@ -79,7 +79,7 @@ export class DownloadCsv {
                                 break;
                             }
 
-                            queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000, pageToken: pageToken });
+                            queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000, pageToken: pageToken });
                             records = queryResults[0];
                         }
 
