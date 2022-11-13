@@ -50,13 +50,21 @@ To run only the query selected in the text, can be done by the key combination `
 
 After the query returns a response, the bottom panel of Visual Studio code will be made visible with the selected tab `Bigquery: Query results`. There, the query results are displayed with the usual pagination functionality. For convinience, is possible to open the same query results in another tab for side-by-side comparisons or further persistance. The results in the bottom panel will only represent the latest query execution.
 
-As visible in the image above, syntax highlight is very poor at the moment. Intellisence is not implemented at all. This will be the next improvements biggest area. 
+As visible in the image above, syntax highlight is very poor at the moment. Intellisence has too few features. This will be the next improvements biggest area. 
 
 The query in the editor is evaluated in every change. If there's errors in the query, it will be underlined
 <img src="documentation/query_error.png" alt="query error" width="600"/>
 
 If the query is valid, the number of bytes that will be consumed will appear in the bottom bar
 <img src="documentation/query_size_evaluation.png" alt="query error" width="600"/>
+
+## Download CSV
+
+After a query has run, in the result grid, there's the option of downloading that same results in CSV format. The file generated supports multiline, but not nested complex objects. 
+There is no limit size/row number imposed in this feature, so please be aware of the effort that will be asked of your computer.
+
+<img src="documentation/download_csv.png" alt="file explorer" width="200"/>
+
 
 ## View table schema
 

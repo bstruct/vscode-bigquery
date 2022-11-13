@@ -6,6 +6,9 @@ import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsRespons
 import { ResultsGrid } from './resultsGrid';
 import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 import { TableGridRenderRequest } from './tableGridRenderRequest';
+import { DownloadCsvRequest } from './downloadCsvRequest';
+import { request } from 'http';
+import { DownloadCsv } from './downloadCsv';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
@@ -340,6 +343,17 @@ export class ResultsGridRender {
                     });
 
                 reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_open_in_tab', {});
+
+                break;
+
+            case 'download_csv':
+
+                const downloadCsvRequest = {
+                    jobsPromise: request.jobsPromise,
+                    jobIndex:request.jobIndex
+                } as DownloadCsvRequest;
+
+                DownloadCsv.download(downloadCsvRequest);
 
                 break;
             default:
