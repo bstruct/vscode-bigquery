@@ -7,6 +7,7 @@ import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/treeItem';
 import { TableGridRenderRequest } from './tableResultsPanel/tableGridRenderRequest';
 import { SchemaRender } from './tableResultsPanel/schemaRender';
+import { QueryGeneratorService } from './services/queryGeneratorService';
 
 let resultsGridRender: ResultsGridRender | null = null;
 
@@ -20,6 +21,7 @@ export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-re
 export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
 export const COMMAND_VIEW_TABLE = "vscode-bigquery.view-table";
 export const COMMAND_VIEW_TABLE_SCHEMA = "vscode-bigquery.view-table-schema";
+export const COMMAND_CREATE_TABLE_DEFAULT_QUERY = "vscode-bigquery.create-table-default-query";
 export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
 export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
@@ -279,6 +281,32 @@ export const commandViewTableSchema = function (...args: any[]) {
 	schemaRender.render(metadataPromise);
 
 	reporter?.sendTelemetryEvent('commandViewTableSchema', {}, { elapsedMs: Date.now() - t1 });
+
+};
+
+export const commandCreateTableDefaultQuery = async function (...args: any[]) {
+
+	const t1 = Date.now();
+
+	const item = args[0] as BigqueryTreeItem;
+
+	const title = `Query ${item.tableId}`;
+
+	if (item.projectId === null || item.datasetId === null || item.tableId === null) {
+		return;
+	}
+
+	const metadata = await getBigQueryClient().getMetadata(item.projectId, item.datasetId, item.tableId);
+	const query = QueryGeneratorService.generateSelectQuery(metadata);
+
+	vscode.workspace.openTextDocument({
+		language: 'bqsql',
+		content: query
+	}).then(doc => {
+		vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
+	});
+
+	reporter?.sendTelemetryEvent('commandCreateTableDefaultQuery', {}, { elapsedMs: Date.now() - t1 });
 
 };
 

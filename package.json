@@ -110,6 +110,11 @@
 				"icon": "$(link-external)"
 			},
 			{
+				"command": "vscode-bigquery.create-table-default-query",
+				"title": "Bigquery: Query table",
+				"icon": "$(file-text)"
+			},
+			{
 				"command": "vscode-bigquery.set-default-project",
 				"title": "Set as default project",
 				"icon": "$(issue-closed)"
@@ -152,6 +157,10 @@
 				},
 				{
 					"command": "vscode-bigquery.view-table-schema",
+					"when": "viewItem == 'bq-table'"
+				},
+				{
+					"command": "vscode-bigquery.create-table-default-query",
 					"when": "viewItem == 'bq-table'"
 				},
 				{

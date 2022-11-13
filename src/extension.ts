@@ -94,6 +94,13 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_CREATE_TABLE_DEFAULT_QUERY,
+			commands.commandCreateTableDefaultQuery
+		)
+	);
+
 	//https://code.visualstudio.com/api/references/when-clause-contexts
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
