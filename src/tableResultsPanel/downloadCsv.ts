@@ -44,7 +44,6 @@ export class DownloadCsv {
 
                         const createCsvStringifier = csv_writer.createObjectCsvStringifier;
 
-                        // job.metadata
                         let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000 });
                         const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
 
