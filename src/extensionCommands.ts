@@ -290,8 +290,6 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 
 	const item = args[0] as BigqueryTreeItem;
 
-	const title = `Query ${item.tableId}`;
-
 	if (item.projectId === null || item.datasetId === null || item.tableId === null) {
 		return;
 	}
@@ -304,6 +302,11 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 		content: query
 	}).then(doc => {
 		vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
+		// vscode.commands.executeCommand("cursorMove", {
+		// 	to: "down",
+		// 	by: "line",
+		// 	value: 2
+		// });
 	});
 
 	reporter?.sendTelemetryEvent('commandCreateTableDefaultQuery', {}, { elapsedMs: Date.now() - t1 });
