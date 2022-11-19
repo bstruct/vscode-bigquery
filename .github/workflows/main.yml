@@ -1,4 +1,6 @@
 on: push
+env:
+  GITHUB_NPM_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
 jobs:
   build:
