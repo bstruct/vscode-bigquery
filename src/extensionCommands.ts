@@ -297,17 +297,12 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 	const metadata = await getBigQueryClient().getMetadata(item.projectId, item.datasetId, item.tableId);
 	const query = QueryGeneratorService.generateSelectQuery(metadata);
 
-	vscode.workspace.openTextDocument({
+	const doc = await vscode.workspace.openTextDocument({
 		language: 'bqsql',
 		content: query
-	}).then(doc => {
-		vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
-		// vscode.commands.executeCommand("cursorMove", {
-		// 	to: "down",
-		// 	by: "line",
-		// 	value: 2
-		// });
 	});
+
+	await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
 
 	reporter?.sendTelemetryEvent('commandCreateTableDefaultQuery', {}, { elapsedMs: Date.now() - t1 });
 
