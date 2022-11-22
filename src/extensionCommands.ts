@@ -143,36 +143,32 @@ export const commandUserLoginWithDrive = function (...args: any[]) {
 	reporter?.sendTelemetryEvent('commandUserLoginWithDrive', {});
 };
 
-export const commandServiceAccountLogin = function (...args: any[]) {
+export const commandServiceAccountLogin = async function (...args: any[]) {
 
 	resetBigQueryClient();
 
-	vscode.window.showOpenDialog({ canSelectFiles: true, canSelectMany: false, canSelectFolders: false })
-		.then(file => {
+	const showOpenDialogResult = await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectMany: false, canSelectFolders: false });
 
-			if (file) {
+	if (showOpenDialogResult) {
 
-				let path = file[0].path;
-				if (process.platform === 'win32') {
-					path = path.substring(1);
-				}
+		let path = showOpenDialogResult[0].path;
+		if (process.platform === 'win32') {
+			path = path.substring(1);
+		}
 
-				Authentication.serviceAccountLogin(path)
-					.then(result => {
-						if (result.valid) {
-							vscode.window.showInformationMessage('Bigquery: Service account login - successful');
-							vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
-						} else {
-							vscode.window.showErrorMessage('Bigquery: Service account login - had invalid response');
-							reporter?.sendTelemetryErrorEvent('commandUserLogin', { error: 'Bigquery: Service account login - had invalid response' });
-						}
+		const serviceAccountLoginResult = await Authentication.serviceAccountLogin(path);
 
-						resetBigQueryClient();
+		if (serviceAccountLoginResult.valid) {
+			vscode.window.showInformationMessage('Bigquery: Service account login - successful');
+			vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
+		} else {
+			vscode.window.showErrorMessage('Bigquery: Service account login - had invalid response');
+			reporter?.sendTelemetryErrorEvent('commandUserLogin', { error: 'Bigquery: Service account login - had invalid response' });
+		}
 
-					});
-			}
+		resetBigQueryClient();
+	}
 
-		});
 
 	reporter?.sendTelemetryEvent('commandServiceAccountLogin', {});
 
