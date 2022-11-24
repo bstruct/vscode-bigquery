@@ -32,7 +32,7 @@ suite('Extension Test Suite', async () => {
 
 	});
 
-	test('COMMAND_SERVICE_ACCOUNT_LOGIN: File selected - invalid response', async () => {
+	test('COMMAND_SERVICE_ACCOUNT_LOGIN: Invalid file selected', async () => {
 
 		const extension = vscode.extensions.getExtension('bstruct.vscode-bigquery');
 		if (!extension) { assert.fail('extension not found'); }
@@ -63,7 +63,7 @@ suite('Extension Test Suite', async () => {
 		};
 
 		let showErrorMessageCount = 0;
-		vscode.window.showErrorMessage = function (message: string, ...items: any[]): Thenable<any | undefined> {
+		vscode.window.showErrorMessage = function<T extends string> (message: string, ...items: T[]): Thenable<any | undefined> {
 
 			showErrorMessageCount++;
 
@@ -71,23 +71,73 @@ suite('Extension Test Suite', async () => {
 
 			return new Promise((resolve, reject) => { resolve(undefined); });
 		};
+		try {
+			const commandResult = await vscode.commands.executeCommand(COMMAND_SERVICE_ACCOUNT_LOGIN);
 
-		// let serviceAccountLoginCount = 0;
-		// Authentication.serviceAccountLogin = function (filePath: string): Promise<AuthenticationUserLoginResponse> {
-
-		// 	serviceAccountLoginCount++;
-
-		// 	return new Promise((resolve, reject) => { resolve({ valid: false } as AuthenticationUserLoginResponse); });
-		// };
-
-		const commandResult = await vscode.commands.executeCommand(COMMAND_SERVICE_ACCOUNT_LOGIN);
+		} catch (error) { }
 
 		assert.equal(1, showOpenDialogCount);
-		// assert.equal(1, serviceAccountLoginCount);
 		assert.equal(1, showErrorMessageCount);
 		assert.equal(0, showInformationMessageCount);
 
 	});
+
+	// test('COMMAND_SERVICE_ACCOUNT_LOGIN: File selected - invalid response', async () => {
+
+	// 	const extension = vscode.extensions.getExtension('bstruct.vscode-bigquery');
+	// 	if (!extension) { assert.fail('extension not found'); }
+	// 	await extension.activate();
+
+	// 	//create dummy file to 
+	// 	const fileUri = vscode.Uri.joinPath(vscode.Uri.parse(__dirname), 'dummy.json');
+	// 	await vscode.workspace.fs.writeFile(fileUri, (new TextEncoder()).encode('dummy'));
+
+	// 	let showOpenDialogCount = 0;
+	// 	vscode.window.showOpenDialog = function (options?: vscode.OpenDialogOptions): Thenable<vscode.Uri[] | undefined> {
+
+	// 		showOpenDialogCount++;
+
+	// 		assert.equal(true, options?.canSelectFiles);
+	// 		assert.equal(false, options?.canSelectFolders);
+	// 		assert.equal(false, options?.canSelectMany);
+
+	// 		return new Promise((resolve, reject) => { resolve([fileUri]); });
+	// 	};
+
+	// 	let showInformationMessageCount = 0;
+	// 	vscode.window.showInformationMessage = function (message: string, ...items: any[]): Thenable<any | undefined> {
+
+	// 		showInformationMessageCount++;
+
+	// 		return new Promise((resolve, reject) => { resolve(undefined); });
+	// 	};
+
+	// 	let showErrorMessageCount = 0;
+	// 	vscode.window.showErrorMessage = function (message: string, ...items: any[]): Thenable<any | undefined> {
+
+	// 		showErrorMessageCount++;
+
+	// 		assert.equal('Bigquery: Service account login - had invalid response', message);
+
+	// 		return new Promise((resolve, reject) => { resolve(undefined); });
+	// 	};
+
+	// 	// let serviceAccountLoginCount = 0;
+	// 	// Authentication.serviceAccountLogin = function (filePath: string): Promise<AuthenticationUserLoginResponse> {
+
+	// 	// 	serviceAccountLoginCount++;
+
+	// 	// 	return new Promise((resolve, reject) => { resolve({ valid: false } as AuthenticationUserLoginResponse); });
+	// 	// };
+
+	// 	const commandResult = await vscode.commands.executeCommand(COMMAND_SERVICE_ACCOUNT_LOGIN);
+
+	// 	assert.equal(1, showOpenDialogCount);
+	// 	// assert.equal(1, serviceAccountLoginCount);
+	// 	assert.equal(1, showErrorMessageCount);
+	// 	assert.equal(0, showInformationMessageCount);
+
+	// });
 
 	// test('Sample test', async () => {
 

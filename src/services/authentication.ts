@@ -20,12 +20,17 @@ export class Authentication {
     }
 
     public static async serviceAccountLogin(filePath: string): Promise<AuthenticationUserLoginResponse> {
-        const result = await this.runCommand(`gcloud auth activate-service-account --key-file="${filePath}" --format="json"`, true);
 
-        const typedResult = JSON.parse(result) as string[];
-        if (typedResult.length === 0) {
-            return { valid: true } as AuthenticationUserLoginResponse;
-        }
+        try {
+
+            const result = await this.runCommand(`gcloud auth activate-service-account --key-file="${filePath}" --format="json"`, true);
+
+            const typedResult = JSON.parse(result) as string[];
+            if (typedResult.length === 0) {
+                return { valid: true } as AuthenticationUserLoginResponse;
+            }
+
+        } catch (error) { }
 
         return { valid: false } as AuthenticationUserLoginResponse;
     }
@@ -100,11 +105,12 @@ export class Authentication {
                     terminal.sendText(stderr);
 
                     reject({ error, stdout, stderr });
+                } else {
+
+                    terminal.sendText(stdout);
+
+                    resolve(stdout);
                 }
-
-                terminal.sendText(stdout);
-
-                resolve(stdout);
             });
 
         });
