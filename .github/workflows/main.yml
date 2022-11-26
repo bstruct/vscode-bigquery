@@ -1,7 +1,7 @@
 on: push
 env:
   GITHUB_NPM_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  WORKSPACE_PATH: ${{GITHUB_WORKSPACE}}
+  WORKSPACE_PATH: ${env.GITHUB_WORKSPACE}
 
 jobs:
   build:
