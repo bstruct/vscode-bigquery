@@ -23,7 +23,6 @@ export class Authentication {
 
         try {
             let filePath = fileUri.path;
-            console.debug(`platform: ${process.platform}`);
             if (process.platform === 'win32') {
                 filePath = filePath.substring(1);
             }

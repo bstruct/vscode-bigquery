@@ -39,7 +39,7 @@ suite('Extension Test Suite', async () => {
 		await extension.activate();
 
 		//create dummy file to 
-		const fileUri = vscode.Uri.joinPath(vscode.Uri.parse(__dirname), 'dummy.json');
+		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(__dirname), 'dummy.json');
 		await vscode.workspace.fs.writeFile(fileUri, (new TextEncoder()).encode('dummy'));
 
 		let showOpenDialogCount = 0;
@@ -63,7 +63,7 @@ suite('Extension Test Suite', async () => {
 		};
 
 		let showErrorMessageCount = 0;
-		vscode.window.showErrorMessage = function<T extends string> (message: string, ...items: T[]): Thenable<any | undefined> {
+		vscode.window.showErrorMessage = function <T extends string>(message: string, ...items: T[]): Thenable<any | undefined> {
 
 			showErrorMessageCount++;
 
@@ -89,7 +89,7 @@ suite('Extension Test Suite', async () => {
 		await extension.activate();
 
 		//create dummy file to 
-		const fileUri = vscode.Uri.joinPath(vscode.Uri.parse(__dirname), 'credentials.json');
+		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(__dirname), 'credentials.json');
 
 		//valid service account with no permissions
 		const sa = {
