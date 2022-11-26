@@ -3,7 +3,8 @@ import * as assert from 'assert';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
-import { COMMAND_SERVICE_ACCOUNT_LOGIN } from '../../extensionCommands';
+import { bigqueryWebviewViewProvider } from '../../extension';
+import { COMMAND_RUN_QUERY, COMMAND_SERVICE_ACCOUNT_LOGIN } from '../../extensionCommands';
 
 suite('Extension Test Suite', async () => {
 	vscode.window.showInformationMessage('Start all tests.');
@@ -130,6 +131,23 @@ suite('Extension Test Suite', async () => {
 		assert.equal(1, showOpenDialogCount);
 		assert.equal(0, showErrorMessageCount);
 		assert.equal(1, showInformationMessageCount);
+
+	});
+
+	test('COMMAND_RUN_QUERY: SELECT 1,2,3', async () => {
+
+		const doc = await vscode.workspace.openTextDocument({
+			language: 'bqsql',
+			content: 'SELECT 1,2,3'
+		});
+
+		await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
+
+		const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results", 'xxx', { viewColumn: vscode.ViewColumn.Active });
+
+		await vscode.commands.executeCommand(COMMAND_RUN_QUERY, panel);
+
+		assert.equal(true, panel !== null);
 
 	});
 

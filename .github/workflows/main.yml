@@ -15,6 +15,7 @@ jobs:
     - run: echo '${{secrets.BQ_SERVICE_ACCOUNT}}' > ./credentials.json
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
+      if: runner.os != 'Linux'
     - name: 'Use gcloud CLI'
       run: 'gcloud info'
     - name: Install Node.js

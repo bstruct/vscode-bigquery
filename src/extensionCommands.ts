@@ -34,11 +34,19 @@ export const commandRunQuery = async function (...args: any[]) {
 		return;
 	}
 
+	// let panelTest: vscode.WebviewView | undefined = undefined;
+	// if (args && args.length) {
+	// 	const arg0 = args[0];
+	// 	if (arg0 instanceof Object && arg0.webview) {
+	// 		panelTest = arg0;
+	// 	}
+	// }
+
 	const textEditor = vscode.window.activeTextEditor;
 
 	const queryText: string = textEditor.document.getText() ?? '';
 
-	const numberOfJobs = await runQuery(queryText);
+	const numberOfJobs = await runQuery(queryText, undefined);
 
 	reporter?.sendTelemetryEvent('commandRunQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
@@ -61,31 +69,45 @@ export const commandRunSelectedQuery = async function (...args: any[]) {
 		return;
 	}
 
-	const numberOfJobs = await runQuery(queryText);
+	let panelTest: vscode.WebviewView | undefined = undefined;
+	if (args && args.length) {
+		const arg0 = args[0];
+		if (arg0 instanceof Object && arg0.webview) {
+			panelTest = arg0;
+		}
+	}
+
+	const numberOfJobs = await runQuery(queryText, panelTest);
 
 	reporter?.sendTelemetryEvent('commandRunSelectedQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
 };
 
-const runQuery = async function (queryText: string): Promise<number> {
+const runQuery = async function (queryText: string, panelTest: vscode.WebviewView | undefined): Promise<number> {
 
 	const queryResponse = getBigQueryClient().runQuery(queryText);
 
-	let panel = bigqueryWebviewViewProvider.webviewView;
+	// let panel = panelTest || bigqueryWebviewViewProvider.webviewView;
+	await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
+
+	// const tab = vscode.window.tabGroups.all[1];
+
+	const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results", 'Query results', { viewColumn: vscode.ViewColumn.Two }, { enableFindWidget: true, enableScripts: true });
+
 
 	if (resultsGridRender === null) {
 
-		if (panel === null) {
-			//https://www.eliostruyf.com/devhack-open-custom-vscode-webview-panel-focus-input/
-			await vscode.commands.executeCommand('workbench.view.extension.vscode-bigquery-query-results');
-			panel = bigqueryWebviewViewProvider.webviewView;
-		}
-		if (panel === null) { return 0; }
+		// if (panel === null) {
+		// 	//https://www.eliostruyf.com/devhack-open-custom-vscode-webview-panel-focus-input/
+		// 	await vscode.commands.executeCommand('workbench.view.extension.vscode-bigquery-query-results');
+		// 	panel = bigqueryWebviewViewProvider.webviewView;
+		// }
+		// if (panel === null) { return 0; }
 
 		resultsGridRender = new ResultsGridRender(panel.webview);
 	}
 
-	if (panel && !panel.visible) { panel.show(); }
+	// if (panel && !panel.visible) { panel.show(); }
 
 	const request = {
 		jobsPromise: queryResponse,
@@ -98,7 +120,6 @@ const runQuery = async function (queryText: string): Promise<number> {
 	resultsGridRender.render(request);
 
 	return (await queryResponse).length;
-
 };
 
 export const commandUserLogin = function (...args: any[]) {

@@ -6,10 +6,6 @@ import { ObjectCsvStringifierParams } from 'csv-writer/src/lib/csv-stringifier-f
 
 export class DownloadCsv {
 
-    // constructor(webView: vscode.Webview) {
-    //     this.webView = webView;
-    // }
-
     public static download(downloadCsvRequest: DownloadCsvRequest) {
 
         try {
