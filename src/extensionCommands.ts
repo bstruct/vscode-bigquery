@@ -151,12 +151,8 @@ export const commandServiceAccountLogin = async function (...args: any[]) {
 
 	if (showOpenDialogResult) {
 
-		let path = showOpenDialogResult[0].path;
-		if (process.platform === 'win32') {
-			path = path.substring(1);
-		}
-
-		const serviceAccountLoginResult = await Authentication.serviceAccountLogin(path);
+		let fileUri = showOpenDialogResult[0];
+		const serviceAccountLoginResult = await Authentication.serviceAccountLogin(fileUri);
 
 		if (serviceAccountLoginResult.valid) {
 			vscode.window.showInformationMessage('Bigquery: Service account login - successful');

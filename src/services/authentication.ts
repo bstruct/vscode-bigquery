@@ -19,11 +19,11 @@ export class Authentication {
         return JSON.parse(result) as AuthenticationUserLoginResponse;
     }
 
-    public static async serviceAccountLogin(filePath: string): Promise<AuthenticationUserLoginResponse> {
+    public static async serviceAccountLogin(fileUri: vscode.Uri): Promise<AuthenticationUserLoginResponse> {
 
         try {
 
-            const result = await this.runCommand(`gcloud auth activate-service-account --key-file="${filePath}" --format="json"`, true);
+            const result = await this.runCommand(`gcloud auth activate-service-account --key-file="${fileUri.fsPath}" --format="json"`, true);
 
             const typedResult = JSON.parse(result) as string[];
             if (typedResult.length === 0) {
