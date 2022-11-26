@@ -13,7 +13,10 @@ jobs:
       uses: actions/checkout@v3
     - run: echo '{test:1}' > ./dummy.json
     - run: echo '${{secrets.BQ_SERVICE_ACCOUNT}}' > ./credentials.json
-
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+    - name: 'Use gcloud CLI'
+      run: 'gcloud info'
     - name: Install Node.js
       uses: actions/setup-node@v3
       with:
