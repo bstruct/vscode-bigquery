@@ -41,6 +41,9 @@ suite('Extension Test Suite', async () => {
 		//create dummy file to 
 		const path = process.env.WORKSPACE_PATH || __dirname;
 		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(path), 'dummy.json');
+		if(!process.env.WORKSPACE_PATH){
+			await vscode.workspace.fs.writeFile(fileUri, (new TextEncoder()).encode('{test:1}'));
+		}
 
 		let showOpenDialogCount = 0;
 		vscode.window.showOpenDialog = function (options?: vscode.OpenDialogOptions): Thenable<vscode.Uri[] | undefined> {
@@ -91,6 +94,9 @@ suite('Extension Test Suite', async () => {
 		//create dummy file to 
 		const path = process.env.WORKSPACE_PATH || __dirname;
 		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(path), 'credentials.json');
+		// if(!process.env.WORKSPACE_PATH){
+		// 	await vscode.workspace.fs.writeFile(fileUri, (new TextEncoder()).encode('{test:1}'));
+		// }
 
 		let showOpenDialogCount = 0;
 		vscode.window.showOpenDialog = function (options?: vscode.OpenDialogOptions): Thenable<vscode.Uri[] | undefined> {

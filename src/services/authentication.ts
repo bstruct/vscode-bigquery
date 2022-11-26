@@ -34,7 +34,9 @@ export class Authentication {
                 return { valid: true } as AuthenticationUserLoginResponse;
             }
 
-        } catch (error) { }
+        } catch (error) {
+            console.error(JSON.stringify(error));
+        }
 
         return { valid: false } as AuthenticationUserLoginResponse;
     }
