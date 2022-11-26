@@ -12,8 +12,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
     - name: Create dummy.json and credentials.json
-      run: echo 'dummy' > ./dummy.json
-      run: echo '${{secrets.BQ_SERVICE_ACCOUNT}}' > ./credentials.json
+      run: 
+        echo 'dummy' > ./dummy.json
+        echo '${{secrets.BQ_SERVICE_ACCOUNT}}' > ./credentials.json
     - name: Install Node.js
       uses: actions/setup-node@v3
       with:
