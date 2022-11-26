@@ -39,9 +39,9 @@ suite('Extension Test Suite', async () => {
 		await extension.activate();
 
 		//create dummy file to 
-		const path = process.env.WORKSPACE_PATH || __dirname;
+		const path = process.env.GITHUB_WORKSPACE || __dirname;
 		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(path), 'dummy.json');
-		if(!process.env.WORKSPACE_PATH){
+		if(!process.env.GITHUB_WORKSPACE){
 			await vscode.workspace.fs.writeFile(fileUri, (new TextEncoder()).encode('{test:1}'));
 		}
 
@@ -92,9 +92,9 @@ suite('Extension Test Suite', async () => {
 		await extension.activate();
 
 		//create dummy file to 
-		const path = process.env.WORKSPACE_PATH || __dirname;
+		const path = process.env.GITHUB_WORKSPACE || __dirname;
 		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(path), 'credentials.json');
-		// if(!process.env.WORKSPACE_PATH){
+		// if(!process.env.GITHUB_WORKSPACE){
 		// 	await vscode.workspace.fs.writeFile(fileUri, (new TextEncoder()).encode('{test:1}'));
 		// }
 
