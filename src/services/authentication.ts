@@ -35,7 +35,7 @@ export class Authentication {
             }
 
         } catch (error) {
-            console.error(JSON.stringify(error));
+            console.info(JSON.stringify(error));
         }
 
         return { valid: false } as AuthenticationUserLoginResponse;

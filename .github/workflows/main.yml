@@ -12,7 +12,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - run: echo 'dummy' > ./dummy.json
+    - run: echo '{test:1}' > ./dummy.json
     - run: echo '${{secrets.BQ_SERVICE_ACCOUNT}}' > ./credentials.json
 
     - name: Install Node.js
