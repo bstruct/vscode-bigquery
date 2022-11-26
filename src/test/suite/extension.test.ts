@@ -41,9 +41,6 @@ suite('Extension Test Suite', async () => {
 		//create dummy file to 
 		const path = process.env.GITHUB_WORKSPACE || __dirname;
 		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(path), 'dummy.json');
-		if(!process.env.GITHUB_WORKSPACE){
-			await vscode.workspace.fs.writeFile(fileUri, (new TextEncoder()).encode('{test:1}'));
-		}
 
 		let showOpenDialogCount = 0;
 		vscode.window.showOpenDialog = function (options?: vscode.OpenDialogOptions): Thenable<vscode.Uri[] | undefined> {
