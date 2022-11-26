@@ -1,13 +1,12 @@
 on: push
 env:
   GITHUB_NPM_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  # WORKSPACE_PATH: ${{ env.GITHUB_WORKSPACE }}
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest] #, , macos-latest, windows-latest
+        os: [ubuntu-latest, macos-latest, windows-latest] 
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout
