@@ -39,7 +39,8 @@ suite('Extension Test Suite', async () => {
 		await extension.activate();
 
 		//create dummy file to 
-		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(__dirname), 'dummy.json');
+		const path = process.env.WORKSPACE_PATH || __dirname;
+		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(path), 'dummy.json');
 
 		let showOpenDialogCount = 0;
 		vscode.window.showOpenDialog = function (options?: vscode.OpenDialogOptions): Thenable<vscode.Uri[] | undefined> {
@@ -88,7 +89,8 @@ suite('Extension Test Suite', async () => {
 		await extension.activate();
 
 		//create dummy file to 
-		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(__dirname), 'credentials.json');
+		const path = process.env.WORKSPACE_PATH || __dirname;
+		const fileUri = vscode.Uri.joinPath(vscode.Uri.file(path), 'credentials.json');
 
 		let showOpenDialogCount = 0;
 		vscode.window.showOpenDialog = function (options?: vscode.OpenDialogOptions): Thenable<vscode.Uri[] | undefined> {
