@@ -123,6 +123,13 @@
 				"command": "vscode-bigquery.project-pin",
 				"title": "Pin or unpin project",
 				"icon": "$(pin)"
+			},
+			{
+				"command": "vscode-bigquery.download-csv",
+				"title": "Download CSV",
+				"icon": "$(cloud-download)",
+				"category": "cat1",
+				"enablement": "x == 1"
 			}
 		],
 		"menus": {
@@ -138,7 +145,7 @@
 					"when": "editorLangId == bqsql"
 				},
 				{
-					"command": "vscode-bigquery.run-query",
+					"command": "vscode-bigquery.download-csv",
 					"group": "navigation",
 					"when": "activeWebviewPanelId == 'bigquery-query-results'"
 				}

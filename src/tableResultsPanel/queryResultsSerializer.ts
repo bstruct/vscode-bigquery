@@ -10,4 +10,3 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
         return new Promise((resolve, reject) => { resolve(undefined); });
     }
 }
-//

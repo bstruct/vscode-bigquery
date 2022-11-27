@@ -11,7 +11,6 @@ import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
 import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaService';
 import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
 import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializer';
-import { QueryResultsProvider } from './tableResultsPanel/queryResultsProvider';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -122,6 +121,13 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand(
 			commands.COMMAND_SET_DEFAULT_PROJECT,
 			commands.commandSetDefaultProject
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_DOWNLOAD_CSV,
+			commands.commandDownloadCsv
 		)
 	);
 

@@ -22,6 +22,7 @@ export const COMMAND_VIEW_TABLE_SCHEMA = "vscode-bigquery.view-table-schema";
 export const COMMAND_CREATE_TABLE_DEFAULT_QUERY = "vscode-bigquery.create-table-default-query";
 export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
 export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
+export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 
 export const commandRunQuery = async function (...args: any[]) {
@@ -32,19 +33,11 @@ export const commandRunQuery = async function (...args: any[]) {
 		return;
 	}
 
-	// let panelTest: vscode.WebviewView | undefined = undefined;
-	// if (args && args.length) {
-	// 	const arg0 = args[0];
-	// 	if (arg0 instanceof Object && arg0.webview) {
-	// 		panelTest = arg0;
-	// 	}
-	// }
-
 	const textEditor = vscode.window.activeTextEditor;
 
 	const queryText: string = textEditor.document.getText() ?? '';
 
-	const numberOfJobs = await runQuery(queryText, undefined);
+	const numberOfJobs = await runQuery(queryText);
 
 	reporter?.sendTelemetryEvent('commandRunQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
@@ -67,21 +60,13 @@ export const commandRunSelectedQuery = async function (...args: any[]) {
 		return;
 	}
 
-	let panelTest: vscode.WebviewView | undefined = undefined;
-	if (args && args.length) {
-		const arg0 = args[0];
-		if (arg0 instanceof Object && arg0.webview) {
-			panelTest = arg0;
-		}
-	}
-
-	const numberOfJobs = await runQuery(queryText, panelTest);
+	const numberOfJobs = await runQuery(queryText);
 
 	reporter?.sendTelemetryEvent('commandRunSelectedQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
 };
 
-const runQuery = async function (queryText: string, panelTest: vscode.WebviewView | undefined): Promise<number> {
+const runQuery = async function (queryText: string): Promise<number> {
 
 	const queryResponse = getBigQueryClient().runQuery(queryText);
 
@@ -91,16 +76,16 @@ const runQuery = async function (queryText: string, panelTest: vscode.WebviewVie
 
 	const panel = vscode.window.createWebviewPanel("bigquery-query-results", 'Query results', { viewColumn: vscode.ViewColumn.Two, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
 
+	await vscode.commands.executeCommand('setContext', 'x', 1);
+
+	
+
 	// panel.iconPath = { light: vscode.Uri.parse(bigqueryIcons.pinned.light), dark: vscode.Uri.parse(bigqueryIcons.pinned.dark) };
-	// panel._store;
 
 	//lock the tab group in vscode.ViewColumn.Two
-	await vscode.commands.executeCommand('workbench.action.lockEditorGroup', vscode.ViewColumn.Two);
-
+	await vscode.commands.executeCommand('workbench.action.lockEditorGroup');
 
 	const resultsGridRender = new ResultsGridRender(panel.webview);
-
-	// if (panel && !panel.visible) { panel.show(); }
 
 	const request = {
 		jobsPromise: queryResponse,
@@ -327,6 +312,27 @@ export const commandSetDefaultProject = function (...args: any[]) {
 		});
 
 	reporter?.sendTelemetryEvent('setDefaultProjectId', {});
+};
+
+export const commandDownloadCsv = async function (...args: any[]) {
+
+	// const webviewPanel = vscode.window.tabGroups.activeTabGroup.activeTab;
+	// webviewPanel.input.viewType === ''mainThreadWebview-bigquery-query-results''
+	
+	if (args && args.length) {
+		const fileUri = args[0] as vscode.Uri;
+
+		const handler = (new vscode.WorkspaceEdit()).get(fileUri);
+
+
+		// vscode.window.
+		
+
+		debugger;
+
+	}
+
+	reporter?.sendTelemetryEvent('downloadCsv', {});
 };
 
 export const commandPinOrUnpinProject = function (...args: any[]) {

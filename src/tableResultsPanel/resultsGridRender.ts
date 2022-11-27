@@ -84,6 +84,10 @@ export class ResultsGridRender {
 				<meta charset="UTF-8">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<script type="module" src="${toolkitUri}"></script>
+                <script>
+                    const vscode = acquireVsCodeApi();
+                    vscode.setState({ value: 112222 });
+                </script>
 			</head>
 			<body>
                 <vscode-progress-ring></vscode-progress-ring>

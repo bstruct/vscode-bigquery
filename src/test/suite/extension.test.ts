@@ -135,7 +135,7 @@ suite('Extension Test Suite', async () => {
 	});
 
 	test('COMMAND_RUN_QUERY: SELECT 1,2,3', async () => {
-
+		
 		const doc = await vscode.workspace.openTextDocument({
 			language: 'bqsql',
 			content: 'SELECT 1,2,3'
