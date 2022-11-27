@@ -25,7 +25,7 @@
 		"onView:bigquery-main-activity-bar",
 		"onView:bigquery-authentication",
 		"onView:bigquery-tree-data-provider",
-		"onView:vscode-bigquery-query-results",
+		"onWebviewPanel:bigquery-query-results",
 		"onLanguage:bqsql"
 	],
 	"main": "./dist/extension.js",
@@ -136,6 +136,11 @@
 					"command": "vscode-bigquery.run-selected-query",
 					"group": "navigation",
 					"when": "editorLangId == bqsql"
+				},
+				{
+					"command": "vscode-bigquery.run-query",
+					"group": "navigation",
+					"when": "activeWebviewPanelId == 'bigquery-query-results'"
 				}
 			],
 			"view/title": [
@@ -189,14 +194,6 @@
 					"contextualTitle": "BigQuery",
 					"type": "tree"
 				}
-			],
-			"vscode-bigquery-query-results": [
-				{
-					"id": "vscode-bigquery-query-results-main",
-					"name": "query results",
-					"type": "webview",
-					"visibility": "visible"
-				}
 			]
 		},
 		"viewsContainers": {
@@ -204,13 +201,6 @@
 				{
 					"id": "bigquery-main-activity-bar",
 					"title": "BigQuery",
-					"icon": "./resources/google-bigquery.svg"
-				}
-			],
-			"panel": [
-				{
-					"id": "vscode-bigquery-query-results",
-					"title": "bigquery",
 					"icon": "./resources/google-bigquery.svg"
 				}
 			]

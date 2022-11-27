@@ -1,15 +1,13 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigqueryClient';
-import { authenticationWebviewProvider, bigQueryTreeDataProvider, bigqueryWebviewViewProvider, reporter } from './extension';
-import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
+import { authenticationWebviewProvider, bigqueryIcons, bigQueryTreeDataProvider, bigqueryWebviewViewProvider, reporter } from './extension';
 import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/treeItem';
 import { TableGridRenderRequest } from './tableResultsPanel/tableGridRenderRequest';
 import { SchemaRender } from './tableResultsPanel/schemaRender';
 import { QueryGeneratorService } from './services/queryGeneratorService';
-
-let resultsGridRender: ResultsGridRender | null = null;
+import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -87,25 +85,20 @@ const runQuery = async function (queryText: string, panelTest: vscode.WebviewVie
 
 	const queryResponse = getBigQueryClient().runQuery(queryText);
 
-	// let panel = panelTest || bigqueryWebviewViewProvider.webviewView;
-	await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
-
-	// const tab = vscode.window.tabGroups.all[1];
-
-	const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results", 'Query results', { viewColumn: vscode.ViewColumn.Two }, { enableFindWidget: true, enableScripts: true });
-
-
-	if (resultsGridRender === null) {
-
-		// if (panel === null) {
-		// 	//https://www.eliostruyf.com/devhack-open-custom-vscode-webview-panel-focus-input/
-		// 	await vscode.commands.executeCommand('workbench.view.extension.vscode-bigquery-query-results');
-		// 	panel = bigqueryWebviewViewProvider.webviewView;
-		// }
-		// if (panel === null) { return 0; }
-
-		resultsGridRender = new ResultsGridRender(panel.webview);
+	if (vscode.window.tabGroups.all.filter(c => c.viewColumn === vscode.ViewColumn.Two).length === 0) {
+		await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
 	}
+
+	const panel = vscode.window.createWebviewPanel("bigquery-query-results", 'Query results', { viewColumn: vscode.ViewColumn.Two, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
+
+	// panel.iconPath = { light: vscode.Uri.parse(bigqueryIcons.pinned.light), dark: vscode.Uri.parse(bigqueryIcons.pinned.dark) };
+	// panel._store;
+
+	//lock the tab group in vscode.ViewColumn.Two
+	await vscode.commands.executeCommand('workbench.action.lockEditorGroup', vscode.ViewColumn.Two);
+
+
+	const resultsGridRender = new ResultsGridRender(panel.webview);
 
 	// if (panel && !panel.visible) { panel.show(); }
 
@@ -272,7 +265,6 @@ export const commandViewTable = async function (...args: any[]) {
 	}
 
 	reporter?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
-
 };
 
 export const commandViewTableSchema = function (...args: any[]) {

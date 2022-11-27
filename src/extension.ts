@@ -10,6 +10,8 @@ import { BqsqlDocumentSemanticTokensProvider } from './language/bqsqlDocumentSem
 import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
 import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaService';
 import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
+import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializer';
+import { QueryResultsProvider } from './tableResultsPanel/queryResultsProvider';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -147,11 +149,11 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	//vscode-bigquery-query-results-main
+	//bigquery-query-results
 	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider(
-			"vscode-bigquery-query-results-main",
-			bigqueryWebviewViewProvider
+		vscode.window.registerWebviewPanelSerializer(
+			"bigquery-query-results",
+			new QueryResultsSerializer()
 		)
 	);
 
