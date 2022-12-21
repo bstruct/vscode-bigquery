@@ -123,7 +123,7 @@
 				"command": "vscode-bigquery.project-pin",
 				"title": "Pin or unpin project",
 				"icon": "$(pin)"
-			},
+			},			
 			{
 				"command": "vscode-bigquery.download-csv",
 				"title": "Download CSV",
@@ -240,6 +240,7 @@
 		"@types/glob": "^7.2.0",
 		"@types/mocha": "^9.1.1",
 		"@types/node": "16.x",
+		"@types/uuid": "^9.0.0",
 		"@types/vscode": "^1.5.0",
 		"@typescript-eslint/eslint-plugin": "^5.30.0",
 		"@typescript-eslint/parser": "^5.30.0",
@@ -259,8 +260,8 @@
 		"@vscode/codicons": "^0.0.32",
 		"@vscode/extension-telemetry": "^0.6.2",
 		"@vscode/webview-ui-toolkit": "^1.1.0",
+		"csv-writer": "^1.6.0",
 		"preact": "^10.10.6",
-		"preact-render-to-string": "^5.2.2",
-		"csv-writer": "^1.6.0"
+		"preact-render-to-string": "^5.2.2"
 	}
 }

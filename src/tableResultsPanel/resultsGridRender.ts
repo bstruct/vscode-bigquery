@@ -7,7 +7,7 @@ import { ResultsGrid } from './resultsGrid';
 import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 import { TableGridRenderRequest } from './tableGridRenderRequest';
 import { DownloadCsvRequest } from './downloadCsvRequest';
-import { request } from 'http';
+// import { request } from 'http';
 import { DownloadCsv } from './downloadCsv';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
@@ -87,6 +87,7 @@ export class ResultsGridRender {
                 <script>
                     const vscode = acquireVsCodeApi();
                     vscode.setState({ value: 112222 });
+                    debugger;
                 </script>
 			</head>
 			<body>
@@ -195,6 +196,10 @@ export class ResultsGridRender {
         		<script type="module" src="${toolkitUri}"></script>
                 <link href="${codiconsUri}" rel="stylesheet" />
                 <link href="${gridCss}" rel="stylesheet" />
+                <script>
+                    const vscode = acquireVsCodeApi();
+                    vscode.setState({ value: 1122223333 });
+                </script>
         	</head>
         	<body>
                 ${(new ResultsGrid(schema, queryRowsResponse[0], totalRows, startIndex, maxResults, jobCount, jobIndex, openInTabVisible))}

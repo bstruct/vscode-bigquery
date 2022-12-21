@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigqueryClient';
-import { authenticationWebviewProvider, bigqueryIcons, bigQueryTreeDataProvider, bigqueryWebviewViewProvider, reporter } from './extension';
+import { authenticationWebviewProvider, bigQueryTreeDataProvider, reporter } from './extension';
 import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/treeItem';
@@ -8,6 +8,7 @@ import { TableGridRenderRequest } from './tableResultsPanel/tableGridRenderReque
 import { SchemaRender } from './tableResultsPanel/schemaRender';
 import { QueryGeneratorService } from './services/queryGeneratorService';
 import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
+import { v4 as uuidv4 } from 'uuid';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -25,7 +26,7 @@ export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 
-export const commandRunQuery = async function (...args: any[]) {
+export const commandRunQuery = async function (this: any, ...args: any[]) {
 
 	const t1 = Date.now();
 
@@ -37,7 +38,16 @@ export const commandRunQuery = async function (...args: any[]) {
 
 	const queryText: string = textEditor.document.getText() ?? '';
 
-	const numberOfJobs = await runQuery(queryText);
+	const uuid = uuidv4().substring(0, 8);
+
+	const globalState: vscode.Memento = this.globalState;
+
+	globalState.update('queryResultsMapping', {
+		uuid,
+		textEditor
+	});
+
+	const numberOfJobs = await runQuery(uuid, queryText);
 
 	reporter?.sendTelemetryEvent('commandRunQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
@@ -60,13 +70,15 @@ export const commandRunSelectedQuery = async function (...args: any[]) {
 		return;
 	}
 
-	const numberOfJobs = await runQuery(queryText);
+	const uuid = uuidv4().substring(0, 8);
+
+	const numberOfJobs = await runQuery(uuid, queryText);
 
 	reporter?.sendTelemetryEvent('commandRunSelectedQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
 };
 
-const runQuery = async function (queryText: string): Promise<number> {
+const runQuery = async function (uuid: string, queryText: string): Promise<number> {
 
 	const queryResponse = getBigQueryClient().runQuery(queryText);
 
@@ -74,13 +86,11 @@ const runQuery = async function (queryText: string): Promise<number> {
 		await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
 	}
 
-	const panel = vscode.window.createWebviewPanel("bigquery-query-results", 'Query results', { viewColumn: vscode.ViewColumn.Two, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
+	const label = `Query results | ${uuid}`;
+
+	const panel = vscode.window.createWebviewPanel("bigquery-query-results", label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
 
 	await vscode.commands.executeCommand('setContext', 'x', 1);
-
-	
-
-	// panel.iconPath = { light: vscode.Uri.parse(bigqueryIcons.pinned.light), dark: vscode.Uri.parse(bigqueryIcons.pinned.dark) };
 
 	//lock the tab group in vscode.ViewColumn.Two
 	await vscode.commands.executeCommand('workbench.action.lockEditorGroup');
@@ -314,23 +324,43 @@ export const commandSetDefaultProject = function (...args: any[]) {
 	reporter?.sendTelemetryEvent('setDefaultProjectId', {});
 };
 
-export const commandDownloadCsv = async function (...args: any[]) {
+export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 
 	// const webviewPanel = vscode.window.tabGroups.activeTabGroup.activeTab;
 	// webviewPanel.input.viewType === ''mainThreadWebview-bigquery-query-results''
-	
-	if (args && args.length) {
-		const fileUri = args[0] as vscode.Uri;
 
-		const handler = (new vscode.WorkspaceEdit()).get(fileUri);
+	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
+	if (activeTab === undefined) {
+		return;
+	}
 
-		// vscode.window.
-		
+	const uuid = activeTab.label.substring(activeTab.label.length - 8);
 
-		debugger;
+	const globalState: vscode.Memento = this.globalState;
+	let queryResultsMapping: any | undefined = globalState.get('queryResultsMapping');
+	if (queryResultsMapping) {
 
 	}
+
+	// const p: vscode.WebviewPanel = activeTab?.input as vscode.WebviewPanel;
+	// const path = p.iconPath;
+
+
+	// if (args && args.length) {
+	// 	// const fileUri = args[0] as vscode.Uri;
+
+	// 	let doc1 = new vscode.TabInputWebview("bigquery-query-results");
+
+
+	// 	// const x = new vscode.custom();
+
+	// 	// vscode.window.
+
+
+	// 	debugger;
+
+	// }
 
 	reporter?.sendTelemetryEvent('downloadCsv', {});
 };

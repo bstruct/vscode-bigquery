@@ -42,14 +42,16 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_RUN_QUERY,
-			commands.commandRunQuery
+			commands.commandRunQuery,
+			{ "globalState": context.globalState }
 		)
 	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_RUN_SELECTED_QUERY,
-			commands.commandRunSelectedQuery
+			commands.commandRunSelectedQuery,
+			{ "globalState": context.globalState }
 		)
 	);
 
@@ -127,8 +129,9 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_DOWNLOAD_CSV,
-			commands.commandDownloadCsv
-		)
+			commands.commandDownloadCsv,
+			{ "globalState": context.globalState }
+		),
 	);
 
 	context.subscriptions.push(
