@@ -162,7 +162,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.window.registerWebviewPanelSerializer(
 			"bigquery-query-results",
-			new QueryResultsSerializer()
+			new QueryResultsSerializer(context.globalState)
 		)
 	);
 

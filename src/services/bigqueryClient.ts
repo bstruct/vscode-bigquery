@@ -1,4 +1,5 @@
 import { BigQuery, Job, JobResponse, Query, Table } from '@google-cloud/bigquery';
+import { JobReference } from '../queryResultsMapping';
 import { BigqueryJobError } from './bigqueryJobError';
 import { BigqueryTableSchema } from './bigqueryTableSchema';
 import { SchemaField, TableMetadata } from './tableMetadata';
@@ -152,6 +153,10 @@ WHERE table_name = '${tableName}' AND is_hidden = 'NO';
 
 		return results[0].map(c => c as BigqueryTableSchema);
 
+	}
+
+	public getJob(jobReference: JobReference): Job {
+		return this.bqclient.job(jobReference.jobId, { location: jobReference.location, projectId: jobReference.projectId });
 	}
 
 	private onfulfilled(value: [any, any]): TableMetadata {

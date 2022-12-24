@@ -6,7 +6,6 @@ import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsRespons
 import { ResultsGrid } from './resultsGrid';
 import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 import { TableGridRenderRequest } from './tableGridRenderRequest';
-import { DownloadCsvRequest } from './downloadCsvRequest';
 // import { request } from 'http';
 import { DownloadCsv } from './downloadCsv';
 
@@ -29,7 +28,7 @@ export class ResultsGridRender {
             if (this.disposableEvent) { this.disposableEvent.dispose(); }
 
             //set waiting gif
-            this.webView.html = this.getWaitingHtml();
+            this.webView.html = this.getWaitingHtml(request.maxResults, request.openInTabVisible, request.startIndex, request.jobIndex);
 
             request.jobsPromise
                 .then(async (jobs) => {
@@ -58,7 +57,7 @@ export class ResultsGridRender {
             if (this.disposableEvent) { this.disposableEvent.dispose(); }
 
             //set waiting gif
-            this.webView.html = this.getWaitingHtml();
+            this.webView.html = this.getWaitingHtml(request.maxResults, request.openInTabVisible, request.startIndex, request.jobIndex);
 
             const [html, totalRows] = await this.getTableHtml(request.table, request.startIndex, request.maxResults, request.openInTabVisible);
             this.webView.html = html;
@@ -71,7 +70,7 @@ export class ResultsGridRender {
         }
     }
 
-    private getWaitingHtml(): string {
+    private getWaitingHtml(maxResults: number, openInTabVisible: boolean, startIndex: number, jobIndex: number | undefined): string {
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
             "resources",
@@ -86,8 +85,7 @@ export class ResultsGridRender {
 				<script type="module" src="${toolkitUri}"></script>
                 <script>
                     const vscode = acquireVsCodeApi();
-                    vscode.setState({ value: 112222 });
-                    debugger;
+                    vscode.setState({ maxResults: ${maxResults}, openInTabVisible: ${openInTabVisible}, startIndex: ${startIndex}, jobIndex: ${jobIndex} });
                 </script>
 			</head>
 			<body>
@@ -198,7 +196,7 @@ export class ResultsGridRender {
                 <link href="${gridCss}" rel="stylesheet" />
                 <script>
                     const vscode = acquireVsCodeApi();
-                    vscode.setState({ value: 1122223333 });
+                    vscode.setState({ maxResults: ${maxResults}, openInTabVisible: ${openInTabVisible}, startIndex: ${startIndex}, jobIndex: ${jobIndex} });
                 </script>
         	</head>
         	<body>
@@ -357,12 +355,12 @@ export class ResultsGridRender {
 
             case 'download_csv':
 
-                const downloadCsvRequest = {
-                    jobsPromise: request.jobsPromise,
-                    jobIndex:request.jobIndex
-                } as DownloadCsvRequest;
+                // const downloadCsvRequest = {
+                //     jobsPromise: request.jobsPromise,
+                //     jobIndex:request.jobIndex
+                // } as DownloadCsvRequest;
 
-                DownloadCsv.download(downloadCsvRequest);
+                // DownloadCsv.download(downloadCsvRequest);
 
                 break;
             default:

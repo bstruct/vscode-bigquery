@@ -128,8 +128,7 @@
 				"command": "vscode-bigquery.download-csv",
 				"title": "Download CSV",
 				"icon": "$(cloud-download)",
-				"category": "cat1",
-				"enablement": "x == 1"
+				"category": "cat1"
 			}
 		],
 		"menus": {
