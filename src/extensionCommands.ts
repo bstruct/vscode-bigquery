@@ -9,8 +9,9 @@ import { SchemaRender } from './tableResultsPanel/schemaRender';
 import { QueryGeneratorService } from './services/queryGeneratorService';
 import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
 import { v4 as uuidv4 } from 'uuid';
-import { QueryResultsMapping } from './queryResultsMapping';
 import { DownloadCsv } from './tableResultsPanel/downloadCsv';
+import { QueryResultsMappingService } from './services/queryResultsMappingService';
+import { QueryResultsMapping } from './services/queryResultsMapping';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -32,6 +33,12 @@ export const commandRunQuery = async function (this: any, ...args: any[]) {
 
 	const t1 = Date.now();
 
+	// const commands = await vscode.commands.getCommands();
+	// const q = commands.filter(c => c.toLowerCase().indexOf('set') >= 0);
+
+	// await vscode.commands.executeCommand('setContext', 'x', 0);
+	// await vscode.commands.executeCommand('setContext', 'x1', 'my text');
+
 	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
 	if (activeTab === undefined) {
@@ -46,13 +53,13 @@ export const commandRunQuery = async function (this: any, ...args: any[]) {
 
 	const queryText: string = textEditor.document.getText() ?? '';
 
-	const uuid = uuidv4().substring(0, 8);
-
 	const globalState: vscode.Memento = this.globalState;
-	globalState.update('queryResultsMapping', [{
-		uuid,
-		textEditor
-	} as QueryResultsMapping]);
+	let uuid = QueryResultsMappingService.getQueryResultsMappingUuid(globalState, textEditor);
+	if (!uuid) {
+		uuid = uuidv4().substring(0, 8);
+	}
+
+	QueryResultsMappingService.upsertQueryResultsMapping(globalState, uuid, textEditor);
 
 	const numberOfJobs = await runQuery(globalState, uuid, activeTab.label, queryText);
 
@@ -103,10 +110,27 @@ const runQuery = async function (globalState: vscode.Memento, uuid: string, main
 
 	const label = `Result: ${mainLabel} | ${uuid}`;
 
-	const panel = vscode.window.createWebviewPanel("bigquery-query-results", label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
+	let panel = QueryResultsMappingService.getQueryResultsMappingWebviewPanel(uuid);
 
-	//lock the tab group in vscode.ViewColumn.Two
-	await vscode.commands.executeCommand('workbench.action.lockEditorGroup');
+	if (panel) {
+
+		panel.reveal(undefined, true);
+
+	} else {
+
+		panel = vscode.window.createWebviewPanel("bigquery-query-results", label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
+
+		QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(uuid, panel);
+
+		//action when panel is closed
+		panel.onDidDispose(e => {
+			QueryResultsMappingService.deleteQueryResultsMapping(globalState, uuid);
+		});
+
+		//lock the tab group in vscode.ViewColumn.Two
+		await vscode.commands.executeCommand('workbench.action.lockEditorGroup');
+
+	}
 
 	const resultsGridRender = new ResultsGridRender(panel.webview);
 
@@ -120,7 +144,7 @@ const runQuery = async function (globalState: vscode.Memento, uuid: string, main
 
 	resultsGridRender.render(request);
 
-	udpateQueryResultsMapping(globalState, uuid, request);
+	QueryResultsMappingService.udpateQueryResultsMapping(globalState, uuid, request);
 
 	return (await queryResponse).length;
 };
@@ -402,22 +426,4 @@ export const getBigQueryClient = function (): BigQueryClient {
 
 const resetBigQueryClient = function () {
 	bigQueryClient = null;
-};
-
-const udpateQueryResultsMapping = async function (globalState: vscode.Memento, uuid: string, request: ResultsGridRenderRequest) {
-
-	let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
-	if (queryResultsMapping) {
-
-		const item = queryResultsMapping.find(c => c.uuid === uuid);
-		if (item) {
-			const jobs = await request.jobsPromise;
-			const jobReferences = jobs.map(c => c.metadata.jobReference);
-
-			item.jobReferences = jobReferences;
-			item.jobIndex = request.jobIndex;
-			globalState.update('queryResultsMapping', queryResultsMapping);
-		}
-	}
-
 };

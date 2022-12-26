@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as csv_writer from 'csv-writer';
 import { ObjectCsvStringifierParams } from 'csv-writer/src/lib/csv-stringifier-factory';
-import { JobReference } from '../queryResultsMapping';
+import { JobReference } from '../services/queryResultsMapping';
 import { BigQueryClient } from '../services/bigqueryClient';
 
 export class DownloadCsv {

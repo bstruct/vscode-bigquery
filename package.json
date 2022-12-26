@@ -125,10 +125,35 @@
 				"icon": "$(pin)"
 			},			
 			{
+				"command": "vscode-bigquery.results-page-info",
+				"title": "${x1}",			
+				"enablement": "0==1"	
+			},
+			{
+				"command": "vscode-bigquery.results-first-page",
+				"title": "first page",
+				"icon": "$(arrow-circle-left)",
+				"enablement": "x==1"		
+			},			
+			{
+				"command": "vscode-bigquery.results-next-page",
+				"title": "next page",
+				"icon": "$(arrow-right)"
+			},			
+			{
+				"command": "vscode-bigquery.results-previous-page",
+				"title": "previous page",
+				"icon": "$(arrow-left)"
+			},			
+			{
+				"command": "vscode-bigquery.results-last-page",
+				"title": "last page",
+				"icon": "$(arrow-circle-right)"
+			},			
+			{
 				"command": "vscode-bigquery.download-csv",
-				"title": "Download CSV",
-				"icon": "$(cloud-download)",
-				"category": "cat1"
+				"title": "download CSV",
+				"icon": "$(cloud-download)"
 			}
 		],
 		"menus": {
@@ -144,8 +169,33 @@
 					"when": "editorLangId == bqsql"
 				},
 				{
+					"command": "vscode-bigquery.results-page-info",			
+					"group": "navigation@-6",
+					"when": "activeWebviewPanelId == 'bigquery-query-results'"
+				},
+				{
+					"command": "vscode-bigquery.results-first-page",
+					"group": "navigation@-5",
+					"when": "activeWebviewPanelId == 'bigquery-query-results'"
+				},
+				{
+					"command": "vscode-bigquery.results-previous-page",
+					"group": "navigation@-4",
+					"when": "activeWebviewPanelId == 'bigquery-query-results'"
+				},
+				{
+					"command": "vscode-bigquery.results-next-page",
+					"group": "navigation@-3",
+					"when": "activeWebviewPanelId == 'bigquery-query-results'"
+				},
+				{
+					"command": "vscode-bigquery.results-last-page",
+					"group": "navigation@-2",
+					"when": "activeWebviewPanelId == 'bigquery-query-results'"
+				},
+				{
 					"command": "vscode-bigquery.download-csv",
-					"group": "navigation",
+					"group": "navigation@-1",
 					"when": "activeWebviewPanelId == 'bigquery-query-results'"
 				}
 			],

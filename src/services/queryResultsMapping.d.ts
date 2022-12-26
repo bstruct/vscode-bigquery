@@ -1,5 +1,4 @@
-import { TextEditor } from 'vscode';
-import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
+import { WebviewPanel } from "vscode";
 
 interface JobReference {
     projectId: string,
@@ -9,7 +8,8 @@ interface JobReference {
 
 interface QueryResultsMapping {
     uuid: string,
-    textEditor: TextEditor,
+    textEditorUriString: string,
     jobReferences: JobReference[] | undefined,
     jobIndex: number | undefined,
+    webviewPanel: WebviewPanel | undefined,
 }

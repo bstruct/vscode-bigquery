@@ -11,6 +11,7 @@ import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
 import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaService';
 import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
 import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializer';
+import { QueryResultsMappingService } from './services/queryResultsMappingService';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -20,6 +21,7 @@ export let extensionUri: vscode.Uri;
 export let bigqueryIcons: BigqueryIcons;
 export let reporter: TelemetryReporter | null;
 export let statusBarInfo: vscode.StatusBarItem | null;
+export let queryResultsWebviewMapping: Map<string, vscode.WebviewPanel> = new Map<string, vscode.WebviewPanel>();
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -199,6 +201,26 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.commands.executeCommand(commands.COMMAND_EXPLORER_REFRESH);
 			reporter?.sendTelemetryEvent('onDidChangeActiveColorTheme', { activeColorThemeKind: vscode.ColorThemeKind[vscode.window.activeColorTheme.kind] });
 		}
+	});
+
+	vscode.window.onDidChangeActiveTextEditor(e => {
+
+		if (e?.document.languageId === 'bqsql') {
+
+			//check if results tab exist and it's known
+			//  is possible that is not know in case that vscode was restarted and that window was not opened
+			//  in this scenario, the tab exists but is not possible to determine the correspondent panel
+			//  panels are lazy loaded
+
+			const uuid = QueryResultsMappingService.getQueryResultsMappingUuid(context.globalState, e);
+			if (uuid) {
+				const panel = QueryResultsMappingService.getQueryResultsMappingWebviewPanel(uuid);
+				if (panel) {
+					panel.reveal(undefined, true);
+				}
+			}
+		}
+
 	});
 
 	// vscode.env.onDidChangeTelemetryEnabled
