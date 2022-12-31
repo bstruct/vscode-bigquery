@@ -183,7 +183,7 @@ export class ResultsGrid extends Object {
         //initialize rows array with the header column row already
         const rows = [];
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header' }, getHeaderCells()));
+        rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header', 'style':'position:sticky;top:0' }, getHeaderCells()));
 
         //widths of the columns
         const widths: number[] = [5];

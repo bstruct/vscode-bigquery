@@ -169,11 +169,6 @@
 					"when": "editorLangId == bqsql"
 				},
 				{
-					"command": "vscode-bigquery.results-page-info",			
-					"group": "navigation@-6",
-					"when": "activeWebviewPanelId == 'bigquery-query-results'"
-				},
-				{
 					"command": "vscode-bigquery.results-first-page",
 					"group": "navigation@-5",
 					"when": "activeWebviewPanelId == 'bigquery-query-results'"

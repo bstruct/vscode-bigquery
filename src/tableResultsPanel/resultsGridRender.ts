@@ -8,6 +8,7 @@ import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 import { TableGridRenderRequest } from './tableGridRenderRequest';
 // import { request } from 'http';
 import { DownloadCsv } from './downloadCsv';
+import { COMMAND_DOWNLOAD_CSV } from '../extensionCommands';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
@@ -84,6 +85,13 @@ export class ResultsGridRender {
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<script type="module" src="${toolkitUri}"></script>
                 <script>
+                    debugger;
+                    const qElement = document.querySelectorAll('div.editor-actions ul.actions-container > li.action-item a[aria-label="\${x1}"]');
+                    if(qElement.length >0){
+                        const element = qElement[0];
+                        element.innerText = 'trying';
+                    }
+                
                     const vscode = acquireVsCodeApi();
                     vscode.setState({ maxResults: ${maxResults}, openInTabVisible: ${openInTabVisible}, startIndex: ${startIndex}, jobIndex: ${jobIndex} });
                 </script>
@@ -266,7 +274,7 @@ export class ResultsGridRender {
     /* This function will run as an event triggered when the JS on the webview triggers
      * the `postMessage` method. For query results
     */
-    listenerResultsOnDidReceiveMessage(message: any): void {
+    async listenerResultsOnDidReceiveMessage(message: any): Promise<void> {
 
         const resultsGridRender: ResultsGridRender = (this as any)[0];
         const jobResponsePromise: Promise<Job[]> = (this as any)[1];
@@ -355,12 +363,7 @@ export class ResultsGridRender {
 
             case 'download_csv':
 
-                // const downloadCsvRequest = {
-                //     jobsPromise: request.jobsPromise,
-                //     jobIndex:request.jobIndex
-                // } as DownloadCsvRequest;
-
-                // DownloadCsv.download(downloadCsvRequest);
+                await vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV);
 
                 break;
             default:
