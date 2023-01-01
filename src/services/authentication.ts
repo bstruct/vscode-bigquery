@@ -35,7 +35,7 @@ export class Authentication {
                 //change default credentials
                 //https://cloud.google.com/docs/authentication/application-default-credentials#personal
                 if (process.platform === 'win32') {
-                    await this.runCommand(`copy "${filePath}" %APPDATA%\gcloud\application_default_credentials.json`, true);
+                    await this.runCommand(`copy "${filePath}" %APPDATA%\\gcloud\\application_default_credentials.json`, true);
                 } else {
                     await this.runCommand(`cp "${filePath}" $HOME/.config/gcloud/application_default_credentials.json`, true);
                 }
