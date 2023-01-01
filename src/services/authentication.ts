@@ -35,7 +35,7 @@ export class Authentication {
                 //change default credentials
                 //https://cloud.google.com/docs/authentication/application-default-credentials#personal
                 if (process.platform === 'win32') {
-                    await this.runCommand(`copy "${filePath}" %APPDATA%\\gcloud\\application_default_credentials.json`, true);
+                    await this.runCommand(`copy "${filePath}" "%APPDATA%\gcloud\application_default_credentials.json"`, true);
                 } else {
                     await this.runCommand(`cp "${filePath}" $HOME/.config/gcloud/application_default_credentials.json`, true);
                 }
@@ -44,6 +44,9 @@ export class Authentication {
                 const defaultProject = await this.runCommand('gcloud config get project', true);
                 if (!defaultProject) {
                     const projectsString = await this.runCommand('gcloud config get project --format="json"', true);
+                    console.info('projectsString');
+                    console.info(projectsString);
+
                     const projects = JSON.parse(projectsString);
                     const projectId = projects?.core?.project || 'damiao-project-1';
                     if (projectId) {
