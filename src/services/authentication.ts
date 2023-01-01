@@ -45,7 +45,7 @@ export class Authentication {
                 if (!defaultProject) {
                     const projectsString = await this.runCommand('gcloud config get project --format="json"', true);
                     const projects = JSON.parse(projectsString);
-                    const projectId = projects?.core?.project;
+                    const projectId = projects?.core?.project || 'damiao-project-1';
                     if (projectId) {
                         await this.runCommand(`gcloud config set project "${projectId}"`, true);
                     }
