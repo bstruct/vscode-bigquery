@@ -43,14 +43,17 @@ export class Authentication {
                 //set default project if needed
                 const defaultProject = await this.runCommand('gcloud config get project', true);
                 if (!defaultProject) {
-                    const projectsString = await this.runCommand('gcloud config get project --format="json"', true);
+                    const projectsString = await this.runCommand('gcloud projects list --format="json"', true);
+
                     console.info('projectsString');
                     console.info(projectsString);
 
                     const projects = JSON.parse(projectsString);
-                    const projectId = projects?.core?.project || 'damiao-project-1';
-                    if (projectId) {
-                        await this.runCommand(`gcloud config set project "${projectId}"`, true);
+                    if (projects && projects.length && projects.length > 0) {
+                        const projectId = projects[0].projectId;
+                        if (projectId) {
+                            await this.runCommand(`gcloud config set project "${projectId}"`, true);
+                        }
                     }
                 }
 
