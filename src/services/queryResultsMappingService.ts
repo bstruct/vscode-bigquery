@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { queryResultsWebviewMapping } from '../extension';
 import { ResultsGridRenderRequest } from '../tableResultsPanel/resultsGridRenderRequest';
 import { QueryResultsMapping } from './queryResultsMapping';
 
@@ -90,14 +89,14 @@ export class QueryResultsMappingService {
 
     };
 
-    static getQueryResultsMappingWebviewPanel(uuid: string): vscode.WebviewPanel | undefined {
+    static getQueryResultsMappingWebviewPanel(queryResultsWebviewMapping: Map<string, vscode.WebviewPanel>, uuid: string): vscode.WebviewPanel | undefined {
         if (queryResultsWebviewMapping) {
             return queryResultsWebviewMapping.get(uuid);
         }
         return undefined;
     }
 
-    static updateQueryResultsMappingWebviewPanel(uuid: string, webviewPanel: vscode.WebviewPanel) {
+    static updateQueryResultsMappingWebviewPanel(queryResultsWebviewMapping: Map<string, vscode.WebviewPanel>, uuid: string, webviewPanel: vscode.WebviewPanel) {
         if (queryResultsWebviewMapping) {
             queryResultsWebviewMapping.set(uuid, webviewPanel);
         }

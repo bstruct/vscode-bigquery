@@ -26,7 +26,7 @@ export class DownloadCsv {
             // const baseUri= vscode.workspace.workspaceFolders[0].uri;
             // const path = vscode.workspace.asRelativePath('test.csv', true);
 
-            vscode.window.showSaveDialog(
+            const uri: vscode.Uri | undefined = await vscode.window.showSaveDialog(
                 {
                     title: 'Save export',
                     filters: {
@@ -34,52 +34,51 @@ export class DownloadCsv {
                     },
                     defaultUri: defaultUri
                 }
-            ).then(async (uri: vscode.Uri | undefined) => {
+            );
 
-                if (uri !== undefined) {
-                    try {
-                        const fsPath = uri.fsPath;
+            if (uri !== undefined) {
+                try {
+                    const fsPath = uri.fsPath;
 
-                        vscode.window.showInformationMessage(`Initiated downloading into the file:\n${filename}`);
+                    vscode.window.showInformationMessage(`Initiated downloading into the file:\n${filename}`);
 
-                        const createCsvStringifier = csv_writer.createObjectCsvStringifier;
+                    const createCsvStringifier = csv_writer.createObjectCsvStringifier;
 
-                        let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000 });
-                        const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
+                    let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000 });
+                    const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
 
-                        const columnNames = queryResults[2]?.schema?.fields?.filter(c => c.name && c.name.length > 0).map(c => { return { id: c.name as string, title: c.name as string }; });
-                        const csvStringifier = createCsvStringifier({ header: columnNames } as ObjectCsvStringifierParams);
+                    const columnNames = queryResults[2]?.schema?.fields?.filter(c => c.name && c.name.length > 0).map(c => { return { id: c.name as string, title: c.name as string }; });
+                    const csvStringifier = createCsvStringifier({ header: columnNames } as ObjectCsvStringifierParams);
 
-                        fs.writeFileSync(fsPath, csvStringifier.getHeaderString() as string);
+                    fs.writeFileSync(fsPath, csvStringifier.getHeaderString() as string);
 
-                        let records = queryResults[0];
-                        let totalDownloadedRows = 0;
+                    let records = queryResults[0];
+                    let totalDownloadedRows = 0;
 
-                        while (true) {
+                    while (true) {
 
-                            //transform complex objects into string
-                            let adjustedRecords = DownloadCsv.objectsToString(records);
-                            fs.appendFileSync(fsPath, csvStringifier.stringifyRecords(adjustedRecords));
+                        //transform complex objects into string
+                        let adjustedRecords = DownloadCsv.objectsToString(records);
+                        fs.appendFileSync(fsPath, csvStringifier.stringifyRecords(adjustedRecords));
 
-                            totalDownloadedRows += records.length;
-                            const pageToken = queryResults[1]?.pageToken;
+                        totalDownloadedRows += records.length;
+                        const pageToken = queryResults[1]?.pageToken;
 
-                            if (totalDownloadedRows >= totalRows || (!pageToken)) {
-                                break;
-                            }
-
-                            queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000, pageToken: pageToken });
-                            records = queryResults[0];
+                        if (totalDownloadedRows >= totalRows || (!pageToken)) {
+                            break;
                         }
 
-                        //success message
-                        vscode.window.showInformationMessage(`Download concluded:\n${filename}`);
-
-                    } catch (error: any) {
-                        vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
+                        queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000, pageToken: pageToken });
+                        records = queryResults[0];
                     }
+
+                    //success message
+                    vscode.window.showInformationMessage(`Download concluded:\n${filename}`);
+
+                } catch (error: any) {
+                    vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
                 }
-            });
+            }
 
 
         } catch (error: any) {

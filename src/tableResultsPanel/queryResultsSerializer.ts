@@ -7,16 +7,18 @@ import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
 
     private globalState: vscode.Memento;
+    private queryResultsWebviewMapping: Map<string, vscode.WebviewPanel>;
 
-    constructor(globalState: vscode.Memento) {
+    constructor(globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, vscode.WebviewPanel>) {
         this.globalState = globalState;
+        this.queryResultsWebviewMapping = queryResultsWebviewMapping;
     }
 
     deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any): Thenable<void> {
 
         const uuid = webviewPanel.title.substring(webviewPanel.title.length - 8);
 
-		QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(uuid, webviewPanel);
+        QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(this.queryResultsWebviewMapping, uuid, webviewPanel);
 
         //action when panel is closed
         webviewPanel.onDidDispose(e => {

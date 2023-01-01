@@ -21,13 +21,14 @@ export let extensionUri: vscode.Uri;
 export let bigqueryIcons: BigqueryIcons;
 export let reporter: TelemetryReporter | null;
 export let statusBarInfo: vscode.StatusBarItem | null;
-export let queryResultsWebviewMapping: Map<string, vscode.WebviewPanel> = new Map<string, vscode.WebviewPanel>();
 
 export function activate(context: vscode.ExtensionContext) {
 
 	extensionUri = context.extensionUri;
 
 	bigqueryIcons = new BigqueryIcons();
+
+	let queryResultsWebviewMapping: Map<string, vscode.WebviewPanel> = new Map<string, vscode.WebviewPanel>();
 
 	try {
 
@@ -45,7 +46,10 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand(
 			commands.COMMAND_RUN_QUERY,
 			commands.commandRunQuery,
-			{ "globalState": context.globalState }
+			{
+				"globalState": context.globalState,
+				queryResultsWebviewMapping: queryResultsWebviewMapping
+			}
 		)
 	);
 
@@ -53,7 +57,10 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand(
 			commands.COMMAND_RUN_SELECTED_QUERY,
 			commands.commandRunSelectedQuery,
-			{ "globalState": context.globalState }
+			{
+				"globalState": context.globalState,
+				queryResultsWebviewMapping: queryResultsWebviewMapping
+			}
 		)
 	);
 
@@ -164,7 +171,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.window.registerWebviewPanelSerializer(
 			"bigquery-query-results",
-			new QueryResultsSerializer(context.globalState)
+			new QueryResultsSerializer(context.globalState, queryResultsWebviewMapping)
 		)
 	);
 
@@ -214,7 +221,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 			const uuid = QueryResultsMappingService.getQueryResultsMappingUuid(context.globalState, e);
 			if (uuid) {
-				const panel = QueryResultsMappingService.getQueryResultsMappingWebviewPanel(uuid);
+				const panel = QueryResultsMappingService.getQueryResultsMappingWebviewPanel(queryResultsWebviewMapping, uuid);
 				if (panel) {
 					panel.reveal(undefined, true);
 				}
