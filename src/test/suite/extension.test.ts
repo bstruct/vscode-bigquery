@@ -150,7 +150,7 @@ suite('Extension Test Suite', async () => {
 			queryResultsWebviewMapping: queryResultsWebviewMapping
 		};
 
-		const xxx = await vscode.commands.executeCommand(COMMAND_RUN_QUERY, commandInput);
+		await vscode.commands.executeCommand(COMMAND_RUN_QUERY, commandInput);
 
 		//there is a second group tab
 		const secondGroupTab = vscode.window.tabGroups.all.find(c => c.viewColumn === vscode.ViewColumn.Two);

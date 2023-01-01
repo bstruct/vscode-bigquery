@@ -31,6 +31,14 @@ export class Authentication {
 
             const typedResult = JSON.parse(result) as string[];
             if (typedResult.length === 0) {
+
+                //https://cloud.google.com/docs/authentication/application-default-credentials#personal
+                if (process.platform === 'win32') {
+                    await this.runCommand(`cp "${filePath}" %APPDATA%\gcloud\application_default_credentials.json`, true);
+                } else {
+                    await this.runCommand(`cp "${filePath}" $HOME/.config/gcloud/application_default_credentials.json`, true);
+                }
+
                 return { valid: true } as AuthenticationUserLoginResponse;
             }
 
