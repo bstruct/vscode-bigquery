@@ -32,11 +32,23 @@ export class Authentication {
             const typedResult = JSON.parse(result) as string[];
             if (typedResult.length === 0) {
 
+                //change default credentials
                 //https://cloud.google.com/docs/authentication/application-default-credentials#personal
                 if (process.platform === 'win32') {
                     await this.runCommand(`cp "${filePath}" %APPDATA%\gcloud\application_default_credentials.json`, true);
                 } else {
                     await this.runCommand(`cp "${filePath}" $HOME/.config/gcloud/application_default_credentials.json`, true);
+                }
+
+                //set default project if needed
+                const defaultProject = await this.runCommand('gcloud config get project', true);
+                if (!defaultProject) {
+                    const projectsString = await this.runCommand('gcloud config get project --format="json"', true);
+                    const projects = JSON.parse(projectsString);
+                    const projectId = projects?.core?.project;
+                    if (projectId) {
+                        await this.runCommand(`gcloud config set project "${projectId}"`, true);
+                    }
                 }
 
                 return { valid: true } as AuthenticationUserLoginResponse;
