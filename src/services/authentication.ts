@@ -22,12 +22,12 @@ export class Authentication {
     public static async serviceAccountLogin(fileUri: vscode.Uri): Promise<AuthenticationUserLoginResponse> {
 
         try {
-            let filePath = fileUri.path;
-            if (process.platform === 'win32') {
-                filePath = filePath.substring(1);
-            }
+            // let filePath = fileUri.path;
+            // if (process.platform === 'win32') {
+            //     filePath = filePath.substring(1);
+            // }
 
-            const result = await this.runCommand(`gcloud auth activate-service-account --key-file="${filePath}" --format="json"`, true);
+            const result = await this.runCommand(`gcloud auth activate-service-account --key-file="${fileUri.fsPath}" --format="json"`, true);
 
             const typedResult = JSON.parse(result) as string[];
             if (typedResult.length === 0) {
@@ -37,7 +37,7 @@ export class Authentication {
                 if (process.platform === 'win32') {
                     await this.runCommand(`copy "${fileUri.fsPath}" %APPDATA%\\gcloud\\application_default_credentials.json`, true);
                 } else {
-                    await this.runCommand(`cp "${filePath}" $HOME/.config/gcloud/application_default_credentials.json`, true);
+                    await this.runCommand(`cp "${fileUri.fsPath}" $HOME/.config/gcloud/application_default_credentials.json`, true);
                 }
 
                 //set default project if needed
@@ -45,8 +45,8 @@ export class Authentication {
                 if (!defaultProject) {
                     const projectsString = await this.runCommand('gcloud projects list --format="json"', true);
 
-                    console.info('projectsString');
-                    console.info(projectsString);
+                    // console.info('projectsString');
+                    // console.info(projectsString);
 
                     const projects = JSON.parse(projectsString);
                     if (projects && projects.length && projects.length > 0) {
