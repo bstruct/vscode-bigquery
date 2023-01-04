@@ -45,8 +45,7 @@ export const commandRunQuery = async function (this: any, ...args: any[]) {
 		return;
 	}
 
-	const textEditor = vscode.window.activeTextEditor;
-
+	const textEditor = vscode.window.activeTextEditor;	
 	if (textEditor === undefined) {
 		return;
 	}
@@ -107,8 +106,10 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	const queryResponse = getBigQueryClient().runQuery(queryText);
 
+	let performLock = false;
 	if (vscode.window.tabGroups.all.filter(c => c.viewColumn === vscode.ViewColumn.Two).length === 0) {
 		await vscode.commands.executeCommand('workbench.action.editorLayoutTwoRows');
+		performLock = true;
 	}
 
 	const label = `Result: ${mainLabel} | ${uuid}`;
@@ -123,15 +124,19 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 		panel = vscode.window.createWebviewPanel("bigquery-query-results", label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
 
+		//lock the tab group in vscode.ViewColumn.Two
+		if (performLock) {
+			panel.reveal(undefined, false);
+			await vscode.commands.executeCommand('workbench.action.lockEditorGroup');
+			await vscode.commands.executeCommand("workbench.action.focusPreviousGroup");
+		}
+
 		QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(queryResultsWebviewMapping, uuid, panel);
 
 		//action when panel is closed
 		panel.onDidDispose(e => {
 			QueryResultsMappingService.deleteQueryResultsMapping(globalState, uuid);
 		});
-
-		//lock the tab group in vscode.ViewColumn.Two
-		await vscode.commands.executeCommand('workbench.action.lockEditorGroup');
 
 	}
 

@@ -205,8 +205,6 @@ suite('Extension Test Suite', async () => {
 				return new Promise((resolve, reject) => { resolve(undefined); });
 			};
 
-
-
 			await vscode.commands.executeCommand('workbench.action.focusNextGroup');
 			await vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV);
 

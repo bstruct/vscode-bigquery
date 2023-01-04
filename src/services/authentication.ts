@@ -11,21 +11,25 @@ export class Authentication {
     //https://cloud.google.com/sdk/gcloud/reference/auth/login
     public static async userLogin(): Promise<AuthenticationUserLoginResponse> {
         const result = await this.runCommand('gcloud auth login --update-adc --add-quota-project-to-adc --quiet --verbosity warning --format="json"', true);
+
+        //set default project if needed
+        await Authentication.setDefaultProject();
+
         return JSON.parse(result) as AuthenticationUserLoginResponse;
     }
 
     public static async userLoginWithDrive(): Promise<AuthenticationUserLoginResponse> {
         const result = await this.runCommand('gcloud auth login --update-adc --add-quota-project-to-adc --quiet --enable-gdrive-access --verbosity warning --format="json"', true);
+
+        //set default project if needed
+        await Authentication.setDefaultProject();
+
         return JSON.parse(result) as AuthenticationUserLoginResponse;
     }
 
     public static async serviceAccountLogin(fileUri: vscode.Uri): Promise<AuthenticationUserLoginResponse> {
 
         try {
-            // let filePath = fileUri.path;
-            // if (process.platform === 'win32') {
-            //     filePath = filePath.substring(1);
-            // }
 
             const result = await this.runCommand(`gcloud auth activate-service-account --key-file="${fileUri.fsPath}" --format="json"`, true);
 
@@ -41,21 +45,7 @@ export class Authentication {
                 }
 
                 //set default project if needed
-                const defaultProject = await this.runCommand('gcloud config get project', true);
-                if (!defaultProject) {
-                    const projectsString = await this.runCommand('gcloud projects list --format="json"', true);
-
-                    // console.info('projectsString');
-                    // console.info(projectsString);
-
-                    const projects = JSON.parse(projectsString);
-                    if (projects && projects.length && projects.length > 0) {
-                        const projectId = projects[0].projectId;
-                        if (projectId) {
-                            await this.runCommand(`gcloud config set project "${projectId}"`, true);
-                        }
-                    }
-                }
+                await Authentication.setDefaultProject();
 
                 return { valid: true } as AuthenticationUserLoginResponse;
             }
@@ -65,6 +55,23 @@ export class Authentication {
         }
 
         return { valid: false } as AuthenticationUserLoginResponse;
+    }
+
+    private static async setDefaultProject() {
+        const defaultProject = await this.runCommand('gcloud config get project', true);
+        if (!defaultProject) {
+            const projectsString = await this.runCommand('gcloud projects list --format="json"', true);
+
+            // console.info('projectsString');
+            // console.info(projectsString);
+            const projects = JSON.parse(projectsString);
+            if (projects && projects.length && projects.length > 0) {
+                const projectId = projects[0].projectId;
+                if (projectId) {
+                    await this.runCommand(`gcloud config set project "${projectId}"`, true);
+                }
+            }
+        }
     }
 
     public static async list(forceShowConsole: boolean): Promise<AuthenticationListItem[]> {

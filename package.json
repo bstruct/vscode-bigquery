@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.0.17",
+	"version": "0.0.18",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -125,32 +125,6 @@
 				"icon": "$(pin)"
 			},			
 			{
-				"command": "vscode-bigquery.results-page-info",
-				"title": "${x1}",			
-				"enablement": "0==1"	
-			},
-			{
-				"command": "vscode-bigquery.results-first-page",
-				"title": "first page",
-				"icon": "$(arrow-circle-left)",
-				"enablement": "x==1"		
-			},			
-			{
-				"command": "vscode-bigquery.results-next-page",
-				"title": "next page",
-				"icon": "$(arrow-right)"
-			},			
-			{
-				"command": "vscode-bigquery.results-previous-page",
-				"title": "previous page",
-				"icon": "$(arrow-left)"
-			},			
-			{
-				"command": "vscode-bigquery.results-last-page",
-				"title": "last page",
-				"icon": "$(arrow-circle-right)"
-			},			
-			{
 				"command": "vscode-bigquery.download-csv",
 				"title": "download CSV",
 				"icon": "$(cloud-download)"
@@ -167,26 +141,6 @@
 					"command": "vscode-bigquery.run-selected-query",
 					"group": "navigation",
 					"when": "editorLangId == bqsql"
-				},
-				{
-					"command": "vscode-bigquery.results-first-page",
-					"group": "navigation@-5",
-					"when": "activeWebviewPanelId == 'bigquery-query-results'"
-				},
-				{
-					"command": "vscode-bigquery.results-previous-page",
-					"group": "navigation@-4",
-					"when": "activeWebviewPanelId == 'bigquery-query-results'"
-				},
-				{
-					"command": "vscode-bigquery.results-next-page",
-					"group": "navigation@-3",
-					"when": "activeWebviewPanelId == 'bigquery-query-results'"
-				},
-				{
-					"command": "vscode-bigquery.results-last-page",
-					"group": "navigation@-2",
-					"when": "activeWebviewPanelId == 'bigquery-query-results'"
 				},
 				{
 					"command": "vscode-bigquery.download-csv",
