@@ -14,7 +14,7 @@
 		"url": "https://github.com/bstruct/vscode-bigquery/issues"
 	},
 	"engines": {
-		"vscode": "^1.5.0"
+		"vscode": "^1.63.0"
 	},
 	"categories": [
 		"Other"
