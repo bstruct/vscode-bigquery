@@ -1,7 +1,7 @@
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
-import { JobReference } from '../services/queryResultsMapping';
+import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 
 //---------------- @vscode/webview-ui-toolkit ----------------
 //https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -14,41 +14,38 @@ import { JobReference } from '../services/queryResultsMapping';
 export class ResultsGrid extends Object {
 
     // private queryRowsResponse: QueryRowsResponse;
+    private request: ResultsGridRenderRequest;
     private schema: bigquery.ITableSchema;
     private rows: any[];
     private totalRows: number;
-    private jobReferences: JobReference[] | undefined;
-    private startIndex: number;
-    private maxResults: number;
-    private queryCount: number;
-    private queryIndex: number;
-    private openInTabVisible: boolean;
+    // private jobReferences: JobReference[] | undefined;
+    // private startIndex: number;
+    // private maxResults: number;
+    // private queryCount: number;
+    // private queryIndex: number;
+    // private openInTabVisible: boolean;
 
     /**
      *
      */
     constructor(
+        request: ResultsGridRenderRequest,
         schema: bigquery.ITableSchema,
         rows: any[],
-        jobReferences: JobReference[] | undefined,
-        totalRows: number,
-        startIndex: number,
-        maxResults: number,
-        queryCount: number,
-        queryIndex: number,
-        openInTabVisible: boolean) {
+        totalRows: number) {
 
         super();
         // this.queryRowsResponse = queryRowsResponse;
+        this.request = request;
         this.schema = schema;
         this.rows = rows;
-        this.jobReferences = jobReferences;
         this.totalRows = totalRows;
-        this.startIndex = startIndex;
-        this.maxResults = maxResults;
-        this.queryCount = queryCount;
-        this.queryIndex = queryIndex;
-        this.openInTabVisible = openInTabVisible;
+        // this.jobReferences = jobReferences;
+        // this.startIndex = startIndex;
+        // this.maxResults = maxResults;
+        // this.queryCount = queryCount;
+        // this.queryIndex = queryIndex;
+        // this.openInTabVisible = openInTabVisible;
     }
 
     private render(): preact.VNode[] {
@@ -58,11 +55,11 @@ export class ResultsGrid extends Object {
         //array of elements to create
         const elements: preact.VNode[] = [];
 
-        elements.push(this.getControls(this.startIndex, this.maxResults, this.totalRows, resultsSize));
+        elements.push(this.getControls(this.request.startIndex, this.request.maxResults, this.totalRows, resultsSize));
 
         elements.push(preact.h('vscode-divider', {}, []));
 
-        const [gridNode, _] = this.getGrid(this.schema, this.rows, this.startIndex + 1, false);
+        const [gridNode, _] = this.getGrid(this.schema, this.rows, this.request.startIndex + 1, false);
 
         elements.push(gridNode);
 
@@ -76,14 +73,16 @@ export class ResultsGrid extends Object {
         //array of elements to create
         const elements: preact.VNode[] = [];
 
-        if (this.queryCount > 1) {
+        if (this.request && this.request.jobReferences && this.request.jobReferences.length > 1) {
 
             const options = [];
-            for (let index = 0; index < this.queryCount; index++) {
-                options.push(preact.h('vscode-option', { selected: this.queryIndex === index, value: index }, `Result query ${index + 1}`));
+            for (let index = 0; index < this.request.jobReferences.length; index++) {
+                options.push(preact.h('vscode-option', { selected: this.request.jobIndex === index, value: index }, `Result query ${index + 1}`));
             }
 
-            elements.push(preact.h('vscode-dropdown', { 'onchange': 'vscode.postMessage({"command":"query_index_change", "value": this.value})' }, options));
+            const parametersSerialized = JSON.stringify([this.request.jobReferences, this.request.tableReference, this.request.startIndex, this.request.maxResults, totalRows, "$$$", this.request.openInTabVisible]).replace('"$$$"', 'this.value');
+
+            elements.push(preact.h('vscode-dropdown', { 'onchange': `vscode.postMessage({"command":"query_index_change", parameters: ${parametersSerialized}})` }, options));
 
             elements.push(preact.h('span', {}, ' '));
         }
@@ -105,7 +104,7 @@ export class ResultsGrid extends Object {
 
         const firstAndPreviousPageEnabled = startIndex >= maxResults;
 
-        const parameters = [this.jobReferences, this.startIndex, this.maxResults, totalRows, this.queryIndex, this.openInTabVisible];
+        const parameters = [this.request.jobReferences, this.request.tableReference, this.request.startIndex, this.request.maxResults, totalRows, this.request.jobIndex, this.request.openInTabVisible];
 
         elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "first_page", parameters: ${JSON.stringify(parameters)}})`, disabled: !firstAndPreviousPageEnabled }, [
             'First page',
@@ -135,7 +134,7 @@ export class ResultsGrid extends Object {
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
         ]));
 
-        if (this.openInTabVisible) {
+        if (this.request.openInTabVisible) {
 
             elements.push(preact.h('span', {}, ' '));
 
@@ -250,7 +249,7 @@ export class ResultsGrid extends Object {
                     }
 
                     let totalWidth: number = 0;
-                    [value, totalWidth] = this.getGrid(innerSchema, innerResults, 1, true);
+                    [value, totalWidth] = this.getGrid(innerSchema, innerResults || [], 1, true);
 
                     cellProperties.class = 'disableFocus';
 
@@ -266,24 +265,24 @@ export class ResultsGrid extends Object {
                         case 'TIME':
                         case 'TIMESTAMP':
                         case 'GEOGRAPHY':
-                            if (value !== null) {
+                            if (value !== null && value !== undefined) {
                                 value = value.value;
                             }
                             break;
                         case 'NUMERIC':
                         case 'FLOAT':
                         case 'INTEGER':
-                            if (value !== null) {
+                            if (value !== null && value !== undefined) {
                                 value = value.toString();
                             }
                             break;
                         case 'BYTES':
-                            if (value !== null) {
+                            if (value !== null && value !== undefined) {
                                 value = value.toString('base64');
                             }
                             break;
                         case 'BOOLEAN':
-                            if (value !== null) {
+                            if (value !== null && value !== undefined) {
                                 value = value ? 'true' : 'false';
                             }
                             break;

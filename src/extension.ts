@@ -222,9 +222,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 			const uuid = QueryResultsMappingService.getQueryResultsMappingUuid(context.globalState, e);
 			if (uuid) {
-				const panel = QueryResultsMappingService.getQueryResultsMappingResultsGridRender(queryResultsWebviewMapping, uuid);
-				if (panel) {
-					// panel.reveal(undefined, true);
+				const resultsGridRender = QueryResultsMappingService.getQueryResultsMappingResultsGridRender(queryResultsWebviewMapping, uuid);
+				if (resultsGridRender) {
+					resultsGridRender.reveal(undefined, true);
 				}
 			}
 		}

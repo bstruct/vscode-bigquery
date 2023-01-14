@@ -4,7 +4,6 @@ import { authenticationWebviewProvider, bigQueryTreeDataProvider, reporter } fro
 import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/treeItem';
-import { TableGridRenderRequest } from './tableResultsPanel/tableGridRenderRequest';
 import { SchemaRender } from './tableResultsPanel/schemaRender';
 import { QueryGeneratorService } from './services/queryGeneratorService';
 import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
@@ -13,6 +12,7 @@ import { DownloadCsv } from './tableResultsPanel/downloadCsv';
 import { QueryResultsMappingService } from './services/queryResultsMappingService';
 import { QueryResultsMapping } from './services/queryResultsMapping';
 import { JobReference } from "./services/queryResultsMapping";
+import { TableReference } from './services/tableMetadata';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -32,13 +32,24 @@ export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 
 export const commandRunQuery = async function (this: any, ...args: any[]) {
 
+	return commandQuery(this, RunQueryType.query);
+
+};
+
+export const commandRunSelectedQuery = async function (this: any, ...args: any[]) {
+
+	return commandQuery(this, RunQueryType.selectedQuery);
+
+};
+
+enum RunQueryType {
+	query = 1,
+	selectedQuery = 2
+}
+
+const commandQuery = async function (local: any, queryType: RunQueryType) {
+
 	const t1 = Date.now();
-
-	// const commands = await vscode.commands.getCommands();
-	// const q = commands.filter(c => c.toLowerCase().indexOf('set') >= 0);
-
-	// await vscode.commands.executeCommand('setContext', 'x', 0);
-	// await vscode.commands.executeCommand('setContext', 'x1', 'my text');
 
 	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
@@ -51,10 +62,10 @@ export const commandRunQuery = async function (this: any, ...args: any[]) {
 		return;
 	}
 
-	const queryText: string = textEditor.document.getText() ?? '';
+	const queryText: string = (queryType === RunQueryType.query) ? textEditor.document.getText() ?? '' : textEditor.document.getText(textEditor.selection) ?? '';
 
-	const globalState: vscode.Memento = this.globalState;
-	const queryResultsWebviewMapping: Map<string, ResultsGridRender> = this.queryResultsWebviewMapping;
+	const globalState: vscode.Memento = local.globalState;
+	const queryResultsWebviewMapping: Map<string, ResultsGridRender> = local.queryResultsWebviewMapping;
 
 	let uuid = QueryResultsMappingService.getQueryResultsMappingUuid(globalState, textEditor);
 	if (!uuid) {
@@ -65,43 +76,10 @@ export const commandRunQuery = async function (this: any, ...args: any[]) {
 
 	const numberOfJobs = await runQuery(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
 
-	reporter?.sendTelemetryEvent('commandRunQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+	reporter?.sendTelemetryEvent((queryType === RunQueryType.query) ? 'commandRunQuery' : 'commandRunSelectedQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
 };
 
-export const commandRunSelectedQuery = async function (this: any, ...args: any[]) {
-
-	const t1 = Date.now();
-
-	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
-
-	if (activeTab === undefined) {
-		return;
-	}
-
-	const textEditor = vscode.window.activeTextEditor;
-
-	if (textEditor === undefined) {
-		return;
-	}
-
-	const queryText: string = textEditor.document.getText(textEditor.selection) ?? '';
-
-	if (queryText.length === 0) {
-		vscode.window.showErrorMessage('No text selected');
-		return;
-	}
-
-	const globalState: vscode.Memento = this.globalState;
-	const queryResultsWebviewMapping: Map<string, ResultsGridRender> = this.queryResultsWebviewMapping;
-
-	const uuid = uuidv4().substring(0, 8);
-
-	const numberOfJobs = await runQuery(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
-
-	reporter?.sendTelemetryEvent('commandRunSelectedQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
-
-};
 
 const runQuery = async function (globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, ResultsGridRender>, uuid: string, mainLabel: string, queryText: string): Promise<number> {
 
@@ -119,7 +97,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	if (resultsGridRender) {
 
-		// resultsGridRender.reveal(undefined, true);
+		resultsGridRender.reveal(undefined, true);
 
 	} else {
 
@@ -223,7 +201,6 @@ export const commandServiceAccountLogin = async function (...args: any[]) {
 		resetBigQueryClient();
 	}
 
-
 	reporter?.sendTelemetryEvent('commandServiceAccountLogin', {});
 
 };
@@ -277,7 +254,7 @@ export const commandViewTable = async function (...args: any[]) {
 	const table = getBigQueryClient().getTable(item.projectId, item.datasetId, item.tableId);
 	const metadata = await table.getMetadata();
 
-	const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
+	const panel = vscode.window.createWebviewPanel("bigquery-query-results", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
 	const newresultsGridRender = new ResultsGridRender(panel);
 
 	if (metadata[0].type === 'EXTERNAL') {
@@ -305,14 +282,14 @@ export const commandViewTable = async function (...args: any[]) {
 	} else {
 
 		const request = {
-			table: table,
+			tableReference: { projectId: item.projectId, datasetId: item.datasetId, tableId: item.tableId } as TableReference,
 			startIndex: 0,
 			maxResults: 50,
 			jobIndex: 0,
 			openInTabVisible: false
-		} as TableGridRenderRequest;
+		} as ResultsGridRenderRequest;
 
-		newresultsGridRender.renderTable(request);
+		newresultsGridRender.render(request);
 	}
 
 	reporter?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });

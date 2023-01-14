@@ -1,7 +1,9 @@
 import { JobReference } from "../services/queryResultsMapping";
+import { TableReference } from "../services/tableMetadata";
 
 export interface ResultsGridRenderRequest {
-    jobReferences: JobReference[];
+    jobReferences: JobReference[] | undefined;
+    tableReference: TableReference | undefined;
     startIndex: number;
     maxResults: number;
     jobIndex: number;

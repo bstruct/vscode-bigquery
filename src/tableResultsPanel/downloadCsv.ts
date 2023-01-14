@@ -86,8 +86,6 @@ export class DownloadCsv {
         }
     }
 
-
-
     private static objectsToString(records: any[]): any[] {
 
         let adjustedRecords = [];
@@ -111,4 +109,5 @@ export class DownloadCsv {
 
         return adjustedRecords;
     }
+    
 }
