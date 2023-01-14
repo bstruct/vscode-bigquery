@@ -1,6 +1,7 @@
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
+import { JobReference } from '../services/queryResultsMapping';
 
 //---------------- @vscode/webview-ui-toolkit ----------------
 //https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -16,6 +17,7 @@ export class ResultsGrid extends Object {
     private schema: bigquery.ITableSchema;
     private rows: any[];
     private totalRows: number;
+    private jobReferences: JobReference[] | undefined;
     private startIndex: number;
     private maxResults: number;
     private queryCount: number;
@@ -28,6 +30,7 @@ export class ResultsGrid extends Object {
     constructor(
         schema: bigquery.ITableSchema,
         rows: any[],
+        jobReferences: JobReference[] | undefined,
         totalRows: number,
         startIndex: number,
         maxResults: number,
@@ -39,6 +42,7 @@ export class ResultsGrid extends Object {
         // this.queryRowsResponse = queryRowsResponse;
         this.schema = schema;
         this.rows = rows;
+        this.jobReferences = jobReferences;
         this.totalRows = totalRows;
         this.startIndex = startIndex;
         this.maxResults = maxResults;
@@ -101,14 +105,16 @@ export class ResultsGrid extends Object {
 
         const firstAndPreviousPageEnabled = startIndex >= maxResults;
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("first_page")', disabled: !firstAndPreviousPageEnabled }, [
+        const parameters = [this.jobReferences, this.startIndex, this.maxResults, totalRows, this.queryIndex, this.openInTabVisible];
+
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "first_page", parameters: ${JSON.stringify(parameters)}})`, disabled: !firstAndPreviousPageEnabled }, [
             'First page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-left' }, [])
         ]));
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("previous_page")', disabled: !firstAndPreviousPageEnabled }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "previous_page", parameters: ${JSON.stringify(parameters)}})`, disabled: !firstAndPreviousPageEnabled }, [
             'Previous page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-left' }, [])
         ]));
@@ -117,14 +123,14 @@ export class ResultsGrid extends Object {
 
         const nextAndLastPageEnabled = startIndex + resultsSize < totalRows;
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("next_page")', disabled: !nextAndLastPageEnabled }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "next_page", parameters: ${JSON.stringify(parameters)}})`, disabled: !nextAndLastPageEnabled }, [
             'Next page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-right' }, [])
         ]));
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("last_page")', disabled: !nextAndLastPageEnabled }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "last_page", parameters: ${JSON.stringify(parameters)}})`, disabled: !nextAndLastPageEnabled }, [
             'Last page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
         ]));
@@ -133,7 +139,7 @@ export class ResultsGrid extends Object {
 
             elements.push(preact.h('span', {}, ' '));
 
-            elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("open_in_tab")' }, [
+            elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "open_in_tab", parameters: ${JSON.stringify(parameters)}})` }, [
                 'Open in tab',
                 preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-open-preview' }, [])
             ]));
@@ -143,7 +149,7 @@ export class ResultsGrid extends Object {
         //download csv
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("download_csv")' }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "download_csv", parameters: ${JSON.stringify(parameters)}})` }, [
             'Download CSV',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-cloud-download' }, [])
         ]));
@@ -183,7 +189,7 @@ export class ResultsGrid extends Object {
         //initialize rows array with the header column row already
         const rows = [];
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header', 'style':'position:sticky;top:0' }, getHeaderCells()));
+        rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header', 'style': 'position:sticky;top:0' }, getHeaderCells()));
 
         //widths of the columns
         const widths: number[] = [5];

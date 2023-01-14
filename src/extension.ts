@@ -221,7 +221,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 			const uuid = QueryResultsMappingService.getQueryResultsMappingUuid(context.globalState, e);
 			if (uuid) {
-				const panel = QueryResultsMappingService.getQueryResultsMappingWebviewPanel(queryResultsWebviewMapping, uuid);
+				const panel = QueryResultsMappingService.getQueryResultsMappingResultsGridRender(queryResultsWebviewMapping, uuid);
 				if (panel) {
 					panel.reveal(undefined, true);
 				}

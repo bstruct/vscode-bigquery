@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DownloadCsv } from './tableResultsPanel/downloadCsv';
 import { QueryResultsMappingService } from './services/queryResultsMappingService';
 import { QueryResultsMapping } from './services/queryResultsMapping';
+import { JobReference } from "./services/queryResultsMapping";
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -45,7 +46,7 @@ export const commandRunQuery = async function (this: any, ...args: any[]) {
 		return;
 	}
 
-	const textEditor = vscode.window.activeTextEditor;	
+	const textEditor = vscode.window.activeTextEditor;
 	if (textEditor === undefined) {
 		return;
 	}
@@ -53,7 +54,7 @@ export const commandRunQuery = async function (this: any, ...args: any[]) {
 	const queryText: string = textEditor.document.getText() ?? '';
 
 	const globalState: vscode.Memento = this.globalState;
-	const queryResultsWebviewMapping: Map<string, vscode.WebviewPanel> = this.queryResultsWebviewMapping;
+	const queryResultsWebviewMapping: Map<string, ResultsGridRender> = this.queryResultsWebviewMapping;
 
 	let uuid = QueryResultsMappingService.getQueryResultsMappingUuid(globalState, textEditor);
 	if (!uuid) {
@@ -92,7 +93,7 @@ export const commandRunSelectedQuery = async function (this: any, ...args: any[]
 	}
 
 	const globalState: vscode.Memento = this.globalState;
-	const queryResultsWebviewMapping: Map<string, vscode.WebviewPanel> = this.queryResultsWebviewMapping;
+	const queryResultsWebviewMapping: Map<string, ResultsGridRender> = this.queryResultsWebviewMapping;
 
 	const uuid = uuidv4().substring(0, 8);
 
@@ -102,7 +103,7 @@ export const commandRunSelectedQuery = async function (this: any, ...args: any[]
 
 };
 
-const runQuery = async function (globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, vscode.WebviewPanel>, uuid: string, mainLabel: string, queryText: string): Promise<number> {
+const runQuery = async function (globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, ResultsGridRender>, uuid: string, mainLabel: string, queryText: string): Promise<number> {
 
 	const queryResponse = getBigQueryClient().runQuery(queryText);
 
@@ -114,15 +115,16 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	const label = `Result: ${mainLabel} | ${uuid}`;
 
-	let panel = QueryResultsMappingService.getQueryResultsMappingWebviewPanel(queryResultsWebviewMapping, uuid);
+	let resultsGridRender = QueryResultsMappingService.getQueryResultsMappingResultsGridRender(queryResultsWebviewMapping, uuid);
 
-	if (panel) {
+	if (resultsGridRender) {
 
-		panel.reveal(undefined, true);
+		// resultsGridRender.reveal(undefined, true);
 
 	} else {
 
-		panel = vscode.window.createWebviewPanel("bigquery-query-results", label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
+		const panel = vscode.window.createWebviewPanel("bigquery-query-results", label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
+		resultsGridRender = new ResultsGridRender(panel);
 
 		//lock the tab group in vscode.ViewColumn.Two
 		if (performLock) {
@@ -131,7 +133,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 			await vscode.commands.executeCommand("workbench.action.focusPreviousGroup");
 		}
 
-		QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(queryResultsWebviewMapping, uuid, panel);
+		QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(queryResultsWebviewMapping, uuid, resultsGridRender);
 
 		//action when panel is closed
 		panel.onDidDispose(e => {
@@ -140,10 +142,10 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	}
 
-	const resultsGridRender = new ResultsGridRender(panel.webview);
+	const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
 
 	const request = {
-		jobsPromise: queryResponse,
+		jobReferences: jobReferences,
 		startIndex: 0,
 		maxResults: 50,
 		jobIndex: 0,
@@ -276,15 +278,22 @@ export const commandViewTable = async function (...args: any[]) {
 	const metadata = await table.getMetadata();
 
 	const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
-	const newresultsGridRender = new ResultsGridRender(panel.webview);
+	const newresultsGridRender = new ResultsGridRender(panel);
 
 	if (metadata[0].type === 'EXTERNAL') {
 
-		const queryResponse = getBigQueryClient().runQuery(
+		const queryResponse = await getBigQueryClient().runQuery(
 			`SELECT * FROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``);
 
+		const jobReferences = [
+			{
+				jobId: queryResponse[0].id,
+				location: queryResponse[0].location,
+				projectId: queryResponse[0].projectId
+			} as JobReference];
+
 		const request = {
-			jobsPromise: queryResponse,
+			jobReferences: jobReferences,
 			startIndex: 0,
 			maxResults: 50,
 			jobIndex: 0,

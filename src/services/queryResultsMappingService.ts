@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { ResultsGridRender } from '../tableResultsPanel/resultsGridRender';
 import { ResultsGridRenderRequest } from '../tableResultsPanel/resultsGridRenderRequest';
 import { QueryResultsMapping } from './queryResultsMapping';
 
@@ -66,10 +67,10 @@ export class QueryResultsMappingService {
 
             const item = queryResultsMapping.find(c => c.uuid === uuid);
             if (item) {
-                const jobs = await request.jobsPromise;
-                const jobReferences = jobs.map(c => c.metadata.jobReference);
+                // const jobs = await request.jobsPromise;
+                // const jobReferences = jobs.map(c => c.metadata.jobReference);
 
-                item.jobReferences = jobReferences;
+                item.jobReferences = request.jobReferences;
                 item.jobIndex = request.jobIndex;
                 globalState.update('queryResultsMapping', queryResultsMapping);
             }
@@ -89,16 +90,16 @@ export class QueryResultsMappingService {
 
     };
 
-    static getQueryResultsMappingWebviewPanel(queryResultsWebviewMapping: Map<string, vscode.WebviewPanel>, uuid: string): vscode.WebviewPanel | undefined {
+    static getQueryResultsMappingResultsGridRender(queryResultsWebviewMapping: Map<string, ResultsGridRender>, uuid: string): ResultsGridRender | undefined {
         if (queryResultsWebviewMapping) {
             return queryResultsWebviewMapping.get(uuid);
         }
         return undefined;
     }
 
-    static updateQueryResultsMappingWebviewPanel(queryResultsWebviewMapping: Map<string, vscode.WebviewPanel>, uuid: string, webviewPanel: vscode.WebviewPanel) {
+    static updateQueryResultsMappingWebviewPanel(queryResultsWebviewMapping: Map<string, ResultsGridRender>, uuid: string, resultsGridRender: ResultsGridRender) {
         if (queryResultsWebviewMapping) {
-            queryResultsWebviewMapping.set(uuid, webviewPanel);
+            queryResultsWebviewMapping.set(uuid, resultsGridRender);
         }
     }
 

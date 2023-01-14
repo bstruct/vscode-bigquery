@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { getBigQueryClient } from '../extensionCommands';
 import { QueryResultsMappingService } from '../services/queryResultsMappingService';
 import { ResultsGridRender } from './resultsGridRender';
 import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
@@ -40,17 +39,10 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
             && startIndex !== undefined
             && jobIndex !== undefined) {
 
-            const bqClient = getBigQueryClient();
-            const jobReferences = queryResultsMappingItem.jobReferences;
-
-            const jobsPromise = new Promise((resolve, reject) => {
-                resolve(jobReferences.map(c => bqClient.getJob(c)));
-            });
-
             const resultsGridRender = new ResultsGridRender(webviewPanel.webview);
 
             const request = {
-                jobsPromise: jobsPromise,
+                jobReferences: queryResultsMappingItem.jobReferences,
                 startIndex: 0,
                 maxResults: 50,
                 jobIndex: 0,
