@@ -332,7 +332,7 @@ export class ResultsGridRender {
                         jobName = request.jobReferences[0].jobId?.replace(RegExp('_\\d+$'), '') || '';
                     }
 
-                    const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results-new-tab", jobName, { viewColumn: vscode.ViewColumn.One && vscode.ViewColumn.Beside, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
+                    const panel = vscode.window.createWebviewPanel("bigquery-query-results", jobName, { viewColumn: vscode.ViewColumn.One && vscode.ViewColumn.Beside, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
                     const newresultsGridRender = new ResultsGridRender(panel);
 
                     request.openInTabVisible = false;

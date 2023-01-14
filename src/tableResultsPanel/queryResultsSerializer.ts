@@ -41,8 +41,6 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
             && startIndex !== undefined
             && jobIndex !== undefined) {
 
-            const resultsGridRender = new ResultsGridRender(webviewPanel);
-
             const request = {
                 jobReferences: queryResultsMappingItem.jobReferences,
                 startIndex: 0,
