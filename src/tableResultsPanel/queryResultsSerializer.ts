@@ -6,9 +6,9 @@ import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
 
     private globalState: vscode.Memento;
-    private queryResultsWebviewMapping: Map<string, vscode.WebviewPanel>;
+    private queryResultsWebviewMapping: Map<string, ResultsGridRender>;
 
-    constructor(globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, vscode.WebviewPanel>) {
+    constructor(globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, ResultsGridRender>) {
         this.globalState = globalState;
         this.queryResultsWebviewMapping = queryResultsWebviewMapping;
     }
@@ -17,7 +17,9 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
 
         const uuid = webviewPanel.title.substring(webviewPanel.title.length - 8);
 
-        QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(this.queryResultsWebviewMapping, uuid, webviewPanel);
+		const resultsGridRender = new ResultsGridRender(webviewPanel);
+
+        QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(this.queryResultsWebviewMapping, uuid, resultsGridRender);
 
         //action when panel is closed
         webviewPanel.onDidDispose(e => {
@@ -39,7 +41,7 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
             && startIndex !== undefined
             && jobIndex !== undefined) {
 
-            const resultsGridRender = new ResultsGridRender(webviewPanel.webview);
+            const resultsGridRender = new ResultsGridRender(webviewPanel);
 
             const request = {
                 jobReferences: queryResultsMappingItem.jobReferences,

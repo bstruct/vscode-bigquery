@@ -12,6 +12,7 @@ import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaServic
 import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
 import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializer';
 import { QueryResultsMappingService } from './services/queryResultsMappingService';
+import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -28,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	bigqueryIcons = new BigqueryIcons();
 
-	let queryResultsWebviewMapping: Map<string, vscode.WebviewPanel> = new Map<string, vscode.WebviewPanel>();
+	let queryResultsWebviewMapping: Map<string, ResultsGridRender> = new Map<string, ResultsGridRender>();
 
 	try {
 
@@ -223,7 +224,7 @@ export function activate(context: vscode.ExtensionContext) {
 			if (uuid) {
 				const panel = QueryResultsMappingService.getQueryResultsMappingResultsGridRender(queryResultsWebviewMapping, uuid);
 				if (panel) {
-					panel.reveal(undefined, true);
+					// panel.reveal(undefined, true);
 				}
 			}
 		}
