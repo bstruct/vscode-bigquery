@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import bigquery from '@google-cloud/bigquery/build/src/types';
-import { extensionUri, reporter } from '../extension';
+import { extensionUri, QUERY_RESULTS_VIEW_TYPE, reporter } from '../extension';
 import { QueryResultsOptions, Table } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
 import { ResultsGrid } from './resultsGrid';
@@ -19,6 +19,10 @@ export class ResultsGridRender {
         this.webViewPanel = webViewPanel;
         const listener = this.webViewPanel.webview.onDidReceiveMessage(this.listenerResultsOnDidReceiveMessage, this);
         webViewPanel.onDidDispose(c => { listener.dispose(); });
+    }
+
+    public renderLoadingIcon() {
+        this.webViewPanel.webview.html = this.getWaitingHtml(50, false, 0, 0);
     }
 
     public async render(request: ResultsGridRenderRequest) {
@@ -279,7 +283,7 @@ export class ResultsGridRender {
                             jobName = request.jobReferences[0].jobId?.replace(RegExp('_\\d+$'), '') || '';
                         }
 
-                        const panel = vscode.window.createWebviewPanel("bigquery-query-results", jobName, { viewColumn: vscode.ViewColumn.Beside, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
+                        const panel = vscode.window.createWebviewPanel(QUERY_RESULTS_VIEW_TYPE, jobName, { viewColumn: vscode.ViewColumn.Beside, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
                         const newresultsGridRender = new ResultsGridRender(panel);
 
                         request.openInTabVisible = false;

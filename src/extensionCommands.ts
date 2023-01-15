@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigqueryClient';
-import { authenticationWebviewProvider, bigQueryTreeDataProvider, reporter } from './extension';
+import { authenticationWebviewProvider, bigQueryTreeDataProvider, QUERY_RESULTS_VIEW_TYPE, reporter, TABLE_RESULTS_VIEW_TYPE } from './extension';
 import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/treeItem';
@@ -80,7 +80,6 @@ const commandQuery = async function (local: any, queryType: RunQueryType) {
 
 };
 
-
 const runQuery = async function (globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, ResultsGridRender>, uuid: string, mainLabel: string, queryText: string): Promise<number> {
 
 	const queryResponse = getBigQueryClient().runQuery(queryText);
@@ -101,7 +100,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	} else {
 
-		const panel = vscode.window.createWebviewPanel("bigquery-query-results", label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
+		const panel = vscode.window.createWebviewPanel(QUERY_RESULTS_VIEW_TYPE, label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
 		resultsGridRender = new ResultsGridRender(panel);
 
 		//lock the tab group in vscode.ViewColumn.Two
@@ -119,6 +118,8 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		});
 
 	}
+
+	resultsGridRender.renderLoadingIcon();
 
 	const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
 
@@ -254,7 +255,13 @@ export const commandViewTable = async function (...args: any[]) {
 	const table = getBigQueryClient().getTable(item.projectId, item.datasetId, item.tableId);
 	const metadata = await table.getMetadata();
 
-	const panel = vscode.window.createWebviewPanel("bigquery-query-results", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
+	let panel: vscode.WebviewPanel;
+	if (args.length > 1 && args[1] && args[1].viewType === TABLE_RESULTS_VIEW_TYPE) {
+		panel = args[1];
+	} else {
+		panel = vscode.window.createWebviewPanel(TABLE_RESULTS_VIEW_TYPE, title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
+	}
+
 	const newresultsGridRender = new ResultsGridRender(panel);
 
 	if (metadata[0].type === 'EXTERNAL') {

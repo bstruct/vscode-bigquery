@@ -13,6 +13,7 @@ import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
 import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializer';
 import { QueryResultsMappingService } from './services/queryResultsMappingService';
 import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
+import { TableResultsSerializer } from './tableResultsPanel/tableResultsSerializer';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -22,6 +23,9 @@ export let extensionUri: vscode.Uri;
 export let bigqueryIcons: BigqueryIcons;
 export let reporter: TelemetryReporter | null;
 export let statusBarInfo: vscode.StatusBarItem | null;
+
+export const QUERY_RESULTS_VIEW_TYPE = "bigquery-query-results";
+export const TABLE_RESULTS_VIEW_TYPE = "bigquery-table-results";
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -171,8 +175,16 @@ export function activate(context: vscode.ExtensionContext) {
 	//bigquery-query-results
 	context.subscriptions.push(
 		vscode.window.registerWebviewPanelSerializer(
-			"bigquery-query-results",
+			QUERY_RESULTS_VIEW_TYPE,
 			new QueryResultsSerializer(context.globalState, queryResultsWebviewMapping)
+		)
+	);
+
+	//bigquery-table-results
+	context.subscriptions.push(
+		vscode.window.registerWebviewPanelSerializer(
+			TABLE_RESULTS_VIEW_TYPE,
+			new TableResultsSerializer()
 		)
 	);
 
