@@ -1,22 +1,29 @@
-on:
-  push:
-    branches:
-      - main
+on: push
+env:
+  GITHUB_NPM_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest] 
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+    - run: echo '{test:1}' > ./dummy.json
+    - run: echo '${{secrets.BQ_SERVICE_ACCOUNT}}' > ./credentials.json
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+      if: runner.os != 'Linux'
+    - name: 'Use gcloud CLI'
+      run: 'gcloud info'
     - name: Install Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v3
       with:
         node-version: 16.x
     - run: npm install
+    - run: mkdir dist
     - run: xvfb-run -a npm test
       if: runner.os == 'Linux'
     - run: npm test

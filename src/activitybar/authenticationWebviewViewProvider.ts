@@ -7,7 +7,7 @@ import { AuthenticationGrid } from './authenticationGrid';
 export class BigqueryAuthenticationWebviewViewProvider implements vscode.WebviewViewProvider {
 
     private disposableEvent: vscode.Disposable | null = null;
-    private webviewView: vscode.WebviewView | null = null;
+    public webviewView: vscode.WebviewView | null = null;
     private context: vscode.WebviewViewResolveContext<unknown> | null = null;
     private token: vscode.CancellationToken | null = null;
 

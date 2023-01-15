@@ -1,79 +1,48 @@
 import * as vscode from 'vscode';
 import bigquery from '@google-cloud/bigquery/build/src/types';
-import { extensionUri, reporter } from '../extension';
-import { Job, QueryResultsOptions, Table } from '@google-cloud/bigquery';
+import { extensionUri, QUERY_RESULTS_VIEW_TYPE, reporter } from '../extension';
+import { QueryResultsOptions, Table } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
 import { ResultsGrid } from './resultsGrid';
 import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
-import { TableGridRenderRequest } from './tableGridRenderRequest';
-import { DownloadCsvRequest } from './downloadCsvRequest';
-import { request } from 'http';
-import { DownloadCsv } from './downloadCsv';
+import { COMMAND_DOWNLOAD_CSV, getBigQueryClient } from '../extensionCommands';
+import { JobReference } from '../services/queryResultsMapping';
+import { TableReference } from '../services/tableMetadata';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
 export class ResultsGridRender {
 
-    private webView: vscode.Webview;
+    private webViewPanel: vscode.WebviewPanel;
 
-    private disposableEvent: vscode.Disposable | null = null;
-
-    constructor(webView: vscode.Webview) {
-        this.webView = webView;
+    constructor(webViewPanel: vscode.WebviewPanel) {
+        this.webViewPanel = webViewPanel;
+        const listener = this.webViewPanel.webview.onDidReceiveMessage(this.listenerResultsOnDidReceiveMessage, this);
+        webViewPanel.onDidDispose(c => { listener.dispose(); });
     }
 
-    public render(request: ResultsGridRenderRequest) {
+    public renderLoadingIcon() {
+        this.webViewPanel.webview.html = this.getWaitingHtml(50, false, 0, 0);
+    }
+
+    public async render(request: ResultsGridRenderRequest) {
 
         try {
-            //dispose event regardless of successful query or not
-            if (this.disposableEvent) { this.disposableEvent.dispose(); }
-
             //set waiting gif
-            this.webView.html = this.getWaitingHtml();
+            this.webViewPanel.webview.html = this.getWaitingHtml(request.maxResults, request.openInTabVisible, request.startIndex, request.jobIndex);
 
-            request.jobsPromise
-                .then(async (jobs) => {
-
-                    const [html, totalRows] = await this.getResultsHtml(jobs, request.startIndex, request.maxResults, request.jobIndex, request.openInTabVisible);
-                    this.webView.html = html;
-
-                    //in case that the search result needs pagination, this event is enabled
-                    this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerResultsOnDidReceiveMessage, [this, request.jobsPromise, request.startIndex, request.maxResults, totalRows, request.jobIndex, request.openInTabVisible]);
-
-                })
-                .catch(exception => {
-                    this.webView.html = this.getExceptionHtml(exception);
-                });
+            const [html, totalRows] = await this.getResultsHtml(request);
+            this.webViewPanel.webview.html = html;
 
         } catch (error: any) {
-            vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
+            // vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
+            this.webViewPanel.webview.html = this.getExceptionHtml(error);
         }
     }
 
-    public async renderTable(request: TableGridRenderRequest) {
+    private getWaitingHtml(maxResults: number, openInTabVisible: boolean, startIndex: number, jobIndex: number | undefined): string {
 
-        try {
-
-            //dispose event regardless of successful query or not
-            if (this.disposableEvent) { this.disposableEvent.dispose(); }
-
-            //set waiting gif
-            this.webView.html = this.getWaitingHtml();
-
-            const [html, totalRows] = await this.getTableHtml(request.table, request.startIndex, request.maxResults, request.openInTabVisible);
-            this.webView.html = html;
-
-            //in case that the search result needs pagination, this event is enabled
-            this.disposableEvent = this.webView.onDidReceiveMessage(this.listenerTableOnDidReceiveMessage, [this, request.table, request.startIndex, request.maxResults, totalRows, request.jobIndex, request.openInTabVisible]);
-
-        } catch (error: any) {
-            vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
-        }
-    }
-
-    private getWaitingHtml(): string {
-
-        const toolkitUri = this.getUri(this.webView, extensionUri, [
+        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
             "resources",
             "toolkit.min.js",
         ]);
@@ -84,6 +53,17 @@ export class ResultsGridRender {
 				<meta charset="UTF-8">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<script type="module" src="${toolkitUri}"></script>
+                <script>
+                    debugger;
+                    const qElement = document.querySelectorAll('div.editor-actions ul.actions-container > li.action-item a[aria-label="\${x1}"]');
+                    if(qElement.length >0){
+                        const element = qElement[0];
+                        element.innerText = 'trying';
+                    }
+                
+                    const vscode = acquireVsCodeApi();
+                    vscode.setState({ maxResults: ${maxResults}, openInTabVisible: ${openInTabVisible}, startIndex: ${startIndex}, jobIndex: ${jobIndex} });
+                </script>
 			</head>
 			<body>
                 <vscode-progress-ring></vscode-progress-ring>
@@ -94,7 +74,7 @@ export class ResultsGridRender {
 
     private getExceptionHtml(exception: any): string {
 
-        const toolkitUri = this.getUri(this.webView, extensionUri, [
+        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
             "resources",
             "toolkit.min.js",
         ]);
@@ -152,34 +132,48 @@ export class ResultsGridRender {
     /* 
     * weird response because the total rows are only known in the `getQueryResults` response
     */
-    private async getResultsHtml(
-        jobs: Job[],
-        startIndex: number,
-        maxResults: number,
-        jobIndex: number,
-        openInTabVisible: boolean
-    ): Promise<[string, number]> {
+    private async getResultsHtml(request: ResultsGridRenderRequest): Promise<[string, number]> {
 
-        const job = jobs[jobIndex];
-        const jobCount = jobs.length;
 
-        const queryResultOptions: QueryResultsOptions = { startIndex: startIndex.toString(), maxResults: maxResults };
-        const queryRowsResponse = await job.getQueryResults(queryResultOptions);
-        const schema: bigquery.ITableSchema = queryRowsResponse[2]?.schema || {};
+        let totalRows: number = 0;
+        let rows: any[] = [];
+        let schema: bigquery.ITableSchema = {};
 
-        const totalRows: number = Number(queryRowsResponse[2]?.totalRows || 0);
+        if (request.jobReferences && request.jobReferences.length > 0) {
+            const jobsReference = request.jobReferences[request.jobIndex];
+            const job = getBigQueryClient().getJob(jobsReference);
+            const queryResultOptions: QueryResultsOptions = { startIndex: request.startIndex.toString(), maxResults: request.maxResults };
+            const queryRowsResponse = (await job.getQueryResults(queryResultOptions));
+            rows = queryRowsResponse[0];
+            schema = queryRowsResponse[2]?.schema || {};
+            totalRows = Number(queryRowsResponse[2]?.totalRows || 0);
 
-        const toolkitUri = this.getUri(this.webView, extensionUri, [
+        } else {
+            if (request.tableReference) {
+
+                const tableReference = request.tableReference;
+                const table = getBigQueryClient().getTable(tableReference.projectId, tableReference.datasetId, tableReference.tableId);
+                const metadata = await table.getMetadata();
+                schema = metadata[0].schema;
+                totalRows = Number(metadata[0].numRows || 0);
+                rows = (await table.getRows({ startIndex: request.startIndex.toString(), maxResults: request.maxResults }))[0];
+
+            } else {
+                throw new Error('Unexpected error: "No job results nor table was found"');
+            }
+        }
+
+        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
             "resources",
             "toolkit.min.js",
         ]);
 
-        const codiconsUri = this.getUri(this.webView, extensionUri, [
+        const codiconsUri = this.getUri(this.webViewPanel.webview, extensionUri, [
             'resources',
             'codicon.css']
         );
 
-        const gridCss = this.getUri(this.webView, extensionUri, [
+        const gridCss = this.getUri(this.webViewPanel.webview, extensionUri, [
             'resources',
             'grid.css']
         );
@@ -191,57 +185,13 @@ export class ResultsGridRender {
         		<script type="module" src="${toolkitUri}"></script>
                 <link href="${codiconsUri}" rel="stylesheet" />
                 <link href="${gridCss}" rel="stylesheet" />
-        	</head>
-        	<body>
-                ${(new ResultsGrid(schema, queryRowsResponse[0], totalRows, startIndex, maxResults, jobCount, jobIndex, openInTabVisible))}
                 <script>
                     const vscode = acquireVsCodeApi();
+                    vscode.setState({ maxResults: ${request.maxResults}, openInTabVisible: ${request.openInTabVisible}, startIndex: ${request.startIndex}, jobIndex: ${request.jobIndex} });
                 </script>
-        	</body>
-        </html>`,
-            totalRows
-        ];
-
-    }
-
-    private async getTableHtml(
-        table: Table,
-        startIndex: number,
-        maxResults: number,
-        openInTabVisible: boolean
-    ): Promise<[string, number]> {
-
-        const metadata = await table.getMetadata();
-        const schema: bigquery.ITableSchema = metadata[0].schema;
-
-        const tableStream = await table.getRows({ startIndex: startIndex.toString(), maxResults: maxResults });
-        const totalRows: number = Number(metadata[0].numRows || 0);
-
-        const toolkitUri = this.getUri(this.webView, extensionUri, [
-            "resources",
-            "toolkit.min.js",
-        ]);
-
-        const codiconsUri = this.getUri(this.webView, extensionUri, [
-            'resources',
-            'codicon.css']
-        );
-
-        const gridCss = this.getUri(this.webView, extensionUri, [
-            'resources',
-            'grid.css']
-        );
-
-        return [`<!DOCTYPE html>
-        <html lang="en" style="display:flex;">
-        	<head>
-        		<meta charset="UTF-8">
-        		<script type="module" src="${toolkitUri}"></script>
-                <link href="${codiconsUri}" rel="stylesheet" />
-                <link href="${gridCss}" rel="stylesheet" />
         	</head>
         	<body>
-                ${new ResultsGrid(schema, tableStream[0], totalRows, startIndex, maxResults, 1, 1, openInTabVisible)}
+                ${(new ResultsGrid(request, schema, rows, totalRows))}
                 <script>
                     const vscode = acquireVsCodeApi();
                 </script>
@@ -259,176 +209,105 @@ export class ResultsGridRender {
     /* This function will run as an event triggered when the JS on the webview triggers
      * the `postMessage` method. For query results
     */
-    listenerResultsOnDidReceiveMessage(message: any): void {
+    async listenerResultsOnDidReceiveMessage(message: any): Promise<void> {
 
-        const resultsGridRender: ResultsGridRender = (this as any)[0];
-        const jobResponsePromise: Promise<Job[]> = (this as any)[1];
+        const resultsGridRender: ResultsGridRender = this as ResultsGridRender;
 
-        const startIndex: number = (this as any)[2];
-        const maxResults: number = (this as any)[3];
-        const totalRows: number = (this as any)[4];
-        const jobIndex: number = (this as any)[5];
-        const openInTabVisible: boolean = (this as any)[6];
+        if (message.parameters && message.parameters.length === 7) {
+            const jobReferences: JobReference[] = message.parameters[0];
+            const tableReference: TableReference = message.parameters[1];
 
-        const request = {
-            jobsPromise: jobResponsePromise,
-            startIndex: startIndex,
-            maxResults: maxResults,
-            jobIndex: jobIndex,
-            openInTabVisible: openInTabVisible
-        } as ResultsGridRenderRequest;
+            const startIndex: number = message.parameters[2];
+            const maxResults: number = message.parameters[3];
+            const totalRows: number = message.parameters[4];
+            const jobIndex: number = message.parameters[5];
+            const openInTabVisible: boolean = message.parameters[6];
 
-        switch (message.command || message) {
-            case 'first_page':
-                request.startIndex = 0;
-                resultsGridRender.render(request);
+            const request = {
+                jobReferences: jobReferences,
+                tableReference: tableReference,
+                startIndex: startIndex,
+                maxResults: maxResults,
+                jobIndex: jobIndex,
+                openInTabVisible: openInTabVisible
+            } as ResultsGridRenderRequest;
 
-                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_first_page', {});
+            switch (message.command || message) {
+                case 'first_page':
+                    request.startIndex = 0;
+                    resultsGridRender.render(request);
 
-                break;
-            case 'previous_page':
-                request.startIndex = startIndex - maxResults;
-                resultsGridRender.render(request);
+                    reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_first_page', {});
 
-                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_previous_page', {});
+                    break;
+                case 'previous_page':
+                    request.startIndex = startIndex - maxResults;
+                    resultsGridRender.render(request);
 
-                break;
-            case 'next_page':
-                request.startIndex = startIndex + maxResults;
-                resultsGridRender.render(request);
+                    reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_previous_page', {});
 
-                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_next_page', {});
+                    break;
+                case 'next_page':
+                    request.startIndex = startIndex + maxResults;
+                    resultsGridRender.render(request);
 
-                break;
-            case 'last_page':
-                const lastPageStartIndex = (Math.ceil(totalRows / maxResults) - 1) * maxResults;
-                request.startIndex = lastPageStartIndex;
-                resultsGridRender.render(request);
+                    reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_next_page', {});
 
-                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_last_page', {});
+                    break;
+                case 'last_page':
+                    const lastPageStartIndex = (Math.ceil(totalRows / maxResults) - 1) * maxResults;
+                    request.startIndex = lastPageStartIndex;
+                    resultsGridRender.render(request);
 
-                break;
-            case 'query_index_change':
-                const newIndex = Number(message.value || 0);
-                request.startIndex = 0;
-                request.jobIndex = newIndex;
-                resultsGridRender.render(request);
+                    reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_last_page', {});
+
+                    break;
+                case 'query_index_change':
+                    // const newIndex = Number(message.value || 0);
+                    request.startIndex = 0;
+                    request.jobIndex = Number.parseInt(request.jobIndex as any);
+                    resultsGridRender.render(request);
 
 
-                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_query_index_change', {});
+                    reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_query_index_change', {});
 
-                break;
-            case 'open_in_tab':
+                    break;
+                case 'open_in_tab':
 
-                //evaluate jobResponsePromise to get the ID of the job 
-                jobResponsePromise
-                    .then(jobs => {
+                    if (request.jobReferences && request.jobReferences.length > 1) {
 
                         let jobName = 'Query_1';
-                        if (jobs.length === 1) {
-                            jobName = jobs[0].id || '';
+                        if (request.jobReferences.length === 1) {
+                            jobName = request.jobReferences[0].jobId || '';
                         } else {
-                            jobName = jobs[0].id?.replace(RegExp('_\\d+$'), '') || '';
+                            jobName = request.jobReferences[0].jobId?.replace(RegExp('_\\d+$'), '') || '';
                         }
 
-                        const panel = vscode.window.createWebviewPanel("vscode-bigquery-query-results", jobName, { viewColumn: vscode.ViewColumn.Beside }, { enableFindWidget: true, enableScripts: true });
-                        const newresultsGridRender = new ResultsGridRender(panel.webview);
+                        const panel = vscode.window.createWebviewPanel(QUERY_RESULTS_VIEW_TYPE, jobName, { viewColumn: vscode.ViewColumn.Beside, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
+                        const newresultsGridRender = new ResultsGridRender(panel);
 
                         request.openInTabVisible = false;
                         newresultsGridRender.render(request);
 
-                        //close the panel, to give more space for the new tab just opened
-                        vscode.commands.executeCommand('workbench.action.closePanel');
+                        reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_open_in_tab', {});
+                    }
 
-                    });
+                    break;
 
-                reporter?.sendTelemetryEvent('listenerResultsOnDidReceiveMessage_open_in_tab', {});
+                case 'download_csv':
 
-                break;
+                    await vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV);
 
-            case 'download_csv':
-
-                const downloadCsvRequest = {
-                    jobsPromise: request.jobsPromise,
-                    jobIndex:request.jobIndex
-                } as DownloadCsvRequest;
-
-                DownloadCsv.download(downloadCsvRequest);
-
-                break;
-            default:
-                console.error(`Unexpected message "${message}"`);
+                    break;
+                default:
+                    console.error(`Unexpected message "${message}"`);
+            }
         }
-
     }
 
-    /* This function will run as an event triggered when the JS on the webview triggers
-     * the `postMessage` method. For tables
-    */
-    listenerTableOnDidReceiveMessage(message: any): void {
-
-        const resultsGridRender: ResultsGridRender = (this as any)[0];
-        const table: Table = (this as any)[1];
-
-        const startIndex: number = (this as any)[2];
-        const maxResults: number = (this as any)[3];
-        const totalRows: number = (this as any)[4];
-        const jobIndex: number = (this as any)[5];
-        const openInTabVisible: boolean = (this as any)[6];
-
-        const request = {
-            table: table,
-            startIndex: startIndex,
-            maxResults: maxResults,
-            jobIndex: jobIndex,
-            openInTabVisible: openInTabVisible
-        } as TableGridRenderRequest;
-
-        switch (message.command || message) {
-            case 'first_page':
-                request.startIndex = 0;
-                resultsGridRender.renderTable(request);
-
-                reporter?.sendTelemetryEvent('listenerTableOnDidReceiveMessage_first_page', {});
-
-                break;
-            case 'previous_page':
-                request.startIndex = startIndex - maxResults;
-                resultsGridRender.renderTable(request);
-
-                reporter?.sendTelemetryEvent('listenerTableOnDidReceiveMessage_previous_page', {});
-
-                break;
-            case 'next_page':
-                request.startIndex = startIndex + maxResults;
-                resultsGridRender.renderTable(request);
-
-                reporter?.sendTelemetryEvent('listenerTableOnDidReceiveMessage_next_page', {});
-
-                break;
-            case 'last_page':
-                const lastPageStartIndex = (Math.ceil(totalRows / maxResults) - 1) * maxResults;
-                request.startIndex = lastPageStartIndex;
-                resultsGridRender.renderTable(request);
-
-                reporter?.sendTelemetryEvent('listenerTableOnDidReceiveMessage_last_page', {});
-
-                break;
-            case 'query_index_change':
-                const newIndex = Number(message.value || 0);
-                request.startIndex = 0;
-                request.jobIndex = newIndex;
-                resultsGridRender.renderTable(request);
-
-                reporter?.sendTelemetryEvent('listenerTableOnDidReceiveMessage_query_index_change', {});
-
-                break;
-            case 'open_in_tab':
-                break;
-            default:
-                console.error(`Unexpected message "${message}"`);
-        }
-
+    reveal(viewColumn?: vscode.ViewColumn, preserveFocus?: boolean): void {
+        this.webViewPanel.reveal(viewColumn, preserveFocus);
     }
 
 }
+

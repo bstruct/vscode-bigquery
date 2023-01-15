@@ -1,7 +1,9 @@
-import { Job } from "@google-cloud/bigquery";
+import { JobReference } from "../services/queryResultsMapping";
+import { TableReference } from "../services/tableMetadata";
 
 export interface ResultsGridRenderRequest {
-    jobsPromise: Promise<Job[]>;
+    jobReferences: JobReference[] | undefined;
+    tableReference: TableReference | undefined;
     startIndex: number;
     maxResults: number;
     jobIndex: number;

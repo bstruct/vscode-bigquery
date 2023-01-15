@@ -10,6 +10,10 @@ import { BqsqlDocumentSemanticTokensProvider } from './language/bqsqlDocumentSem
 import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
 import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaService';
 import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
+import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializer';
+import { QueryResultsMappingService } from './services/queryResultsMappingService';
+import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
+import { TableResultsSerializer } from './tableResultsPanel/tableResultsSerializer';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -20,11 +24,16 @@ export let bigqueryIcons: BigqueryIcons;
 export let reporter: TelemetryReporter | null;
 export let statusBarInfo: vscode.StatusBarItem | null;
 
+export const QUERY_RESULTS_VIEW_TYPE = "bigquery-query-results";
+export const TABLE_RESULTS_VIEW_TYPE = "bigquery-table-results";
+
 export function activate(context: vscode.ExtensionContext) {
 
 	extensionUri = context.extensionUri;
 
 	bigqueryIcons = new BigqueryIcons();
+
+	let queryResultsWebviewMapping: Map<string, ResultsGridRender> = new Map<string, ResultsGridRender>();
 
 	try {
 
@@ -41,14 +50,22 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_RUN_QUERY,
-			commands.commandRunQuery
+			commands.commandRunQuery,
+			{
+				"globalState": context.globalState,
+				queryResultsWebviewMapping: queryResultsWebviewMapping
+			}
 		)
 	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_RUN_SELECTED_QUERY,
-			commands.commandRunSelectedQuery
+			commands.commandRunSelectedQuery,
+			{
+				"globalState": context.globalState,
+				queryResultsWebviewMapping: queryResultsWebviewMapping
+			}
 		)
 	);
 
@@ -125,6 +142,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_DOWNLOAD_CSV,
+			commands.commandDownloadCsv,
+			{ "globalState": context.globalState }
+		),
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_PROJECT_PIN,
 			commands.commandPinOrUnpinProject
 		)
@@ -147,11 +172,19 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	//vscode-bigquery-query-results-main
+	//bigquery-query-results
 	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider(
-			"vscode-bigquery-query-results-main",
-			bigqueryWebviewViewProvider
+		vscode.window.registerWebviewPanelSerializer(
+			QUERY_RESULTS_VIEW_TYPE,
+			new QueryResultsSerializer(context.globalState, queryResultsWebviewMapping)
+		)
+	);
+
+	//bigquery-table-results
+	context.subscriptions.push(
+		vscode.window.registerWebviewPanelSerializer(
+			TABLE_RESULTS_VIEW_TYPE,
+			new TableResultsSerializer()
 		)
 	);
 
@@ -188,6 +221,26 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.commands.executeCommand(commands.COMMAND_EXPLORER_REFRESH);
 			reporter?.sendTelemetryEvent('onDidChangeActiveColorTheme', { activeColorThemeKind: vscode.ColorThemeKind[vscode.window.activeColorTheme.kind] });
 		}
+	});
+
+	vscode.window.onDidChangeActiveTextEditor(e => {
+
+		if (e?.document.languageId === 'bqsql') {
+
+			//check if results tab exist and it's known
+			//  is possible that is not know in case that vscode was restarted and that window was not opened
+			//  in this scenario, the tab exists but is not possible to determine the correspondent panel
+			//  panels are lazy loaded
+
+			const uuid = QueryResultsMappingService.getQueryResultsMappingUuid(context.globalState, e);
+			if (uuid) {
+				const resultsGridRender = QueryResultsMappingService.getQueryResultsMappingResultsGridRender(queryResultsWebviewMapping, uuid);
+				if (resultsGridRender) {
+					resultsGridRender.reveal(undefined, true);
+				}
+			}
+		}
+
 	});
 
 	// vscode.env.onDidChangeTelemetryEnabled

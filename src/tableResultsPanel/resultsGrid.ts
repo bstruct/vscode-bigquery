@@ -1,6 +1,7 @@
 import bigquery from '@google-cloud/bigquery/build/src/types';
 import * as preact from 'preact';
 import * as p from 'preact-render-to-string';
+import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 
 //---------------- @vscode/webview-ui-toolkit ----------------
 //https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -13,38 +14,38 @@ import * as p from 'preact-render-to-string';
 export class ResultsGrid extends Object {
 
     // private queryRowsResponse: QueryRowsResponse;
+    private request: ResultsGridRenderRequest;
     private schema: bigquery.ITableSchema;
     private rows: any[];
     private totalRows: number;
-    private startIndex: number;
-    private maxResults: number;
-    private queryCount: number;
-    private queryIndex: number;
-    private openInTabVisible: boolean;
+    // private jobReferences: JobReference[] | undefined;
+    // private startIndex: number;
+    // private maxResults: number;
+    // private queryCount: number;
+    // private queryIndex: number;
+    // private openInTabVisible: boolean;
 
     /**
      *
      */
     constructor(
+        request: ResultsGridRenderRequest,
         schema: bigquery.ITableSchema,
         rows: any[],
-        totalRows: number,
-        startIndex: number,
-        maxResults: number,
-        queryCount: number,
-        queryIndex: number,
-        openInTabVisible: boolean) {
+        totalRows: number) {
 
         super();
         // this.queryRowsResponse = queryRowsResponse;
+        this.request = request;
         this.schema = schema;
         this.rows = rows;
         this.totalRows = totalRows;
-        this.startIndex = startIndex;
-        this.maxResults = maxResults;
-        this.queryCount = queryCount;
-        this.queryIndex = queryIndex;
-        this.openInTabVisible = openInTabVisible;
+        // this.jobReferences = jobReferences;
+        // this.startIndex = startIndex;
+        // this.maxResults = maxResults;
+        // this.queryCount = queryCount;
+        // this.queryIndex = queryIndex;
+        // this.openInTabVisible = openInTabVisible;
     }
 
     private render(): preact.VNode[] {
@@ -54,11 +55,11 @@ export class ResultsGrid extends Object {
         //array of elements to create
         const elements: preact.VNode[] = [];
 
-        elements.push(this.getControls(this.startIndex, this.maxResults, this.totalRows, resultsSize));
+        elements.push(this.getControls(this.request.startIndex, this.request.maxResults, this.totalRows, resultsSize));
 
         elements.push(preact.h('vscode-divider', {}, []));
 
-        const [gridNode, _] = this.getGrid(this.schema, this.rows, this.startIndex + 1, false);
+        const [gridNode, _] = this.getGrid(this.schema, this.rows, this.request.startIndex + 1, false);
 
         elements.push(gridNode);
 
@@ -72,14 +73,16 @@ export class ResultsGrid extends Object {
         //array of elements to create
         const elements: preact.VNode[] = [];
 
-        if (this.queryCount > 1) {
+        if (this.request && this.request.jobReferences && this.request.jobReferences.length > 1) {
 
             const options = [];
-            for (let index = 0; index < this.queryCount; index++) {
-                options.push(preact.h('vscode-option', { selected: this.queryIndex === index, value: index }, `Result query ${index + 1}`));
+            for (let index = 0; index < this.request.jobReferences.length; index++) {
+                options.push(preact.h('vscode-option', { selected: this.request.jobIndex === index, value: index }, `Result query ${index + 1}`));
             }
 
-            elements.push(preact.h('vscode-dropdown', { 'onchange': 'vscode.postMessage({"command":"query_index_change", "value": this.value})' }, options));
+            const parametersSerialized = JSON.stringify([this.request.jobReferences, this.request.tableReference, this.request.startIndex, this.request.maxResults, totalRows, "$$$", this.request.openInTabVisible]).replace('"$$$"', 'this.value');
+
+            elements.push(preact.h('vscode-dropdown', { 'onchange': `vscode.postMessage({"command":"query_index_change", parameters: ${parametersSerialized}})` }, options));
 
             elements.push(preact.h('span', {}, ' '));
         }
@@ -101,14 +104,16 @@ export class ResultsGrid extends Object {
 
         const firstAndPreviousPageEnabled = startIndex >= maxResults;
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("first_page")', disabled: !firstAndPreviousPageEnabled }, [
+        const parameters = [this.request.jobReferences, this.request.tableReference, this.request.startIndex, this.request.maxResults, totalRows, this.request.jobIndex, this.request.openInTabVisible];
+
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "first_page", parameters: ${JSON.stringify(parameters)}})`, disabled: !firstAndPreviousPageEnabled }, [
             'First page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-left' }, [])
         ]));
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("previous_page")', disabled: !firstAndPreviousPageEnabled }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "previous_page", parameters: ${JSON.stringify(parameters)}})`, disabled: !firstAndPreviousPageEnabled }, [
             'Previous page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-left' }, [])
         ]));
@@ -117,23 +122,23 @@ export class ResultsGrid extends Object {
 
         const nextAndLastPageEnabled = startIndex + resultsSize < totalRows;
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("next_page")', disabled: !nextAndLastPageEnabled }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "next_page", parameters: ${JSON.stringify(parameters)}})`, disabled: !nextAndLastPageEnabled }, [
             'Next page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-small-right' }, [])
         ]));
 
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("last_page")', disabled: !nextAndLastPageEnabled }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "last_page", parameters: ${JSON.stringify(parameters)}})`, disabled: !nextAndLastPageEnabled }, [
             'Last page',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-arrow-circle-right' }, [])
         ]));
 
-        if (this.openInTabVisible) {
+        if (this.request.openInTabVisible) {
 
             elements.push(preact.h('span', {}, ' '));
 
-            elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("open_in_tab")' }, [
+            elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "open_in_tab", parameters: ${JSON.stringify(parameters)}})` }, [
                 'Open in tab',
                 preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-open-preview' }, [])
             ]));
@@ -143,7 +148,7 @@ export class ResultsGrid extends Object {
         //download csv
         elements.push(preact.h('span', {}, ' '));
 
-        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': 'vscode.postMessage("download_csv")' }, [
+        elements.push(preact.h('vscode-button', { 'appearance': 'secondary', 'onclick': `vscode.postMessage({"command": "download_csv", parameters: ${JSON.stringify(parameters)}})` }, [
             'Download CSV',
             preact.h('span', { 'slot': 'start', 'class': 'codicon codicon-cloud-download' }, [])
         ]));
@@ -183,7 +188,7 @@ export class ResultsGrid extends Object {
         //initialize rows array with the header column row already
         const rows = [];
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header' }, getHeaderCells()));
+        rows.push(preact.h('vscode-data-grid-row', { 'row-type': 'header', 'style': 'position:sticky;top:0' }, getHeaderCells()));
 
         //widths of the columns
         const widths: number[] = [5];
@@ -244,7 +249,7 @@ export class ResultsGrid extends Object {
                     }
 
                     let totalWidth: number = 0;
-                    [value, totalWidth] = this.getGrid(innerSchema, innerResults, 1, true);
+                    [value, totalWidth] = this.getGrid(innerSchema, innerResults || [], 1, true);
 
                     cellProperties.class = 'disableFocus';
 
@@ -260,24 +265,24 @@ export class ResultsGrid extends Object {
                         case 'TIME':
                         case 'TIMESTAMP':
                         case 'GEOGRAPHY':
-                            if (value !== null) {
+                            if (value !== null && value !== undefined) {
                                 value = value.value;
                             }
                             break;
                         case 'NUMERIC':
                         case 'FLOAT':
                         case 'INTEGER':
-                            if (value !== null) {
+                            if (value !== null && value !== undefined) {
                                 value = value.toString();
                             }
                             break;
                         case 'BYTES':
-                            if (value !== null) {
+                            if (value !== null && value !== undefined) {
                                 value = value.toString('base64');
                             }
                             break;
                         case 'BOOLEAN':
-                            if (value !== null) {
+                            if (value !== null && value !== undefined) {
                                 value = value ? 'true' : 'false';
                             }
                             break;
