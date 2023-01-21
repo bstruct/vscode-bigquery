@@ -14,6 +14,7 @@ import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializ
 import { QueryResultsMappingService } from './services/queryResultsMappingService';
 import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
 import { TableResultsSerializer } from './tableResultsPanel/tableResultsSerializer';
+import { BqsqlHoverProvider } from './language/bqsqlHoverProvider';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -214,6 +215,14 @@ export function activate(context: vscode.ExtensionContext) {
 			new BqsqlInlayHintsProvider()
 		)
 	);
+
+	//later
+	// context.subscriptions.push(
+	// 	vscode.languages.registerHoverProvider(
+	// 		{ language: 'bqsql' },
+	// 		new BqsqlHoverProvider()
+	// 	)
+	// );
 
 	//check if the theme has changed and the tree icons need to change colour
 	vscode.workspace.onDidChangeConfiguration(event => {

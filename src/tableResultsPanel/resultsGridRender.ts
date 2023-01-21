@@ -40,6 +40,10 @@ export class ResultsGridRender {
         }
     }
 
+    public renderException(error: any){
+        this.webViewPanel.webview.html = this.getExceptionHtml(error);
+    }
+
     private getWaitingHtml(maxResults: number, openInTabVisible: boolean, startIndex: number, jobIndex: number | undefined): string {
 
         const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [

@@ -119,23 +119,29 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	}
 
-	resultsGridRender.renderLoadingIcon();
+	try {
+		resultsGridRender.renderLoadingIcon();
 
-	const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
+		const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
 
-	const request = {
-		jobReferences: jobReferences,
-		startIndex: 0,
-		maxResults: 50,
-		jobIndex: 0,
-		openInTabVisible: true
-	} as ResultsGridRenderRequest;
+		const request = {
+			jobReferences: jobReferences,
+			startIndex: 0,
+			maxResults: 50,
+			jobIndex: 0,
+			openInTabVisible: true
+		} as ResultsGridRenderRequest;
 
-	resultsGridRender.render(request);
+		resultsGridRender.render(request);
 
-	QueryResultsMappingService.udpateQueryResultsMapping(globalState, uuid, request);
+		QueryResultsMappingService.udpateQueryResultsMapping(globalState, uuid, request);
 
-	return (await queryResponse).length;
+		return (await queryResponse).length;
+	} catch (error) {
+		resultsGridRender.renderException(error);
+	}
+
+	return 0;
 };
 
 export const commandUserLogin = function (...args: any[]) {
