@@ -252,6 +252,7 @@ export class BqsqlCompletionItemProvider implements CompletionItemProvider<Compl
                 this.getCompletionItem("GENERATE_DATE_ARRAY", CompletionItemKind.Function),
                 this.getCompletionItem("GENERATE_TIMESTAMP_ARRAY", CompletionItemKind.Function),
                 this.getCompletionItem("ARRAY_REVERSE", CompletionItemKind.Function),
+                this.getCompletionItem("OFFSET and ORDINAL", CompletionItemKind.Function),
                 this.getCompletionItem("CURRENT_DATE", CompletionItemKind.Function),
                 this.getCompletionItem("EXTRACT", CompletionItemKind.Function),
                 this.getCompletionItem("DATE", CompletionItemKind.Function),
