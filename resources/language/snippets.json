@@ -1,0 +1,10 @@
+{
+    "APPROX_COUNT_DISTINCT": {
+        "prefix": "APPROX_COUNT_DISTINCT",
+        "body": [
+            "APPROX_COUNT_DISTINCT($1) AS ${2:approx_count_distinct},",
+            "$3"
+        ],
+        "description": ""
+    }
+}

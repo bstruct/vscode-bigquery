@@ -65,6 +65,12 @@
 				"path": "./resources/language/bqsql.tmGrammar.json"
 			}
 		],
+		"snippets": [
+			{
+				"language": "bqsql",
+				"path": "./resources/language/snippets.json"
+			}
+		],
 		"configurationDefaults": {
 			"[bqsql]": {
 				"editor.semanticHighlighting.enabled": true
@@ -123,7 +129,7 @@
 				"command": "vscode-bigquery.project-pin",
 				"title": "Pin or unpin project",
 				"icon": "$(pin)"
-			},			
+			},
 			{
 				"command": "vscode-bigquery.download-csv",
 				"title": "download CSV",

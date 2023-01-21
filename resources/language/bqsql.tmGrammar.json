@@ -3,6 +3,9 @@
   "patterns": [
     {
       "include": "#expression"
+    },
+    {
+      "include": "#functions"
     }
   ],
   "repository": {
@@ -53,6 +56,2658 @@
       "begin": "`",
       "end": "`",
       "name": "string.identity"
+    },
+    "functions": {
+      "patterns": [
+        {
+          "match": "(?i)(APPROX_COUNT_DISTINCT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(COALESCE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(IF)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(IFNULL)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NULLIF)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ANY_VALUE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ARRAY_AGG)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ARRAY_CONCAT_AGG)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(AVG)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(BIT_AND)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(BIT_OR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(BIT_XOR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(COUNT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(COUNTIF)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LOGICAL_AND)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LOGICAL_OR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(MAX)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(MIN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(STRING_AGG)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SUM)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CORR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(COVAR_POP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(COVAR_SAMP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(STDDEV_POP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(STDDEV_SAMP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(STDDEV)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(VAR_POP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(VAR_SAMP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(VARIANCE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(APPROX_COUNT_DISTINCT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(APPROX_QUANTILES)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(APPROX_TOP_COUNT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(APPROX_TOP_SUM)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(HLL_COUNT.INIT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(HLL_COUNT.MERGE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(HLL_COUNT.MERGE_PARTIAL)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(HLL_COUNT.EXTRACT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(RANK)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DENSE_RANK)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(PERCENT_RANK)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CUME_DIST)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NTILE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ROW_NUMBER)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(BIT_COUNT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CAST)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(PARSE_BIGNUMERIC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(PARSE_NUMERIC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SAFE_CAST)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ABS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SIGN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(IS_INF)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(IS_NAN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(IEEE_DIVIDE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(RAND)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SQRT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(POW)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(POWER)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(EXP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LOG)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LOG10)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(GREATEST)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LEAST)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DIV)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SAFE_DIVIDE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SAFE_MULTIPLY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SAFE_NEGATE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SAFE_ADD)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SAFE_SUBTRACT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(MOD)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ROUND)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TRUNC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CEIL)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CEILING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FLOOR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(COS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(COSH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ACOS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ACOSH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(COT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(COTH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CSC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CSCH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SEC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SECH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SIN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SINH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ASIN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ASINH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TAN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TANH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ATAN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ATANH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ATAN2)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CBRT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(RANGE_BUCKET)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FIRST_VALUE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LAST_VALUE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NTH_VALUE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LEAD)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LAG)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(PERCENTILE_CONT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(PERCENTILE_DISC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FARM_FINGERPRINT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(MD5)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SHA1)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SHA256)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SHA512)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ASCII)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(BYTE_LENGTH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CHAR_LENGTH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CHARACTER_LENGTH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CHR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CODE_POINTS_TO_BYTES)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CODE_POINTS_TO_STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(COLLATE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CONCAT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CONTAINS_SUBSTR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ENDS_WITH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FORMAT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FROM_BASE32)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FROM_BASE64)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FROM_HEX)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(INITCAP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(INSTR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LEFT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LENGTH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LPAD)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LOWER)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LTRIM)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NORMALIZE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NORMALIZE_AND_CASEFOLD)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(OCTET_LENGTH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(REGEXP_CONTAINS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(REGEXP_EXTRACT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(REGEXP_EXTRACT_ALL)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(REGEXP_INSTR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(REGEXP_REPLACE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(REGEXP_SUBSTR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(REPLACE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(REPEAT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(REVERSE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(RIGHT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(RPAD)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(RTRIM)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SAFE_CONVERT_BYTES_TO_STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SOUNDEX)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SPLIT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(STARTS_WITH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(STRPOS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SUBSTR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SUBSTRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TO_BASE32)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TO_BASE64)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TO_CODE_POINTS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TO_HEX)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TRANSLATE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TRIM)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(UNICODE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(UPPER)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JSON_EXTRACT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JSON_QUERY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JSON_EXTRACT_SCALAR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JSON_VALUE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JSON_EXTRACT_ARRAY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JSON_QUERY_ARRAY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JSON_EXTRACT_STRING_ARRAY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JSON_VALUE_ARRAY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(PARSE_JSON)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TO_JSON)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TO_JSON_STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(BOOL)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(INT64)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FLOAT64)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JSON_TYPE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ARRAY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ARRAY_CONCAT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ARRAY_LENGTH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ARRAY_TO_STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(GENERATE_ARRAY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(GENERATE_DATE_ARRAY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(GENERATE_TIMESTAMP_ARRAY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ARRAY_REVERSE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CURRENT_DATE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(EXTRACT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATE_ADD)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATE_SUB)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATE_DIFF)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATE_TRUNC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATE_FROM_UNIX_DATE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FORMAT_DATE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LAST_DAY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(PARSE_DATE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(UNIX_DATE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CURRENT_DATETIME)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATETIME)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(EXTRACT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATETIME_ADD)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATETIME_SUB)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATETIME_DIFF)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DATETIME_TRUNC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FORMAT_DATETIME)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(LAST_DAY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(PARSE_DATETIME)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CURRENT_TIME)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIME)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(EXTRACT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIME_ADD)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIME_SUB)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIME_DIFF)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIME_TRUNC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FORMAT_TIME)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(PARSE_TIME)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(CURRENT_TIMESTAMP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(EXTRACT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIMESTAMP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIMESTAMP_ADD)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIMESTAMP_SUB)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIMESTAMP_DIFF)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIMESTAMP_TRUNC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(FORMAT_TIMESTAMP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(PARSE_TIMESTAMP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIMESTAMP_SECONDS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIMESTAMP_MILLIS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(TIMESTAMP_MICROS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(UNIX_SECONDS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(UNIX_MILLIS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(UNIX_MICROS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(MAKE_INTERVAL)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(EXTRACT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JUSTIFY_DAYS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JUSTIFY_HOURS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(JUSTIFY_INTERVAL)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(S2_CELLIDFROMPOINT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(S2_COVERINGCELLIDS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_ANGLE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_AREA)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_ASBINARY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_ASGEOJSON)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_ASTEXT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_AZIMUTH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_BOUNDARY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_BOUNDINGBOX)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_BUFFER)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_BUFFERWITHTOLERANCE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_CENTROID)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_CENTROID_AGG)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_CLOSESTPOINT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_CLUSTERDBSCAN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_CONTAINS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_CONVEXHULL)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_COVEREDBY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_COVERS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_DIFFERENCE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_DIMENSION)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_DISJOINT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_DISTANCE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_DUMP)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_DWITHIN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_ENDPOINT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_EQUALS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_EXTENT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_EXTERIORRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_GEOGFROM)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_GEOGFROMGEOJSON)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_GEOGFROMTEXT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_GEOGFROMWKB)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_GEOGPOINT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_GEOGPOINTFROMGEOHASH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_GEOHASH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_GEOMETRYTYPE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_INTERIORRINGS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_INTERSECTION)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_INTERSECTS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_INTERSECTSBOX)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_ISCLOSED)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_ISCOLLECTION)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_ISEMPTY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_ISRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_LENGTH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_MAKELINE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_MAKEPOLYGON)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_MAKEPOLYGONORIENTED)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_MAXDISTANCE)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_NPOINTS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_NUMGEOMETRIES)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_NUMPOINTS)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_PERIMETER)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_POINTN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_SIMPLIFY)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_SNAPTOGRID)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_STARTPOINT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_TOUCHES)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_UNION)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_UNION_AGG)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_WITHIN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_X)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ST_Y)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(SESSION_USER)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(GENERATE_UUID)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NET.IP_FROM_STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NET.SAFE_IP_FROM_STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NET.IP_TO_STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NET.IP_NET_MASK)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NET.IP_TRUNC)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NET.IPV4_FROM_INT64)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NET.IPV4_TO_INT64)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NET.HOST)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NET.PUBLIC_SUFFIX)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(NET.REG_DOMAIN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(ERROR)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(KEYS.NEW_KEYSET)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(KEYS.NEW_WRAPPED_KEYSET)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(KEYS.REWRAP_KEYSET)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(KEYS.ADD_KEY_FROM_RAW_BYTES)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(AEAD.DECRYPT_BYTES)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(AEAD.DECRYPT_STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(AEAD.ENCRYPT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DETERMINISTIC_DECRYPT_BYTES)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DETERMINISTIC_DECRYPT_STRING)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(DETERMINISTIC_ENCRYPT)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(KEYS.KEYSET_CHAIN)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(KEYS.KEYSET_FROM_JSON)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(KEYS.KEYSET_TO_JSON)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(KEYS.ROTATE_KEYSET)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(KEYS.ROTATE_WRAPPED_KEYSET)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(KEYS.KEYSET_LENGTH)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "(?i)(EXTERNAL_OBJECT_TRANSFORM)\\W*(\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        }
+      ]
     }
   }
 }
