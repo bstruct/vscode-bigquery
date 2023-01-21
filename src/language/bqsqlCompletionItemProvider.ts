@@ -45,18 +45,18 @@ export class BqsqlCompletionItemProvider implements CompletionItemProvider<Compl
                     }
                 }
 
-                if (element.suggestion_type === 'Function') {
-                    for (let j = 0; j < element.snippets.length; j++) {
-                        const func = element.snippets[j];
+                // if (element.suggestion_type === 'Function') {
+                //     for (let j = 0; j < element.snippets.length; j++) {
+                //         const func = element.snippets[j];
 
-                        const fn = new CompletionItem(func.name, CompletionItemKind.Function);
+                //         const fn = new CompletionItem(func.name, CompletionItemKind.Function);
 
-                        fn.insertText = new vscode.SnippetString(func.snippet);
-                        // fn.documentation = new MarkdownString('#### Description\nReturns a random universally unique identifier (UUID) as a `STRING`.\nThe returned STRING consists of 32 hexadecimal digits in five groups separated by hyphens in the form 8-4-4-4-12. The hexadecimal digits represent 122 random bits and 6 fixed bits, in compliance with [RFC 4122 section 4.4](https://tools.ietf.org/html/rfc4122#section-4.4). The returned STRING is lowercase.\n#### Return Data Type\nSTRING');
-                        list.items.push(fn);
-                    }
+                //         fn.insertText = new vscode.SnippetString(func.snippet);
+                //         // fn.documentation = new MarkdownString('#### Description\nReturns a random universally unique identifier (UUID) as a `STRING`.\nThe returned STRING consists of 32 hexadecimal digits in five groups separated by hyphens in the form 8-4-4-4-12. The hexadecimal digits represent 122 random bits and 6 fixed bits, in compliance with [RFC 4122 section 4.4](https://tools.ietf.org/html/rfc4122#section-4.4). The returned STRING is lowercase.\n#### Return Data Type\nSTRING');
+                //         list.items.push(fn);
+                //     }
 
-                }
+                // }
 
             }
         }
@@ -410,7 +410,8 @@ export class BqsqlCompletionItemProvider implements CompletionItemProvider<Compl
 
         let completionItem = new CompletionItem(label, kind);
 
-        completionItem.documentation = '[documentation](https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators#'.concat(label.toLocaleLowerCase().concat(')'));
+        const anchor = label.toLocaleLowerCase().replace('.', '');
+        completionItem.documentation = new vscode.MarkdownString('Bigquery official [documentation](https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators#'.concat(anchor.concat(')')));
         const alias = label.toLocaleLowerCase().replace('.', '_');
         completionItem.insertText = new vscode.SnippetString(`${label}($1) AS \${2:${alias}},`);
 
