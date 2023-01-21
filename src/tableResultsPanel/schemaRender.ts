@@ -33,7 +33,8 @@ export class SchemaRender {
                 });
 
         } catch (error: any) {
-            vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
+            this.webView.html = this.getExceptionHtml(error.message);
+            // vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
         }
     }
 
