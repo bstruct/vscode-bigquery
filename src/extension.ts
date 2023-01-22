@@ -25,6 +25,7 @@ export let bigqueryIcons: BigqueryIcons;
 export let reporter: TelemetryReporter | null;
 export let statusBarInfo: vscode.StatusBarItem | null;
 
+export const CHART_VIEW_TYPE = "bigquery-query-chart";
 export const QUERY_RESULTS_VIEW_TYPE = "bigquery-query-results";
 export const TABLE_RESULTS_VIEW_TYPE = "bigquery-table-results";
 
@@ -153,6 +154,13 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand(
 			commands.COMMAND_PROJECT_PIN,
 			commands.commandPinOrUnpinProject
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_SHOW_CHART,
+			commands.commandShowChart
 		)
 	);
 

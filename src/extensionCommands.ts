@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigqueryClient';
-import { authenticationWebviewProvider, bigQueryTreeDataProvider, QUERY_RESULTS_VIEW_TYPE, reporter, TABLE_RESULTS_VIEW_TYPE } from './extension';
+import { authenticationWebviewProvider, bigQueryTreeDataProvider, CHART_VIEW_TYPE, QUERY_RESULTS_VIEW_TYPE, reporter, TABLE_RESULTS_VIEW_TYPE } from './extension';
 import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/treeItem';
@@ -13,6 +13,7 @@ import { QueryResultsMappingService } from './services/queryResultsMappingServic
 import { QueryResultsMapping } from './services/queryResultsMapping';
 import { JobReference } from "./services/queryResultsMapping";
 import { TableReference } from './services/tableMetadata';
+import { ChartRender } from './charts/chartRender';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -28,6 +29,7 @@ export const COMMAND_CREATE_TABLE_DEFAULT_QUERY = "vscode-bigquery.create-table-
 export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
 export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
+export const COMMAND_SHOW_CHART = "vscode-bigquery.show-chart";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 
 export const commandRunQuery = async function (this: any, ...args: any[]) {
@@ -421,6 +423,14 @@ export const commandPinOrUnpinProject = function (...args: any[]) {
 	vscode.commands.executeCommand(COMMAND_EXPLORER_REFRESH);
 
 	reporter?.sendTelemetryEvent('commandPinOrUnpinProject', {});
+};
+
+export const commandShowChart = function (...args: any[]) {
+
+	const panel = vscode.window.createWebviewPanel(CHART_VIEW_TYPE, "label", { viewColumn: vscode.ViewColumn.One, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
+	const chartRender = new ChartRender(panel);
+	chartRender.render();
+
 };
 
 let bigQueryClient: BigQueryClient | null;
