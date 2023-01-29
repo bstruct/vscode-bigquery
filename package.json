@@ -135,11 +135,6 @@
 				"command": "vscode-bigquery.download-csv",
 				"title": "Download CSV",
 				"icon": "$(cloud-download)"
-			},
-			{
-				"command": "vscode-bigquery.show-chart",
-				"title": "Show chart",
-				"icon": "$(pie-chart)"
 			}
 		],
 		"menus": {
