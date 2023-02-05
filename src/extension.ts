@@ -159,8 +159,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
-			commands.COMMAND_SHOW_CHART,
-			commands.commandShowChart
+			commands.COMMAND_PLOT_CHART,
+			commands.commandPlotChart,
+			{
+				"globalState": context.globalState,
+				queryResultsWebviewMapping: queryResultsWebviewMapping
+			}
 		)
 	);
 

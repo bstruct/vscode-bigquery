@@ -1,4 +1,7 @@
+import internal = require('stream');
 import * as vscode from 'vscode';
+import { BigQueryClient } from '../services/bigqueryClient';
+import { JobReference } from '../services/queryResultsMapping';
 
 export class ChartRender {
     private webViewPanel: vscode.WebviewPanel;
@@ -9,11 +12,35 @@ export class ChartRender {
         webViewPanel.onDidDispose(c => { listener.dispose(); });
     }
 
-    public async render() {
+    // private hashCode(s: string) {
+    //     return s.split("").reduce(function (a, b) {
+    //         a = ((a << 5) - a) + b.charCodeAt(0);
+    //         return a & a;
+    //     }, 0);
+    // }
+
+    public async render(bigqueryClient: BigQueryClient, jobReference: JobReference) {
 
         try {
 
-            const html = await this.getChartHtml();
+            const job = bigqueryClient.getJob(jobReference);
+            let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000 });
+
+            const ids: number[] = [];//queryResults[0].map(c => this.hashCode(c.combi_number));
+            for (let index = 0; index < queryResults[0].length; index++) {
+                ids.push(index);
+            }
+
+            const binIdsX: any[] = queryResults[0].map(c => c.binIdsX);
+            const binIdsZ: any[] = queryResults[0].map(c => c.binIdsZ);
+            const values: any[] = queryResults[0].map(c => c.value);
+
+            let binsZ: number = 0;
+            new Set(binIdsZ).forEach(() => { binsZ++; });
+            let labelsZ: any[] = [];
+            new Set(binIdsZ).forEach((v) => labelsZ.push(v));
+
+            const html = await this.getChartHtml(ids, binIdsX, binIdsZ, values, binsZ, labelsZ);
             this.webViewPanel.webview.html = html;
 
         } catch (error: any) {
@@ -22,7 +49,10 @@ export class ChartRender {
         }
     }
 
-    getChartHtml() {
+    getChartHtml(ids: any[], binIdsX: any[], binIdsZ: any[], values: any[]
+        , binsZ: number
+        , labelsZ: any[]
+    ) {
         return `<!DOCTYPE html>
         <html lang="en-us">
         
@@ -47,22 +77,16 @@ export class ChartRender {
                     core.renderer = new MorphCharts.Renderers.Basic.Main();
         
                     // Data
-                    const count = 1000;
-                    const ids = new Uint32Array(count);
-                    const binIdsX = new Float64Array(count);
-                    const binIdsZ = new Float64Array(count);
-                    const values = new Float64Array(count);
-                    const binsX = 5;
-                    const binsZ = 1;
+                    const ids = ${JSON.stringify(ids)};
+                    const binIdsX = ${JSON.stringify(binIdsX)};
+                    const binIdsZ = ${JSON.stringify(binIdsZ)};
+                    const values = ${JSON.stringify(values)};
+
+                    const binsX = binIdsX.reduce((a,b)=> (a > b)? a : b) + 1;
+                    const binsZ = binIdsZ.reduce((a,b)=> (a > b)? a : b) + 1;
                     const sizeX = 5;
                     const sizeZ = 5;
-                    for (let i = 0; i < count; i++) {
-                        ids[i] = i;
-                        binIdsX[i] = Math.floor(binsX * Math.pow(Math.random(), 2));
-                        binIdsZ[i] = Math.floor(binsZ * Math.pow(Math.random(), 2));
-                        values[i] = Math.pow(Math.random(), 2);
-                    }
-        
+
                     // Palette
                     const palette = MorphCharts.Helpers.PaletteHelper.resample(core.paletteResources.palettes[MorphCharts.PaletteName.blues].colors, 32, false);
         
@@ -73,12 +97,12 @@ export class ChartRender {
                     transitionBuffer.currentPalette.colors = palette;
         
                     // Order by value
-                    const orderedIds = new Uint32Array(ids);
+                    // const orderedIds = new Uint32Array(ids);
                     // orderedIds.sort(function (a, b) { return values[a] - values[b]; });
         
                     // Layout
                     const stack = new MorphCharts.Layouts.Stack(core);
-                    stack.layout(transitionBuffer.currentBuffer, orderedIds, {
+                    stack.layout(transitionBuffer.currentBuffer, ids, {
                         binsX: binsX,
                         binsZ: binsZ,
                         binIdsX: binIdsX,
@@ -104,7 +128,8 @@ export class ChartRender {
                         minValueX: 0,
                         maxValueX: binsX - 1,
                         minValueY: 0,
-                        maxValueY: stack.maxLevel * sizeX * sizeZ,
+                        // maxValueY: stack.maxLevel * sizeX * sizeZ,
+                        maxValueY: stack.maxTotal,
                         minValueZ: 0,
                         maxValueZ: binsZ - 1,
                         titleX: "x",

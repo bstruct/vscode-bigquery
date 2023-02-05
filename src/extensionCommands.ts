@@ -29,7 +29,7 @@ export const COMMAND_CREATE_TABLE_DEFAULT_QUERY = "vscode-bigquery.create-table-
 export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
 export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
-export const COMMAND_SHOW_CHART = "vscode-bigquery.show-chart";
+export const COMMAND_PLOT_CHART = "vscode-bigquery.plot-chart";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 
 export const commandRunQuery = async function (this: any, ...args: any[]) {
@@ -425,12 +425,36 @@ export const commandPinOrUnpinProject = function (...args: any[]) {
 	reporter?.sendTelemetryEvent('commandPinOrUnpinProject', {});
 };
 
-export const commandShowChart = function (...args: any[]) {
+export const commandPlotChart = function (this: any, ...args: any[]) {
 
-	const panel = vscode.window.createWebviewPanel(CHART_VIEW_TYPE, "label", { viewColumn: vscode.ViewColumn.One, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
-	const chartRender = new ChartRender(panel);
-	chartRender.render();
+	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
+	if (activeTab === undefined || activeTab.input === undefined) {
+		return;
+	}
+
+	if (!((activeTab.input as any).viewType as string).endsWith('-bigquery-query-results')) {
+		return;
+	}
+
+	const uuid = activeTab.label.substring(activeTab.label.length - 8);
+
+	const globalState: vscode.Memento = this.globalState;
+	let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+	if (queryResultsMapping) {
+
+		const item = queryResultsMapping.find(c => c.uuid === uuid);
+		if (item && item.jobReferences && item.jobIndex !== undefined) {
+
+			const panel = vscode.window.createWebviewPanel(CHART_VIEW_TYPE, "label", { viewColumn: vscode.ViewColumn.One, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
+			const chartRender = new ChartRender(panel);
+			chartRender.render(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+
+		}
+
+	}
+
+	reporter?.sendTelemetryEvent('downloadCsv', {});
 };
 
 let bigQueryClient: BigQueryClient | null;

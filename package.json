@@ -20,7 +20,6 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vscode-bigquery.show-chart",
 		"onCommand:vscode-bigquery.run-query",
 		"onCommand:vscode-bigquery.run-selected-query",
 		"onView:bigquery-main-activity-bar",
@@ -135,6 +134,11 @@
 				"command": "vscode-bigquery.download-csv",
 				"title": "Download CSV",
 				"icon": "$(cloud-download)"
+			},
+			{
+				"command": "vscode-bigquery.plot-chart",
+				"title": "Plot chart",
+				"icon": "$(pie-chart)"
 			}
 		],
 		"menus": {
@@ -152,6 +156,11 @@
 				{
 					"command": "vscode-bigquery.download-csv",
 					"group": "navigation@-1",
+					"when": "activeWebviewPanelId == 'bigquery-query-results'"
+				},
+				{
+					"command": "vscode-bigquery.plot-chart",
+					"group": "navigation@-2",
 					"when": "activeWebviewPanelId == 'bigquery-query-results'"
 				}
 			],
