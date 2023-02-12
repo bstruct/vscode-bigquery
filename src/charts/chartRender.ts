@@ -1,7 +1,9 @@
 import internal = require('stream');
 import * as vscode from 'vscode';
+import { extensionUri } from '../extension';
 import { BigQueryClient } from '../services/bigqueryClient';
 import { JobReference } from '../services/queryResultsMapping';
+import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
 
 export class ChartRender {
     private webViewPanel: vscode.WebviewPanel;
@@ -12,19 +14,31 @@ export class ChartRender {
         webViewPanel.onDidDispose(c => { listener.dispose(); });
     }
 
-    // private hashCode(s: string) {
-    //     return s.split("").reduce(function (a, b) {
-    //         a = ((a << 5) - a) + b.charCodeAt(0);
-    //         return a & a;
-    //     }, 0);
-    // }
-
     public async render(bigqueryClient: BigQueryClient, jobReference: JobReference) {
 
         try {
 
             const job = bigqueryClient.getJob(jobReference);
             let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000 });
+
+
+            const uri: vscode.Uri | undefined = await vscode.window.showSaveDialog(
+                {
+                    title: 'Save export',
+                    filters: {
+                        'csv': ['csv']
+                    },
+                }
+            );
+            if (uri !== undefined) {
+
+                var enc = new TextEncoder();
+                await vscode.workspace.fs.writeFile(
+                    uri,
+                    enc.encode(JSON.stringify(queryResults[2]?.schema))
+                );
+
+            }
 
             const ids: number[] = [];//queryResults[0].map(c => this.hashCode(c.combi_number));
             for (let index = 0; index < queryResults[0].length; index++) {
@@ -40,12 +54,13 @@ export class ChartRender {
             let labelsZ: any[] = [];
             new Set(binIdsZ).forEach((v) => labelsZ.push(v));
 
+
+            //pass the file path to html page builder getChartHtml and set html
             const html = await this.getChartHtml(ids, binIdsX, binIdsZ, values, binsZ, labelsZ);
             this.webViewPanel.webview.html = html;
 
         } catch (error: any) {
-            // this.webViewPanel.webview.html = this.getExceptionHtml(error.message);
-            // vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
+            this.webViewPanel.webview.html = this.getExceptionHtml(error.message);
         }
     }
 
@@ -163,6 +178,67 @@ export class ChartRender {
      * the `postMessage` method. For query results
     */
     private async listenerResultsOnDidReceiveMessage(message: any): Promise<void> {
+    }
+
+    private getExceptionHtml(exception: any): string {
+
+        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
+            "resources",
+            "toolkit.min.js",
+        ]);
+
+        if (exception.errors) {
+
+            const errors = (exception as SimpleQueryRowsResponseError).errors;
+
+            const rows = JSON.stringify(errors.map(c => (
+                {
+                    "message": c.message,
+                    "reason": c.reason,
+                    "locationType": c.locationType
+                }
+            )));
+
+            return `<!DOCTYPE html>
+            <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <script type="module" src="${toolkitUri}"></script>
+                </head>
+                <body>
+                <vscode-data-grid id="basic-grid" generate-header="sticky" aria-label="Default"></vscode-data-grid>
+    
+                <script>
+                    document.getElementById('basic-grid').rowsData = ${rows};
+                </script>
+                </body>
+            </html>`;
+
+        } else {
+
+            const rows = JSON.stringify([{ message: exception.message, stack: exception.stack }]);
+
+            return `<!DOCTYPE html>
+            <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <script type="module" src="${toolkitUri}"></script>
+                </head>
+                <body>
+                <vscode-data-grid id="basic-grid" generate-header="sticky" aria-label="Default"></vscode-data-grid>
+    
+                <script>
+                    document.getElementById('basic-grid').rowsData = ${rows};
+                </script>
+                </body>
+            </html>`;
+
+        }
+    }
+
+    private getUri(webview: vscode.Webview, extensionUri: vscode.Uri, pathList: string[]) {
+        return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
     }
 
 }
