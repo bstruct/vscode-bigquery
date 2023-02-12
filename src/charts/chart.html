@@ -33,7 +33,7 @@
                 .filter(c => c.type === 'STRING');
 
             //populate
-            const selectors = ['selectXAxis', 'selectZAxis', 'selectColor', 'selectFacet'];
+            const selectors = ['selectXAxis', 'selectZAxis', 'selectColor'];//, 'selectFacet'
 
             selectors.forEach(elementName => {
                 const selectElement = document.getElementById(elementName);
@@ -60,9 +60,9 @@
                     const columnX = columnNames[0] ? getColumn(columnNames[0]) : null;
                     const columnZ = columnNames[1] ? getColumn(columnNames[1]) : null;
                     const columnColor = columnNames[2] ? getColumn(columnNames[2]) : getFakeColumn();
-                    const columnFacet = columnNames[3] ? getColumn(columnNames[3]) : null;
+                    // const columnFacet = columnNames[3] ? getColumn(columnNames[3]) : null;
 
-                    plotChart(columnX, columnZ, columnColor, columnFacet);
+                    plotChart(columnX, columnZ, columnColor, null);
 
                 };
 
@@ -301,12 +301,12 @@
                 <option value="-">-</option>
             </select>
         </div>
-        <div style="padding-bottom: 5px;">
+        <!-- <div style="padding-bottom: 5px;">
             <label style="width: 40px;display: inline-block;" for="selectFacet">Facet</label>
             <select id="selectFacet">
                 <option value="-">-</option>
             </select>
-        </div>
+        </div> -->
         <div id="itemSelectedParent" style="padding-bottom: 5px;display: none;">
             <button onclick="document.getElementById('itemSelectedParent').style.display = 'none';">Close</button>
             <pre id="itemSelected"></pre>
