@@ -135,6 +135,9 @@
             // core.renderer.config.shadowWidth = core.renderer.config.shadowHeight = 4096;
             // core.renderer.labelSets[0].isVisible = core.renderer.labelSets[1].isVisible = false;
             core.renderer = new MorphCharts.Renderers.Basic.Main();
+            core.renderer._backgroundColor = [0.4, 0.5, 0.6];
+            // core.renderer._backgroundColor = [0, 0, 0];
+
             // core.renderer.transitionTime = 0;
             // core.renderer.axesVisibility = MorphCharts.AxesVisibility.previous;
 
@@ -213,6 +216,8 @@
                             // titleZ: "z",
                             isDiscreteX: true,
                             isDiscreteZ: true,
+                            labelOrientationZ: MorphCharts.AxesTextOrientation.perpendicular,
+
                             labelsX: (value) => { return columnX.categories_distinct[value] || '-'; },
                             labelsY: (value) => { return Math.round(value).toString(); },
                             labelsZ: (value) => { return columnZ.categories_distinct[value] || '-'; }
@@ -282,7 +287,7 @@
 </head>
 
 <body>
-    <div style="margin:8px;position:absolute;left:0;top:0;background-color:white;">
+    <div style="margin:8px;position:absolute;left:0;top:0;">
         <div style="padding-bottom: 5px;">
             <label style="width: 40px;display: inline-block;" for="selectXAxis">X</label>
             <select id="selectXAxis">
@@ -307,7 +312,7 @@
                 <option value="-">-</option>
             </select>
         </div> -->
-        <div id="itemSelectedParent" style="padding-bottom: 5px;display: none;">
+        <div id="itemSelectedParent" style="padding-bottom: 5px;display: none;background-color: whitesmoke;">
             <button onclick="document.getElementById('itemSelectedParent').style.display = 'none';">Close</button>
             <pre id="itemSelected"></pre>
         </div>

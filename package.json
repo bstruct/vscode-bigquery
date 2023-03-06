@@ -20,13 +20,8 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vscode-bigquery.run-query",
-		"onCommand:vscode-bigquery.run-selected-query",
 		"onView:bigquery-main-activity-bar",
-		"onView:bigquery-authentication",
-		"onView:bigquery-tree-data-provider",
-		"onWebviewPanel:bigquery-query-results",
-		"onLanguage:bqsql"
+		"onWebviewPanel:bigquery-query-results"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -137,7 +132,7 @@
 			},
 			{
 				"command": "vscode-bigquery.plot-chart",
-				"title": "Plot chart",
+				"title": "Plot chart -- PREVIEW --",
 				"icon": "$(pie-chart)"
 			}
 		],
@@ -145,22 +140,22 @@
 			"editor/title": [
 				{
 					"command": "vscode-bigquery.run-query",
-					"group": "navigation",
+					"group": "navigation@-3",
 					"when": "editorLangId == bqsql"
 				},
 				{
 					"command": "vscode-bigquery.run-selected-query",
-					"group": "navigation",
+					"group": "navigation@-2",
+					"when": "editorLangId == bqsql"
+				},
+				{
+					"command": "vscode-bigquery.plot-chart",
+					"group": "navigation@-1",
 					"when": "editorLangId == bqsql"
 				},
 				{
 					"command": "vscode-bigquery.download-csv",
 					"group": "navigation@-1",
-					"when": "activeWebviewPanelId == 'bigquery-query-results'"
-				},
-				{
-					"command": "vscode-bigquery.plot-chart",
-					"group": "navigation@-2",
 					"when": "activeWebviewPanelId == 'bigquery-query-results'"
 				}
 			],
@@ -236,6 +231,11 @@
 				"command": "vscode-bigquery.run-selected-query",
 				"key": "Ctrl+E",
 				"when": "editorLangId == bqsql"
+			},
+			{
+				"command": "vscode-bigquery.plot-chart",
+				"key": "Ctrl+M",
+				"when": "editorLangId == bqsql"
 			}
 		]
 	},
@@ -269,11 +269,11 @@
 	},
 	"dependencies": {
 		"@bstruct/bqsql-parser": "0.1.5",
-		"@google-cloud/bigquery": "^6.0.3",
-		"@google-cloud/resource-manager": "^4.1.3",
+		"@google-cloud/bigquery": "^6.1.0",
+		"@google-cloud/resource-manager": "^4.2.1",
 		"@vscode/codicons": "^0.0.32",
-		"@vscode/extension-telemetry": "^0.6.2",
-		"@vscode/webview-ui-toolkit": "^1.1.0",
+		"@vscode/extension-telemetry": "^0.7.5",
+		"@vscode/webview-ui-toolkit": "^1.2.2",
 		"csv-writer": "^1.6.0",
 		"preact": "^10.10.6",
 		"preact-render-to-string": "^5.2.2"
