@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { QueryResultsMappingService } from '../services/queryResultsMappingService';
 import { ResultsRender } from '../services/resultsRender';
-import { ResultsGridRender } from './resultsGridRender';
-import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
+import { ResultsChartRender } from './resultsChartRender';
+import { ResultsChartRenderRequest } from './ResultsChartRenderRequest';
 
-export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
+export class ChartResultsSerializer implements vscode.WebviewPanelSerializer {
 
     private globalState: vscode.Memento;
     private queryResultsWebviewMapping: Map<string, ResultsRender>;
@@ -18,39 +18,37 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
 
         const uuid = webviewPanel.title.substring(webviewPanel.title.length - 8);
 
-		const resultsGridRender = new ResultsGridRender(webviewPanel);
+		const resultsChartRender = new ResultsChartRender(webviewPanel);
 
-        QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(this.queryResultsWebviewMapping, uuid, resultsGridRender);
+        QueryResultsMappingService.updateQueryResultsChartMappingWebviewPanel(this.queryResultsWebviewMapping, uuid, resultsChartRender);
 
         //action when panel is closed
         webviewPanel.onDidDispose(e => {
             QueryResultsMappingService.deleteQueryResultsMapping(this.globalState, uuid);
         });
 
-        const maxResults: number | undefined = state.maxResults;
-        const openInTabVisible: boolean | undefined = state.openInTabVisible;
-        const startIndex: number | undefined = state.startIndex;
-        const jobIndex: number | undefined = state.jobIndex;
+        // const maxResults: number | undefined = state.maxResults;
+        // const openInTabVisible: boolean | undefined = state.openInTabVisible;
+        // const startIndex: number | undefined = state.startIndex;
+        // const jobIndex: number | undefined = state.jobIndex;
 
         const queryResultsMappingItem = QueryResultsMappingService.getQueryResultsMappingItem(this.globalState, uuid);
 
         if (queryResultsMappingItem !== undefined
             && queryResultsMappingItem.jobReferences
             && queryResultsMappingItem.jobReferences.length > 0
-            && maxResults !== undefined
-            && openInTabVisible !== undefined
-            && startIndex !== undefined
-            && jobIndex !== undefined) {
+            // && maxResults !== undefined
+            // && openInTabVisible !== undefined
+            // && startIndex !== undefined
+            // && jobIndex !== undefined
+            ) {
 
             const request = {
                 jobReferences: queryResultsMappingItem.jobReferences,
-                startIndex: 0,
-                maxResults: 50,
-                jobIndex: 0,
-                openInTabVisible: true
-            } as ResultsGridRenderRequest;
+                jobIndex:0,
+            } as ResultsChartRenderRequest;
 
-            return resultsGridRender.render(request);
+            return resultsChartRender.render(request);
 
         }
 

@@ -1,4 +1,5 @@
 import { WebviewPanel } from "vscode";
+import { QueryResultsVisualizationType } from "./QueryResultsVisualizationType";
 
 interface JobReference {
     projectId: string,
@@ -8,6 +9,7 @@ interface JobReference {
 
 interface QueryResultsMapping {
     uuid: string,
+    visualizationType: QueryResultsVisualizationType,
     textEditorUriString: string,
     jobReferences: JobReference[] | undefined,
     jobIndex: number | undefined,
