@@ -272,27 +272,30 @@ export const commandViewTable = async function (...args: any[]) {
 
 	const newresultsGridRender = new ResultsGridRender(panel);
 
-	if (metadata[0].type === 'EXTERNAL') {
+	if (metadata[0].type === 'EXTERNAL' || metadata[0].type === 'VIEW') {
+		try {
+			const queryResponse = await getBigQueryClient().runQuery(
+				`SELECT * FROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``);
 
-		const queryResponse = await getBigQueryClient().runQuery(
-			`SELECT * FROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``);
+			const jobReferences = [
+				{
+					jobId: queryResponse[0].id,
+					location: queryResponse[0].location,
+					projectId: queryResponse[0].projectId
+				} as JobReference];
 
-		const jobReferences = [
-			{
-				jobId: queryResponse[0].id,
-				location: queryResponse[0].location,
-				projectId: queryResponse[0].projectId
-			} as JobReference];
+			const request = {
+				jobReferences: jobReferences,
+				startIndex: 0,
+				maxResults: 50,
+				jobIndex: 0,
+				openInTabVisible: false
+			} as ResultsGridRenderRequest;
 
-		const request = {
-			jobReferences: jobReferences,
-			startIndex: 0,
-			maxResults: 50,
-			jobIndex: 0,
-			openInTabVisible: false
-		} as ResultsGridRenderRequest;
-
-		newresultsGridRender.render(request);
+			newresultsGridRender.render(request);
+		} catch (error) {
+			newresultsGridRender.renderException(error);
+		}
 
 	} else {
 

@@ -51,6 +51,8 @@ export class BigqueryTreeItem extends vscode.TreeItem {
                 break;
             case TreeItemType.tableView:
                 this.iconPath = bigqueryIcons.tableView;
+                this.contextValue = 'bq-table';
+                this.command = { command: commands.COMMAND_VIEW_TABLE, arguments: [this] } as vscode.Command;            
                 break;
             case TreeItemType.dataset:
                 this.iconPath = bigqueryIcons.dataset;
