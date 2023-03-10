@@ -12,9 +12,10 @@ import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaServic
 import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
 import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializer';
 import { QueryResultsMappingService } from './services/queryResultsMappingService';
-import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
 import { TableResultsSerializer } from './tableResultsPanel/tableResultsSerializer';
-import { BqsqlHoverProvider } from './language/bqsqlHoverProvider';
+import { ResultsRender } from './services/resultsRender';
+import { ChartResultsSerializer } from './charts/chartResultsSerializer';
+import { QueryResultsVisualizationType } from './services/QueryResultsVisualizationType';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -35,7 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	bigqueryIcons = new BigqueryIcons();
 
-	let queryResultsWebviewMapping: Map<string, ResultsGridRender> = new Map<string, ResultsGridRender>();
+	let queryResultsWebviewMapping: Map<string, ResultsRender> = new Map<string, ResultsRender>();
 
 	try {
 
@@ -159,8 +160,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
-			commands.COMMAND_SHOW_CHART,
-			commands.commandShowChart
+			commands.COMMAND_PLOT_CHART,
+			commands.commandPlotChart,
+			{
+				"globalState": context.globalState,
+				queryResultsWebviewMapping: queryResultsWebviewMapping
+			}
 		)
 	);
 
@@ -178,6 +183,14 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.registerTreeDataProvider(
 			'bigquery-tree-data-provider',
 			bigQueryTreeDataProvider
+		)
+	);
+
+	//bigquery-query-chart
+	context.subscriptions.push(
+		vscode.window.registerWebviewPanelSerializer(
+			CHART_VIEW_TYPE,
+			new ChartResultsSerializer(context.globalState, queryResultsWebviewMapping)
 		)
 	);
 
@@ -249,13 +262,15 @@ export function activate(context: vscode.ExtensionContext) {
 			//  in this scenario, the tab exists but is not possible to determine the correspondent panel
 			//  panels are lazy loaded
 
-			const uuid = QueryResultsMappingService.getQueryResultsMappingUuid(context.globalState, e);
-			if (uuid) {
-				const resultsGridRender = QueryResultsMappingService.getQueryResultsMappingResultsGridRender(queryResultsWebviewMapping, uuid);
-				if (resultsGridRender) {
-					resultsGridRender.reveal(undefined, true);
+			[QueryResultsVisualizationType.chart, QueryResultsVisualizationType.table].forEach(t => {
+				const uuid = QueryResultsMappingService.getQueryResultsMappingUuid(context.globalState, e, t);
+				if (uuid) {
+					const resultsGridRender = QueryResultsMappingService.getQueryResultsMappingResultsGridRender(queryResultsWebviewMapping, uuid);
+					if (resultsGridRender) {
+						resultsGridRender.reveal(undefined, true);
+					}
 				}
-			}
+			});
 		}
 
 	});

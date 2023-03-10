@@ -13,7 +13,10 @@ import { QueryResultsMappingService } from './services/queryResultsMappingServic
 import { QueryResultsMapping } from './services/queryResultsMapping';
 import { JobReference } from "./services/queryResultsMapping";
 import { TableReference } from './services/tableMetadata';
-import { ChartRender } from './charts/chartRender';
+import { ResultsChartRender } from './charts/resultsChartRender';
+import { ResultsRender } from './services/resultsRender';
+import { ResultsChartRenderRequest } from './charts/ResultsChartRenderRequest';
+import { QueryResultsVisualizationType } from './services/QueryResultsVisualizationType';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -29,7 +32,7 @@ export const COMMAND_CREATE_TABLE_DEFAULT_QUERY = "vscode-bigquery.create-table-
 export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
 export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
-export const COMMAND_SHOW_CHART = "vscode-bigquery.show-chart";
+export const COMMAND_PLOT_CHART = "vscode-bigquery.plot-chart";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 
 export const commandRunQuery = async function (this: any, ...args: any[]) {
@@ -67,9 +70,9 @@ const commandQuery = async function (local: any, queryType: RunQueryType) {
 	const queryText: string = (queryType === RunQueryType.query) ? textEditor.document.getText() ?? '' : textEditor.document.getText(textEditor.selection) ?? '';
 
 	const globalState: vscode.Memento = local.globalState;
-	const queryResultsWebviewMapping: Map<string, ResultsGridRender> = local.queryResultsWebviewMapping;
+	const queryResultsWebviewMapping: Map<string, ResultsRender> = local.queryResultsWebviewMapping;
 
-	let uuid = QueryResultsMappingService.getQueryResultsMappingUuid(globalState, textEditor);
+	let uuid = QueryResultsMappingService.getQueryResultsMappingUuid(globalState, textEditor, QueryResultsVisualizationType.chart);
 	if (!uuid) {
 		uuid = uuidv4().substring(0, 8);
 	}
@@ -82,7 +85,7 @@ const commandQuery = async function (local: any, queryType: RunQueryType) {
 
 };
 
-const runQuery = async function (globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, ResultsGridRender>, uuid: string, mainLabel: string, queryText: string): Promise<number> {
+const runQuery = async function (globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, ResultsRender>, uuid: string, mainLabel: string, queryText: string): Promise<number> {
 
 	const queryResponse = getBigQueryClient().runQuery(queryText);
 
@@ -92,7 +95,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		performLock = true;
 	}
 
-	const label = `Result: ${mainLabel} | ${uuid}`;
+	const label = `Visualization: ${mainLabel} | ${uuid}`;
 
 	let resultsGridRender = QueryResultsMappingService.getQueryResultsMappingResultsGridRender(queryResultsWebviewMapping, uuid);
 
@@ -136,7 +139,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 		resultsGridRender.render(request);
 
-		QueryResultsMappingService.udpateQueryResultsMapping(globalState, uuid, request);
+		QueryResultsMappingService.updateQueryResultsMapping(globalState, uuid, request);
 
 		return (await queryResponse).length;
 	} catch (error) {
@@ -428,12 +431,114 @@ export const commandPinOrUnpinProject = function (...args: any[]) {
 	reporter?.sendTelemetryEvent('commandPinOrUnpinProject', {});
 };
 
-export const commandShowChart = function (...args: any[]) {
+export const commandPlotChart = async function (this: any, ...args: any[]) {
 
-	const panel = vscode.window.createWebviewPanel(CHART_VIEW_TYPE, "label", { viewColumn: vscode.ViewColumn.One, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
-	const chartRender = new ChartRender(panel);
-	chartRender.render();
+	// const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
+	// if (activeTab === undefined || activeTab.input === undefined) {
+	// 	return;
+	// }
+
+	// if (!((activeTab.input as any).viewType as string).endsWith('-bigquery-query-results')) {
+	// 	return;
+	// }
+
+	// const uuid = activeTab.label.substring(activeTab.label.length - 8);
+
+	// const globalState: vscode.Memento = this.globalState;
+	// let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+	// if (queryResultsMapping) {
+
+	// 	const item = queryResultsMapping.find(c => c.uuid === uuid);
+	// 	if (item && item.jobReferences && item.jobIndex !== undefined) {
+
+	// 		const panel = vscode.window.createWebviewPanel(CHART_VIEW_TYPE, "label", { viewColumn: vscode.ViewColumn.One, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
+	// 		const chartRender = new ChartRender(panel);
+	// 		chartRender.render(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+
+	// 	}
+
+	// }
+
+	// reporter?.sendTelemetryEvent('downloadCsv', {});
+
+	const t1 = Date.now();
+
+	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+
+	if (activeTab === undefined) {
+		return;
+	}
+
+	const textEditor = vscode.window.activeTextEditor;
+	if (textEditor === undefined) {
+		return;
+	}
+
+	const queryText: string = textEditor.document.getText() ?? '';
+
+	const globalState: vscode.Memento = this.globalState;
+	const queryResultsWebviewMapping: Map<string, ResultsRender> = this.queryResultsWebviewMapping;
+
+	let uuid = QueryResultsMappingService.getQueryResultsMappingUuid(globalState, textEditor, QueryResultsVisualizationType.chart);
+	if (!uuid) {
+		uuid = uuidv4().substring(0, 8);
+	}
+
+	QueryResultsMappingService.upsertQueryResultsMapping(globalState, uuid, textEditor);
+
+	const numberOfJobs = await runQueryToChart(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
+
+	reporter?.sendTelemetryEvent('commandPlotChart', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+
+};
+
+const runQueryToChart = async function (globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, ResultsRender>, uuid: string, mainLabel: string, queryText: string): Promise<number> {
+
+	const label = `Visualization: ${mainLabel} | ${uuid}`;
+
+	let resultsChartRender = QueryResultsMappingService.getQueryResultsMappingResultsChartRender(queryResultsWebviewMapping, uuid);
+
+	if (resultsChartRender) {
+
+		resultsChartRender.reveal(undefined, true);
+
+	} else {
+
+		const panel = vscode.window.createWebviewPanel(CHART_VIEW_TYPE, label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
+		resultsChartRender = new ResultsChartRender(panel);
+
+		QueryResultsMappingService.updateQueryResultsChartMappingWebviewPanel(queryResultsWebviewMapping, uuid, resultsChartRender);
+
+		//action when panel is closed
+		panel.onDidDispose(e => {
+			QueryResultsMappingService.deleteQueryResultsMapping(globalState, uuid);
+		});
+
+	}
+
+	try {
+
+		resultsChartRender.renderLoadingIcon();
+		
+		const queryResponse = getBigQueryClient().runQuery(queryText);
+		const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
+
+		const request = {
+			jobReferences: jobReferences,
+			jobIndex: 0,
+		} as ResultsChartRenderRequest;
+
+		resultsChartRender.render(request);
+
+		QueryResultsMappingService.updateQueryResultsMapping(globalState, uuid, request);
+
+		return (await queryResponse).length;
+	} catch (error) {
+		resultsChartRender.renderException(error);
+	}
+
+	return 0;
 };
 
 let bigQueryClient: BigQueryClient | null;

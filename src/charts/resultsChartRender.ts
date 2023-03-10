@@ -1,11 +1,11 @@
-import internal = require('stream');
+import { QueryResultsOptions } from '@google-cloud/bigquery/build/src/job';
 import * as vscode from 'vscode';
 import { extensionUri } from '../extension';
-import { BigQueryClient } from '../services/bigqueryClient';
-import { JobReference } from '../services/queryResultsMapping';
+import { getBigQueryClient } from '../extensionCommands';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
+import { ResultsChartRenderRequest } from './ResultsChartRenderRequest';
 
-export class ChartRender {
+export class ResultsChartRender {
     private webViewPanel: vscode.WebviewPanel;
 
     constructor(webViewPanel: vscode.WebviewPanel) {
@@ -14,18 +14,14 @@ export class ChartRender {
         webViewPanel.onDidDispose(c => { listener.dispose(); });
     }
 
-    public async render(bigqueryClient: BigQueryClient, jobReference: JobReference) {
+    public async render(request: ResultsChartRenderRequest) {
 
         try {
 
-            const job = bigqueryClient.getJob(jobReference);
-            let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000 });
+            //set waiting gif
+            this.webViewPanel.webview.html = this.getWaitingHtml(request.jobIndex);
 
-            const schema = JSON.stringify(queryResults[2]?.schema);
-            const data = JSON.stringify(queryResults[0]);
-
-            //pass the file path to html page builder getChartHtml and set html
-            const html = this.getChartHtml(schema, data);
+            const [html, totalRows] = await this.getChartHtml(request);
             this.webViewPanel.webview.html = html;
 
         } catch (error: any) {
@@ -33,14 +29,97 @@ export class ChartRender {
         }
     }
 
-    getChartHtml(schema: string, data: string) {
+    public renderException(error: any) {
+        this.webViewPanel.webview.html = this.getExceptionHtml(error);
+    }
+
+    public renderLoadingIcon() {
+        this.webViewPanel.webview.html = this.getWaitingHtml(undefined);
+    }
+
+    private getWaitingHtml(jobIndex: number | undefined): string {
+
+        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
+            "resources",
+            "toolkit.min.js",
+        ]);
+
         return `<!DOCTYPE html>
+		<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<script type="module" src="${toolkitUri}"></script>
+                <script>
+                    const qElement = document.querySelectorAll('div.editor-actions ul.actions-container > li.action-item a[aria-label="\${x1}"]');
+                    if(qElement.length >0){
+                        const element = qElement[0];
+                        element.innerText = 'trying';
+                    }
+                
+                    const vscode = acquireVsCodeApi();
+                    vscode.setState({ jobIndex: ${jobIndex} });
+                </script>
+			</head>
+			<body>
+                <vscode-progress-ring></vscode-progress-ring>
+			</body>
+		</html>`;
+
+    }
+
+    async getChartHtml(request: ResultsChartRenderRequest) :  Promise<[string, number]> {
+
+        // const job = bigqueryClient.getJob(jobReference);
+        // let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000 });
+
+        // const schema = JSON.stringify(queryResults[2]?.schema);
+        // const data = JSON.stringify(queryResults[0]);
+        let schema = '';
+        let data = '';
+        let totalRows = 0;
+
+        // let totalRows: number = 0;
+        // let rows: any[] = [];
+        // let schema: bigquery.ITableSchema = {};
+
+        if (request.jobReferences && request.jobReferences.length > 0) {
+            const jobsReference = request.jobReferences[request.jobIndex];
+            const job = getBigQueryClient().getJob(jobsReference);
+            const queryResultOptions: QueryResultsOptions = {startIndex: '0', maxResults: 1_000_000};
+            const queryRowsResponse = (await job.getQueryResults(queryResultOptions));
+            data = JSON.stringify(queryRowsResponse[0]);
+            schema = JSON.stringify(queryRowsResponse[2]?.schema || {});
+            totalRows = Number(queryRowsResponse[2]?.totalRows || 0);
+
+            // } else {
+            //     if (request.tableReference) {
+
+            //         const tableReference = request.tableReference;
+            //         const table = getBigQueryClient().getTable(tableReference.projectId, tableReference.datasetId, tableReference.tableId);
+            //         const metadata = await table.getMetadata();
+            //         schema = metadata[0].schema;
+            //         totalRows = Number(metadata[0].numRows || 0);
+            //         rows = (await table.getRows({ startIndex: request.startIndex.toString(), maxResults: request.maxResults }))[0];
+
+        } else {
+            throw new Error('Unexpected error: "No job results nor table was found"');
+        }
+        // }
+
+        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
+            "resources",
+            "toolkit.min.js",
+        ]);
+
+        return [`<!DOCTYPE html>
         <html lang="en-us">
         
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>Transition</title>
+        	<script type="module" src="${toolkitUri}"></script>
             <style type="text/css">
                 html,
                 body {
@@ -52,6 +131,10 @@ export class ChartRender {
                     margin: 8px;
                 }
             </style>
+            <script>
+                const vscode = acquireVsCodeApi();
+                vscode.setState({ jobIndex: ${request.jobIndex} });
+            </script>
             <script id="chart-data-schema" type="application/json">${schema}</script>
             <script id="chart-data" type="application/json">${data}</script>
         
@@ -348,7 +431,10 @@ export class ChartRender {
             <div id="container" class="container" style="width:100%;height:100%;"></div>
         </body>
         
-        </html>`;
+        </html>`,
+            totalRows
+        ];
+
     }
 
     /* This function will run as an event triggered when the JS on the webview triggers
@@ -416,6 +502,10 @@ export class ChartRender {
 
     private getUri(webview: vscode.Webview, extensionUri: vscode.Uri, pathList: string[]) {
         return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
+    }
+
+    reveal(viewColumn?: vscode.ViewColumn, preserveFocus?: boolean): void {
+        this.webViewPanel.reveal(viewColumn, preserveFocus);
     }
 
 }
