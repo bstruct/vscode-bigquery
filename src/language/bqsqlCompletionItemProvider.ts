@@ -412,7 +412,7 @@ export class BqsqlCompletionItemProvider implements CompletionItemProvider<Compl
         const anchor = label.toLocaleLowerCase().replace('.', '');
         completionItem.documentation = new vscode.MarkdownString('Bigquery official [documentation](https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators#'.concat(anchor.concat(')')));
         const alias = label.toLocaleLowerCase().replace('.', '_');
-        completionItem.insertText = new vscode.SnippetString(`${label}($1) AS \${2:${alias}},`);
+        completionItem.insertText = new vscode.SnippetString(`${label}($1)`);
 
         return completionItem;
     }
