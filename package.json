@@ -21,7 +21,11 @@
 	],
 	"activationEvents": [
 		"onView:bigquery-main-activity-bar",
-		"onWebviewPanel:bigquery-query-results"
+		"onView:bigquery-authentication",
+		"onView:bigquery-tree-data-provider",
+		"onWebviewPanel:bigquery-query-results",
+		"onWebviewPanel:bigquery-table-results",
+		"onLanguage:bqsql"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -102,17 +106,17 @@
 			},
 			{
 				"command": "vscode-bigquery.view-table",
-				"title": "Bigquery: View table",
+				"title": "Bigquery: Preview",
 				"icon": "$(link-external)"
 			},
 			{
 				"command": "vscode-bigquery.view-table-schema",
-				"title": "Bigquery: View table schema",
+				"title": "Bigquery: View schema",
 				"icon": "$(link-external)"
 			},
 			{
 				"command": "vscode-bigquery.create-table-default-query",
-				"title": "Bigquery: Query table",
+				"title": "Bigquery: Create query",
 				"icon": "$(file-text)"
 			},
 			{
@@ -129,7 +133,7 @@
 				"command": "vscode-bigquery.download-csv",
 				"title": "Download CSV",
 				"icon": "$(cloud-download)"
-			},
+      },
 			{
 				"command": "vscode-bigquery.plot-chart",
 				"title": "Plot chart -- PREVIEW --",
