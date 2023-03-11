@@ -40,7 +40,7 @@ export class ResultsGridRender {
         }
     }
 
-    public renderException(error: any){
+    public renderException(error: any) {
         this.webViewPanel.webview.html = this.getExceptionHtml(error);
     }
 
@@ -299,7 +299,7 @@ export class ResultsGridRender {
 
                 case 'download_csv':
 
-                    await vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV);
+                    await vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV, "resultsTable");
 
                     break;
                 default:

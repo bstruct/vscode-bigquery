@@ -17,6 +17,7 @@ import { ResultsChartRender } from './charts/resultsChartRender';
 import { ResultsRender } from './services/resultsRender';
 import { ResultsChartRenderRequest } from './charts/ResultsChartRenderRequest';
 import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
+import { TelemetryEventProperties } from '@vscode/extension-telemetry';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -409,7 +410,11 @@ export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 
 	}
 
-	reporter?.sendTelemetryEvent('downloadCsv', {});
+	const telemetryProperties: TelemetryEventProperties = {
+		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
+	};
+
+	reporter?.sendTelemetryEvent('downloadCsv', telemetryProperties);
 };
 
 export const commandPinOrUnpinProject = function (...args: any[]) {
