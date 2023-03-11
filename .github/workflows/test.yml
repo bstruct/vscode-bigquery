@@ -1,7 +1,9 @@
-# on: push
 on:
-  pull_request_review:
-    types: [submitted]
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    types: [opened,opened]
     
 env:
   GITHUB_NPM_TOKEN: ${{secrets.GITHUB_TOKEN}}
