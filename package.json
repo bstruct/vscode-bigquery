@@ -21,11 +21,8 @@
 	],
 	"activationEvents": [
 		"onView:bigquery-main-activity-bar",
-		"onView:bigquery-authentication",
-		"onView:bigquery-tree-data-provider",
 		"onWebviewPanel:bigquery-query-results",
-		"onWebviewPanel:bigquery-table-results",
-		"onLanguage:bqsql"
+		"onWebviewPanel:bigquery-table-results"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -38,6 +35,20 @@
 					"scope": "machine-overridable",
 					"title": "Pinned projects",
 					"description": "Pinned GCP projects id's in the explorer tree in the Bigquery extension"
+				},
+				"vscode-bigquery.projects": {
+					"type": "array",
+					"default": [],
+					"scope": "machine-overridable",
+					"title": "Projects",
+					"description": "GCP projects id's that need to be listed, but there's no explicit permission to the project, only datasets"
+				},
+				"vscode-bigquery.tables": {
+					"type": "array",
+					"default": [],
+					"scope": "machine-overridable",
+					"title": "Table full name",
+					"description": "Tables that need to be listed, but there's no explicit permission to the project nor dataset, only the table"
 				}
 			}
 		},

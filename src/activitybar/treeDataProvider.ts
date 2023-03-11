@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import { BigqueryTreeItem, TreeItemType } from './treeItem';
-import { BigQuery } from '@google-cloud/bigquery';
+import { BigQuery, Dataset, Model, Routine, Table } from '@google-cloud/bigquery';
 import { Authentication } from '../services/authentication';
-import { getBigQueryClient, SETTING_PINNED_PROJECTS } from '../extensionCommands';
+import { getBigQueryClient, SETTING_PINNED_PROJECTS, SETTING_PROJECTS, SETTING_TABLES } from '../extensionCommands';
+import { GetMetadataOptions, MetadataResponse } from '@google-cloud/common/build/src/service-object';
+import { TableReference } from '../services/tableMetadata';
 
 // const { google } = require('googleapis');
 // const vault = google.vault('v1');
@@ -115,17 +117,17 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
     }
 
-    private async getProjects() {
-
-        const bigqueryClient = getBigQueryClient();
-        const bqProjectsPromise = bigqueryClient.getProjects();
+    private async getProjects(): Promise<BigqueryTreeItem[]> {
 
         const defaultProjectIdPromise = Authentication.getDefaultProjectId();
-        const bqProjects = await bqProjectsPromise;
+        const bqProjects = await getBigQueryClient().getProjects();
 
-        let listProjects = [];
-        for await (const project of bqProjects.projects || []) {
-            listProjects.push(project);
+        let listProjects = this.getProjectsFromSettings();
+        for (const project of bqProjects.projects || []) {
+            const projectId = (project.id || 'xxx').toLowerCase();
+            if (listProjects.indexOf(projectId) < 0) {
+                listProjects.push(projectId);
+            }
         }
 
         const defaultProjectId = await defaultProjectIdPromise;
@@ -137,8 +139,6 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
         const listProjectSorted =
             listProjects
-                // .filter(c => c.state === 'ACTIVE')
-                .map(c => c.id || 'xxx')
                 .sort((a, b) =>
                     (
                         pinnedProjects.indexOf(a) >= 0
@@ -178,37 +178,88 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
         const datasets = await bigqueryClient.getDatasets({ all: true, filter: '' });
 
-        const datasetPromises = datasets[0]
-            .filter(c => c.id !== null && (!c.id?.startsWith('_')))
-            .map(c => {
+        const datasetList = datasets[0].filter(c => c.id !== null && (!c.id?.startsWith('_')));
 
-                return c.getMetadata()
-                    .then(metadata => {
+        const tablesFromSettings = this.getTablesFromSettings();
+        const qDatasetsFromTablesInSettings = tablesFromSettings.filter(c => c.projectId === projectId);
 
-                        let treeItemType = TreeItemType.dataset;
-                        if (metadata[0].type === 'LINKED') {
-                            treeItemType = TreeItemType.datasetLink;
-                        }
+        if (qDatasetsFromTablesInSettings.length > 0) {
 
-                        const datasetId = c.id ?? 'xxx';
-                        return new BigqueryTreeItem(treeItemType, projectId, datasetId, null, datasetId, '', false, vscode.TreeItemCollapsibleState.Collapsed);
+            for (let index = 0; index < qDatasetsFromTablesInSettings.length; index++) {
+                const element = qDatasetsFromTablesInSettings[index];
 
-                    });
-            });
+                if (!datasetList.find(c => c.id === element.datasetId)) {
+
+                    const getMetadata = function (options?: GetMetadataOptions): Promise<MetadataResponse> {
+                        return new Promise((resolve, reject) => {
+                            resolve({
+                                // eslint-disable-next-line @typescript-eslint/naming-convention
+                                "0": {
+                                    type: ''
+                                }
+                            } as MetadataResponse);
+                        });
+                    };
+
+                    datasetList.push({
+                        id: element.datasetId,
+                        getMetadata: getMetadata
+                    } as Dataset);
+                }
+            }
+
+        }
+
+        const datasetPromises = datasetList.map(c => {
+            return c.getMetadata()
+                .then(metadata => {
+
+                    let treeItemType = TreeItemType.dataset;
+                    if (metadata[0].type === 'LINKED') {
+                        treeItemType = TreeItemType.datasetLink;
+                    }
+
+                    const datasetId = c.id ?? 'xxx';
+                    return new BigqueryTreeItem(treeItemType, projectId, datasetId, null, datasetId, '', false, vscode.TreeItemCollapsibleState.Collapsed);
+
+                });
+        });
 
         return (await Promise.all(datasetPromises));
 
     }
 
-    private async getTables(projectId: string, datasetId: string) {
+    private async getTables(projectId: string, datasetId: string): Promise<BigqueryTreeItem[]> {
 
-        const bigqueryClient = new BigQuery({ projectId: projectId });
+        let tables: Table[] = [];
+        try {
+            const bigqueryClient = new BigQuery({ projectId: projectId });
+            const dataset = bigqueryClient.dataset(datasetId);
+            const getTablesResponse = await dataset.getTables();
+            tables = getTablesResponse[0]
+                .filter(c => c.id !== null && (!c.id?.startsWith('_')));
+        } catch (error) { }
 
-        const dataset = bigqueryClient.dataset(datasetId);
-        const tables = await dataset.getTables();
+        const tablesFromSettings = this.getTablesFromSettings();
+        const qTablesInSettings = tablesFromSettings.filter(c => c.projectId === projectId && c.datasetId === datasetId);
 
-        return tables[0]
-            .filter(c => c.id !== null && (!c.id?.startsWith('_')))
+        if (qTablesInSettings.length > 0) {
+
+            for (let index = 0; index < qTablesInSettings.length; index++) {
+                const element = qTablesInSettings[index];
+
+                if (!tables.find(c => c.id === element.tableId)) {
+                    tables.push({
+                        id: element.tableId,
+                        metadata: {
+                            type: 'TABLE'
+                        }
+                    } as Table);
+                }
+            }
+        }
+
+        return tables
             .map(c => {
                 const tableId = c.id ?? 'xxx';
 
@@ -225,18 +276,51 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
     }
 
+    private getProjectsFromSettings(): string[] {
+
+        let projects = (vscode.workspace
+            .getConfiguration()
+            .get(SETTING_PROJECTS) as string[] || [])
+            .map(c => (c as string).toLowerCase())
+            ;
+
+        const tables = this.getTablesFromSettings();
+        for (let index = 0; index < tables.length; index++) {
+            const element = tables[index];
+            if (projects.indexOf(element.projectId) < 0) {
+                projects.push(element.projectId);
+            }
+        }
+
+        return projects;
+    }
+
+    private getTablesFromSettings(): TableReference[] {
+
+        return (vscode.workspace
+            .getConfiguration()
+            .get(SETTING_TABLES) as string[] || [])
+            .map(c => (c as string).toLowerCase())
+            .map(c => c.split('.'))
+            .filter(c => c.length === 3)
+            .map(
+                c => { return { projectId: c[0], datasetId: c[1], tableId: c[2] } as TableReference; }
+            );
+
+    }
+
     private async getRoutines(projectId: string, datasetId: string) {
 
-        const bigqueryClient = new BigQuery({ projectId: projectId });
+        let routines: Routine[] = [];
+        try {
+            const bigqueryClient = new BigQuery({ projectId: projectId });
+            const dataset = bigqueryClient.dataset(datasetId);
+            routines = (await dataset.getRoutines())[0];
+        } catch (error) { }
 
-        const dataset = bigqueryClient.dataset(datasetId);
-        const routines = await dataset.getRoutines();
-
-        return routines[0]
+        return routines
             .map(c => {
-
                 const routineId = c.id ?? 'xxx';
-
                 return new BigqueryTreeItem(TreeItemType.routine, projectId, datasetId, routineId, routineId, '', false, vscode.TreeItemCollapsibleState.None);
             });
 
@@ -244,19 +328,18 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
     private async getModels(projectId: string, datasetId: string) {
 
-        const bigqueryClient = new BigQuery({ projectId: projectId });
+        let models: Model[] = [];
+        try {
+            const bigqueryClient = new BigQuery({ projectId: projectId });
+            const dataset = bigqueryClient.dataset(datasetId);
+            models = (await dataset.getModels())[0];
+        } catch (error) { }
 
-        const dataset = bigqueryClient.dataset(datasetId);
-        const models = await dataset.getModels();
-
-        return models[0]
+        return models
             .map(c => {
-
                 const modelId = c.id ?? 'xxx';
-
                 return new BigqueryTreeItem(TreeItemType.model, projectId, datasetId, modelId, modelId, '', false, vscode.TreeItemCollapsibleState.None);
             });
-
     }
 
     private deduplicate(projectId: string, datasetId: string, treeItems: BigqueryTreeItem[], newItems: BigqueryTreeItem[]): BigqueryTreeItem[] {

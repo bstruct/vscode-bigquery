@@ -3,6 +3,13 @@ import { TableMetadata } from "@google-cloud/bigquery";
 
 export class QueryGeneratorService {
 
+    static generateSelectQuerySimple(projectId: string, datasetId: string, tableId: string): string {
+        return `SELECT
+\t
+FROM \`${projectId}.${datasetId}.${tableId}\`
+LIMIT 10;`;
+    }
+
 
     public static generateSelectQuery(metadata: TableMetadata): string {
 
@@ -15,8 +22,8 @@ LIMIT 10;`;
 
     private static generateTimepartitionClause(metadata: TableMetadata): string {
 
-        if(metadata.timePartitioning){
-            if(metadata.timePartitioning.type === 'DAY'){
+        if (metadata.timePartitioning) {
+            if (metadata.timePartitioning.type === 'DAY') {
                 return `\nWHERE DATE(${metadata.timePartitioning.field}) = CURRENT_DATE()`;
             }
         }

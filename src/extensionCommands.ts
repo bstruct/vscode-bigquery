@@ -34,6 +34,8 @@ export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
 export const COMMAND_PLOT_CHART = "vscode-bigquery.plot-chart";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
+export const SETTING_PROJECTS = "vscode-bigquery.projects";
+export const SETTING_TABLES = "vscode-bigquery.tables";
 
 export const commandRunQuery = async function (this: any, ...args: any[]) {
 
@@ -348,8 +350,12 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 		return;
 	}
 
-	const metadata = await getBigQueryClient().getMetadata(item.projectId, item.datasetId, item.tableId);
-	const query = QueryGeneratorService.generateSelectQuery(metadata);
+	let query = QueryGeneratorService.generateSelectQuerySimple(item.projectId, item.datasetId, item.tableId);
+	try {
+
+		const metadata = await getBigQueryClient().getMetadata(item.projectId, item.datasetId, item.tableId);
+		query = QueryGeneratorService.generateSelectQuery(metadata);
+	} catch (error) { }
 
 	const doc = await vscode.workspace.openTextDocument({
 		language: 'bqsql',
@@ -491,7 +497,7 @@ const runQueryToChart = async function (globalState: vscode.Memento, queryResult
 	try {
 
 		resultsChartRender.renderLoadingIcon();
-		
+
 		const queryResponse = getBigQueryClient().runQuery(queryText);
 		const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
 
