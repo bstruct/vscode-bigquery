@@ -15,7 +15,7 @@ import { QueryResultsMappingService } from './services/queryResultsMappingServic
 import { TableResultsSerializer } from './tableResultsPanel/tableResultsSerializer';
 import { ResultsRender } from './services/resultsRender';
 import { ChartResultsSerializer } from './charts/chartResultsSerializer';
-import { QueryResultsVisualizationType } from './services/QueryResultsVisualizationType';
+import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	try {
 
-		reporter = new TelemetryReporter(context.extension.id, context.extension.packageJSON.version, '10f4da7d-e729-4526-8d9b-92529b10cb32');
+		reporter = new TelemetryReporter('10f4da7d-e729-4526-8d9b-92529b10cb32');
 		context.subscriptions.push(reporter);
 
 	} catch (e) { console.error(e); }

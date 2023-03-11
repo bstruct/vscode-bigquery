@@ -16,7 +16,8 @@ import { TableReference } from './services/tableMetadata';
 import { ResultsChartRender } from './charts/resultsChartRender';
 import { ResultsRender } from './services/resultsRender';
 import { ResultsChartRenderRequest } from './charts/ResultsChartRenderRequest';
-import { QueryResultsVisualizationType } from './services/QueryResultsVisualizationType';
+import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
+import { TelemetryEventProperties } from '@vscode/extension-telemetry';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -34,6 +35,8 @@ export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
 export const COMMAND_PLOT_CHART = "vscode-bigquery.plot-chart";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
+export const SETTING_PROJECTS = "vscode-bigquery.projects";
+export const SETTING_TABLES = "vscode-bigquery.tables";
 
 export const commandRunQuery = async function (this: any, ...args: any[]) {
 
@@ -72,12 +75,12 @@ const commandQuery = async function (local: any, queryType: RunQueryType) {
 	const globalState: vscode.Memento = local.globalState;
 	const queryResultsWebviewMapping: Map<string, ResultsRender> = local.queryResultsWebviewMapping;
 
-	let uuid = QueryResultsMappingService.getQueryResultsMappingUuid(globalState, textEditor, QueryResultsVisualizationType.chart);
+	let uuid = QueryResultsMappingService.getQueryResultsMappingUuid(globalState, textEditor, QueryResultsVisualizationType.table);
 	if (!uuid) {
 		uuid = uuidv4().substring(0, 8);
 	}
 
-	QueryResultsMappingService.upsertQueryResultsMapping(globalState, uuid, textEditor);
+	QueryResultsMappingService.upsertQueryResultsMapping(globalState, uuid, textEditor, QueryResultsVisualizationType.table);
 
 	const numberOfJobs = await runQuery(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
 
@@ -348,8 +351,12 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 		return;
 	}
 
-	const metadata = await getBigQueryClient().getMetadata(item.projectId, item.datasetId, item.tableId);
-	const query = QueryGeneratorService.generateSelectQuery(metadata);
+	let query = QueryGeneratorService.generateSelectQuerySimple(item.projectId, item.datasetId, item.tableId);
+	try {
+
+		const metadata = await getBigQueryClient().getMetadata(item.projectId, item.datasetId, item.tableId);
+		query = QueryGeneratorService.generateSelectQuery(metadata);
+	} catch (error) { }
 
 	const doc = await vscode.workspace.openTextDocument({
 		language: 'bqsql',
@@ -403,7 +410,11 @@ export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 
 	}
 
-	reporter?.sendTelemetryEvent('downloadCsv', {});
+	const telemetryProperties: TelemetryEventProperties = {
+		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
+	};
+
+	reporter?.sendTelemetryEvent('downloadCsv', telemetryProperties);
 };
 
 export const commandPinOrUnpinProject = function (...args: any[]) {
@@ -433,35 +444,6 @@ export const commandPinOrUnpinProject = function (...args: any[]) {
 
 export const commandPlotChart = async function (this: any, ...args: any[]) {
 
-	// const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
-
-	// if (activeTab === undefined || activeTab.input === undefined) {
-	// 	return;
-	// }
-
-	// if (!((activeTab.input as any).viewType as string).endsWith('-bigquery-query-results')) {
-	// 	return;
-	// }
-
-	// const uuid = activeTab.label.substring(activeTab.label.length - 8);
-
-	// const globalState: vscode.Memento = this.globalState;
-	// let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
-	// if (queryResultsMapping) {
-
-	// 	const item = queryResultsMapping.find(c => c.uuid === uuid);
-	// 	if (item && item.jobReferences && item.jobIndex !== undefined) {
-
-	// 		const panel = vscode.window.createWebviewPanel(CHART_VIEW_TYPE, "label", { viewColumn: vscode.ViewColumn.One, preserveFocus: false }, { enableFindWidget: true, enableScripts: true });
-	// 		const chartRender = new ChartRender(panel);
-	// 		chartRender.render(getBigQueryClient(), item.jobReferences[item.jobIndex]);
-
-	// 	}
-
-	// }
-
-	// reporter?.sendTelemetryEvent('downloadCsv', {});
-
 	const t1 = Date.now();
 
 	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
@@ -485,7 +467,7 @@ export const commandPlotChart = async function (this: any, ...args: any[]) {
 		uuid = uuidv4().substring(0, 8);
 	}
 
-	QueryResultsMappingService.upsertQueryResultsMapping(globalState, uuid, textEditor);
+	QueryResultsMappingService.upsertQueryResultsMapping(globalState, uuid, textEditor, QueryResultsVisualizationType.chart);
 
 	const numberOfJobs = await runQueryToChart(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
 
@@ -520,7 +502,7 @@ const runQueryToChart = async function (globalState: vscode.Memento, queryResult
 	try {
 
 		resultsChartRender.renderLoadingIcon();
-		
+
 		const queryResponse = getBigQueryClient().runQuery(queryText);
 		const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
 

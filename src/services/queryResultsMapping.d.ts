@@ -1,5 +1,5 @@
 import { WebviewPanel } from "vscode";
-import { QueryResultsVisualizationType } from "./QueryResultsVisualizationType";
+import { QueryResultsVisualizationType } from "./queryResultsVisualizationType";
 
 interface JobReference {
     projectId: string,

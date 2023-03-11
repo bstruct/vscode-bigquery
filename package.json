@@ -21,11 +21,8 @@
 	],
 	"activationEvents": [
 		"onView:bigquery-main-activity-bar",
-		"onView:bigquery-authentication",
-		"onView:bigquery-tree-data-provider",
 		"onWebviewPanel:bigquery-query-results",
-		"onWebviewPanel:bigquery-table-results",
-		"onLanguage:bqsql"
+		"onWebviewPanel:bigquery-table-results"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -38,6 +35,20 @@
 					"scope": "machine-overridable",
 					"title": "Pinned projects",
 					"description": "Pinned GCP projects id's in the explorer tree in the Bigquery extension"
+				},
+				"vscode-bigquery.projects": {
+					"type": "array",
+					"default": [],
+					"scope": "machine-overridable",
+					"title": "Projects",
+					"description": "GCP projects id's that need to be listed, but there's no explicit permission to the project, only datasets"
+				},
+				"vscode-bigquery.tables": {
+					"type": "array",
+					"default": [],
+					"scope": "machine-overridable",
+					"title": "Table full name",
+					"description": "Tables that need to be listed, but there's no explicit permission to the project nor dataset, only the table"
 				}
 			}
 		},
@@ -133,7 +144,7 @@
 				"command": "vscode-bigquery.download-csv",
 				"title": "Download CSV",
 				"icon": "$(cloud-download)"
-      },
+			},
 			{
 				"command": "vscode-bigquery.plot-chart",
 				"title": "Plot chart -- PREVIEW --",
@@ -274,7 +285,7 @@
 	"dependencies": {
 		"@bstruct/bqsql-parser": "0.1.5",
 		"@google-cloud/bigquery": "^6.1.0",
-		"@google-cloud/resource-manager": "^4.2.1",
+		"@types/gapi.client.bigquery-v2": "^0.0.1",
 		"@vscode/codicons": "^0.0.32",
 		"@vscode/extension-telemetry": "^0.7.5",
 		"@vscode/webview-ui-toolkit": "^1.2.2",
