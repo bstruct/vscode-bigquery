@@ -193,4 +193,25 @@ WHERE table_name = '${tableName}' AND is_hidden = 'NO';
 		return newSchemaItems;
 	}
 
+	//GET https://bigquery.googleapis.com/bigquery/v2/projects
+	public async getProjects(): Promise<gapi.client.bigquery.ProjectList> {
+
+		const request = this.bqclient.makeAuthenticatedRequest({ uri: 'https://bigquery.googleapis.com/bigquery/v2/projects', method: 'GET' });
+
+		return new Promise((resolve, reject) => {
+
+			request.on('data', (stream) => {
+				const response = stream.toString('utf-8');
+				resolve(JSON.parse(response) as gapi.client.bigquery.ProjectList);
+			});
+
+			request.on('error', (error) => {
+				console.log(error);
+				reject(error);
+			});
+
+		});
+
+	}
+
 }

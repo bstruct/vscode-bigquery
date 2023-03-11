@@ -15,7 +15,7 @@ import { QueryResultsMappingService } from './services/queryResultsMappingServic
 import { TableResultsSerializer } from './tableResultsPanel/tableResultsSerializer';
 import { ResultsRender } from './services/resultsRender';
 import { ChartResultsSerializer } from './charts/chartResultsSerializer';
-import { QueryResultsVisualizationType } from './services/QueryResultsVisualizationType';
+import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();

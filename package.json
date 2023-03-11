@@ -133,7 +133,7 @@
 				"command": "vscode-bigquery.download-csv",
 				"title": "Download CSV",
 				"icon": "$(cloud-download)"
-      },
+			},
 			{
 				"command": "vscode-bigquery.plot-chart",
 				"title": "Plot chart -- PREVIEW --",
@@ -274,7 +274,7 @@
 	"dependencies": {
 		"@bstruct/bqsql-parser": "0.1.5",
 		"@google-cloud/bigquery": "^6.1.0",
-		"@google-cloud/resource-manager": "^4.2.1",
+		"@types/gapi.client.bigquery-v2": "^0.0.1",
 		"@vscode/codicons": "^0.0.32",
 		"@vscode/extension-telemetry": "^0.7.5",
 		"@vscode/webview-ui-toolkit": "^1.2.2",

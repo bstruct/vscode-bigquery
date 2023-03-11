@@ -4,7 +4,7 @@ import { ResultsChartRenderRequest } from '../charts/ResultsChartRenderRequest';
 import { ResultsGridRender } from '../tableResultsPanel/resultsGridRender';
 import { ResultsGridRenderRequest } from '../tableResultsPanel/resultsGridRenderRequest';
 import { QueryResultsMapping } from './queryResultsMapping';
-import { QueryResultsVisualizationType } from './QueryResultsVisualizationType';
+import { QueryResultsVisualizationType } from './queryResultsVisualizationType';
 import { ResultsRender } from './resultsRender';
 
 export class QueryResultsMappingService {
@@ -60,7 +60,7 @@ export class QueryResultsMappingService {
         return undefined;
     };
 
-    public static async upsertQueryResultsMapping(globalState: vscode.Memento, uuid: string, textEditor: vscode.TextEditor) {
+    public static async upsertQueryResultsMapping(globalState: vscode.Memento, uuid: string, textEditor: vscode.TextEditor, visualizationType: QueryResultsVisualizationType) {
 
         let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
 
@@ -71,10 +71,10 @@ export class QueryResultsMappingService {
             if (item) {
                 item.textEditorUriString = textEditorUriString;
             } else {
-                queryResultsMapping.push({ uuid: uuid, textEditorUriString: textEditorUriString } as QueryResultsMapping);
+                queryResultsMapping.push({ uuid: uuid, textEditorUriString: textEditorUriString, visualizationType: visualizationType } as QueryResultsMapping);
             }
         } else {
-            queryResultsMapping = [{ uuid: uuid, textEditorUriString: textEditorUriString } as QueryResultsMapping];
+            queryResultsMapping = [{ uuid: uuid, textEditorUriString: textEditorUriString, visualizationType: visualizationType } as QueryResultsMapping];
         }
 
         globalState.update('queryResultsMapping', queryResultsMapping);

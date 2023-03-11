@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
 import { BigqueryTreeItem, TreeItemType } from './treeItem';
 import { BigQuery } from '@google-cloud/bigquery';
-import { ProjectsClient } from '@google-cloud/resource-manager';
 import { Authentication } from '../services/authentication';
-import { SETTING_PINNED_PROJECTS } from '../extensionCommands';
+import { getBigQueryClient, SETTING_PINNED_PROJECTS } from '../extensionCommands';
 
 // const { google } = require('googleapis');
 // const vault = google.vault('v1');
@@ -118,13 +117,14 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
     private async getProjects() {
 
-        const projectsClient = new ProjectsClient();
+        const bigqueryClient = getBigQueryClient();
+        const bqProjectsPromise = bigqueryClient.getProjects();
 
         const defaultProjectIdPromise = Authentication.getDefaultProjectId();
-        const projects = await projectsClient.searchProjectsAsync();
+        const bqProjects = await bqProjectsPromise;
 
         let listProjects = [];
-        for await (const project of projects) {
+        for await (const project of bqProjects.projects || []) {
             listProjects.push(project);
         }
 
@@ -137,8 +137,8 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
         const listProjectSorted =
             listProjects
-                .filter(c => c.state === 'ACTIVE')
-                .map(c => c.projectId || 'xxx')
+                // .filter(c => c.state === 'ACTIVE')
+                .map(c => c.id || 'xxx')
                 .sort((a, b) =>
                     (
                         pinnedProjects.indexOf(a) >= 0
