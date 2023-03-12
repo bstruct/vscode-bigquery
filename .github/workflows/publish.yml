@@ -2,7 +2,10 @@ on:
   release:
     types:
     - created
-
+    
+env:
+  GITHUB_NPM_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  
 jobs:
   build:
     runs-on: ubuntu-latest
