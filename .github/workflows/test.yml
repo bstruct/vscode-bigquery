@@ -3,7 +3,7 @@ on:
   #   branches:
   #     - 'main'
   pull_request:
-    types: [opened,opened]
+    types: [opened,edited]
     
 env:
   GITHUB_NPM_TOKEN: ${{secrets.GITHUB_TOKEN}}
