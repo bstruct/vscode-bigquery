@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	try {
 
-		reporter = new TelemetryReporter('10f4da7d-e729-4526-8d9b-92529b10cb32');
+		reporter = new TelemetryReporter(context.extension.id, context.extension.packageJSON.version, '10f4da7d-e729-4526-8d9b-92529b10cb32');
 		context.subscriptions.push(reporter);
 
 	} catch (e) { console.error(e); }

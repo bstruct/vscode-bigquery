@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -292,7 +292,7 @@
 		"@google-cloud/bigquery": "^6.1.0",
 		"@types/gapi.client.bigquery-v2": "^0.0.1",
 		"@vscode/codicons": "^0.0.32",
-		"@vscode/extension-telemetry": "^0.7.5",
+		"@vscode/extension-telemetry": "^0.6.2",
 		"@vscode/webview-ui-toolkit": "^1.2.2",
 		"csv-writer": "^1.6.0",
 		"preact": "^10.10.6",
