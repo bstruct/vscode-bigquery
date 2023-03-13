@@ -200,9 +200,15 @@ WHERE table_name = '${tableName}' AND is_hidden = 'NO';
 
 		return new Promise((resolve, reject) => {
 
-			request.on('data', (stream) => {
-				const response = stream.toString('utf-8');
-				resolve(JSON.parse(response) as gapi.client.bigquery.ProjectList);
+			let responseBody: Uint8Array[] = [];
+
+			request.on('data', (chunk) => {
+				responseBody.push(chunk);
+			});
+
+			request.on('end', () => {
+				const responseBodyString = Buffer.concat(responseBody).toString('utf-8');
+				resolve(JSON.parse(responseBodyString) as gapi.client.bigquery.ProjectList);
 			});
 
 			request.on('error', (error) => {
