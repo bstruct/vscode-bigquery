@@ -134,6 +134,11 @@
 				"icon": "$(file-text)"
 			},
 			{
+				"command": "vscode-bigquery.open-ddl",
+				"title": "Bigquery: Open DDL",
+				"icon": "$(link-external)"
+			},
+			{
 				"command": "vscode-bigquery.set-default-project",
 				"title": "Set as default project",
 				"icon": "$(issue-closed)"
@@ -201,6 +206,10 @@
 				{
 					"command": "vscode-bigquery.create-table-default-query",
 					"when": "viewItem == 'bq-table'"
+				},
+				{
+					"command": "vscode-bigquery.open-ddl",
+					"when": "viewItem == 'bq-table' || viewItem == 'bq-routine'"
 				},
 				{
 					"command": "vscode-bigquery.set-default-project",
