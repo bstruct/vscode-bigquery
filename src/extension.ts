@@ -121,6 +121,13 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_OPEN_DDL,
+			commands.commandOpenDdl
+		)
+	);
+
 	//https://code.visualstudio.com/api/references/when-clause-contexts
 	context.subscriptions.push(
 		vscode.commands.registerCommand(

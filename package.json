@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.1.21",
+	"version": "0.1.22",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -134,6 +134,11 @@
 				"icon": "$(file-text)"
 			},
 			{
+				"command": "vscode-bigquery.open-ddl",
+				"title": "Bigquery: Open DDL",
+				"icon": "$(link-external)"
+			},
+			{
 				"command": "vscode-bigquery.set-default-project",
 				"title": "Set as default project",
 				"icon": "$(issue-closed)"
@@ -201,6 +206,10 @@
 				{
 					"command": "vscode-bigquery.create-table-default-query",
 					"when": "viewItem == 'bq-table'"
+				},
+				{
+					"command": "vscode-bigquery.open-ddl",
+					"when": "viewItem == 'bq-table' || viewItem == 'bq-routine'"
 				},
 				{
 					"command": "vscode-bigquery.set-default-project",

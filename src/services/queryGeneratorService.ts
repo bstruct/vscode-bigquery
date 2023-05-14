@@ -1,4 +1,5 @@
 import { TableMetadata } from "@google-cloud/bigquery";
+import { BigqueryTreeItem } from "../activitybar/treeItem";
 
 
 export class QueryGeneratorService {
@@ -17,6 +18,24 @@ LIMIT 10;`;
 \t
 FROM \`${metadata.tableReference?.projectId}.${metadata.tableReference?.datasetId}.${metadata.tableReference?.tableId}\` ${QueryGeneratorService.generateTimepartitionClause(metadata)}
 LIMIT 10;`;
+
+    }
+
+    public static generateDdlQuery(item: BigqueryTreeItem): string {
+
+        if (item.contextValue === 'bq-routine') {
+
+            return `SELECT ddl
+            FROM \`${item.projectId}\`.${item.datasetId}.INFORMATION_SCHEMA.ROUTINES
+            WHERE routine_name = '${item.tableId}';`;
+
+        } else {
+
+            return `SELECT ddl
+            FROM \`${item.projectId}\`.${item.datasetId}.INFORMATION_SCHEMA.TABLES
+            WHERE table_name = '${item.tableId}';`;
+
+        }
 
     }
 

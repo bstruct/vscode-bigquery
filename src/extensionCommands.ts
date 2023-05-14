@@ -30,6 +30,7 @@ export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
 export const COMMAND_VIEW_TABLE = "vscode-bigquery.view-table";
 export const COMMAND_VIEW_TABLE_SCHEMA = "vscode-bigquery.view-table-schema";
 export const COMMAND_CREATE_TABLE_DEFAULT_QUERY = "vscode-bigquery.create-table-default-query";
+export const COMMAND_OPEN_DDL = "vscode-bigquery.open-ddl";
 export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
 export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
@@ -366,6 +367,39 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 	await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
 
 	reporter?.sendTelemetryEvent('commandCreateTableDefaultQuery', {}, { elapsedMs: Date.now() - t1 });
+
+};
+
+
+export const commandOpenDdl = async function (...args: any[]) {
+
+	const t1 = Date.now();
+
+	const item = args[0] as BigqueryTreeItem;
+
+	if (item.projectId === null || item.datasetId === null || item.tableId === null) {
+		return;
+	}
+
+	try {
+		let query = QueryGeneratorService.generateDdlQuery(item);
+
+		const queryRun = await getBigQueryClient().runQuery(query);
+		const queryResult = await queryRun[0].getQueryResults();
+		const ddl = queryResult[0][0].ddl;
+
+		const doc = await vscode.workspace.openTextDocument({
+			language: 'bqsql',
+			content: ddl
+		});
+
+		await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
+
+	} catch (error) {
+		vscode.window.showErrorMessage(JSON.stringify(error));
+	}
+
+	reporter?.sendTelemetryEvent('commandOpenDdl', {}, { elapsedMs: Date.now() - t1 });
 
 };
 

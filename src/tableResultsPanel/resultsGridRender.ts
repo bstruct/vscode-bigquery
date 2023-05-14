@@ -277,7 +277,7 @@ export class ResultsGridRender {
                     break;
                 case 'open_in_tab':
 
-                    if (request.jobReferences && request.jobReferences.length > 1) {
+                    if (request.jobReferences && request.jobReferences.length > 0) {
 
                         let jobName = 'Query_1';
                         if (request.jobReferences.length === 1) {
