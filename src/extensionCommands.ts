@@ -392,10 +392,12 @@ export const commandOpenDdl = async function (...args: any[]) {
 			language: 'bqsql',
 			content: ddl
 		});
-	
+
 		await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
-	
-	} catch (error) { }
+
+	} catch (error) {
+		vscode.window.showErrorMessage(JSON.stringify(error));
+	}
 
 	reporter?.sendTelemetryEvent('commandOpenDdl', {}, { elapsedMs: Date.now() - t1 });
 

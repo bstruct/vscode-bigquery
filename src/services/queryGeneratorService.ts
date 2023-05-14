@@ -22,10 +22,20 @@ LIMIT 10;`;
     }
 
     public static generateDdlQuery(item: BigqueryTreeItem): string {
-        
-        return `SELECT ddl
-FROM \`${item.projectId}\`.${item.datasetId}.INFORMATION_SCHEMA.ROUTINES
-WHERE routine_name = '${item.tableId}';`;
+
+        if (item.contextValue === 'bq-routine') {
+
+            return `SELECT ddl
+            FROM \`${item.projectId}\`.${item.datasetId}.INFORMATION_SCHEMA.ROUTINES
+            WHERE routine_name = '${item.tableId}';`;
+
+        } else {
+
+            return `SELECT ddl
+            FROM \`${item.projectId}\`.${item.datasetId}.INFORMATION_SCHEMA.TABLES
+            WHERE table_name = '${item.tableId}';`;
+
+        }
 
     }
 
