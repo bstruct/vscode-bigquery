@@ -25,6 +25,7 @@
 		"onView:bigquery-tree-data-provider",
 		"onWebviewPanel:bigquery-query-results",
 		"onWebviewPanel:bigquery-table-results",
+		"onWebviewPanel:authentication-troubleshoot",
 		"onLanguage:bqsql"
 	],
 	"main": "./dist/extension.js",
@@ -157,6 +158,10 @@
 				"command": "vscode-bigquery.plot-chart",
 				"title": "Plot chart -- PREVIEW --",
 				"icon": "$(pie-chart)"
+			},
+			{
+				"command": "vscode-bigquery.troubleshoot",
+				"title": "troubleshoot"
 			}
 		],
 		"menus": {
@@ -263,6 +268,12 @@
 				"command": "vscode-bigquery.plot-chart",
 				"key": "Ctrl+M",
 				"when": "editorLangId == bqsql"
+			}
+		],
+		"viewsWelcome": [
+			{
+				"view": "bigquery-tree-data-provider",
+				"contents": "No Google Cloud projects found [troubleshoot](command:vscode-bigquery.troubleshoot).\n[Add Project directly in Settings](command:nodeDependencies.addEntry)"
 			}
 		]
 	},

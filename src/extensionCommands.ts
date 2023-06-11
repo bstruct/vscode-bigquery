@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigqueryClient';
-import { authenticationWebviewProvider, bigQueryTreeDataProvider, CHART_VIEW_TYPE, QUERY_RESULTS_VIEW_TYPE, reporter, TABLE_RESULTS_VIEW_TYPE } from './extension';
+import { authenticationWebviewProvider, bigQueryTreeDataProvider, CHART_VIEW_TYPE, QUERY_RESULTS_VIEW_TYPE, reporter, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE } from './extension';
 import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/treeItem';
@@ -18,6 +18,7 @@ import { ResultsRender } from './services/resultsRender';
 import { ResultsChartRenderRequest } from './charts/ResultsChartRenderRequest';
 import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
 import { TelemetryEventProperties } from '@vscode/extension-telemetry';
+import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -38,6 +39,7 @@ export const COMMAND_PLOT_CHART = "vscode-bigquery.plot-chart";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 export const SETTING_PROJECTS = "vscode-bigquery.projects";
 export const SETTING_TABLES = "vscode-bigquery.tables";
+export const AUTHENTICATION_TROUBLESHOOT = "vscode-bigquery.troubleshoot";
 
 export const commandRunQuery = async function (this: any, ...args: any[]) {
 
@@ -370,7 +372,6 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 
 };
 
-
 export const commandOpenDdl = async function (...args: any[]) {
 
 	const t1 = Date.now();
@@ -506,6 +507,23 @@ export const commandPlotChart = async function (this: any, ...args: any[]) {
 	const numberOfJobs = await runQueryToChart(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
 
 	reporter?.sendTelemetryEvent('commandPlotChart', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+
+};
+
+export const commandAuthenticationTroubleshoot = async function (this: any, ...args: any[]) {
+
+	const t1 = Date.now();
+
+	const panel = vscode.window.createWebviewPanel(
+		TROUBLESHOOT_VIEW_TYPE,
+		'Troubleshoot',
+		vscode.ViewColumn.One,
+		{ retainContextWhenHidden: true }
+	);
+
+	panel.webview.html = TroubleshootSerializer.getTroubleshootHtml();
+
+	reporter?.sendTelemetryEvent('commandAuthenticationTroubleshoot', {}, { elapsedMs: Date.now() - t1 });
 
 };
 
