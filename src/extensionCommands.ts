@@ -40,6 +40,8 @@ export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 export const SETTING_PROJECTS = "vscode-bigquery.projects";
 export const SETTING_TABLES = "vscode-bigquery.tables";
 export const AUTHENTICATION_TROUBLESHOOT = "vscode-bigquery.troubleshoot";
+export const OPEN_SETTING_PROJECTS = "vscode-bigquery.open-settings-projects";
+export const OPEN_SETTING_TABLES = "vscode-bigquery.open-settings-tables";
 
 export const commandRunQuery = async function (this: any, ...args: any[]) {
 
@@ -524,6 +526,26 @@ export const commandAuthenticationTroubleshoot = async function (this: any, ...a
 	panel.webview.html = TroubleshootSerializer.getTroubleshootHtml();
 
 	reporter?.sendTelemetryEvent('commandAuthenticationTroubleshoot', {}, { elapsedMs: Date.now() - t1 });
+
+};
+
+export const commandOpenSettingProjects = async function (this: any, ...args: any[]) {
+
+	const t1 = Date.now();
+
+	vscode.commands.executeCommand('workbench.action.openWorkspaceSettings', 'vscode-bigquery.projects');
+
+	reporter?.sendTelemetryEvent('commandOpenSettingProjects', {}, { elapsedMs: Date.now() - t1 });
+
+};
+
+export const commandOpenSettingTables = async function (this: any, ...args: any[]) {
+
+	const t1 = Date.now();
+
+	vscode.commands.executeCommand('workbench.action.openWorkspaceSettings', 'vscode-bigquery.tables');
+
+	reporter?.sendTelemetryEvent('commandOpenSettingTables', {}, { elapsedMs: Date.now() - t1 });
 
 };
 

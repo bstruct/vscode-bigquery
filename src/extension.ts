@@ -185,6 +185,20 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.OPEN_SETTING_PROJECTS,
+			commands.commandOpenSettingProjects
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.OPEN_SETTING_TABLES,
+			commands.commandOpenSettingTables
+		)
+	);
+
 	// bigquery-authentication
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(
