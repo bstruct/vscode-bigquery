@@ -4,21 +4,23 @@ export class TroubleshootSerializer implements vscode.WebviewPanelSerializer {
 
     deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any): Thenable<void> {
 
-        webviewPanel.webview.html = TroubleshootSerializer.getTroubleshootHtml();
+        let extensionUri = vscode.extensions.getExtension('bstruct.vscode-bigquery')?.extensionUri;
+
+        webviewPanel.webview.html = TroubleshootSerializer.getTroubleshootHtml(webviewPanel);
 
         return new Promise((resolve, reject) => { resolve(undefined); });
     }
 
-    static getTroubleshootHtml(): string {
+    static getTroubleshootHtml(webviewPanel: vscode.WebviewPanel): string {
 
-        let extensionUri = vscode.extensions.getExtension('vscode-bigquery')?.extensionUri;
+        let extensionUri = vscode.extensions.getExtension('bstruct.vscode-bigquery')?.extensionUri;
 
         if (!extensionUri) {
             extensionUri = vscode.Uri.parse('../');
         }
 
         // Get path to resource on disk
-        const onDiskPath = vscode.Uri.joinPath(extensionUri, 'troubleshoot', 'gcloud-authentication.png');
+        const onDiskPath = webviewPanel.webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'media', 'gcloud-authentication.png'));
 
 
         return `<!DOCTYPE html>

@@ -523,7 +523,7 @@ export const commandAuthenticationTroubleshoot = async function (this: any, ...a
 		{ retainContextWhenHidden: true }
 	);
 
-	panel.webview.html = TroubleshootSerializer.getTroubleshootHtml();
+	panel.webview.html = TroubleshootSerializer.getTroubleshootHtml(panel);
 
 	reporter?.sendTelemetryEvent('commandAuthenticationTroubleshoot', {}, { elapsedMs: Date.now() - t1 });
 
