@@ -278,7 +278,7 @@
 		"viewsWelcome": [
 			{
 				"view": "bigquery-tree-data-provider",
-				"contents": "Please make sure that there is at least one valid authentication specified in the `Authentication` tab above.\nNo Google Cloud projects found or still loading. If you are presented with an error, please try to find your problem in the [troubleshoot](command:vscode-bigquery.troubleshoot) guide.\nIf the permissions to GCP were given to dataset or table level (not project), it's possible to specify the project (of the target dataset) and/or table in the settings.\n[Add Project directly in Settings](command:vscode-bigquery.open-settings-projects)\n[Add Table directly in Settings](command:vscode-bigquery.open-settings-tables)"
+				"contents": "No Google Cloud projects found or still loading.\n\nIf you are presented with an error, please try to find your problem in the [troubleshoot](command:vscode-bigquery.troubleshoot) guide.\nIf the permissions to GCP were given to dataset or table level (not project), it's possible to specify the project (of the target dataset) and/or table in the settings.\n[Add Project directly in Settings](command:vscode-bigquery.open-settings-projects)\n[Add Table directly in Settings](command:vscode-bigquery.open-settings-tables)"
 			}
 		]
 	},

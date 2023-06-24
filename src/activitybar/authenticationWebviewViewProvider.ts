@@ -54,8 +54,7 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
                         <div>Authentication is based on the <a href="https://cloud.google.com/sdk/docs/install">gcloud CLI</a>.</div>
                         <div>&nbsp;</div>
                         <div>
-                            <div>Still running into authentication issues? Please run: </div>
-                            <vscode-button appearance="secondary" onclick="vscode.postMessage('gcloud_init')">gcloud init</vscode-button>
+                            <div>Still running into authentication issues? Please check the <a onclick="vscode.postMessage('troubleshoot')" style="cursor: pointer;">troubleshoot</a> guide.
                         </div>
                         <script>
                             const vscode = acquireVsCodeApi();
@@ -102,6 +101,9 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
                 break;
             case 'gcloud_init':
                 vscode.commands.executeCommand(commands.COMMAND_GCLOUD_INIT);
+                break;
+            case 'troubleshoot':
+                vscode.commands.executeCommand(commands.AUTHENTICATION_TROUBLESHOOT);
                 break;
             case 'service_account_login':
                 vscode.commands.executeCommand(commands.COMMAND_SERVICE_ACCOUNT_LOGIN);
