@@ -16,6 +16,7 @@ import { TableResultsSerializer } from './tableResultsPanel/tableResultsSerializ
 import { ResultsRender } from './services/resultsRender';
 import { ChartResultsSerializer } from './charts/chartResultsSerializer';
 import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
+import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -29,6 +30,7 @@ export let statusBarInfo: vscode.StatusBarItem | null;
 export const CHART_VIEW_TYPE = "bigquery-query-chart";
 export const QUERY_RESULTS_VIEW_TYPE = "bigquery-query-results";
 export const TABLE_RESULTS_VIEW_TYPE = "bigquery-table-results";
+export const TROUBLESHOOT_VIEW_TYPE = "authentication-troubleshoot";
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -160,6 +162,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_DOWNLOAD_JSONL,
+			commands.commandDownloadJsonl,
+			{ "globalState": context.globalState }
+		),
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_PROJECT_PIN,
 			commands.commandPinOrUnpinProject
 		)
@@ -173,6 +183,27 @@ export function activate(context: vscode.ExtensionContext) {
 				"globalState": context.globalState,
 				queryResultsWebviewMapping: queryResultsWebviewMapping
 			}
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.AUTHENTICATION_TROUBLESHOOT,
+			commands.commandAuthenticationTroubleshoot
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.OPEN_SETTING_PROJECTS,
+			commands.commandOpenSettingProjects
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.OPEN_SETTING_TABLES,
+			commands.commandOpenSettingTables
 		)
 	);
 
@@ -214,6 +245,14 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.registerWebviewPanelSerializer(
 			TABLE_RESULTS_VIEW_TYPE,
 			new TableResultsSerializer()
+		)
+	);
+
+	//troubleshoot
+	context.subscriptions.push(
+		vscode.window.registerWebviewPanelSerializer(
+			TROUBLESHOOT_VIEW_TYPE,
+			new TroubleshootSerializer()
 		)
 	);
 

@@ -145,11 +145,43 @@ export class ResultsGridRender {
         if (request.jobReferences && request.jobReferences.length > 0) {
             const jobsReference = request.jobReferences[request.jobIndex];
             const job = getBigQueryClient().getJob(jobsReference);
-            const queryResultOptions: QueryResultsOptions = { startIndex: request.startIndex.toString(), maxResults: request.maxResults };
-            const queryRowsResponse = (await job.getQueryResults(queryResultOptions));
-            rows = queryRowsResponse[0];
-            schema = queryRowsResponse[2]?.schema || {};
-            totalRows = Number(queryRowsResponse[2]?.totalRows || 0);
+
+            const metadata = await job.getMetadata();
+            const statementType = metadata[0].statistics.query.statementType;
+            if (statementType === 'INSERT' || statementType === 'UPDATE' || statementType === 'DELETE' || statementType === 'MERGE') {
+                const dmlStats = metadata[0].statistics.query.dmlStats;
+                rows = [
+                    {
+                        insertedRowCount: dmlStats.insertedRowCount ?? null,
+                        updatedRowCount: dmlStats.updatedRowCount ?? null,
+                        deletedRowCount: dmlStats.deletedRowCount ?? null,
+                    }
+                ];
+                schema = {
+                    fields: [
+                        {
+                            name: 'insertedRowCount',
+                            type: 'STRING'
+                        } as bigquery.ITableFieldSchema,
+                        {
+                            name: 'updatedRowCount',
+                            type: 'STRING'
+                        } as bigquery.ITableFieldSchema,
+                        {
+                            name: 'deletedRowCount',
+                            type: 'STRING'
+                        } as bigquery.ITableFieldSchema
+                    ]
+                } as bigquery.ITableSchema;
+                totalRows = 1;
+
+            } else {
+                const queryResultOptions: QueryResultsOptions = { startIndex: request.startIndex.toString(), maxResults: request.maxResults };
+                const queryRowsResponse = (await job.getQueryResults(queryResultOptions));
+                rows = queryRowsResponse[0];
+                schema = queryRowsResponse[2]?.schema || {};
+                totalRows = Number(queryRowsResponse[2]?.totalRows || 0);
+            }
 
         } else {
             if (request.tableReference) {

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigqueryClient';
-import { authenticationWebviewProvider, bigQueryTreeDataProvider, CHART_VIEW_TYPE, QUERY_RESULTS_VIEW_TYPE, reporter, TABLE_RESULTS_VIEW_TYPE } from './extension';
+import { authenticationWebviewProvider, bigQueryTreeDataProvider, CHART_VIEW_TYPE, QUERY_RESULTS_VIEW_TYPE, reporter, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE } from './extension';
 import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/treeItem';
@@ -18,6 +18,8 @@ import { ResultsRender } from './services/resultsRender';
 import { ResultsChartRenderRequest } from './charts/ResultsChartRenderRequest';
 import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
 import { TelemetryEventProperties } from '@vscode/extension-telemetry';
+import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
+import { DownloadJsonl } from './tableResultsPanel/downloadJsonl';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -34,10 +36,14 @@ export const COMMAND_OPEN_DDL = "vscode-bigquery.open-ddl";
 export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
 export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
+export const COMMAND_DOWNLOAD_JSONL = "vscode-bigquery.download-jsonl";
 export const COMMAND_PLOT_CHART = "vscode-bigquery.plot-chart";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 export const SETTING_PROJECTS = "vscode-bigquery.projects";
 export const SETTING_TABLES = "vscode-bigquery.tables";
+export const AUTHENTICATION_TROUBLESHOOT = "vscode-bigquery.troubleshoot";
+export const OPEN_SETTING_PROJECTS = "vscode-bigquery.open-settings-projects";
+export const OPEN_SETTING_TABLES = "vscode-bigquery.open-settings-tables";
 
 export const commandRunQuery = async function (this: any, ...args: any[]) {
 
@@ -370,7 +376,6 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 
 };
 
-
 export const commandOpenDdl = async function (...args: any[]) {
 
 	const t1 = Date.now();
@@ -448,7 +453,39 @@ export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
 	};
 
-	reporter?.sendTelemetryEvent('downloadCsv', telemetryProperties);
+	reporter?.sendTelemetryEvent('commandDownloadCsv', telemetryProperties);
+};
+
+export const commandDownloadJsonl = async function (this: any, ...args: any[]) {
+
+	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+
+	if (activeTab === undefined || activeTab.input === undefined) {
+		return;
+	}
+
+	if (!((activeTab.input as any).viewType as string).endsWith('-bigquery-query-results')) {
+		return;
+	}
+
+	const uuid = activeTab.label.substring(activeTab.label.length - 8);
+
+	const globalState: vscode.Memento = this.globalState;
+	let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+	if (queryResultsMapping) {
+
+		const item = queryResultsMapping.find(c => c.uuid === uuid);
+		if (item && item.jobReferences && item.jobIndex !== undefined) {
+			await DownloadJsonl.download(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+		}
+
+	}
+
+	const telemetryProperties: TelemetryEventProperties = {
+		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
+	};
+
+	reporter?.sendTelemetryEvent('commandDownloadJsonl', telemetryProperties);
 };
 
 export const commandPinOrUnpinProject = function (...args: any[]) {
@@ -506,6 +543,43 @@ export const commandPlotChart = async function (this: any, ...args: any[]) {
 	const numberOfJobs = await runQueryToChart(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
 
 	reporter?.sendTelemetryEvent('commandPlotChart', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+
+};
+
+export const commandAuthenticationTroubleshoot = async function (this: any, ...args: any[]) {
+
+	const t1 = Date.now();
+
+	const panel = vscode.window.createWebviewPanel(
+		TROUBLESHOOT_VIEW_TYPE,
+		'Troubleshoot',
+		vscode.ViewColumn.One,
+		{ retainContextWhenHidden: true }
+	);
+
+	panel.webview.html = TroubleshootSerializer.getTroubleshootHtml(panel);
+
+	reporter?.sendTelemetryEvent('commandAuthenticationTroubleshoot', {}, { elapsedMs: Date.now() - t1 });
+
+};
+
+export const commandOpenSettingProjects = async function (this: any, ...args: any[]) {
+
+	const t1 = Date.now();
+
+	vscode.commands.executeCommand('workbench.action.openWorkspaceSettings', 'vscode-bigquery.projects');
+
+	reporter?.sendTelemetryEvent('commandOpenSettingProjects', {}, { elapsedMs: Date.now() - t1 });
+
+};
+
+export const commandOpenSettingTables = async function (this: any, ...args: any[]) {
+
+	const t1 = Date.now();
+
+	vscode.commands.executeCommand('workbench.action.openWorkspaceSettings', 'vscode-bigquery.tables');
+
+	reporter?.sendTelemetryEvent('commandOpenSettingTables', {}, { elapsedMs: Date.now() - t1 });
 
 };
 

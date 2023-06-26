@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.1.22",
+	"version": "0.1.23",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -25,6 +25,7 @@
 		"onView:bigquery-tree-data-provider",
 		"onWebviewPanel:bigquery-query-results",
 		"onWebviewPanel:bigquery-table-results",
+		"onWebviewPanel:authentication-troubleshoot",
 		"onLanguage:bqsql"
 	],
 	"main": "./dist/extension.js",
@@ -154,9 +155,23 @@
 				"icon": "$(cloud-download)"
 			},
 			{
+				"command": "vscode-bigquery.download-jsonl",
+				"title": "Download JSONL",
+				"icon": "$(json)"
+			},
+			{
 				"command": "vscode-bigquery.plot-chart",
 				"title": "Plot chart -- PREVIEW --",
-				"icon": "$(pie-chart)"
+				"icon": "$(pie-chart)",
+				"enablement": "false"
+			},
+			{
+				"command": "vscode-bigquery.troubleshoot",
+				"title": "troubleshoot"
+			},
+			{
+				"command": "vscode-bigquery.open-settings-projects",
+				"title": "open settings - projects"
 			}
 		],
 		"menus": {
@@ -178,6 +193,11 @@
 				},
 				{
 					"command": "vscode-bigquery.download-csv",
+					"group": "navigation@-2",
+					"when": "activeWebviewPanelId == 'bigquery-query-results'"
+				},
+				{
+					"command": "vscode-bigquery.download-jsonl",
 					"group": "navigation@-1",
 					"when": "activeWebviewPanelId == 'bigquery-query-results'"
 				}
@@ -263,6 +283,12 @@
 				"command": "vscode-bigquery.plot-chart",
 				"key": "Ctrl+M",
 				"when": "editorLangId == bqsql"
+			}
+		],
+		"viewsWelcome": [
+			{
+				"view": "bigquery-tree-data-provider",
+				"contents": "No Google Cloud projects found or still loading.\n\nIf you are presented with an error, please try to find your problem in the [troubleshoot](command:vscode-bigquery.troubleshoot) guide.\nIf the permissions to GCP were given to dataset or table level (not project), it's possible to specify the project (of the target dataset) and/or table in the settings.\n[Add Project directly in Settings](command:vscode-bigquery.open-settings-projects)\n[Add Table directly in Settings](command:vscode-bigquery.open-settings-tables)"
 			}
 		]
 	},
