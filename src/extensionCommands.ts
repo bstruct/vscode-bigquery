@@ -19,6 +19,7 @@ import { ResultsChartRenderRequest } from './charts/ResultsChartRenderRequest';
 import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
 import { TelemetryEventProperties } from '@vscode/extension-telemetry';
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
+import { DownloadJsonl } from './tableResultsPanel/downloadJsonl';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -35,6 +36,7 @@ export const COMMAND_OPEN_DDL = "vscode-bigquery.open-ddl";
 export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
 export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
+export const COMMAND_DOWNLOAD_JSONL = "vscode-bigquery.download-jsonl";
 export const COMMAND_PLOT_CHART = "vscode-bigquery.plot-chart";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 export const SETTING_PROJECTS = "vscode-bigquery.projects";
@@ -451,7 +453,39 @@ export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
 	};
 
-	reporter?.sendTelemetryEvent('downloadCsv', telemetryProperties);
+	reporter?.sendTelemetryEvent('commandDownloadCsv', telemetryProperties);
+};
+
+export const commandDownloadJsonl = async function (this: any, ...args: any[]) {
+
+	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+
+	if (activeTab === undefined || activeTab.input === undefined) {
+		return;
+	}
+
+	if (!((activeTab.input as any).viewType as string).endsWith('-bigquery-query-results')) {
+		return;
+	}
+
+	const uuid = activeTab.label.substring(activeTab.label.length - 8);
+
+	const globalState: vscode.Memento = this.globalState;
+	let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+	if (queryResultsMapping) {
+
+		const item = queryResultsMapping.find(c => c.uuid === uuid);
+		if (item && item.jobReferences && item.jobIndex !== undefined) {
+			await DownloadJsonl.download(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+		}
+
+	}
+
+	const telemetryProperties: TelemetryEventProperties = {
+		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
+	};
+
+	reporter?.sendTelemetryEvent('commandDownloadJsonl', telemetryProperties);
 };
 
 export const commandPinOrUnpinProject = function (...args: any[]) {

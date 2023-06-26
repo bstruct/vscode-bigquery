@@ -162,6 +162,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_DOWNLOAD_JSONL,
+			commands.commandDownloadJsonl,
+			{ "globalState": context.globalState }
+		),
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_PROJECT_PIN,
 			commands.commandPinOrUnpinProject
 		)
