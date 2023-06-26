@@ -316,7 +316,7 @@ suite('Extension Test Suite', async () => {
 
 	});
 
-	test('COMMAND_RUN_QUERY: INSERT', async () => {
+	test('COMMAND_RUN_QUERY: DELETE', async () => {
 
 		const doc = await vscode.workspace.openTextDocument({
 			language: 'bqsql',
