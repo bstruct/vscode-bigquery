@@ -51,7 +51,6 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarInfo = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
 	context.subscriptions.push(statusBarInfo);
 
-
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			commands.COMMAND_RUN_QUERY,

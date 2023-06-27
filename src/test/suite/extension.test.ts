@@ -228,6 +228,8 @@ suite('Extension Test Suite', async () => {
 
 	test('COMMAND_RUN_QUERY: INSERT', async () => {
 
+		await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+
 		const doc = await vscode.workspace.openTextDocument({
 			language: 'bqsql',
 			content: 'INSERT INTO Business.dataflow_test SELECT CURRENT_TIMESTAMP(), "NAME" as NAME, "body"'
