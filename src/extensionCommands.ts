@@ -432,7 +432,7 @@ export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 		return;
 	}
 
-	if (!((activeTab.input as any).viewType as string).endsWith('-bigquery-query-results')) {
+	if (!((activeTab.input as any).viewType as string)?.endsWith('-bigquery-query-results')) {
 		return;
 	}
 
@@ -464,7 +464,7 @@ export const commandDownloadJsonl = async function (this: any, ...args: any[]) {
 		return;
 	}
 
-	if (!((activeTab.input as any).viewType as string).endsWith('-bigquery-query-results')) {
+	if (!((activeTab.input as any).viewType as string)?.endsWith('-bigquery-query-results')) {
 		return;
 	}
 

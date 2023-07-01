@@ -11,8 +11,6 @@ export class DownloadJsonl {
 
             const job = bigqueryClient.getJob(jobReference);
 
-            // const jobs = await downloadCsvRequest.jobsPromise;
-            // const job = jobs[downloadCsvRequest.jobIndex];
             const date = new Date();
             const filename = `${date.getFullYear()}${(date.getMonth() + 1).toString(2)}${date.getDay()}${date.toLocaleTimeString().replace(/:/g, '')}_${job.id}.jsonl`;
 
@@ -38,7 +36,7 @@ export class DownloadJsonl {
                 try {
                     const fsPath = uri.fsPath;
 
-                    vscode.window.withProgress({
+                    await vscode.window.withProgress({
                         location: vscode.ProgressLocation.Notification,
                         cancellable: true,
                         title: `Downloading results into:\n${filename}`
@@ -51,33 +49,50 @@ export class DownloadJsonl {
                             console.log("User canceled the long running operation");
                         });
 
-                        let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000 });
-                        const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
+                        //resolve if job is INSERT, UPDATE, DELETE or MERGE
+                        const metadata = await job.getMetadata();
+                        const statementType = metadata[0].statistics.query.statementType;
+                        if (statementType === 'INSERT' || statementType === 'UPDATE' || statementType === 'DELETE' || statementType === 'MERGE') {
+                            const dmlStats = metadata[0].statistics.query.dmlStats;
 
-                        let records = queryResults[0];
+                            const row = {
+                                insertedRowCount: dmlStats.insertedRowCount ?? null,
+                                updatedRowCount: dmlStats.updatedRowCount ?? null,
+                                deletedRowCount: dmlStats.deletedRowCount ?? null,
+                            };
 
-                        let increment = totalRows / 10000;
+                            fs.appendFileSync(fsPath, JSON.stringify(row));
 
-                        let totalDownloadedRows = 0;
+                        } else {
 
-                        while (true) {
+                            let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000 });
+                            const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
 
-                            //transform complex objects into string
-                            let adjustedRecords = DownloadJsonl.objectsToString(records);
-                            fs.appendFileSync(fsPath, adjustedRecords.join('\n'));
+                            let records = queryResults[0];
 
-                            // https://github.com/microsoft/vscode-extension-samples/blob/main/progress-sample/src/extension.ts
-                            progress.report({ increment: increment });
+                            let increment = totalRows / 10000;
 
-                            totalDownloadedRows += records.length;
-                            const pageToken = queryResults[1]?.pageToken;
+                            let totalDownloadedRows = 0;
 
-                            if (totalDownloadedRows >= totalRows || (!pageToken)) {
-                                break;
+                            while (!token.isCancellationRequested) {
+
+                                //transform complex objects into string
+                                let adjustedRecords = DownloadJsonl.objectsToString(records);
+                                fs.appendFileSync(fsPath, adjustedRecords.join('\n'));
+
+                                // https://github.com/microsoft/vscode-extension-samples/blob/main/progress-sample/src/extension.ts
+                                progress.report({ increment: increment });
+
+                                totalDownloadedRows += records.length;
+                                const pageToken = queryResults[1]?.pageToken;
+
+                                if (totalDownloadedRows >= totalRows || (!pageToken)) {
+                                    break;
+                                }
+
+                                queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000, pageToken: pageToken });
+                                records = queryResults[0];
                             }
-
-                            queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000, pageToken: pageToken });
-                            records = queryResults[0];
                         }
 
                         progress.report({ message: 'Done' });
