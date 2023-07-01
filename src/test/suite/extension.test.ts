@@ -228,8 +228,8 @@ suite('Extension Test Suite', async () => {
 
 	test('COMMAND_RUN_QUERY: INSERT', async () => {
 
-		// await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-		// await vscode.commands.executeCommand('workbench.action.closeAllGroups');
+		await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+		await vscode.commands.executeCommand('workbench.action.closeAllGroups');
 
 		const doc = await vscode.workspace.openTextDocument({
 			language: 'bqsql',
@@ -321,8 +321,8 @@ suite('Extension Test Suite', async () => {
 
 	test('COMMAND_RUN_QUERY: DELETE', async () => {
 
-		// await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-		// await vscode.commands.executeCommand('workbench.action.closeAllGroups');
+		await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+		await vscode.commands.executeCommand('workbench.action.closeAllGroups');
 
 		const doc = await vscode.workspace.openTextDocument({
 			language: 'bqsql',
