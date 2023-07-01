@@ -270,6 +270,12 @@ suite('Extension Test Suite', async () => {
 		if (secondGroupTab !== null && secondGroupTab !== undefined) {
 			assert.ok(secondGroupTab.tabs.length > 0);
 
+			assert.ok(
+				secondGroupTab.tabs
+					.find(t => t.label.startsWith('Visualization: INSERT'))
+					?.isActive
+			);
+
 			const path = process.env.GITHUB_WORKSPACE || __dirname;
 			const downloadFileUri = vscode.Uri.joinPath(vscode.Uri.file(path), 'download2.csv');
 
@@ -301,7 +307,7 @@ suite('Extension Test Suite', async () => {
 			await vscode.commands.executeCommand('workbench.action.focusNextGroup');
 			await vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV);
 
-			// assert.equal(1, showOpenDialogCount);
+			assert.equal(1, showOpenDialogCount);
 			if (downloadFileUri !== undefined) {
 				const fileContent = await vscode.workspace.fs.readFile(downloadFileUri);
 				const fileContentString = new TextDecoder().decode(fileContent);
@@ -362,6 +368,12 @@ suite('Extension Test Suite', async () => {
 		//
 		if (secondGroupTab !== null && secondGroupTab !== undefined) {
 			assert.ok(secondGroupTab.tabs.length > 0);
+
+			assert.ok(
+				secondGroupTab.tabs
+					.find(t => t.label.startsWith('Visualization: DELETE'))
+					?.isActive
+			);
 
 			const path = process.env.GITHUB_WORKSPACE || __dirname;
 			const downloadFileUri = vscode.Uri.joinPath(vscode.Uri.file(path), 'download1.jsonl');
