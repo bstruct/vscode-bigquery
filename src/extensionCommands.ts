@@ -20,6 +20,8 @@ import { QueryResultsVisualizationType } from './services/queryResultsVisualizat
 import { TelemetryEventProperties } from '@vscode/extension-telemetry';
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 import { DownloadJsonl } from './tableResultsPanel/downloadJsonl';
+import { BigQuery } from '@google-cloud/bigquery';
+import { SendToPubsub } from './tableResultsPanel/sendToPubsub';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -37,6 +39,7 @@ export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project"
 export const COMMAND_PROJECT_PIN = "vscode-bigquery.project-pin";
 export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
 export const COMMAND_DOWNLOAD_JSONL = "vscode-bigquery.download-jsonl";
+export const COMMAND_SEND_PUBSUB = "vscode-bigquery.send-pubsub";
 export const COMMAND_PLOT_CHART = "vscode-bigquery.plot-chart";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 export const SETTING_PROJECTS = "vscode-bigquery.projects";
@@ -324,7 +327,7 @@ export const commandViewTable = async function (...args: any[]) {
 	}
 
 	reporter?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
-};
+}; 0
 
 export const commandViewTableSchema = function (...args: any[]) {
 
@@ -432,21 +435,29 @@ export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 		return;
 	}
 
-	if (!((activeTab.input as any).viewType as string)?.endsWith('-bigquery-query-results')) {
-		return;
-	}
+	const viewType = ((activeTab.input as any).viewType as string);
+	if (viewType?.endsWith('-bigquery-query-results')) {
 
-	const uuid = activeTab.label.substring(activeTab.label.length - 8);
+		const uuid = activeTab.label.substring(activeTab.label.length - 8);
 
-	const globalState: vscode.Memento = this.globalState;
-	let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
-	if (queryResultsMapping) {
+		const globalState: vscode.Memento = this.globalState;
+		let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+		if (queryResultsMapping) {
 
-		const item = queryResultsMapping.find(c => c.uuid === uuid);
-		if (item && item.jobReferences && item.jobIndex !== undefined) {
-			await DownloadCsv.download(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+			const item = queryResultsMapping.find(c => c.uuid === uuid);
+			if (item && item.jobReferences && item.jobIndex !== undefined) {
+				await DownloadCsv.download(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+			}
 		}
+	} else {
+		if (viewType?.endsWith('-bigquery-table-results')) {
 
+			const tableId = activeTab.label.split('.');
+			const table = getBigQueryClient().getTable(tableId[0], tableId[1], tableId[2]);
+
+			await DownloadCsv.downloadTable(getBigQueryClient(), table);
+
+		}
 	}
 
 	const telemetryProperties: TelemetryEventProperties = {
@@ -464,22 +475,71 @@ export const commandDownloadJsonl = async function (this: any, ...args: any[]) {
 		return;
 	}
 
-	if (!((activeTab.input as any).viewType as string)?.endsWith('-bigquery-query-results')) {
+	const viewType = ((activeTab.input as any).viewType as string);
+	if (viewType?.endsWith('-bigquery-query-results')) {
+
+		const uuid = activeTab.label.substring(activeTab.label.length - 8);
+
+		const globalState: vscode.Memento = this.globalState;
+		let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+		if (queryResultsMapping) {
+
+			const item = queryResultsMapping.find(c => c.uuid === uuid);
+			if (item && item.jobReferences && item.jobIndex !== undefined) {
+				await DownloadJsonl.download(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+			}
+		}
+	} else {
+		if (viewType?.endsWith('-bigquery-table-results')) {
+
+			const tableId = activeTab.label.split('.');
+			const table = getBigQueryClient().getTable(tableId[0], tableId[1], tableId[2]);
+
+			await DownloadJsonl.downloadTable(getBigQueryClient(), table);
+
+		}
+	}
+
+	const telemetryProperties: TelemetryEventProperties = {
+		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
+	};
+
+	reporter?.sendTelemetryEvent('commandDownloadJsonl', telemetryProperties);
+};
+
+export const commandSendPubsub = async function (this: any, ...args: any[]) {
+
+	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+
+	if (activeTab === undefined || activeTab.input === undefined) {
 		return;
 	}
 
-	const uuid = activeTab.label.substring(activeTab.label.length - 8);
+	const viewType = ((activeTab.input as any).viewType as string);
+	if (viewType?.endsWith('-bigquery-query-results')) {
 
-	const globalState: vscode.Memento = this.globalState;
-	let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
-	if (queryResultsMapping) {
+		const uuid = activeTab.label.substring(activeTab.label.length - 8);
 
-		const item = queryResultsMapping.find(c => c.uuid === uuid);
-		if (item && item.jobReferences && item.jobIndex !== undefined) {
-			await DownloadJsonl.download(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+		const globalState: vscode.Memento = this.globalState;
+		let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+		if (queryResultsMapping) {
+
+			const item = queryResultsMapping.find(c => c.uuid === uuid);
+			if (item && item.jobReferences && item.jobIndex !== undefined) {
+				await SendToPubsub.sendJobResult(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+			}
 		}
-
 	}
+	//  else {
+	// 	if (viewType?.endsWith('-bigquery-table-results')) {
+
+	// 		const tableId = activeTab.label.split('.');
+	// 		const table = getBigQueryClient().getTable(tableId[0], tableId[1], tableId[2]);
+
+	// 		await DownloadJsonl.downloadTable(getBigQueryClient(), table);
+
+	// 	}
+	// }
 
 	const telemetryProperties: TelemetryEventProperties = {
 		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')

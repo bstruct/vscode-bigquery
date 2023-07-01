@@ -169,6 +169,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_SEND_PUBSUB,
+			commands.commandSendPubsub,
+			{ "globalState": context.globalState }
+		),
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_PROJECT_PIN,
 			commands.commandPinOrUnpinProject
 		)
