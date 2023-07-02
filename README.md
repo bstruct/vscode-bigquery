@@ -92,6 +92,25 @@ There is no limit size/row number imposed in this feature, so please be aware of
 <img src="documentation/download_csv.png" alt="file explorer" width="200"/>
 
 
+## Download JSONL
+
+
+## Send to Pub/Sub
+
+```sql
+
+    SELECT 
+        (
+        SELECT AS STRUCT
+            "1123123" AS test,
+            "dsdfdsd" AS data_type
+        ) AS attributes,
+
+        TO_JSON(t) AS data
+
+    FROM `dataset.table` t
+```
+
 <!-- ### Known Issues -->
 
 ### Troubleshooting

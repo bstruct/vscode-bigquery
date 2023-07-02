@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { JobReference } from '../services/queryResultsMapping';
 import { BigQueryClient } from '../services/bigqueryClient';
-import { Table } from '@google-cloud/bigquery';
+import { QueryRowsResponse, Table, TableSchema } from '@google-cloud/bigquery';
+import { BatchPublishOptions, PubSub } from '@google-cloud/pubsub';
 
 export class SendToPubsub {
 
@@ -11,98 +12,103 @@ export class SendToPubsub {
         try {
 
             const job = bigqueryClient.getJob(jobReference);
+            //check if job is INSERT, UPDATE, DELETE or MERGE
+            const metadata = await job.getMetadata();
+            const statementType = metadata[0].statistics.query.statementType;
+            if (statementType === 'INSERT' || statementType === 'UPDATE' || statementType === 'DELETE' || statementType === 'MERGE') {
+                vscode.window.showErrorMessage('Bigquery jobs of type `INSERT`, `UPDATE`, `DELETE`, or `MERGE` are not supported in sending to Pub/Sub.');
+                return;
+            }
 
-            // const date = new Date();
-            // const filename = `${date.getFullYear()}${(date.getMonth() + 1).toString(2)}${date.getDay()}${date.toLocaleTimeString().replace(/:/g, '')}_${job.id}.jsonl`;
+            //check for `body` column 
+            let queryResults = await job.getQueryResults({ maxResults: 1 });
+            const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
 
-            // //download start
-            // let defaultUri: vscode.Uri | undefined;
-            // if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-            //     defaultUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, filename);
-            // }
+            const containsAttributes = queryResults[2]?.schema?.fields?.find(c => c.name?.toLowerCase() === 'attributes' && c.type === 'RECORD');
+            const containsData = queryResults[2]?.schema?.fields?.find(c => c.name?.toLowerCase() === 'data' && (c.type === 'STRING' || c.type === 'JSON'));
 
-            // const uri: vscode.Uri | undefined = await vscode.window.showSaveDialog(
-            //     {
-            //         title: 'Save export',
-            //         filters: {
-            //             'jsonl': ['jsonl']
-            //         },
-            //         defaultUri: defaultUri
-            //     }
-            // );
+            if (containsData === undefined) {
+                vscode.window.showErrorMessage('Please make a STRING or JSON column called `data` to be sent to Pub/Sub.');
+                return;
+            }
 
-            // if (uri !== undefined) {
-            //     try {
-            //         const fsPath = uri.fsPath;
+            const topicName = await vscode.window.showInputBox({
+                title: 'Pub/Sub topic (projects/<project_id>/topics/<topic_name>)',
+            });
 
-            //         await vscode.window.withProgress({
-            //             location: vscode.ProgressLocation.Notification,
-            //             cancellable: true,
-            //             title: `Downloading results into:\n${filename}`
-            //         }, async (progress, token) => {
+            if (topicName) {
 
-            //             let cancelled = false;
+                try {
 
-            //             token.onCancellationRequested(() => {
-            //                 cancelled = true;
-            //                 console.log("User canceled the long running operation");
-            //             });
+                    // Instantiates a client
+                    const pubsub = new PubSub();
+                    const topic = pubsub.topic(topicName, { messageOrdering: false });
+                    //check if topic exists
+                    if (!topic.exists()) {
+                        vscode.window.showErrorMessage('The given Pub/Sub topic name does not exist or user does not have permissions.');
+                        return;
+                    }
 
-            //             //resolve if job is INSERT, UPDATE, DELETE or MERGE
-            //             const metadata = await job.getMetadata();
-            //             const statementType = metadata[0].statistics.query.statementType;
-            //             if (statementType === 'INSERT' || statementType === 'UPDATE' || statementType === 'DELETE' || statementType === 'MERGE') {
-            //                 const dmlStats = metadata[0].statistics.query.dmlStats;
+                    await vscode.window.withProgress({
+                        location: vscode.ProgressLocation.Notification,
+                        cancellable: true,
+                        title: `Sending results into Pub/Sub`
+                    }, async (progress, token) => {
 
-            //                 const row = {
-            //                     insertedRowCount: dmlStats.insertedRowCount ?? null,
-            //                     updatedRowCount: dmlStats.updatedRowCount ?? null,
-            //                     deletedRowCount: dmlStats.deletedRowCount ?? null,
-            //                 };
+                        let cancelled = false;
 
-            //                 fs.appendFileSync(fsPath, JSON.stringify(row));
+                        token.onCancellationRequested(() => {
+                            cancelled = true;
+                            console.log("User canceled the long running operation");
+                        });
 
-            //             } else {
+                        const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
 
-            //                 let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000 });
-            //                 const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
+                        let increment = totalRows / 1000;
 
-            //                 let records = queryResults[0];
+                        let totalDownloadedRows = 0;
 
-            //                 let increment = totalRows / 10000;
+                        let pageToken: string | undefined = undefined;
 
-            //                 let totalDownloadedRows = 0;
+                        while (!token.isCancellationRequested) {
 
-            //                 while (!token.isCancellationRequested) {
+                            const queryResults: QueryRowsResponse = await job.getQueryResults({ autoPaginate: true, maxResults: 1000, pageToken: pageToken });
+                            const records = queryResults[0];
 
-            //                     //transform complex objects into string
-            //                     let adjustedRecords = DownloadJsonl.objectsToString(records);
-            //                     fs.appendFileSync(fsPath, adjustedRecords.join('\n'));
+                            const promisses = [];
+                            for (let index = 0; index < records.length; index++) {
+                                const element = records[index];
 
-            //                     // https://github.com/microsoft/vscode-extension-samples/blob/main/progress-sample/src/extension.ts
-            //                     progress.report({ increment: increment });
+                                let customAttributes = undefined;
+                                if (containsAttributes) {
+                                    customAttributes = element['attributes'];
+                                }
 
-            //                     totalDownloadedRows += records.length;
-            //                     const pageToken = queryResults[1]?.pageToken;
+                                const data = Buffer.from(element['data']);
 
-            //                     if (totalDownloadedRows >= totalRows || (!pageToken)) {
-            //                         break;
-            //                     }
+                                promisses.push(topic.publishMessage({ data: data, attributes: customAttributes }));
+                            }
+                            await Promise.all(promisses);
 
-            //                     queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000, pageToken: pageToken });
-            //                     records = queryResults[0];
-            //                 }
-            //             }
+                            progress.report({ increment: increment });
 
-            //             progress.report({ message: 'Done' });
+                            totalDownloadedRows += records.length;
+                            pageToken = queryResults[1]?.pageToken;
 
-            //         });
+                            if (totalDownloadedRows >= totalRows || (!pageToken)) {
+                                break;
+                            }
 
-            //     } catch (error: any) {
-            //         vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
-            //     }
-            // }
+                        }
 
+                        progress.report({ message: 'Done' });
+                    });
+
+                } catch (error: any) {
+                    vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
+                }
+
+            }
 
         } catch (error: any) {
             vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
