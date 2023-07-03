@@ -125,6 +125,12 @@ FROM `dataset.table` t
 This menu will be available in the result grid window, when focused.
 <img src="documentation/send_to_pubsub.png" alt="send to Pub/Sub" width="200"/>
 
+
+After invoking this feature, please put the topic name into the input box.
+Please use the topic name with normal shape `projects/<project_id>/topics/<topic_name>`.
+
+<img src="documentation/send_to_pubsub_topic_name.png" alt="send to Pub/Sub" width="200"/>
+
 There is no limit size/row number imposed in this feature, so please be aware of the effort that will be asked of your computer.
 <br />
 <br />
