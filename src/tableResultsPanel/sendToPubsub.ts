@@ -52,7 +52,7 @@ export class SendToPubsub {
                     await vscode.window.withProgress({
                         location: vscode.ProgressLocation.Notification,
                         cancellable: true,
-                        title: `Sending results into Pub/Sub`
+                        title: `Sending results into Pub/Sub`,    
                     }, async (progress, token) => {
 
                         let cancelled = false;
@@ -64,7 +64,7 @@ export class SendToPubsub {
 
                         const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
 
-                        let increment = totalRows / 1000;
+                        let increment = 10000 * 100 / totalRows;
 
                         let totalDownloadedRows = 0;
 
@@ -72,7 +72,7 @@ export class SendToPubsub {
 
                         while (!token.isCancellationRequested) {
 
-                            const queryResults: QueryRowsResponse = await job.getQueryResults({ autoPaginate: true, maxResults: 1000, pageToken: pageToken });
+                            const queryResults: QueryRowsResponse = await job.getQueryResults({ autoPaginate: true, maxResults: 10000, pageToken: pageToken });
                             const records = queryResults[0];
 
                             const promisses = [];

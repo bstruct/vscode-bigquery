@@ -194,7 +194,7 @@
 				{
 					"command": "vscode-bigquery.plot-chart",
 					"group": "navigation@-1",
-					"when": "editorLangId == bqsql"
+					"when": "editorLangId == bqsqlx"
 				},
 				{
 					"command": "vscode-bigquery.download-csv",

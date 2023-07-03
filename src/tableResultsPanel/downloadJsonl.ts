@@ -51,7 +51,7 @@ export class DownloadJsonl {
                         const metadata = await table.getMetadata();
                         const totalRows = Number(metadata[0].numRows || 0);
 
-                        let increment = totalRows / 10000;
+                        let increment = 10000 * 100 / totalRows;
 
                         let totalDownloadedRows = 0;
                         let startIndex = 0;
@@ -153,7 +153,7 @@ export class DownloadJsonl {
 
                             let records = queryResults[0];
 
-                            let increment = totalRows / 10000;
+                            let increment = 10000 * 100 / totalRows;
 
                             let totalDownloadedRows = 0;
 

@@ -93,23 +93,41 @@ There is no limit size/row number imposed in this feature, so please be aware of
 
 
 ## Download JSONL
+After a query has run, in the result grid, when focused, there's the option of downloading the same results in [jsonl](https://jsonlines.org/) format. 
 
+<img src="documentation/download_jsonl.png" alt="download jsonl" width="200"/>
+
+There is no limit size/row number imposed in this feature, so please be aware of the effort that will be asked of your computer.
+<br />
+<br />
 
 ## Send to Pub/Sub
 
+It's possible to publish messages in Google Cloud Pub/Sub based on the row information. One message per row. 
+In order to produce a valid query that can be send to Pub/Sub there must be a column with the name `data` that can be of the type `STRING` or `JSON`. 
+Optionally, it possible to define the `attributes` of the message in a column with the same name. This column needs to be of the type `RECORD` as shown below.
+
+
 ```sql
+SELECT 
+    (
+    SELECT AS STRUCT
+        "my test test" AS test,
+        "amazing data type" AS data_type
+    ) AS attributes,
 
-    SELECT 
-        (
-        SELECT AS STRUCT
-            "1123123" AS test,
-            "dsdfdsd" AS data_type
-        ) AS attributes,
+    TO_JSON(t) AS data
 
-        TO_JSON(t) AS data
-
-    FROM `dataset.table` t
+FROM `dataset.table` t
 ```
+
+
+This menu will be available in the result grid window, when focused.
+<img src="documentation/send_to_pubsub.png" alt="send to Pub/Sub" width="200"/>
+
+There is no limit size/row number imposed in this feature, so please be aware of the effort that will be asked of your computer.
+<br />
+<br />
 
 <!-- ### Known Issues -->
 
