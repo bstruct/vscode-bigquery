@@ -14,7 +14,7 @@ import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializ
 import { QueryResultsMappingService } from './services/queryResultsMappingService';
 import { TableResultsSerializer } from './tableResultsPanel/tableResultsSerializer';
 import { ResultsRender } from './services/resultsRender';
-import { ChartResultsSerializer } from './charts/chartResultsSerializer';
+// import { ChartResultsSerializer } from './charts/chartResultsSerializer';
 import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 
@@ -182,16 +182,16 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	context.subscriptions.push(
-		vscode.commands.registerCommand(
-			commands.COMMAND_PLOT_CHART,
-			commands.commandPlotChart,
-			{
-				"globalState": context.globalState,
-				queryResultsWebviewMapping: queryResultsWebviewMapping
-			}
-		)
-	);
+	// context.subscriptions.push(
+	// 	vscode.commands.registerCommand(
+	// 		commands.COMMAND_PLOT_CHART,
+	// 		commands.commandPlotChart,
+	// 		{
+	// 			"globalState": context.globalState,
+	// 			queryResultsWebviewMapping: queryResultsWebviewMapping
+	// 		}
+	// 	)
+	// );
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
@@ -231,13 +231,13 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	//bigquery-query-chart
-	context.subscriptions.push(
-		vscode.window.registerWebviewPanelSerializer(
-			CHART_VIEW_TYPE,
-			new ChartResultsSerializer(context.globalState, queryResultsWebviewMapping)
-		)
-	);
+	// //bigquery-query-chart
+	// context.subscriptions.push(
+	// 	vscode.window.registerWebviewPanelSerializer(
+	// 		CHART_VIEW_TYPE,
+	// 		new ChartResultsSerializer(context.globalState, queryResultsWebviewMapping)
+	// 	)
+	// );
 
 	//bigquery-query-results
 	context.subscriptions.push(

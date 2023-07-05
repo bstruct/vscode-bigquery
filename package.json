@@ -165,12 +165,6 @@
 				"icon": "$(json)"
 			},
 			{
-				"command": "vscode-bigquery.plot-chart",
-				"title": "Plot chart -- PREVIEW --",
-				"icon": "$(pie-chart)",
-				"enablement": "false"
-			},
-			{
 				"command": "vscode-bigquery.troubleshoot",
 				"title": "troubleshoot"
 			},
@@ -190,11 +184,6 @@
 					"command": "vscode-bigquery.run-selected-query",
 					"group": "navigation@-2",
 					"when": "editorLangId == bqsql"
-				},
-				{
-					"command": "vscode-bigquery.plot-chart",
-					"group": "navigation@-1",
-					"when": "editorLangId == bqsqlx"
 				},
 				{
 					"command": "vscode-bigquery.download-csv",
@@ -287,11 +276,6 @@
 			{
 				"command": "vscode-bigquery.run-selected-query",
 				"key": "Ctrl+E",
-				"when": "editorLangId == bqsql"
-			},
-			{
-				"command": "vscode-bigquery.plot-chart",
-				"key": "Ctrl+M",
 				"when": "editorLangId == bqsql"
 			}
 		],
