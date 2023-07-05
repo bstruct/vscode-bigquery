@@ -79,9 +79,11 @@ After the query returns a response, the bottom panel of Visual Studio code will 
 As visible in the image above, syntax highlight is very poor at the moment. Intellisence has too few features. This will be the next improvement's biggest area. 
 
 The query in the editor is evaluated with every change. If there are errors in the query, they will be underlined
+
 <img src="documentation/query_error.png" alt="query error" width="600"/>
 
 If the query is valid, the number of bytes that will be consumed will appear in the bottom bar
+
 <img src="documentation/query_size_evaluation.png" alt="query error" width="600"/>
 
 ## Download CSV
@@ -91,6 +93,50 @@ There is no limit size/row number imposed in this feature, so please be aware of
 
 <img src="documentation/download_csv.png" alt="file explorer" width="200"/>
 
+
+## Download JSONL
+After a query has run, in the result grid, when focused, there's the option of downloading the same results in [jsonl](https://jsonlines.org/) format. 
+
+<img src="documentation/download_jsonl.png" alt="download jsonl" width="200"/>
+
+There is no limit size/row number imposed in this feature, so please be aware of the effort that will be asked of your computer.
+<br />
+<br />
+
+## Send to Pub/Sub
+
+It's possible to publish messages in Google Cloud Pub/Sub based on the row information. One message per row. 
+In order to produce a valid query that can be send to Pub/Sub there must be a column with the name `data` that can be of the type `STRING` or `JSON`. 
+Optionally, it possible to define the `attributes` of the message in a column with the same name. This column needs to be of the type `RECORD` as shown below.
+
+
+```sql
+SELECT 
+    (
+    SELECT AS STRUCT
+        "my test test" AS test,
+        "amazing data type" AS data_type
+    ) AS attributes,
+
+    TO_JSON(t) AS data
+
+FROM `dataset.table` t
+```
+
+
+This menu will be available in the result grid window, when focused.
+
+<img src="documentation/send_to_pubsub.png" alt="send to Pub/Sub" width="200"/>
+
+
+After invoking this feature, please put the topic name into the input box.
+Please use the topic name with normal shape `projects/<project_id>/topics/<topic_name>`.
+
+<img src="documentation/send_to_pubsub_topic_name.png" alt="send to Pub/Sub" width="200"/>
+
+There is no limit size/row number imposed in this feature, so please be aware of the effort that will be asked of your computer.
+<br />
+<br />
 
 <!-- ### Known Issues -->
 

@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.1.23",
+	"version": "0.2.0",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -155,15 +155,14 @@
 				"icon": "$(cloud-download)"
 			},
 			{
+				"command": "vscode-bigquery.send-pubsub",
+				"title": "Send to Pub/Sub",
+				"icon": "$(outline-view-icon)"
+			},
+			{
 				"command": "vscode-bigquery.download-jsonl",
 				"title": "Download JSONL",
 				"icon": "$(json)"
-			},
-			{
-				"command": "vscode-bigquery.plot-chart",
-				"title": "Plot chart -- PREVIEW --",
-				"icon": "$(pie-chart)",
-				"enablement": "false"
 			},
 			{
 				"command": "vscode-bigquery.troubleshoot",
@@ -187,19 +186,19 @@
 					"when": "editorLangId == bqsql"
 				},
 				{
-					"command": "vscode-bigquery.plot-chart",
-					"group": "navigation@-1",
-					"when": "editorLangId == bqsql"
-				},
-				{
 					"command": "vscode-bigquery.download-csv",
-					"group": "navigation@-2",
-					"when": "activeWebviewPanelId == 'bigquery-query-results'"
+					"group": "navigation@-3",
+					"when": "activeWebviewPanelId == 'bigquery-query-results' || activeWebviewPanelId == 'bigquery-table-results'"
 				},
 				{
 					"command": "vscode-bigquery.download-jsonl",
+					"group": "navigation@-2",
+					"when": "activeWebviewPanelId == 'bigquery-query-results' || activeWebviewPanelId == 'bigquery-table-results'"
+				},
+				{
+					"command": "vscode-bigquery.send-pubsub",
 					"group": "navigation@-1",
-					"when": "activeWebviewPanelId == 'bigquery-query-results'"
+					"when": "activeWebviewPanelId == 'bigquery-query-results' || activeWebviewPanelId == 'bigquery-table-results'"
 				}
 			],
 			"view/title": [
@@ -278,11 +277,6 @@
 				"command": "vscode-bigquery.run-selected-query",
 				"key": "Ctrl+E",
 				"when": "editorLangId == bqsql"
-			},
-			{
-				"command": "vscode-bigquery.plot-chart",
-				"key": "Ctrl+M",
-				"when": "editorLangId == bqsql"
 			}
 		],
 		"viewsWelcome": [
@@ -324,13 +318,14 @@
 	},
 	"dependencies": {
 		"@bstruct/bqsql-parser": "0.1.5",
-		"@google-cloud/bigquery": "^6.1.0",
+		"@google-cloud/bigquery": "^6.2.0",
 		"@types/gapi.client.bigquery-v2": "^0.0.1",
 		"@vscode/codicons": "^0.0.32",
 		"@vscode/extension-telemetry": "^0.6.2",
 		"@vscode/webview-ui-toolkit": "^1.2.2",
 		"csv-writer": "^1.6.0",
 		"preact": "^10.10.6",
-		"preact-render-to-string": "^5.2.2"
+		"preact-render-to-string": "^5.2.2",
+		"@google-cloud/pubsub":"^3.7.1"
 	}
 }
