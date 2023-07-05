@@ -79,9 +79,11 @@ After the query returns a response, the bottom panel of Visual Studio code will 
 As visible in the image above, syntax highlight is very poor at the moment. Intellisence has too few features. This will be the next improvement's biggest area. 
 
 The query in the editor is evaluated with every change. If there are errors in the query, they will be underlined
+
 <img src="documentation/query_error.png" alt="query error" width="600"/>
 
 If the query is valid, the number of bytes that will be consumed will appear in the bottom bar
+
 <img src="documentation/query_size_evaluation.png" alt="query error" width="600"/>
 
 ## Download CSV
@@ -123,6 +125,7 @@ FROM `dataset.table` t
 
 
 This menu will be available in the result grid window, when focused.
+
 <img src="documentation/send_to_pubsub.png" alt="send to Pub/Sub" width="200"/>
 
 
