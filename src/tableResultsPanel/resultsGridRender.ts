@@ -28,7 +28,17 @@ export class ResultsGridRender {
     public async render(request: ResultsGridRenderRequest) {
 
         try {
+
+            // possible solution to prevent the memory leak
+            const viewColumn = this.webViewPanel.viewColumn || vscode.ViewColumn.Two;
+		    const newPanel = vscode.window.createWebviewPanel(this.webViewPanel.viewType, this.webViewPanel.title, { viewColumn: viewColumn, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
+            this.webViewPanel.dispose();
+            this.webViewPanel = newPanel;
+            const listener = newPanel.webview.onDidReceiveMessage(this.listenerResultsOnDidReceiveMessage, this);
+            newPanel.onDidDispose(c => { listener.dispose(); });
+
             //set waiting gif
+            // const x = vscode.dis;
             this.webViewPanel.webview.html = this.getWaitingHtml(request.maxResults, request.openInTabVisible, request.startIndex, request.jobIndex);
 
             const [html, totalRows] = await this.getResultsHtml(request);

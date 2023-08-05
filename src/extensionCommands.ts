@@ -545,7 +545,7 @@ export const commandSendPubsub = async function (this: any, ...args: any[]) {
 		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
 	};
 
-	reporter?.sendTelemetryEvent('commandDownloadJsonl', telemetryProperties);
+	reporter?.sendTelemetryEvent('commandSendPubsub', telemetryProperties);
 };
 
 export const commandPinOrUnpinProject = function (...args: any[]) {
