@@ -149,64 +149,64 @@ export class ResultsGridRender {
 
 
         let totalRows: number = 0;
-        let rows: any[] = [];
-        let schema: bigquery.ITableSchema = {};
+        // let rows: any[] = [];
+        // let schema: bigquery.ITableSchema = {};
 
-        if (request.jobReferences && request.jobReferences.length > 0) {
-            const jobsReference = request.jobReferences[request.jobIndex];
-            const job = getBigQueryClient().getJob(jobsReference);
+        // if (request.jobReferences && request.jobReferences.length > 0) {
+        //     const jobsReference = request.jobReferences[request.jobIndex];
+        //     const job = getBigQueryClient().getJob(jobsReference);
 
-            const metadata = await job.getMetadata();
-            const statementType = metadata[0].statistics.query.statementType;
-            if (statementType === 'INSERT' || statementType === 'UPDATE' || statementType === 'DELETE' || statementType === 'MERGE') {
-                const dmlStats = metadata[0].statistics.query.dmlStats;
-                rows = [
-                    {
-                        insertedRowCount: dmlStats.insertedRowCount ?? null,
-                        updatedRowCount: dmlStats.updatedRowCount ?? null,
-                        deletedRowCount: dmlStats.deletedRowCount ?? null,
-                    }
-                ];
-                schema = {
-                    fields: [
-                        {
-                            name: 'insertedRowCount',
-                            type: 'STRING'
-                        } as bigquery.ITableFieldSchema,
-                        {
-                            name: 'updatedRowCount',
-                            type: 'STRING'
-                        } as bigquery.ITableFieldSchema,
-                        {
-                            name: 'deletedRowCount',
-                            type: 'STRING'
-                        } as bigquery.ITableFieldSchema
-                    ]
-                } as bigquery.ITableSchema;
-                totalRows = 1;
+        //     const metadata = await job.getMetadata();
+        //     const statementType = metadata[0].statistics.query.statementType;
+        //     if (statementType === 'INSERT' || statementType === 'UPDATE' || statementType === 'DELETE' || statementType === 'MERGE') {
+        //         const dmlStats = metadata[0].statistics.query.dmlStats;
+        //         rows = [
+        //             {
+        //                 insertedRowCount: dmlStats.insertedRowCount ?? null,
+        //                 updatedRowCount: dmlStats.updatedRowCount ?? null,
+        //                 deletedRowCount: dmlStats.deletedRowCount ?? null,
+        //             }
+        //         ];
+        //         schema = {
+        //             fields: [
+        //                 {
+        //                     name: 'insertedRowCount',
+        //                     type: 'STRING'
+        //                 } as bigquery.ITableFieldSchema,
+        //                 {
+        //                     name: 'updatedRowCount',
+        //                     type: 'STRING'
+        //                 } as bigquery.ITableFieldSchema,
+        //                 {
+        //                     name: 'deletedRowCount',
+        //                     type: 'STRING'
+        //                 } as bigquery.ITableFieldSchema
+        //             ]
+        //         } as bigquery.ITableSchema;
+        //         totalRows = 1;
 
-            } else {
-                const queryResultOptions: QueryResultsOptions = { startIndex: request.startIndex.toString(), maxResults: request.maxResults };
-                const queryRowsResponse = (await job.getQueryResults(queryResultOptions));
-                rows = queryRowsResponse[0];
-                schema = queryRowsResponse[2]?.schema || {};
-                totalRows = Number(queryRowsResponse[2]?.totalRows || 0);
-            }
+        //     } else {
+        //         const queryResultOptions: QueryResultsOptions = { startIndex: request.startIndex.toString(), maxResults: request.maxResults };
+        //         const queryRowsResponse = (await job.getQueryResults(queryResultOptions));
+        //         rows = queryRowsResponse[0];
+        //         schema = queryRowsResponse[2]?.schema || {};
+        //         totalRows = Number(queryRowsResponse[2]?.totalRows || 0);
+        //     }
 
-        } else {
-            if (request.tableReference) {
+        // } else {
+        //     if (request.tableReference) {
 
-                const tableReference = request.tableReference;
-                const table = getBigQueryClient().getTable(tableReference.projectId, tableReference.datasetId, tableReference.tableId);
-                const metadata = await table.getMetadata();
-                schema = metadata[0].schema;
-                totalRows = Number(metadata[0].numRows || 0);
-                rows = (await table.getRows({ startIndex: request.startIndex.toString(), maxResults: request.maxResults }))[0];
+        //         const tableReference = request.tableReference;
+        //         const table = getBigQueryClient().getTable(tableReference.projectId, tableReference.datasetId, tableReference.tableId);
+        //         const metadata = await table.getMetadata();
+        //         schema = metadata[0].schema;
+        //         totalRows = Number(metadata[0].numRows || 0);
+        //         rows = (await table.getRows({ startIndex: request.startIndex.toString(), maxResults: request.maxResults }))[0];
 
-            } else {
-                throw new Error('Unexpected error: "No job results nor table was found"');
-            }
-        }
+        //     } else {
+        //         throw new Error('Unexpected error: "No job results nor table was found"');
+        //     }
+        // }
 
         const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
             "resources",
@@ -223,6 +223,8 @@ export class ResultsGridRender {
             'grid.css']
         );
 
+        // ${(new ResultsGrid(request, schema, rows, totalRows))}
+
         return [`<!DOCTYPE html>
         <html lang="en" style="display:flex;">
         	<head>
@@ -236,7 +238,9 @@ export class ResultsGridRender {
                 </script>
         	</head>
         	<body>
-                ${(new ResultsGrid(request, schema, rows, totalRows))}
+                <table-with-controls table_reference=""></table-with-controls>
+                <query-results-with-controls job_references="" job_index="1"></table-with-controls>
+
                 <script>
                     const vscode = acquireVsCodeApi();
                 </script>
