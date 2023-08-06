@@ -52,7 +52,13 @@ const extensionConfig = {
         require('path').join(__dirname, 'node_modules', '@bstruct', 'bqsql-parser', 'bqsql_parser_bg.wasm'), 
         require('path').join(__dirname, 'dist', 'bqsql_parser_bg.wasm')
         );
-    }
+    },
+    (a, b) => {
+      copyFileSync(
+        require('path').join(__dirname, 'grid_render', 'pkg', 'grid_render_bg.wasm'), 
+        require('path').join(__dirname, 'dist', 'grid_render_bg.wasm')
+        );
+    },
     // copyFileSync('', '')
   ],
   infrastructureLogging: {
