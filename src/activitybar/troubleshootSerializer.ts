@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
+import { getExtensionUri } from '../extension';
 
 export class TroubleshootSerializer implements vscode.WebviewPanelSerializer {
 
     deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any): Thenable<void> {
 
-        let extensionUri = vscode.extensions.getExtension('bstruct.vscode-bigquery')?.extensionUri;
+        // let extensionUri = vscode.extensions.getExtension('bstruct.vscode-bigquery')?.extensionUri;
 
         webviewPanel.webview.html = TroubleshootSerializer.getTroubleshootHtml(webviewPanel);
 
@@ -13,7 +14,8 @@ export class TroubleshootSerializer implements vscode.WebviewPanelSerializer {
 
     static getTroubleshootHtml(webviewPanel: vscode.WebviewPanel): string {
 
-        let extensionUri = vscode.extensions.getExtension('bstruct.vscode-bigquery')?.extensionUri;
+        // let extensionUri = vscode.extensions.getExtension('bstruct.vscode-bigquery')?.extensionUri;
+        let extensionUri = getExtensionUri();
 
         if (!extensionUri) {
             extensionUri = vscode.Uri.parse('../');

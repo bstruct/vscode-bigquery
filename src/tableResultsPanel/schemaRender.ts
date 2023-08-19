@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { extensionUri } from '../extension';
+import { getExtensionUri } from '../extension';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
 import { TableMetadata } from '../services/tableMetadata';
 import { SchemaGrid } from './schemaGrid';
@@ -40,7 +40,7 @@ export class SchemaRender {
 
     private getWaitingHtml(): string {
 
-        const toolkitUri = this.getUri(this.webView, extensionUri, [
+        const toolkitUri = this.getUri(this.webView, getExtensionUri(), [
             "resources",
             "toolkit.min.js",
         ]);
@@ -60,6 +60,8 @@ export class SchemaRender {
     }
 
     private getExceptionHtml(exception: any): string {
+
+        const extensionUri = getExtensionUri();
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
             "resources",
@@ -119,6 +121,7 @@ export class SchemaRender {
     private async getResultsHtml(tableMetadata: TableMetadata): Promise<string> {
 
         // const schema = JSON.stringify(tableMetadata.schema.fields);
+        const extensionUri = getExtensionUri();
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
             "resources",

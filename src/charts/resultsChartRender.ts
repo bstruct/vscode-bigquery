@@ -1,6 +1,6 @@
 import { QueryResultsOptions } from '@google-cloud/bigquery/build/src/job';
 import * as vscode from 'vscode';
-import { extensionUri } from '../extension';
+import { getExtensionUri } from '../extension';
 import { getBigQueryClient } from '../extensionCommands';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
 import { ResultsChartRenderRequest } from './ResultsChartRenderRequest';
@@ -38,6 +38,8 @@ export class ResultsChartRender {
     }
 
     private getWaitingHtml(jobIndex: number | undefined): string {
+
+        const extensionUri = getExtensionUri();
 
         const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
             "resources",
@@ -107,7 +109,7 @@ export class ResultsChartRender {
         }
         // }
 
-        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
+        const toolkitUri = this.getUri(this.webViewPanel.webview, getExtensionUri(), [
             "resources",
             "toolkit.min.js",
         ]);
@@ -445,7 +447,7 @@ export class ResultsChartRender {
 
     private getExceptionHtml(exception: any): string {
 
-        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
+        const toolkitUri = this.getUri(this.webViewPanel.webview, getExtensionUri(), [
             "resources",
             "toolkit.min.js",
         ]);

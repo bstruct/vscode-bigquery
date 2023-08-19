@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import bigquery from '@google-cloud/bigquery/build/src/types';
-import { extensionUri, QUERY_RESULTS_VIEW_TYPE, reporter } from '../extension';
+import { getExtensionUri, QUERY_RESULTS_VIEW_TYPE, getTelemetryReporter } from '../extension';
 import { QueryResultsOptions, Table } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
 import { ResultsGrid } from './resultsGrid';
@@ -8,6 +8,9 @@ import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 import { COMMAND_DOWNLOAD_CSV, getBigQueryClient } from '../extensionCommands';
 import { JobReference } from '../services/queryResultsMapping';
 import { TableReference } from '../services/tableMetadata';
+
+// import { get_web_components_list } from "grid_render/grid_render";
+
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
@@ -21,28 +24,32 @@ export class ResultsGridRender {
         webViewPanel.onDidDispose(c => { listener.dispose(); });
     }
 
-    public renderLoadingIcon() {
-        this.webViewPanel.webview.html = this.getWaitingHtml(50, false, 0, 0);
-    }
+    // public renderLoadingIcon() {
+    //     this.webViewPanel.webview.html = this.getWaitingHtml(50, false, 0, 0);
+    // }
 
     public async render(request: ResultsGridRenderRequest) {
 
         try {
 
-            // possible solution to prevent the memory leak
-            const viewColumn = this.webViewPanel.viewColumn || vscode.ViewColumn.Two;
-		    const newPanel = vscode.window.createWebviewPanel(this.webViewPanel.viewType, this.webViewPanel.title, { viewColumn: viewColumn, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
-            this.webViewPanel.dispose();
-            this.webViewPanel = newPanel;
-            const listener = newPanel.webview.onDidReceiveMessage(this.listenerResultsOnDidReceiveMessage, this);
-            newPanel.onDidDispose(c => { listener.dispose(); });
+            // // possible solution to prevent the memory leak
+            // const viewColumn = this.webViewPanel.viewColumn || vscode.ViewColumn.Two;
+            // const newPanel = vscode.window.createWebviewPanel(this.webViewPanel.viewType, this.webViewPanel.title, { viewColumn: viewColumn, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
+            // this.webViewPanel.dispose();
+            // this.webViewPanel = newPanel;
+            // const listener = newPanel.webview.onDidReceiveMessage(this.listenerResultsOnDidReceiveMessage, this);
+            // newPanel.onDidDispose(c => { listener.dispose(); });
 
             //set waiting gif
             // const x = vscode.dis;
-            this.webViewPanel.webview.html = this.getWaitingHtml(request.maxResults, request.openInTabVisible, request.startIndex, request.jobIndex);
+            // this.webViewPanel.webview.html = this.getWaitingHtml(request.maxResults, request.openInTabVisible, request.startIndex, request.jobIndex);
 
-            const [html, totalRows] = await this.getResultsHtml(request);
-            this.webViewPanel.webview.html = html;
+            if (this.webViewPanel.webview.html.length === 0) {
+                const [html, totalRows] = await this.getResultsHtml(request);
+                this.webViewPanel.webview.html = html;
+            }
+
+            this.webViewPanel.webview.postMessage(request);
 
         } catch (error: any) {
             // vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
@@ -56,7 +63,7 @@ export class ResultsGridRender {
 
     private getWaitingHtml(maxResults: number, openInTabVisible: boolean, startIndex: number, jobIndex: number | undefined): string {
 
-        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
+        const toolkitUri = this.getUri(this.webViewPanel.webview, getExtensionUri(), [
             "resources",
             "toolkit.min.js",
         ]);
@@ -87,7 +94,7 @@ export class ResultsGridRender {
 
     private getExceptionHtml(exception: any): string {
 
-        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
+        const toolkitUri = this.getUri(this.webViewPanel.webview, getExtensionUri(), [
             "resources",
             "toolkit.min.js",
         ]);
@@ -146,7 +153,6 @@ export class ResultsGridRender {
     * weird response because the total rows are only known in the `getQueryResults` response
     */
     private async getResultsHtml(request: ResultsGridRenderRequest): Promise<[string, number]> {
-
 
         let totalRows: number = 0;
         // let rows: any[] = [];
@@ -208,6 +214,8 @@ export class ResultsGridRender {
         //     }
         // }
 
+        const extensionUri = getExtensionUri();
+
         const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
             "resources",
             "toolkit.min.js",
@@ -223,7 +231,10 @@ export class ResultsGridRender {
             'grid.css']
         );
 
-        // ${(new ResultsGrid(request, schema, rows, totalRows))}
+        const gridJs = this.getUri(this.webViewPanel.webview, extensionUri, [
+            'resources',
+            'grid.js']
+        );
 
         return [`<!DOCTYPE html>
         <html lang="en" style="display:flex;">
@@ -238,12 +249,9 @@ export class ResultsGridRender {
                 </script>
         	</head>
         	<body>
-                <table-with-controls table_reference=""></table-with-controls>
-                <query-results-with-controls job_references="" job_index="1"></table-with-controls>
-
-                <script>
-                    const vscode = acquireVsCodeApi();
-                </script>
+                <table-with-controls></table-with-controls>
+                <query-results-with-controls id="q1"></query-results-with-controls>
+                <script type="module" src="${gridJs}"></script>
         	</body>
         </html>`,
             totalRows
@@ -259,6 +267,8 @@ export class ResultsGridRender {
      * the `postMessage` method. For query results
     */
     async listenerResultsOnDidReceiveMessage(message: any): Promise<void> {
+
+        const reporter = getTelemetryReporter();
 
         const resultsGridRender: ResultsGridRender = this as ResultsGridRender;
 

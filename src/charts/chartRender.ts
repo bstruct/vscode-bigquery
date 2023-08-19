@@ -1,6 +1,6 @@
 import internal = require('stream');
 import * as vscode from 'vscode';
-import { extensionUri } from '../extension';
+import { getExtensionUri } from '../extension';
 import { BigQueryClient } from '../services/bigqueryClient';
 import { JobReference } from '../services/queryResultsMapping';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
@@ -359,7 +359,7 @@ export class ChartRender {
 
     private getExceptionHtml(exception: any): string {
 
-        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
+        const toolkitUri = this.getUri(this.webViewPanel.webview, getExtensionUri(), [
             "resources",
             "toolkit.min.js",
         ]);

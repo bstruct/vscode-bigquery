@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigqueryClient';
-import { authenticationWebviewProvider, bigQueryTreeDataProvider, CHART_VIEW_TYPE, QUERY_RESULTS_VIEW_TYPE, reporter, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE } from './extension';
+import { authenticationWebviewProvider, bigQueryTreeDataProvider, CHART_VIEW_TYPE, QUERY_RESULTS_VIEW_TYPE, getTelemetryReporter, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE } from './extension';
 import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem } from './activitybar/treeItem';
@@ -94,7 +94,7 @@ const commandQuery = async function (local: any, queryType: RunQueryType) {
 
 	const numberOfJobs = await runQuery(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
 
-	reporter?.sendTelemetryEvent((queryType === RunQueryType.query) ? 'commandRunQuery' : 'commandRunSelectedQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+	getTelemetryReporter()?.sendTelemetryEvent((queryType === RunQueryType.query) ? 'commandRunQuery' : 'commandRunSelectedQuery', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
 };
 
@@ -138,7 +138,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 	}
 
 	try {
-		resultsGridRender.renderLoadingIcon();
+		// resultsGridRender.renderLoadingIcon();
 
 		const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
 
@@ -173,14 +173,14 @@ export const commandUserLogin = function (...args: any[]) {
 				vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
 			} else {
 				vscode.window.showErrorMessage('Bigquery: User login - had invalid response');
-				reporter?.sendTelemetryErrorEvent('commandUserLogin', { error: 'Bigquery: User login - had invalid response' });
+				getTelemetryReporter()?.sendTelemetryErrorEvent('commandUserLogin', { error: 'Bigquery: User login - had invalid response' });
 			}
 
 			resetBigQueryClient();
 
 		});
 
-	reporter?.sendTelemetryEvent('commandUserLogin', {});
+	getTelemetryReporter()?.sendTelemetryEvent('commandUserLogin', {});
 };
 
 export const commandUserLoginWithDrive = function (...args: any[]) {
@@ -194,14 +194,14 @@ export const commandUserLoginWithDrive = function (...args: any[]) {
 				vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
 			} else {
 				vscode.window.showErrorMessage('Bigquery: User login - had invalid response');
-				reporter?.sendTelemetryErrorEvent('commandUserLoginWithDrive', { error: 'Bigquery: User login - had invalid response' });
+				getTelemetryReporter()?.sendTelemetryErrorEvent('commandUserLoginWithDrive', { error: 'Bigquery: User login - had invalid response' });
 			}
 
 			resetBigQueryClient();
 
 		});
 
-	reporter?.sendTelemetryEvent('commandUserLoginWithDrive', {});
+	getTelemetryReporter()?.sendTelemetryEvent('commandUserLoginWithDrive', {});
 };
 
 export const commandServiceAccountLogin = async function (...args: any[]) {
@@ -220,19 +220,19 @@ export const commandServiceAccountLogin = async function (...args: any[]) {
 			vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
 		} else {
 			vscode.window.showErrorMessage('Bigquery: Service account login - had invalid response');
-			reporter?.sendTelemetryErrorEvent('commandUserLogin', { error: 'Bigquery: Service account login - had invalid response' });
+			getTelemetryReporter()?.sendTelemetryErrorEvent('commandUserLogin', { error: 'Bigquery: Service account login - had invalid response' });
 		}
 
 		resetBigQueryClient();
 	}
 
-	reporter?.sendTelemetryEvent('commandServiceAccountLogin', {});
+	getTelemetryReporter()?.sendTelemetryEvent('commandServiceAccountLogin', {});
 
 };
 
 export const commandGCloudInit = function (...args: any[]) {
 
-	reporter?.sendTelemetryEvent('commandGCloudInit', {});
+	getTelemetryReporter()?.sendTelemetryEvent('commandGCloudInit', {});
 
 	resetBigQueryClient();
 
@@ -252,7 +252,7 @@ export const commandAuthenticationRefresh = function (...args: any[]) {
 
 	authenticationWebviewProvider.refresh();
 
-	reporter?.sendTelemetryEvent('commandAuthenticationRefresh', {}, { elapsedMs: Date.now() - t1 });
+	getTelemetryReporter()?.sendTelemetryEvent('commandAuthenticationRefresh', {}, { elapsedMs: Date.now() - t1 });
 };
 
 export const commandExplorerRefresh = function (...args: any[]) {
@@ -261,7 +261,7 @@ export const commandExplorerRefresh = function (...args: any[]) {
 
 	bigQueryTreeDataProvider.refresh();
 
-	reporter?.sendTelemetryEvent('commandExplorerRefresh', {}, { elapsedMs: Date.now() - t1 });
+	getTelemetryReporter()?.sendTelemetryEvent('commandExplorerRefresh', {}, { elapsedMs: Date.now() - t1 });
 };
 
 export const commandViewTable = async function (...args: any[]) {
@@ -326,8 +326,8 @@ export const commandViewTable = async function (...args: any[]) {
 		newresultsGridRender.render(request);
 	}
 
-	reporter?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
-}; 0
+	getTelemetryReporter()?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
+};
 
 export const commandViewTableSchema = function (...args: any[]) {
 
@@ -347,7 +347,7 @@ export const commandViewTableSchema = function (...args: any[]) {
 
 	schemaRender.render(metadataPromise);
 
-	reporter?.sendTelemetryEvent('commandViewTableSchema', {}, { elapsedMs: Date.now() - t1 });
+	getTelemetryReporter()?.sendTelemetryEvent('commandViewTableSchema', {}, { elapsedMs: Date.now() - t1 });
 
 };
 
@@ -375,7 +375,7 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 
 	await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
 
-	reporter?.sendTelemetryEvent('commandCreateTableDefaultQuery', {}, { elapsedMs: Date.now() - t1 });
+	getTelemetryReporter()?.sendTelemetryEvent('commandCreateTableDefaultQuery', {}, { elapsedMs: Date.now() - t1 });
 
 };
 
@@ -407,7 +407,7 @@ export const commandOpenDdl = async function (...args: any[]) {
 		vscode.window.showErrorMessage(JSON.stringify(error));
 	}
 
-	reporter?.sendTelemetryEvent('commandOpenDdl', {}, { elapsedMs: Date.now() - t1 });
+	getTelemetryReporter()?.sendTelemetryEvent('commandOpenDdl', {}, { elapsedMs: Date.now() - t1 });
 
 };
 
@@ -424,7 +424,7 @@ export const commandSetDefaultProject = function (...args: any[]) {
 			resetBigQueryClient();
 		});
 
-	reporter?.sendTelemetryEvent('setDefaultProjectId', {});
+	getTelemetryReporter()?.sendTelemetryEvent('setDefaultProjectId', {});
 };
 
 export const commandDownloadCsv = async function (this: any, ...args: any[]) {
@@ -464,7 +464,7 @@ export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
 	};
 
-	reporter?.sendTelemetryEvent('commandDownloadCsv', telemetryProperties);
+	getTelemetryReporter()?.sendTelemetryEvent('commandDownloadCsv', telemetryProperties);
 };
 
 export const commandDownloadJsonl = async function (this: any, ...args: any[]) {
@@ -504,7 +504,7 @@ export const commandDownloadJsonl = async function (this: any, ...args: any[]) {
 		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
 	};
 
-	reporter?.sendTelemetryEvent('commandDownloadJsonl', telemetryProperties);
+	getTelemetryReporter()?.sendTelemetryEvent('commandDownloadJsonl', telemetryProperties);
 };
 
 export const commandSendPubsub = async function (this: any, ...args: any[]) {
@@ -545,7 +545,7 @@ export const commandSendPubsub = async function (this: any, ...args: any[]) {
 		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
 	};
 
-	reporter?.sendTelemetryEvent('commandSendPubsub', telemetryProperties);
+	getTelemetryReporter()?.sendTelemetryEvent('commandSendPubsub', telemetryProperties);
 };
 
 export const commandPinOrUnpinProject = function (...args: any[]) {
@@ -570,7 +570,7 @@ export const commandPinOrUnpinProject = function (...args: any[]) {
 
 	vscode.commands.executeCommand(COMMAND_EXPLORER_REFRESH);
 
-	reporter?.sendTelemetryEvent('commandPinOrUnpinProject', {});
+	getTelemetryReporter()?.sendTelemetryEvent('commandPinOrUnpinProject', {});
 };
 
 export const commandPlotChart = async function (this: any, ...args: any[]) {
@@ -602,7 +602,7 @@ export const commandPlotChart = async function (this: any, ...args: any[]) {
 
 	const numberOfJobs = await runQueryToChart(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
 
-	reporter?.sendTelemetryEvent('commandPlotChart', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+	getTelemetryReporter()?.sendTelemetryEvent('commandPlotChart', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
 };
 
@@ -619,7 +619,7 @@ export const commandAuthenticationTroubleshoot = async function (this: any, ...a
 
 	panel.webview.html = TroubleshootSerializer.getTroubleshootHtml(panel);
 
-	reporter?.sendTelemetryEvent('commandAuthenticationTroubleshoot', {}, { elapsedMs: Date.now() - t1 });
+	getTelemetryReporter()?.sendTelemetryEvent('commandAuthenticationTroubleshoot', {}, { elapsedMs: Date.now() - t1 });
 
 };
 
@@ -629,7 +629,7 @@ export const commandOpenSettingProjects = async function (this: any, ...args: an
 
 	vscode.commands.executeCommand('workbench.action.openWorkspaceSettings', 'vscode-bigquery.projects');
 
-	reporter?.sendTelemetryEvent('commandOpenSettingProjects', {}, { elapsedMs: Date.now() - t1 });
+	getTelemetryReporter()?.sendTelemetryEvent('commandOpenSettingProjects', {}, { elapsedMs: Date.now() - t1 });
 
 };
 
@@ -639,7 +639,7 @@ export const commandOpenSettingTables = async function (this: any, ...args: any[
 
 	vscode.commands.executeCommand('workbench.action.openWorkspaceSettings', 'vscode-bigquery.tables');
 
-	reporter?.sendTelemetryEvent('commandOpenSettingTables', {}, { elapsedMs: Date.now() - t1 });
+	getTelemetryReporter()?.sendTelemetryEvent('commandOpenSettingTables', {}, { elapsedMs: Date.now() - t1 });
 
 };
 
@@ -697,7 +697,7 @@ export const getBigQueryClient = function (): BigQueryClient {
 	if (!bigQueryClient) {
 		const t1 = Date.now();
 		bigQueryClient = new BigQueryClient();
-		reporter?.sendTelemetryEvent('CreateBigQueryClient', {}, { elapsedMs: Date.now() - t1 });
+		getTelemetryReporter()?.sendTelemetryEvent('CreateBigQueryClient', {}, { elapsedMs: Date.now() - t1 });
 	}
 
 	return bigQueryClient;

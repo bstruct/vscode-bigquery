@@ -7,9 +7,9 @@ use super::custom_element_definition::CustomElementDefinition;
 pub struct TableWithControls;
 
 impl CustomElementDefinition for TableWithControls {
-    fn define(_document: &web_sys::Document, element: &web_sys::HtmlElement) {
+    fn define(_document: &web_sys::Document, _element: &web_sys::HtmlElement) {
 
-        element.set_inner_text(&"hi");
+        // element.set_inner_text(&"hi");
 
         // //form
         // let form = document

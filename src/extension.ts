@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
+import { Uri, StatusBarItem, ExtensionContext } from 'vscode';
 import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authenticationWebviewViewProvider';
 import { BigQueryTreeDataProvider } from './activitybar/treeDataProvider';
-import { BigqueryIcons } from './bigqueryIcons';
 import * as commands from './extensionCommands';
 import { WebviewViewProvider } from './tableResultsPanel/webviewViewProvider';
 import TelemetryReporter from '@vscode/extension-telemetry';
@@ -22,27 +22,36 @@ export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
 export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
 export const bigqueryTableSchemaService = new BigqueryTableSchemaService();
-export let extensionUri: vscode.Uri;
-export let bigqueryIcons: BigqueryIcons;
-export let reporter: TelemetryReporter | null;
-export let statusBarInfo: vscode.StatusBarItem | null;
 
 export const CHART_VIEW_TYPE = "bigquery-query-chart";
 export const QUERY_RESULTS_VIEW_TYPE = "bigquery-query-results";
 export const TABLE_RESULTS_VIEW_TYPE = "bigquery-table-results";
 export const TROUBLESHOOT_VIEW_TYPE = "authentication-troubleshoot";
 
-export function activate(context: vscode.ExtensionContext) {
+let statusBarInfo: StatusBarItem | null;
+export function getStatusBarInfo(): StatusBarItem | null {
+	return statusBarInfo;
+}
+
+let extensionUri: Uri;
+export function getExtensionUri(): Uri {
+	return extensionUri;
+}
+
+let reporter: TelemetryReporter | null;
+export function getTelemetryReporter(): TelemetryReporter | null {
+	return reporter;
+}
+
+export function activate(context: ExtensionContext) {
 
 	extensionUri = context.extensionUri;
-
-	bigqueryIcons = new BigqueryIcons();
 
 	let queryResultsWebviewMapping: Map<string, ResultsRender> = new Map<string, ResultsRender>();
 
 	try {
-
-		reporter = new TelemetryReporter(context.extension.id, context.extension.packageJSON.version, '10f4da7d-e729-4526-8d9b-92529b10cb32');
+		//context.extension.id, context.extension.packageJSON.version, 
+		reporter = new TelemetryReporter('10f4da7d-e729-4526-8d9b-92529b10cb32');
 		context.subscriptions.push(reporter);
 
 	} catch (e) { console.error(e); }

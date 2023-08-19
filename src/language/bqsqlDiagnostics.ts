@@ -4,11 +4,13 @@ import * as vscode from 'vscode';
 import { BigqueryJobErrorItem } from "../services/bigqueryJobError";
 import { parse } from "@bstruct/bqsql-parser";
 import { BqsqlDocument, BqsqlDocumentItem } from "./bqsqlDocument";
-import { statusBarInfo } from "../extension";
+import { getStatusBarInfo } from "../extension";
 
 export class BqsqlDiagnostics {
 
     private static refreshDiagnostics(document: vscode.TextDocument, bqsqlDiagnostics: vscode.DiagnosticCollection): void {
+
+        const statusBarInfo = getStatusBarInfo();
 
         if (statusBarInfo) {
             statusBarInfo.text = '';
