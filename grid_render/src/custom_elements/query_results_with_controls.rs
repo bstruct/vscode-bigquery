@@ -2,6 +2,8 @@
 
 // use crate::{createElement, web_events::dialog_user_entry_event::DialogUserEntryEvent};
 
+use crate::bigquery::jobs::{GetQueryResultsRequest, Jobs};
+
 use super::custom_element_definition::CustomElementDefinition;
 use wasm_bindgen::{prelude::Closure, JsCast};
 
@@ -35,15 +37,33 @@ impl QueryResultsWithControls {
             .dyn_into::<web_sys::HtmlElement>()
             .unwrap();
 
-        let max_results = element
-            .get_attribute("xxx")
-            .unwrap_or(String::from("1"));
+        let job_id = element.get_attribute("jobId").unwrap();
+        let project_id = element.get_attribute("projectId").unwrap();
+        let location = element.get_attribute("location").unwrap();
 
-        let max_results_number = max_results.parse::<u8>().unwrap() + 1;
+        let jobs = Jobs::new(&"token");
+        let request = GetQueryResultsRequest {
+            project_id: project_id,
+            job_id: job_id,
+            start_index: None,
+            page_token: None,
+            max_results: None,
+            timeout_ms: None,
+            location: Some(location),
+        };
 
-        element.set_attribute("xxx", &max_results_number.to_string()).unwrap();
+        let _response = jobs.get_query_results(request);
 
-        element.set_inner_text(&format!("xxx: {:?}", max_results));
+        // let r = crate::getQueryResults(&job_id, &project_id, &location);
 
+        // let max_results = element.get_attribute("xxx").unwrap_or(String::from("1"));
+
+        // let max_results_number = max_results.parse::<u8>().unwrap() + 1;
+
+        // element
+        //     .set_attribute("xxx", &max_results_number.to_string())
+        //     .unwrap();
+
+        // element.set_inner_text(&format!("xxx: {:?}", r.as_string()));
     }
 }

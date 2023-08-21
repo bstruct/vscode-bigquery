@@ -20,7 +20,6 @@ import { QueryResultsVisualizationType } from './services/queryResultsVisualizat
 import { TelemetryEventProperties } from '@vscode/extension-telemetry';
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 import { DownloadJsonl } from './tableResultsPanel/downloadJsonl';
-import { BigQuery } from '@google-cloud/bigquery';
 import { SendToPubsub } from './tableResultsPanel/sendToPubsub';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";

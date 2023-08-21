@@ -1,4 +1,5 @@
 mod custom_elements;
+mod bigquery;
 
 use custom_elements::CustomElement;
 use std::str::FromStr;
