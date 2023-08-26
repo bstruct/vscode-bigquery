@@ -6,6 +6,7 @@ use crate::bigquery::jobs::{GetQueryResultsRequest, Jobs};
 
 use super::custom_element_definition::CustomElementDefinition;
 use wasm_bindgen::{prelude::Closure, JsCast};
+use wasm_bindgen_futures::spawn_local;
 
 pub struct QueryResultsWithControls;
 
@@ -40,8 +41,9 @@ impl QueryResultsWithControls {
         let job_id = element.get_attribute("jobId").unwrap();
         let project_id = element.get_attribute("projectId").unwrap();
         let location = element.get_attribute("location").unwrap();
+        let token = element.get_attribute("token").unwrap();
 
-        let jobs = Jobs::new(&"token");
+        let jobs = Jobs::new(&token);
         let request = GetQueryResultsRequest {
             project_id: project_id,
             job_id: job_id,
@@ -52,18 +54,12 @@ impl QueryResultsWithControls {
             location: Some(location),
         };
 
-        let _response = jobs.get_query_results(request);
+        spawn_local(async move {
+            let response = jobs.get_query_results(request).await;
+       
+            element.set_inner_text(&format!("xxx: {:?}", response));
+       
+        });
 
-        // let r = crate::getQueryResults(&job_id, &project_id, &location);
-
-        // let max_results = element.get_attribute("xxx").unwrap_or(String::from("1"));
-
-        // let max_results_number = max_results.parse::<u8>().unwrap() + 1;
-
-        // element
-        //     .set_attribute("xxx", &max_results_number.to_string())
-        //     .unwrap();
-
-        // element.set_inner_text(&format!("xxx: {:?}", r.as_string()));
     }
 }

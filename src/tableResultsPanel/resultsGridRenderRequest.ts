@@ -9,4 +9,5 @@ export interface ResultsGridRenderRequest {
     jobIndex: number;
     //true if results should have a button to open in another tab
     openInTabVisible: boolean;
+    token: string | null
 }

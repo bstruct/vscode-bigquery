@@ -6,6 +6,13 @@ import { SchemaField, TableMetadata } from './tableMetadata';
 
 export class BigQueryClient {
 
+	getToken(): Promise<string | null> {
+		return this.bqclient.authClient.getAccessToken()
+			.then(value => {
+				return value || null;
+			});
+	}
+
 	private bqclient = new BigQuery();
 
 	public async runQuery(queryText: string): Promise<Job[]> {

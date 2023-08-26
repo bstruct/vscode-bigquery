@@ -21,6 +21,7 @@ import { TelemetryEventProperties } from '@vscode/extension-telemetry';
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 import { DownloadJsonl } from './tableResultsPanel/downloadJsonl';
 import { SendToPubsub } from './tableResultsPanel/sendToPubsub';
+import { Job } from '@google-cloud/bigquery';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -137,16 +138,17 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 	}
 
 	try {
-		// resultsGridRender.renderLoadingIcon();
-
-		const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
+		const token = await getBigQueryClient().getToken();
+		const jobs: Job[] = await queryResponse;
+		const jobReferences = jobs.map(c => { return { jobId: c.metadata.jobReference.jobId, projectId: c.metadata.jobReference.projectId, location: c.metadata.jobReference.location } as JobReference; });
 
 		const request = {
 			jobReferences: jobReferences,
 			startIndex: 0,
 			maxResults: 50,
 			jobIndex: 0,
-			openInTabVisible: true
+			openInTabVisible: true,
+			token: token
 		} as ResultsGridRenderRequest;
 
 		resultsGridRender.render(request);
@@ -572,38 +574,38 @@ export const commandPinOrUnpinProject = function (...args: any[]) {
 	getTelemetryReporter()?.sendTelemetryEvent('commandPinOrUnpinProject', {});
 };
 
-export const commandPlotChart = async function (this: any, ...args: any[]) {
+// export const commandPlotChart = async function (this: any, ...args: any[]) {
 
-	const t1 = Date.now();
+// 	const t1 = Date.now();
 
-	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+// 	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
-	if (activeTab === undefined) {
-		return;
-	}
+// 	if (activeTab === undefined) {
+// 		return;
+// 	}
 
-	const textEditor = vscode.window.activeTextEditor;
-	if (textEditor === undefined) {
-		return;
-	}
+// 	const textEditor = vscode.window.activeTextEditor;
+// 	if (textEditor === undefined) {
+// 		return;
+// 	}
 
-	const queryText: string = textEditor.document.getText() ?? '';
+// 	const queryText: string = textEditor.document.getText() ?? '';
 
-	const globalState: vscode.Memento = this.globalState;
-	const queryResultsWebviewMapping: Map<string, ResultsRender> = this.queryResultsWebviewMapping;
+// 	const globalState: vscode.Memento = this.globalState;
+// 	const queryResultsWebviewMapping: Map<string, ResultsRender> = this.queryResultsWebviewMapping;
 
-	let uuid = QueryResultsMappingService.getQueryResultsMappingUuid(globalState, textEditor, QueryResultsVisualizationType.chart);
-	if (!uuid) {
-		uuid = uuidv4().substring(0, 8);
-	}
+// 	let uuid = QueryResultsMappingService.getQueryResultsMappingUuid(globalState, textEditor, QueryResultsVisualizationType.chart);
+// 	if (!uuid) {
+// 		uuid = uuidv4().substring(0, 8);
+// 	}
 
-	QueryResultsMappingService.upsertQueryResultsMapping(globalState, uuid, textEditor, QueryResultsVisualizationType.chart);
+// 	QueryResultsMappingService.upsertQueryResultsMapping(globalState, uuid, textEditor, QueryResultsVisualizationType.chart);
 
-	const numberOfJobs = await runQueryToChart(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
+// 	const numberOfJobs = await runQueryToChart(globalState, queryResultsWebviewMapping, uuid, activeTab.label, queryText);
 
-	getTelemetryReporter()?.sendTelemetryEvent('commandPlotChart', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
+// 	getTelemetryReporter()?.sendTelemetryEvent('commandPlotChart', {}, { numberOfJobs: numberOfJobs, elapsedMs: Date.now() - t1 });
 
-};
+// };
 
 export const commandAuthenticationTroubleshoot = async function (this: any, ...args: any[]) {
 
@@ -642,53 +644,53 @@ export const commandOpenSettingTables = async function (this: any, ...args: any[
 
 };
 
-const runQueryToChart = async function (globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, ResultsRender>, uuid: string, mainLabel: string, queryText: string): Promise<number> {
+// const runQueryToChart = async function (globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, ResultsRender>, uuid: string, mainLabel: string, queryText: string): Promise<number> {
 
-	const label = `Visualization: ${mainLabel} | ${uuid}`;
+// 	const label = `Visualization: ${mainLabel} | ${uuid}`;
 
-	let resultsChartRender = QueryResultsMappingService.getQueryResultsMappingResultsChartRender(queryResultsWebviewMapping, uuid);
+// 	let resultsChartRender = QueryResultsMappingService.getQueryResultsMappingResultsChartRender(queryResultsWebviewMapping, uuid);
 
-	if (resultsChartRender) {
+// 	if (resultsChartRender) {
 
-		resultsChartRender.reveal(undefined, true);
+// 		resultsChartRender.reveal(undefined, true);
 
-	} else {
+// 	} else {
 
-		const panel = vscode.window.createWebviewPanel(CHART_VIEW_TYPE, label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
-		resultsChartRender = new ResultsChartRender(panel);
+// 		const panel = vscode.window.createWebviewPanel(CHART_VIEW_TYPE, label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
+// 		resultsChartRender = new ResultsChartRender(panel);
 
-		QueryResultsMappingService.updateQueryResultsChartMappingWebviewPanel(queryResultsWebviewMapping, uuid, resultsChartRender);
+// 		QueryResultsMappingService.updateQueryResultsChartMappingWebviewPanel(queryResultsWebviewMapping, uuid, resultsChartRender);
 
-		//action when panel is closed
-		panel.onDidDispose(e => {
-			QueryResultsMappingService.deleteQueryResultsMapping(globalState, uuid);
-		});
+// 		//action when panel is closed
+// 		panel.onDidDispose(e => {
+// 			QueryResultsMappingService.deleteQueryResultsMapping(globalState, uuid);
+// 		});
 
-	}
+// 	}
 
-	try {
+// 	try {
 
-		resultsChartRender.renderLoadingIcon();
+// 		resultsChartRender.renderLoadingIcon();
 
-		const queryResponse = getBigQueryClient().runQuery(queryText);
-		const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
+// 		const queryResponse = getBigQueryClient().runQuery(queryText);
+// 		const jobReferences = (await queryResponse).map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
 
-		const request = {
-			jobReferences: jobReferences,
-			jobIndex: 0,
-		} as ResultsChartRenderRequest;
+// 		const request = {
+// 			jobReferences: jobReferences,
+// 			jobIndex: 0,
+// 		} as ResultsChartRenderRequest;
 
-		resultsChartRender.render(request);
+// 		resultsChartRender.render(request);
 
-		QueryResultsMappingService.updateQueryResultsMapping(globalState, uuid, request);
+// 		QueryResultsMappingService.updateQueryResultsMapping(globalState, uuid, request);
 
-		return (await queryResponse).length;
-	} catch (error) {
-		resultsChartRender.renderException(error);
-	}
+// 		return (await queryResponse).length;
+// 	} catch (error) {
+// 		resultsChartRender.renderException(error);
+// 	}
 
-	return 0;
-};
+// 	return 0;
+// };
 
 let bigQueryClient: BigQueryClient | null;
 

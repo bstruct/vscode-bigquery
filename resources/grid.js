@@ -34,6 +34,7 @@ window.addEventListener('message', async event => {
     q1.setAttribute("projectId", message.jobReferences[message.jobIndex].projectId);
     q1.setAttribute("jobId", message.jobReferences[message.jobIndex].jobId);
     q1.setAttribute("location", message.jobReferences[message.jobIndex].location);
+    q1.setAttribute("token", message.token);
     q1.dispatchEvent(new Event("render_table"));
 
 });

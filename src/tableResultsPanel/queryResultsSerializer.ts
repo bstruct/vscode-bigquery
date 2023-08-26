@@ -3,6 +3,7 @@ import { QueryResultsMappingService } from '../services/queryResultsMappingServi
 import { ResultsRender } from '../services/resultsRender';
 import { ResultsGridRender } from './resultsGridRender';
 import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
+import { getBigQueryClient } from '../extensionCommands';
 
 export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
 
@@ -14,11 +15,11 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
         this.queryResultsWebviewMapping = queryResultsWebviewMapping;
     }
 
-    deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any): Thenable<void> {
+    async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any): Promise<void> {
 
         const uuid = webviewPanel.title.substring(webviewPanel.title.length - 8);
 
-		const resultsGridRender = new ResultsGridRender(webviewPanel);
+        const resultsGridRender = new ResultsGridRender(webviewPanel);
 
         QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(this.queryResultsWebviewMapping, uuid, resultsGridRender);
 
@@ -42,12 +43,15 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
             && startIndex !== undefined
             && jobIndex !== undefined) {
 
+            const token = await getBigQueryClient().getToken();
+
             const request = {
                 jobReferences: queryResultsMappingItem.jobReferences,
                 startIndex: 0,
                 maxResults: 50,
                 jobIndex: 0,
-                openInTabVisible: true
+                openInTabVisible: true,
+                token: token
             } as ResultsGridRenderRequest;
 
             return resultsGridRender.render(request);
