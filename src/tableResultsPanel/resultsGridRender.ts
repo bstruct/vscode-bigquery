@@ -61,36 +61,36 @@ export class ResultsGridRender {
         this.webViewPanel.webview.html = this.getExceptionHtml(error);
     }
 
-    private getWaitingHtml(maxResults: number, openInTabVisible: boolean, startIndex: number, jobIndex: number | undefined): string {
+    // private getWaitingHtml(maxResults: number, openInTabVisible: boolean, startIndex: number, jobIndex: number | undefined): string {
 
-        const toolkitUri = this.getUri(this.webViewPanel.webview, getExtensionUri(), [
-            "resources",
-            "toolkit.min.js",
-        ]);
+    //     const toolkitUri = this.getUri(this.webViewPanel.webview, getExtensionUri(), [
+    //         "resources",
+    //         "toolkit.min.js",
+    //     ]);
 
-        return `<!DOCTYPE html>
-		<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<script type="module" src="${toolkitUri}"></script>
-                <script>
-                    const qElement = document.querySelectorAll('div.editor-actions ul.actions-container > li.action-item a[aria-label="\${x1}"]');
-                    if(qElement.length >0){
-                        const element = qElement[0];
-                        element.innerText = 'trying';
-                    }
+    //     return `<!DOCTYPE html>
+	// 	<html lang="en">
+	// 		<head>
+	// 			<meta charset="UTF-8">
+	// 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	// 			<script type="module" src="${toolkitUri}"></script>
+    //             <script>
+    //                 const qElement = document.querySelectorAll('div.editor-actions ul.actions-container > li.action-item a[aria-label="\${x1}"]');
+    //                 if(qElement.length >0){
+    //                     const element = qElement[0];
+    //                     element.innerText = 'trying';
+    //                 }
                 
-                    const vscode = acquireVsCodeApi();
-                    vscode.setState({ maxResults: ${maxResults}, openInTabVisible: ${openInTabVisible}, startIndex: ${startIndex}, jobIndex: ${jobIndex} });
-                </script>
-			</head>
-			<body>
-                <vscode-progress-ring></vscode-progress-ring>
-			</body>
-		</html>`;
+    //                 const vscode = acquireVsCodeApi();
+    //                 vscode.setState({ maxResults: ${maxResults}, openInTabVisible: ${openInTabVisible}, startIndex: ${startIndex}, jobIndex: ${jobIndex} });
+    //             </script>
+	// 		</head>
+	// 		<body>
+    //             <vscode-progress-ring></vscode-progress-ring>
+	// 		</body>
+	// 	</html>`;
 
-    }
+    // }
 
     private getExceptionHtml(exception: any): string {
 

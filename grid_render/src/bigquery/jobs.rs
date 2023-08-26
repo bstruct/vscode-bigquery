@@ -36,7 +36,7 @@ pub struct JobReference {
     pub location: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TableFieldSchema {
     pub name: String,
     // pub type: String,
@@ -55,7 +55,7 @@ pub struct TableFieldSchema {
     pub default_value_expression: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TableSchema {
     pub fields: Vec<TableFieldSchema>,
 }

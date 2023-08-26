@@ -139,6 +139,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	try {
 		const token = await getBigQueryClient().getToken();
+		
 		const jobs: Job[] = await queryResponse;
 		const jobReferences = jobs.map(c => { return { jobId: c.metadata.jobReference.jobId, projectId: c.metadata.jobReference.projectId, location: c.metadata.jobReference.location } as JobReference; });
 
@@ -155,7 +156,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 		QueryResultsMappingService.updateQueryResultsMapping(globalState, uuid, request);
 
-		return (await queryResponse).length;
+		return jobs.length;
 	} catch (error) {
 		resultsGridRender.renderException(error);
 	}

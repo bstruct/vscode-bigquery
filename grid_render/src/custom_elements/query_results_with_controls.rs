@@ -7,6 +7,7 @@ use crate::bigquery::jobs::{GetQueryResultsRequest, Jobs};
 use super::custom_element_definition::CustomElementDefinition;
 use wasm_bindgen::{prelude::Closure, JsCast};
 use wasm_bindgen_futures::spawn_local;
+use web_sys::HtmlElement;
 
 pub struct QueryResultsWithControls;
 
@@ -38,6 +39,9 @@ impl QueryResultsWithControls {
             .dyn_into::<web_sys::HtmlElement>()
             .unwrap();
 
+        //clear out the content
+        element.set_inner_html("");
+
         let job_id = element.get_attribute("jobId").unwrap();
         let project_id = element.get_attribute("projectId").unwrap();
         let location = element.get_attribute("location").unwrap();
@@ -56,10 +60,78 @@ impl QueryResultsWithControls {
 
         spawn_local(async move {
             let response = jobs.get_query_results(request).await;
-       
-            element.set_inner_text(&format!("xxx: {:?}", response));
-       
-        });
+            if response.is_some() {
+                let render_table = QueryResultsWithControls::render_table;
+                render_table(&element, &response.unwrap());
+            }
 
+            // element.set_inner_text(&format!("xxx: {:?}", response));
+        });
+    }
+
+    fn render_table(
+        element: &HtmlElement,
+        query_response: &crate::bigquery::jobs::GetQueryResultsResponse,
+    ) {
+        // https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/src/data-grid/README.md
+        //<vscode-data-grid>
+        let grid = crate::createElement("vscode-data-grid");
+        element.append_child(&grid).unwrap();
+
+        //<vscode-data-grid-row>
+        let row = crate::createElement("vscode-data-grid-row");
+        grid.append_child(&row).unwrap();
+
+        //<vscode-data-grid-cell>
+        let header_cell_style = "background-color: var(--list-hover-background);";
+
+        let cell = crate::createElement("vscode-data-grid-cell");
+        cell.set_attribute("cell-type", "columnheader").unwrap();
+        cell.set_attribute("style", header_cell_style).unwrap();
+        cell.set_attribute("grid-column", "1").unwrap();
+        cell.set_inner_html("Row");
+        row.append_child(&cell).unwrap();
+
+        let fields = &query_response.schema.to_owned().unwrap().fields.to_vec();
+
+        let mut index = 1;
+        for column in fields {
+            let cell = crate::createElement("vscode-data-grid-cell");
+            cell.set_attribute("cell-type", "columnheader").unwrap();
+            cell.set_attribute("style", header_cell_style).unwrap();
+            cell.set_attribute("grid-column", &(index + 1).to_string())
+                .unwrap();
+            cell.set_inner_html(&column.name);
+            index = index + 1;
+            row.append_child(&cell).unwrap();
+        }
+
+        //
+        let mut index = 0;
+        for query_response_row in &query_response.rows {
+            let row = crate::createElement("vscode-data-grid-row");
+            grid.append_child(&row).unwrap();
+
+            let cell = crate::createElement("vscode-data-grid-cell");
+            cell.set_attribute("style", header_cell_style).unwrap();
+            cell.set_attribute("grid-column", &(index + 1).to_string())
+                .unwrap();
+            cell.set_inner_html("xx");
+            index = index + 1;
+            row.append_child(&cell).unwrap();
+
+            for _column in fields {
+
+                let cell = crate::createElement("vscode-data-grid-cell");
+                cell.set_attribute("style", header_cell_style).unwrap();
+                cell.set_attribute("grid-column", &(index + 1).to_string())
+                    .unwrap();
+                cell.set_inner_html(query_response_row.get(index).unwrap().as_str().unwrap());
+                index = index + 1;
+                row.append_child(&cell).unwrap();
+            }
+        }
+
+        // const cells: preact.VNode[] = [preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '1' }, 'Row')];
     }
 }
