@@ -61,77 +61,69 @@ impl QueryResultsWithControls {
         spawn_local(async move {
             let response = jobs.get_query_results(request).await;
             if response.is_some() {
-                let render_table = QueryResultsWithControls::render_table;
                 render_table(&element, &response.unwrap());
             }
 
             // element.set_inner_text(&format!("xxx: {:?}", response));
         });
     }
+}
 
-    fn render_table(
-        element: &HtmlElement,
-        query_response: &crate::bigquery::jobs::GetQueryResultsResponse,
-    ) {
-        // https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/src/data-grid/README.md
-        //<vscode-data-grid>
-        let grid = crate::createElement("vscode-data-grid");
-        element.append_child(&grid).unwrap();
+fn render_table(
+    element: &HtmlElement,
+    query_response: &crate::bigquery::jobs::GetQueryResultsResponse,
+) {
+    // https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/src/data-grid/README.md
+    //<vscode-data-grid>
+    let grid = crate::createElement("vscode-data-grid");
+    element.append_child(&grid).unwrap();
 
-        //<vscode-data-grid-row>
+    //<vscode-data-grid-row>
+    let row = crate::createElement("vscode-data-grid-row");
+    grid.append_child(&row).unwrap();
+
+    //<vscode-data-grid-cell>
+
+    // let cell = create_cell(&"Row");
+    let mut column_index = 1;
+    row.append_child(&create_cell(column_index, &"Row")).unwrap();
+    column_index = column_index + 1;
+
+    let fields = &query_response.schema.to_owned().unwrap().fields.to_vec();
+    for column in fields {
+        row.append_child(&create_cell(column_index, &column.name)).unwrap();
+        column_index = column_index + 1;
+    }
+
+    //
+    let mut row_index = 1;
+    for _query_response_row in &query_response.rows {
         let row = crate::createElement("vscode-data-grid-row");
         grid.append_child(&row).unwrap();
 
-        //<vscode-data-grid-cell>
-        let header_cell_style = "background-color: var(--list-hover-background);";
+        let mut column_index = 1;
+        row.append_child(&create_cell(column_index, &(row_index).to_string()))
+            .unwrap();
 
-        let cell = crate::createElement("vscode-data-grid-cell");
-        cell.set_attribute("cell-type", "columnheader").unwrap();
-        cell.set_attribute("style", header_cell_style).unwrap();
-        cell.set_attribute("grid-column", "1").unwrap();
-        cell.set_inner_html("Row");
-        row.append_child(&cell).unwrap();
-
-        let fields = &query_response.schema.to_owned().unwrap().fields.to_vec();
-
-        let mut index = 1;
-        for column in fields {
-            let cell = crate::createElement("vscode-data-grid-cell");
-            cell.set_attribute("cell-type", "columnheader").unwrap();
-            cell.set_attribute("style", header_cell_style).unwrap();
-            cell.set_attribute("grid-column", &(index + 1).to_string())
-                .unwrap();
-            cell.set_inner_html(&column.name);
-            index = index + 1;
-            row.append_child(&cell).unwrap();
+        for _column in fields {
+            column_index = column_index + 1;
+            let value = &"xxx"; //query_response_row.get(0).unwrap().as_str().unwrap();
+            row.append_child(&create_cell(column_index, value)).unwrap();
         }
 
-        //
-        let mut index = 0;
-        for query_response_row in &query_response.rows {
-            let row = crate::createElement("vscode-data-grid-row");
-            grid.append_child(&row).unwrap();
-
-            let cell = crate::createElement("vscode-data-grid-cell");
-            cell.set_attribute("style", header_cell_style).unwrap();
-            cell.set_attribute("grid-column", &(index + 1).to_string())
-                .unwrap();
-            cell.set_inner_html("xx");
-            index = index + 1;
-            row.append_child(&cell).unwrap();
-
-            for _column in fields {
-
-                let cell = crate::createElement("vscode-data-grid-cell");
-                cell.set_attribute("style", header_cell_style).unwrap();
-                cell.set_attribute("grid-column", &(index + 1).to_string())
-                    .unwrap();
-                cell.set_inner_html(query_response_row.get(index).unwrap().as_str().unwrap());
-                index = index + 1;
-                row.append_child(&cell).unwrap();
-            }
-        }
-
-        // const cells: preact.VNode[] = [preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '1' }, 'Row')];
+        row_index = row_index + 1;
     }
+
+    // const cells: preact.VNode[] = [preact.h('vscode-data-grid-cell', { 'cell-type': 'columnheader', 'style': headerCellStyle, 'grid-column': '1' }, 'Row')];
+}
+
+fn create_cell(grid_column: u8, inner_html: &str) -> web_sys::Element {
+    let cell = crate::createElement("vscode-data-grid-cell");
+    cell.set_attribute("cell-type", "columnheader").unwrap();
+    cell.set_attribute("style", "background-color: var(--list-hover-background);")
+        .unwrap();
+    cell.set_attribute("grid-column", &grid_column.to_string())
+        .unwrap();
+    cell.set_inner_html(inner_html);
+    cell
 }
