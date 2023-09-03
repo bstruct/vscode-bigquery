@@ -39,7 +39,8 @@ pub struct JobReference {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TableFieldSchema {
     pub name: String,
-    // pub type: String,
+    #[serde(alias = "type")]
+    pub r#type: String,
     pub mode: Option<String>,
     pub fields: Option<Vec<TableFieldSchema>>,
     pub description: Option<String>,

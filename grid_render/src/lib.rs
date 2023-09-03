@@ -1,5 +1,5 @@
-mod custom_elements;
 mod bigquery;
+mod custom_elements;
 
 use custom_elements::CustomElement;
 use std::str::FromStr;
@@ -43,7 +43,4 @@ pub fn register_custom_element(custom_component_name: &JsValue, element: web_sys
 }
 
 #[wasm_bindgen(start)]
-fn main() {
-
-    // console::info_1(&JsValue::from("I'm in"));
-}
+fn main_js() {}

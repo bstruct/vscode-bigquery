@@ -45,6 +45,9 @@ features = [
     "MutationObserver",
 ]
 
+[dev-dependencies]
+wasm-bindgen-test = "0.3.37"
+
 [profile.release]
 opt-level = "s"
 # opt-level = "z"
