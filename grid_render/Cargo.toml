@@ -45,6 +45,9 @@ features = [
     "MutationObserver",
 ]
 
+# [features]
+# default = ["console_error_panic_hook", "wee_alloc"]
+
 [dev-dependencies]
 wasm-bindgen-test = "0.3.37"
 
