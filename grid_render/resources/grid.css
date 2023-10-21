@@ -1,10 +1,32 @@
+
+div#controls {
+    top: 0;
+    position: fixed;
+    background: var(--background);
+    left: 20px;
+    width: 100%;
+}
+
+div#controls span#paging {
+    padding: 5px 10px;
+    display: inline-block;
+    background-color: var(--button-secondary-background);
+    color: var(--button-secondary-foreground);
+}
+
 table {
     white-space: nowrap;
     display: table;
     outline: none;
     border-collapse: collapse;
     text-align: left;
+    margin-top: 30px;
+}
 
+table thead {
+    top: 30px;
+    position: sticky;
+    background-color: var(--dropdown-background);
 }
 
 th, td {

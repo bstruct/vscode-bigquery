@@ -43,5 +43,19 @@ pub fn register_custom_element(custom_component_name: &JsValue, element: web_sys
         .expect("custom_component not configured");
 }
 
+fn parse_to_usize(number: Option<String>) -> Option<usize> {
+    match number {
+        Some(s) => {
+            let u = s.parse::<usize>();
+            if u.is_ok() {
+                Some(u.unwrap())
+            } else {
+                None
+            }
+        }
+        None => None,
+    }
+}
+
 #[wasm_bindgen(start)]
 fn main_js() {}

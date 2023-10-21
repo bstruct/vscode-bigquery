@@ -12,8 +12,8 @@ pub struct GetQueryResultsRequest {
     pub job_id: String,
     pub start_index: Option<String>,
     pub page_token: Option<String>,
-    pub max_results: Option<u8>,
-    pub timeout_ms: Option<u8>,
+    pub max_results: Option<usize>,
+    pub timeout_ms: Option<usize>,
     pub location: Option<String>,
     // formatOptions: DataFormatOptions;
 }

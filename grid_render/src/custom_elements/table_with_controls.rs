@@ -1,5 +1,5 @@
 use super::custom_element_definition::CustomElementDefinition;
-use crate::bigquery::jobs::{GetQueryResultsRequest, Jobs};
+use crate::{bigquery::jobs::{GetQueryResultsRequest, Jobs}, parse_to_usize};
 use wasm_bindgen::{prelude::Closure, JsCast};
 use wasm_bindgen_futures::spawn_local;
 
@@ -42,24 +42,14 @@ impl TableWithControls {
         let token = element.get_attribute("token").unwrap();
 
         let start_index = element.get_attribute("startIndex");
-        let max_results = match element.get_attribute("maxResults") {
-            Some(s) => {
-                let u = s.parse::<u8>();
-                if u.is_ok(){
-                    Some(u.unwrap())
-                }else{
-                    None
-                }
-            },
-            None => None,
-        };
+        let max_results = parse_to_usize(element.get_attribute("maxResults"));
         // let xxx = element.get_attribute("openInTabVisible").unwrap();
 
         let jobs = Jobs::new(&token);
         let request = GetQueryResultsRequest {
             project_id: project_id,
             job_id: job_id,
-            start_index: start_index,
+            start_index: start_index.to_owned(),
             page_token: None,
             max_results: max_results,
             timeout_ms: None,
@@ -69,7 +59,9 @@ impl TableWithControls {
         spawn_local(async move {
             let response = jobs.get_query_results(request).await;
             if response.is_some() {
-                crate::custom_elements::table_v2::render_table_v2(&element, &response.unwrap());
+                let start_index = parse_to_usize(start_index).unwrap_or_default();
+
+                crate::custom_elements::table_v2::render_table_v2(&element, &response.unwrap(), start_index);
             }
 
             // element.set_inner_text(&format!("xxx: {:?}", response));

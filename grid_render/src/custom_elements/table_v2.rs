@@ -2,45 +2,65 @@
 // use web_sys::{console, HtmlElement};
 use web_sys::{HtmlElement, ShadowRoot};
 
-use crate::bigquery::jobs::TableFieldSchema;
+use crate::{bigquery::jobs::TableFieldSchema, parse_to_usize};
 
 pub fn render_table_v2(
     element: &HtmlElement,
     query_response: &crate::bigquery::jobs::GetQueryResultsResponse,
+    start_index: usize,
 ) {
     if query_response.schema.is_some() {
+        let shadow = &shadow_init(element);
 
-        let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
-        let shadow = element.attach_shadow(&shadow_init).unwrap();
-            
-        let shadow_style = crate::createElement("style");
-        let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
-        shadow_style.set_inner_html(css_content);
-        shadow.append_child(&shadow_style).unwrap();
-            
+        render_control(shadow, query_response, start_index);
 
-        // let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
-        // let shadow = element.attach_shadow(&shadow_init).unwrap();
-            
-        // query_response.total_rows
-        // control's div
-        let div = crate::createElement("div");
-        shadow.append_child(&div).unwrap();
-
-        div.set_inner_html(&format!("results have {} rows", query_response.total_rows));
-
-
-
-        render_table(query_response, &shadow);
+        render_table(shadow, query_response);
     }
 }
 
-fn render_table(query_response: &crate::bigquery::jobs::GetQueryResultsResponse, shadow: &ShadowRoot) {
+fn shadow_init(element: &HtmlElement) -> ShadowRoot {
+    let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
+    let shadow = element.attach_shadow(&shadow_init).unwrap();
+
+    let shadow_style = crate::createElement("style");
+    let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
+    shadow_style.set_inner_html(css_content);
+    shadow.append_child(&shadow_style).unwrap();
+    shadow
+}
+
+fn render_control(
+    shadow: &ShadowRoot,
+    query_response: &crate::bigquery::jobs::GetQueryResultsResponse,
+    start_index: usize,
+) {
+    let row_count = query_response.rows.len();
+    let total_rows = parse_to_usize(Some(query_response.total_rows.to_owned())).unwrap_or_default();
+
+    // control's div
+    let div = crate::createElement("div");
+    div.set_id("controls");
+    shadow.append_child(&div).unwrap();
+
+    //span for page information
+    let span_page_information = crate::createElement("span");
+    span_page_information.set_id("paging");
+    span_page_information.set_inner_html(&format!("{} - {} of {}", start_index + 1, start_index + row_count, total_rows));
+    div.append_child(&span_page_information).unwrap();
+
+
+
+}
+
+fn render_table(
+    shadow: &ShadowRoot,
+    query_response: &crate::bigquery::jobs::GetQueryResultsResponse,
+) {
     let fields_schema: &Vec<TableFieldSchema> =
         &query_response.schema.to_owned().unwrap().fields.to_vec();
 
     //<table>
-    let table = crate::createElement("table"); 
+    let table = crate::createElement("table");
     shadow.append_child(&table).unwrap();
 
     //<thead>
@@ -75,8 +95,7 @@ fn render_table(query_response: &crate::bigquery::jobs::GetQueryResultsResponse,
 
             column_index = column_index + 1;
             // let value = &"xxx"; //query_response_row.get(0).unwrap().as_str().unwrap();
-            let element =
-                get_value_element(query_response_row, field_schema_index, field_schema);
+            let element = get_value_element(query_response_row, field_schema_index, field_schema);
             row.append_child(&create_cell_with_element(false, column_index, &element))
                 .unwrap();
         }
