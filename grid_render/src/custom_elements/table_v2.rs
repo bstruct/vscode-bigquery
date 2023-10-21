@@ -1,6 +1,6 @@
 // use wasm_bindgen::JsValue;
 // use web_sys::{console, HtmlElement};
-use web_sys::HtmlElement;
+use web_sys::{HtmlElement, ShadowRoot};
 
 use crate::bigquery::jobs::TableFieldSchema;
 
@@ -9,62 +9,79 @@ pub fn render_table_v2(
     query_response: &crate::bigquery::jobs::GetQueryResultsResponse,
 ) {
     if query_response.schema.is_some() {
-        let fields_schema: &Vec<TableFieldSchema> =
-            &query_response.schema.to_owned().unwrap().fields.to_vec();
 
-        //<table>
-        let table = crate::createElement("table");
-        
         let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
         let shadow = element.attach_shadow(&shadow_init).unwrap();
-        
+            
         let shadow_style = crate::createElement("style");
         let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
         shadow_style.set_inner_html(css_content);
         shadow.append_child(&shadow_style).unwrap();
-        
-        shadow.append_child(&table).unwrap();
+            
 
-        //<thead>
-        let thead: web_sys::Element = crate::createElement("thead");
-        table.append_child(&thead).unwrap();
-        let tr: web_sys::Element = crate::createElement("tr");
-        thead.append_child(&tr).unwrap();
-        append_header_columns(&tr, &fields_schema, 1, &None);
+        // let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
+        // let shadow = element.attach_shadow(&shadow_init).unwrap();
+            
+        // query_response.total_rows
+        // control's div
+        let div = crate::createElement("div");
+        shadow.append_child(&div).unwrap();
 
-        //<tbody>
-        let tbody: web_sys::Element = crate::createElement("tbody");
-        table.append_child(&tbody).unwrap();
+        div.set_inner_html(&format!("results have {} rows", query_response.total_rows));
 
-        //rows with data
-        let mut row_index = 1;
-        for query_response_row in &query_response.rows {
-            let row = crate::createElement("tr");
-            tbody.append_child(&row).unwrap();
 
-            let mut column_index = 1;
-            row.append_child(&create_cell_with_text(
-                false,
-                column_index,
-                &(row_index).to_string(),
-            ))
-            .unwrap();
 
-            // console::log_1(&JsValue::from_str(&query_response_row.to_string()));
+        render_table(query_response, &shadow);
+    }
+}
 
-            for (field_schema_index, field_schema) in fields_schema.iter().enumerate() {
-                // console::log_1(&JsValue::from_str(&field_schema.r#type));
+fn render_table(query_response: &crate::bigquery::jobs::GetQueryResultsResponse, shadow: &ShadowRoot) {
+    let fields_schema: &Vec<TableFieldSchema> =
+        &query_response.schema.to_owned().unwrap().fields.to_vec();
 
-                column_index = column_index + 1;
-                // let value = &"xxx"; //query_response_row.get(0).unwrap().as_str().unwrap();
-                let element =
-                    get_value_element(query_response_row, field_schema_index, field_schema);
-                row.append_child(&create_cell_with_element(false, column_index, &element))
-                    .unwrap();
-            }
+    //<table>
+    let table = crate::createElement("table"); 
+    shadow.append_child(&table).unwrap();
 
-            row_index = row_index + 1;
+    //<thead>
+    let thead: web_sys::Element = crate::createElement("thead");
+    table.append_child(&thead).unwrap();
+    let tr: web_sys::Element = crate::createElement("tr");
+    thead.append_child(&tr).unwrap();
+    append_header_columns(&tr, &fields_schema, 1, &None);
+
+    //<tbody>
+    let tbody: web_sys::Element = crate::createElement("tbody");
+    table.append_child(&tbody).unwrap();
+
+    //rows with data
+    let mut row_index = 1;
+    for query_response_row in &query_response.rows {
+        let row = crate::createElement("tr");
+        tbody.append_child(&row).unwrap();
+
+        let mut column_index = 1;
+        row.append_child(&create_cell_with_text(
+            false,
+            column_index,
+            &(row_index).to_string(),
+        ))
+        .unwrap();
+
+        // console::log_1(&JsValue::from_str(&query_response_row.to_string()));
+
+        for (field_schema_index, field_schema) in fields_schema.iter().enumerate() {
+            // console::log_1(&JsValue::from_str(&field_schema.r#type));
+
+            column_index = column_index + 1;
+            // let value = &"xxx"; //query_response_row.get(0).unwrap().as_str().unwrap();
+            let element =
+                get_value_element(query_response_row, field_schema_index, field_schema);
+            row.append_child(&create_cell_with_element(false, column_index, &element))
+                .unwrap();
         }
+
+        row_index = row_index + 1;
     }
 }
 
