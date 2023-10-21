@@ -1,70 +1,10 @@
-use super::custom_element_definition::CustomElementDefinition;
-use crate::bigquery::jobs::{GetQueryResultsRequest, Jobs, TableFieldSchema};
-use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
-use wasm_bindgen_futures::spawn_local;
-use web_sys::{console, HtmlElement};
+// use wasm_bindgen::JsValue;
+// use web_sys::{console, HtmlElement};
+use web_sys::HtmlElement;
 
-pub struct QueryResultsWithControls;
+use crate::bigquery::jobs::TableFieldSchema;
 
-impl CustomElementDefinition for QueryResultsWithControls {
-    fn define(_document: &web_sys::Document, element: &web_sys::HtmlElement) {
-        // element.add_event_listener_with_callback("type_", listener)
-
-        let on_event_type_closure = Closure::wrap(Box::new(
-            QueryResultsWithControls::on_render_table,
-        ) as Box<dyn Fn(&web_sys::Event)>);
-        // form.set_onsubmit(Some(onsubmit_closure.as_ref().unchecked_ref()));
-
-        element
-            .add_event_listener_with_callback(
-                "render_table",
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
-
-        on_event_type_closure.forget();
-    }
-}
-
-impl QueryResultsWithControls {
-    pub fn on_render_table(event: &web_sys::Event) {
-        let element = event
-            .target()
-            .unwrap()
-            .dyn_into::<web_sys::HtmlElement>()
-            .unwrap();
-
-        //clear out the content
-        element.set_inner_html("");
-
-        let job_id = element.get_attribute("jobId").unwrap();
-        let project_id = element.get_attribute("projectId").unwrap();
-        let location = element.get_attribute("location").unwrap();
-        let token = element.get_attribute("token").unwrap();
-
-        let jobs = Jobs::new(&token);
-        let request = GetQueryResultsRequest {
-            project_id: project_id,
-            job_id: job_id,
-            start_index: None,
-            page_token: None,
-            max_results: None,
-            timeout_ms: None,
-            location: Some(location),
-        };
-
-        spawn_local(async move {
-            let response = jobs.get_query_results(request).await;
-            if response.is_some() {
-                render_table(&element, &response.unwrap());
-            }
-
-            // element.set_inner_text(&format!("xxx: {:?}", response));
-        });
-    }
-}
-
-fn render_table(
+pub fn render_table_v2(
     element: &HtmlElement,
     query_response: &crate::bigquery::jobs::GetQueryResultsResponse,
 ) {
@@ -72,24 +12,35 @@ fn render_table(
         let fields_schema: &Vec<TableFieldSchema> =
             &query_response.schema.to_owned().unwrap().fields.to_vec();
 
-        // https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/src/data-grid/README.md
-        //<vscode-data-grid>
-        let grid = crate::createElement("vscode-data-grid");
-        element.append_child(&grid).unwrap();
+        //<table>
+        let table = crate::createElement("table");
+        
+        let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
+        let shadow = element.attach_shadow(&shadow_init).unwrap();
+        
+        let shadow_style = crate::createElement("style");
+        let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
+        shadow_style.set_inner_html(css_content);
+        shadow.append_child(&shadow_style).unwrap();
+        
+        shadow.append_child(&table).unwrap();
 
-        //<vscode-data-grid-row>
+        //<thead>
+        let thead: web_sys::Element = crate::createElement("thead");
+        table.append_child(&thead).unwrap();
+        let tr: web_sys::Element = crate::createElement("tr");
+        thead.append_child(&tr).unwrap();
+        append_header_columns(&tr, &fields_schema, 1, &None);
 
-        let row: web_sys::Element = crate::createElement("vscode-data-grid-row");
-        grid.append_child(&row).unwrap();
-        append_header_columns(&row, &fields_schema, 1, &None);
-
-        //<vscode-data-grid-cell>
+        //<tbody>
+        let tbody: web_sys::Element = crate::createElement("tbody");
+        table.append_child(&tbody).unwrap();
 
         //rows with data
         let mut row_index = 1;
         for query_response_row in &query_response.rows {
-            let row = crate::createElement("vscode-data-grid-row");
-            grid.append_child(&row).unwrap();
+            let row = crate::createElement("tr");
+            tbody.append_child(&row).unwrap();
 
             let mut column_index = 1;
             row.append_child(&create_cell_with_text(
@@ -99,10 +50,10 @@ fn render_table(
             ))
             .unwrap();
 
-            console::log_1(&JsValue::from_str(&query_response_row.to_string()));
+            // console::log_1(&JsValue::from_str(&query_response_row.to_string()));
 
             for (field_schema_index, field_schema) in fields_schema.iter().enumerate() {
-                console::log_1(&JsValue::from_str(&field_schema.r#type));
+                // console::log_1(&JsValue::from_str(&field_schema.r#type));
 
                 column_index = column_index + 1;
                 // let value = &"xxx"; //query_response_row.get(0).unwrap().as_str().unwrap();
@@ -206,16 +157,11 @@ fn get_value_element(
     }
 }
 
-fn create_cell(column_header: bool, grid_column: u8) -> web_sys::Element {
-    let cell = crate::createElement("vscode-data-grid-cell");
-    if column_header {
-        cell.set_attribute("cell-type", "columnheader").unwrap();
+fn create_cell(column_header: bool, _grid_column: u8) -> web_sys::Element {
+    match column_header {
+        true => crate::createElement("th"),
+        false => crate::createElement("td"),
     }
-    cell.set_attribute("style", "background-color: var(--list-hover-background);")
-        .unwrap();
-    cell.set_attribute("grid-column", &grid_column.to_string())
-        .unwrap();
-    cell
 }
 
 fn create_cell_with_text(

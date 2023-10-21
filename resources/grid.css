@@ -41,3 +41,17 @@ div.labelValue span.value {
 /* vscode-data-grid-cell {
     border-bottom: var(--list-hover-background) 1px solid;
 } */
+
+table-with-controls table {
+    white-space: nowrap;
+    display: table;
+    outline: none;
+    border-collapse: collapse;
+    text-align: left;
+
+}
+
+table-with-controls th, table-with-controls td {
+    padding: 5px 15px;
+    border-bottom: 1px solid gray;
+}

@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import bigquery from '@google-cloud/bigquery/build/src/types';
+// import bigquery from '@google-cloud/bigquery/build/src/types';
 import { getExtensionUri, QUERY_RESULTS_VIEW_TYPE, getTelemetryReporter } from '../extension';
-import { QueryResultsOptions, Table } from '@google-cloud/bigquery';
+// import { QueryResultsOptions, Table } from '@google-cloud/bigquery';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
-import { ResultsGrid } from './resultsGrid';
+// import { ResultsGrid } from './resultsGrid';
 import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 import { COMMAND_DOWNLOAD_CSV, getBigQueryClient } from '../extensionCommands';
 import { JobReference } from '../services/queryResultsMapping';
@@ -226,11 +226,6 @@ export class ResultsGridRender {
             'codicon.css']
         );
 
-        const gridCss = this.getUri(this.webViewPanel.webview, extensionUri, [
-            'resources',
-            'grid.css']
-        );
-
         const gridJs = this.getUri(this.webViewPanel.webview, extensionUri, [
             'resources',
             'grid.js']
@@ -242,15 +237,13 @@ export class ResultsGridRender {
         		<meta charset="UTF-8">
         		<script type="module" src="${toolkitUri}"></script>
                 <link href="${codiconsUri}" rel="stylesheet" />
-                <link href="${gridCss}" rel="stylesheet" />
                 <script>
                     const vscode = acquireVsCodeApi();
                     vscode.setState({ maxResults: ${request.maxResults}, openInTabVisible: ${request.openInTabVisible}, startIndex: ${request.startIndex}, jobIndex: ${request.jobIndex} });
                 </script>
         	</head>
         	<body>
-                <table-with-controls></table-with-controls>
-                <query-results-with-controls id="q1"></query-results-with-controls>
+                <table-with-controls id="q1"></table-with-controls>
                 <script type="module" src="${gridJs}"></script>
         	</body>
         </html>`,

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective/dist/cdn/perspective.js"></script>
+    <script type="module"
+        src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/cdn/perspective-viewer.js"></script>
+    <script type="module"
+        src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid/dist/cdn/perspective-viewer-datagrid.js"></script>
+    <script type="module"
+        src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-d3fc/dist/cdn/perspective-viewer-d3fc.js"></script>
+
+    <link rel="stylesheet" crossorigin="anonymous"
+        href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/css/pro.css" />
+
+    <style>
+        div#settings_button.button {
+            display: none;
+        }
+    </style>
+    
+</head>
+
+<body>
+
+    <perspective-viewer id="tableViewer"></perspective-viewer>
+    <script type="module">
+        import perspective from "https://cdn.jsdelivr.net/npm/@finos/perspective/dist/cdn/perspective.js";
+
+        const worker = perspective.worker();
+        const table = worker.table([
+        {"t":1,"int64":1,"i1":"1-6 15 0:0:0","test_null":null,"test_empty":"","x":"12345","y":"123.45","decimal":"1","json":"{\"coordinates\":[10,20],\"id\":1}","bool":false,"geo_point":{"value":"POINT(-50 90)"},"geohash":"fzury","geoline":{"value":"LINESTRING(1 2, 3 4)"},"polygon":{"value":"POLYGON((-125 48, -124 46, -117 46, -117 49, -125 48))"},"timestamp":{"value":"2023-10-18T07:44:19.416496000Z"},"time":{"value":"07:44:19.416496"},"date":{"value":"2023-10-18"},"date_time":{"value":"2023-10-18T07:44:19.416496"},"bytes":{"type":"Buffer","data":[10,77,85,168,215,120,229,2,47,171,112,25,119,197,216,64,187,196,134,208]},"uuid":"b65250b1-be34-41a0-87bf-c6a89cb620d1"},
+{"t":2,"int64":1,"i1":"1-6 15 0:0:0","test_null":null,"test_empty":"","x":"12345","y":"123.45","decimal":"1","json":"{\"coordinates\":[10,20],\"id\":1}","bool":false,"geo_point":{"value":"POINT(-50 90)"},"geohash":"fzury","geoline":{"value":"LINESTRING(1 2, 3 4)"},"polygon":{"value":"POLYGON((-125 48, -124 46, -117 46, -117 49, -125 48))"},"timestamp":{"value":"2023-10-18T07:44:19.416496000Z"},"time":{"value":"07:44:19.416496"},"date":{"value":"2023-10-18"},"date_time":{"value":"2023-10-18T07:44:19.416496"},"bytes":{"type":"Buffer","data":[10,77,85,168,215,120,229,2,47,171,112,25,119,197,216,64,187,196,134,208]},"uuid":"18a51308-e518-4f30-94f7-21fab773bfa3"},
+{"t":3,"int64":1,"i1":"1-6 15 0:0:0","test_null":null,"test_empty":"","x":"12345","y":"123.45","decimal":"1","json":"{\"coordinates\":[10,20],\"id\":1}","bool":false,"geo_point":{"value":"POINT(-50 90)"},"geohash":"fzury","geoline":{"value":"LINESTRING(1 2, 3 4)"},"polygon":{"value":"POLYGON((-125 48, -124 46, -117 46, -117 49, -125 48))"},"timestamp":{"value":"2023-10-18T07:44:19.416496000Z"},"time":{"value":"07:44:19.416496"},"date":{"value":"2023-10-18"},"date_time":{"value":"2023-10-18T07:44:19.416496"},"bytes":{"type":"Buffer","data":[10,77,85,168,215,120,229,2,47,171,112,25,119,197,216,64,187,196,134,208]},"uuid":"ddf803bf-dee2-40cb-ba26-358a16c2f323"}
+        ]);
+        const viewer = document.querySelector("#tableViewer");
+        await viewer.load(table);
+        // const view = await viewer.getView();
+        // await view.set_depth(0);
+        viewer.restore(
+            {
+                // "plugin": "Map Scatter",
+                settings: false
+            }
+        );
+        // viewer[0].settings = false;
+        // await viewer.resetThemes();
+        // viewer.restore({ theme: "Pro Dark" });
+    </script>
+    <style>
+        perspective-viewer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+        </style>
+
+</body>
+
+</html>

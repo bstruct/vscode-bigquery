@@ -29,7 +29,7 @@ window.addEventListener('message', async event => {
     const q1 = document.getElementById('q1');
     q1.setAttribute("startIndex", message.startIndex);
     q1.setAttribute("maxResults", message.maxResults);
-    q1.setAttribute("jobIndex", message.jobIndex);
+    // q1.setAttribute("jobIndex", message.jobIndex);
     q1.setAttribute("openInTabVisible", message.openInTabVisible);
     q1.setAttribute("projectId", message.jobReferences[message.jobIndex].projectId);
     q1.setAttribute("jobId", message.jobReferences[message.jobIndex].jobId);

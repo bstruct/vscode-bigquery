@@ -111,15 +111,24 @@ impl Jobs {
             .unwrap();
         opts.headers(&headers);
 
-        let url = format!(
+        let mut url = format!(
             "https://bigquery.googleapis.com/bigquery/v2/projects/{}/queries/{}",
             request.project_id, request.job_id
         );
 
         // if (request.location) { url.searchParams.append("location", request.location); }
-        // if (request.maxResults !== null) { url.searchParams.append("maxResults", request.maxResults.toString()); }
+        if request.max_results.is_some() {
+            url = format!("{}?maxResults={}", url, request.max_results.unwrap());
+        } else {
+            url = format!("{}?maxResults=50", url);
+        }
+        if request.start_index.is_some() {
+            url = format!("{}&startIndex={}", url, request.start_index.unwrap());
+        }
+
+        console::log_1(&JsValue::from_str(&url));
+
         // if (request.pageToken) { url.searchParams.append("pageToken", request.pageToken); }
-        // if (request.startIndex) { url.searchParams.append("startIndex", request.startIndex); }
         // if (request.timeoutMs !== null) { url.searchParams.append("timeoutMs", request.timeoutMs.toString()); }
 
         let request = web_sys::Request::new_with_str_and_init(&url, &opts).unwrap();

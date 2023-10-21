@@ -1,6 +1,6 @@
 mod custom_element_definition;
 mod table_with_controls;
-pub mod query_results_with_controls;
+mod table_v2;
 
 use self::custom_element_definition::CustomElementDefinition;
 use std::{error::Error, fmt, str::FromStr};
@@ -13,7 +13,7 @@ ADD NEW COMPONENT STEP 1: add the name and respective HTML tag to the enum
 #[derive(Copy, Clone, Debug)]
 pub enum CustomElement {
     TableWithControls = "table-with-controls",
-    QueryResultsWithControls = "query-results-with-controls",
+    // QueryResultsWithControls = "query-results-with-controls",
 }
 
 impl CustomElement {
@@ -21,7 +21,7 @@ impl CustomElement {
     ADD NEW COMPONENT STEP 2: make it available on the full list
     */
     pub fn get_all() -> Vec<CustomElement> {
-        vec![CustomElement::QueryResultsWithControls, CustomElement::TableWithControls]
+        vec![CustomElement::TableWithControls]
     }
 
     /**
@@ -37,7 +37,7 @@ impl CustomElement {
         // element.on
 
         match self {
-            CustomElement::QueryResultsWithControls => query_results_with_controls::QueryResultsWithControls::define(document, element),
+            // CustomElement::QueryResultsWithControls => query_results_with_controls::QueryResultsWithControls::define(document, element),
             CustomElement::TableWithControls => table_with_controls::TableWithControls::define(document, element),
             _ => eprintln!("definition for custom element not found"),
         };

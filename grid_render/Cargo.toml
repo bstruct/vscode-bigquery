@@ -10,14 +10,14 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"]  }
-js-sys = "0.3.64"
-wasm-bindgen-futures = "0.4.37"
-serde = { version = "1.0.188", features = ["derive"] }
+js-sys = "0.3"
+wasm-bindgen-futures = "0.4"
+serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.5"
-serde_json = "1.0.105"
+serde_json = "1.0"
 
 [dependencies.web-sys]
-version = "0.3.64"
+version = "0.3"
 
 features = [
     "console",
@@ -37,9 +37,9 @@ features = [
     # "HtmlSlotElement",
     # "HtmlTemplateElement",
     # "CustomElementRegistry",
-    # "ShadowRoot",
-    # "ShadowRootInit",
-    # "ShadowRootMode",
+    "ShadowRoot",
+    "ShadowRootInit",
+    "ShadowRootMode",
     "Event",
     # "SubmitEvent",
     "MutationObserver",
@@ -49,7 +49,7 @@ features = [
 # default = ["console_error_panic_hook", "wee_alloc"]
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.37"
+wasm-bindgen-test = "0.3"
 
 [profile.release]
 opt-level = "s"

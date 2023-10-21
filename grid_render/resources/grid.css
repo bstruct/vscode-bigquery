@@ -1,0 +1,18 @@
+table {
+    white-space: nowrap;
+    display: table;
+    outline: none;
+    border-collapse: collapse;
+    text-align: left;
+
+}
+
+th, td {
+    padding: 5px 15px;
+    border-bottom: 1px solid gray;
+}
+
+.nullValue {
+    font-style: italic;
+    color: var(--vscode-inputValidation-warningBorder) !important;
+}

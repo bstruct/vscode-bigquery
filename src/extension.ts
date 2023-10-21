@@ -223,6 +223,13 @@ export function activate(context: ExtensionContext) {
 		)
 	);
 
+	// context.subscriptions.push(
+	// 	vscode.window.registerCustomEditorProvider(
+	// 		commands.OPEN_SETTING_TABLES,
+	// 		commands.commandOpenSettingTables
+	// 	)
+	// );
+
 	// bigquery-authentication
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(
