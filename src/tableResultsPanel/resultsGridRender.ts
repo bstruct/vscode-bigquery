@@ -47,7 +47,7 @@ export class ResultsGridRender {
                 </script>
         	</head>
         	<body>
-                <table-with-controls id="q1"></table-with-controls>
+                <bq id="q1"></bq>
                 <script type="module" src="${gridJs}"></script>
         	</body>
         </html>`;
