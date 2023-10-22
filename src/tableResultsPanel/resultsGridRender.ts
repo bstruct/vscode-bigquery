@@ -28,6 +28,32 @@ export class ResultsGridRender {
     //     this.webViewPanel.webview.html = this.getWaitingHtml(50, false, 0, 0);
     // }
 
+    public async render1() {
+
+        const extensionUri = getExtensionUri();
+
+        const gridJs = this.getUri(this.webViewPanel.webview, extensionUri, [
+            'resources',
+            'grid.js']
+        );
+
+        this.webViewPanel.webview.html = `<!DOCTYPE html>
+        <html lang="en" style="display:flex;">
+        	<head>
+        		<meta charset="UTF-8">
+                <script>
+                    const vscode = acquireVsCodeApi();
+                </script>
+        	</head>
+        	<body>
+                <table-with-controls id="q1"></table-with-controls>
+                <script type="module" src="${gridJs}"></script>
+        	</body>
+        </html>`;
+
+        // this.webViewPanel.webview.postMessage(request);
+    }
+
     public async render(request: ResultsGridRenderRequest) {
 
         try {
@@ -69,26 +95,26 @@ export class ResultsGridRender {
     //     ]);
 
     //     return `<!DOCTYPE html>
-	// 	<html lang="en">
-	// 		<head>
-	// 			<meta charset="UTF-8">
-	// 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	// 			<script type="module" src="${toolkitUri}"></script>
+    // 	<html lang="en">
+    // 		<head>
+    // 			<meta charset="UTF-8">
+    // 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    // 			<script type="module" src="${toolkitUri}"></script>
     //             <script>
     //                 const qElement = document.querySelectorAll('div.editor-actions ul.actions-container > li.action-item a[aria-label="\${x1}"]');
     //                 if(qElement.length >0){
     //                     const element = qElement[0];
     //                     element.innerText = 'trying';
     //                 }
-                
+
     //                 const vscode = acquireVsCodeApi();
     //                 vscode.setState({ maxResults: ${maxResults}, openInTabVisible: ${openInTabVisible}, startIndex: ${startIndex}, jobIndex: ${jobIndex} });
     //             </script>
-	// 		</head>
-	// 		<body>
+    // 		</head>
+    // 		<body>
     //             <vscode-progress-ring></vscode-progress-ring>
-	// 		</body>
-	// 	</html>`;
+    // 		</body>
+    // 	</html>`;
 
     // }
 

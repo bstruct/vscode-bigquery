@@ -41,6 +41,7 @@ features = [
     "ShadowRootInit",
     "ShadowRootMode",
     "Event",
+    "MessageEvent",
     # "SubmitEvent",
     "MutationObserver",
 ]

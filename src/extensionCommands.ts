@@ -100,7 +100,7 @@ const commandQuery = async function (local: any, queryType: RunQueryType) {
 
 const runQuery = async function (globalState: vscode.Memento, queryResultsWebviewMapping: Map<string, ResultsRender>, uuid: string, mainLabel: string, queryText: string): Promise<number> {
 
-	const queryResponse = getBigQueryClient().runQuery(queryText);
+	// const queryResponse = getBigQueryClient().runQuery(queryText);
 
 	let performLock = false;
 	if (vscode.window.tabGroups.all.filter(c => c.viewColumn === vscode.ViewColumn.Two).length === 0) {
@@ -128,6 +128,9 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 			await vscode.commands.executeCommand("workbench.action.focusPreviousGroup");
 		}
 
+		resultsGridRender.render1();
+		panel.webview.postMessage(queryText);
+
 		QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(queryResultsWebviewMapping, uuid, resultsGridRender);
 
 		//action when panel is closed
@@ -137,29 +140,29 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	}
 
-	try {
-		const token = await getBigQueryClient().getToken();
+	// try {
+	// 	const token = await getBigQueryClient().getToken();
 		
-		const jobs: Job[] = await queryResponse;
-		const jobReferences = jobs.map(c => { return { jobId: c.metadata.jobReference.jobId, projectId: c.metadata.jobReference.projectId, location: c.metadata.jobReference.location } as JobReference; });
+	// 	const jobs: Job[] = await queryResponse;
+	// 	const jobReferences = jobs.map(c => { return { jobId: c.metadata.jobReference.jobId, projectId: c.metadata.jobReference.projectId, location: c.metadata.jobReference.location } as JobReference; });
 
-		const request = {
-			jobReferences: jobReferences,
-			startIndex: 0,
-			maxResults: 50,
-			jobIndex: 0,
-			openInTabVisible: true,
-			token: token
-		} as ResultsGridRenderRequest;
+		// const request = {
+		// 	jobReferences: jobReferences,
+		// 	startIndex: 0,
+		// 	maxResults: 50,
+		// 	jobIndex: 0,
+		// 	openInTabVisible: true,
+		// 	token: token
+		// } as ResultsGridRenderRequest;
 
-		resultsGridRender.render(request);
+		// resultsGridRender.render(request);
 
-		QueryResultsMappingService.updateQueryResultsMapping(globalState, uuid, request);
+	// 	QueryResultsMappingService.updateQueryResultsMapping(globalState, uuid, request);
 
-		return jobs.length;
-	} catch (error) {
-		resultsGridRender.renderException(error);
-	}
+	// 	return jobs.length;
+	// } catch (error) {
+	// 	resultsGridRender.renderException(error);
+	// }
 
 	return 0;
 };

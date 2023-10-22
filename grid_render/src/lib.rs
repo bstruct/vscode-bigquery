@@ -1,5 +1,6 @@
 mod bigquery;
 mod custom_elements;
+mod event_listener;
 
 use custom_elements::CustomElement;
 use std::str::FromStr;
@@ -58,4 +59,6 @@ fn parse_to_usize(number: Option<String>) -> Option<usize> {
 }
 
 #[wasm_bindgen(start)]
-fn main_js() {}
+fn main_js() {
+    event_listener::add_message_listener_to_window();
+}

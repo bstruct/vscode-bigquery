@@ -48,7 +48,33 @@ fn render_control(
     span_page_information.set_inner_html(&format!("{} - {} of {}", start_index + 1, start_index + row_count, total_rows));
     div.append_child(&span_page_information).unwrap();
 
+    //first page
+    let button = crate::createElement("span");
+    button.set_inner_html("First page");
+    button.set_class_name("button");
+    button.set_id("btn_first_page");
+    div.append_child(&button).unwrap();
 
+    // previous page
+    let button = crate::createElement("span");
+    button.set_inner_html("Previous page");
+    button.set_class_name("button");
+    button.set_id("btn_first_page");
+    div.append_child(&button).unwrap();
+
+    //next page
+    let button = crate::createElement("span");
+    button.set_inner_html("Next page");
+    button.set_class_name("button");
+    button.set_id("btn_next_page");
+    div.append_child(&button).unwrap();
+
+    // last page
+    let button = crate::createElement("span");
+    button.set_inner_html("Last page");
+    button.set_class_name("button");
+    button.set_id("btn_last_page");
+    div.append_child(&button).unwrap();
 
 }
 

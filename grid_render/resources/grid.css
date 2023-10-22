@@ -1,4 +1,3 @@
-
 div#controls {
     top: 0;
     position: fixed;
@@ -7,11 +6,19 @@ div#controls {
     width: 100%;
 }
 
-div#controls span#paging {
+div#controls span {
     padding: 5px 10px;
     display: inline-block;
     background-color: var(--button-secondary-background);
     color: var(--button-secondary-foreground);
+    margin-right: 5px;
+}
+
+div#controls span.button {
+    cursor: pointer;
+    min-width: 80px;
+    text-align: center;
+    user-select: none;
 }
 
 table {
@@ -29,7 +36,8 @@ table thead {
     background-color: var(--dropdown-background);
 }
 
-th, td {
+th,
+td {
     padding: 5px 15px;
     border-bottom: 1px solid gray;
 }
