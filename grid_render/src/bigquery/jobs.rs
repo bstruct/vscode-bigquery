@@ -7,6 +7,57 @@ pub struct Jobs {
     token: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct QueryRequest {
+    pub query: String,
+    #[serde(alias = "maxResults")]
+    pub max_results: Option<usize>,
+    //incomplete
+    // https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#QueryRequest
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QueryResponseSessionInfo {
+    #[serde(alias = "sessionId")]
+    pub session_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QueryResponseSessionDmlStats {
+    #[serde(alias = "insertedRowCount")]
+    pub inserted_row_count: String,
+    #[serde(alias = "deletedRowCount")]
+    pub deleted_row_count: String,
+    #[serde(alias = "updatedRowCount")]
+    pub updated_row_count: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QueryResponse {
+    pub kind: String,
+    pub schema: Option<TableSchema>,
+    #[serde(alias = "jobReference")]
+    pub job_reference: JobReference,
+    #[serde(alias = "totalRows")]
+    pub total_rows: String,
+    #[serde(alias = "pageToken")]
+    pub page_token: String,
+    pub rows: Vec<serde_json::Value>,
+    #[serde(alias = "totalBytesProcessed")]
+    pub total_bytes_processed: String,
+    #[serde(alias = "jobComplete")]
+    pub job_complete: bool,
+    pub errors: Vec<serde_json::Value>,
+    #[serde(alias = "cacheHit")]
+    pub cache_hit: bool,
+    #[serde(alias = "numDmlAffectedRows")]
+    pub num_dml_affected_rows: String,
+    #[serde(alias = "sessionInfo")]
+    pub session_info: QueryResponseSessionInfo,
+    #[serde(alias = "dmlStats")]
+    pub dml_stats: QueryResponseSessionDmlStats,
+}
+
 pub struct GetQueryResultsRequest {
     pub project_id: String,
     pub job_id: String,
@@ -89,6 +140,59 @@ impl Jobs {
         Jobs {
             token: String::from(token),
         }
+    }
+
+    pub async fn query(
+        self: &Self,
+        project_id: &String,
+        request: QueryRequest,
+    ) -> Option<QueryResponse> {
+        let mut opts = web_sys::RequestInit::new();
+        opts.method("POST");
+        opts.mode(web_sys::RequestMode::Cors);
+        let headers = web_sys::Headers::new().unwrap();
+        // headers.set("Accept", "application/json").unwrap();
+        headers.set("Content-Type", "application/json").unwrap();
+        headers
+            .set("Authorization", &format!("Bearer {}", &self.token))
+            .unwrap();
+        opts.headers(&headers);
+        let body = serde_wasm_bindgen::to_value(&request).unwrap();
+        opts.body(Some(&body));
+
+        let url = format!(
+            "https://bigquery.googleapis.com/bigquery/v2/projects/{}",
+            project_id
+        );
+
+        let request = web_sys::Request::new_with_str_and_init(&url, &opts).unwrap();
+
+        let window = web_sys::window().unwrap();
+        let resp_value = JsFuture::from(window.fetch_with_request(&request))
+            .await
+            .unwrap();
+
+        assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
+            &resp_value
+        ));
+        let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
+
+        if resp.status() == 200 {
+            let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
+            // Use serde to parse the JSON into a struct.
+            let bq_response = serde_wasm_bindgen::from_value::<QueryResponse>(json);
+
+            if bq_response.is_err() {
+                console::log_1(&JsValue::from_str(&format!(
+                    "error: {:?}",
+                    bq_response.err().unwrap().to_string()
+                )));
+            } else {
+                return Some(bq_response.unwrap());
+            }
+        }
+
+        None
     }
 
     /*
