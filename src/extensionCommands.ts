@@ -142,12 +142,19 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	try {
 		const token = await getBigQueryClient().getToken();
+		console.log('token:', token);
+		const projectId = await getBigQueryClient().getProjectId();
+		console.log('projectId:', projectId);
 
-		resultsGridRender.postMessage({
+		let postMessageResult = await resultsGridRender.postMessage({
 			requestType: ResultsGridRenderRequestV2Type.executeQuery.toString(),
+			projectId: projectId,
 			token: token,
 			query: queryText,
 		} as ResultsGridRenderRequestV2);
+
+		console.log('postMessageResult:', postMessageResult);
+
 
 		// 	const jobs: Job[] = await queryResponse;
 		// 	const jobReferences = jobs.map(c => { return { jobId: c.metadata.jobReference.jobId, projectId: c.metadata.jobReference.projectId, location: c.metadata.jobReference.location } as JobReference; });

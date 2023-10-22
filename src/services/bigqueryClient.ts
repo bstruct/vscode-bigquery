@@ -12,6 +12,12 @@ export class BigQueryClient {
 				return value || null;
 			});
 	}
+	getProjectId(): Promise<string | null> {
+		return this.bqclient.getProjectId()
+			.then(value => {
+				return value || null;
+			});
+	}
 
 	private bqclient = new BigQuery();
 

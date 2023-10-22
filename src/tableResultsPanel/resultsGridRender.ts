@@ -29,7 +29,7 @@ export class ResultsGridRender {
     //     this.webViewPanel.webview.html = this.getWaitingHtml(50, false, 0, 0);
     // }
 
-    public async render1() {
+    public render1() {
 
         const extensionUri = getExtensionUri();
 
@@ -53,8 +53,8 @@ export class ResultsGridRender {
         </html>`;
     }
 
-    public postMessage(message: ResultsGridRenderRequestV2) {
-        this.webViewPanel.webview.postMessage(message);
+    public postMessage(message: ResultsGridRenderRequestV2): Thenable<boolean> {
+        return this.webViewPanel.webview.postMessage(message);
     }
 
     public async render(request: ResultsGridRenderRequest) {

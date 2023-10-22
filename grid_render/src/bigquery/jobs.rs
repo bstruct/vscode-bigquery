@@ -16,13 +16,13 @@ pub struct QueryRequest {
     // https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#QueryRequest
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct QueryResponseSessionInfo {
     #[serde(alias = "sessionId")]
     pub session_id: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct QueryResponseSessionDmlStats {
     #[serde(alias = "insertedRowCount")]
     pub inserted_row_count: String,
@@ -32,7 +32,7 @@ pub struct QueryResponseSessionDmlStats {
     pub updated_row_count: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct QueryResponse {
     pub kind: String,
     pub schema: Option<TableSchema>,
@@ -142,9 +142,11 @@ impl Jobs {
         }
     }
 
+    /* https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
+    */
     pub async fn query(
         self: &Self,
-        project_id: &String,
+        project_id: &str,
         request: QueryRequest,
     ) -> Option<QueryResponse> {
         let mut opts = web_sys::RequestInit::new();
