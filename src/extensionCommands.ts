@@ -22,6 +22,7 @@ import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 import { DownloadJsonl } from './tableResultsPanel/downloadJsonl';
 import { SendToPubsub } from './tableResultsPanel/sendToPubsub';
 import { Job } from '@google-cloud/bigquery';
+import { ResultsGridRenderRequestV2, ResultsGridRenderRequestV2Type } from './tableResultsPanel/resultsGridRenderRequestV2';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -129,7 +130,6 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		}
 
 		resultsGridRender.render1();
-		panel.webview.postMessage(queryText);
 
 		QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(queryResultsWebviewMapping, uuid, resultsGridRender);
 
@@ -140,11 +140,17 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	}
 
-	// try {
-	// 	const token = await getBigQueryClient().getToken();
-		
-	// 	const jobs: Job[] = await queryResponse;
-	// 	const jobReferences = jobs.map(c => { return { jobId: c.metadata.jobReference.jobId, projectId: c.metadata.jobReference.projectId, location: c.metadata.jobReference.location } as JobReference; });
+	try {
+		const token = await getBigQueryClient().getToken();
+
+		resultsGridRender.postMessage({
+			requestType: ResultsGridRenderRequestV2Type.executeQuery.toString(),
+			token: token,
+			query: queryText,
+		} as ResultsGridRenderRequestV2);
+
+		// 	const jobs: Job[] = await queryResponse;
+		// 	const jobReferences = jobs.map(c => { return { jobId: c.metadata.jobReference.jobId, projectId: c.metadata.jobReference.projectId, location: c.metadata.jobReference.location } as JobReference; });
 
 		// const request = {
 		// 	jobReferences: jobReferences,
@@ -157,12 +163,12 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 		// resultsGridRender.render(request);
 
-	// 	QueryResultsMappingService.updateQueryResultsMapping(globalState, uuid, request);
+		// 	QueryResultsMappingService.updateQueryResultsMapping(globalState, uuid, request);
 
-	// 	return jobs.length;
-	// } catch (error) {
-	// 	resultsGridRender.renderException(error);
-	// }
+		// 	return jobs.length;
+	} catch (error) {
+		resultsGridRender.renderException(error);
+	}
 
 	return 0;
 };

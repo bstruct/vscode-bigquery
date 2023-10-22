@@ -8,6 +8,7 @@ import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
 import { COMMAND_DOWNLOAD_CSV, getBigQueryClient } from '../extensionCommands';
 import { JobReference } from '../services/queryResultsMapping';
 import { TableReference } from '../services/tableMetadata';
+import { ResultsGridRenderRequestV2 } from './resultsGridRenderRequestV2';
 
 // import { get_web_components_list } from "grid_render/grid_render";
 
@@ -38,7 +39,7 @@ export class ResultsGridRender {
         );
 
         this.webViewPanel.webview.html = `<!DOCTYPE html>
-        <html lang="en" style="display:flex;">
+        <html lang="en">
         	<head>
         		<meta charset="UTF-8">
                 <script>
@@ -50,8 +51,10 @@ export class ResultsGridRender {
                 <script type="module" src="${gridJs}"></script>
         	</body>
         </html>`;
+    }
 
-        // this.webViewPanel.webview.postMessage(request);
+    public postMessage(message: ResultsGridRenderRequestV2) {
+        this.webViewPanel.webview.postMessage(message);
     }
 
     public async render(request: ResultsGridRenderRequest) {

@@ -1,6 +1,6 @@
 mod bigquery;
 mod custom_elements;
-mod event_listener;
+mod message_handler;
 
 use custom_elements::CustomElement;
 use std::str::FromStr;
@@ -44,6 +44,11 @@ pub fn register_custom_element(custom_component_name: &JsValue, element: web_sys
         .expect("custom_component not configured");
 }
 
+#[wasm_bindgen]
+pub fn on_window_message_received(event: &web_sys::MessageEvent) {
+    message_handler::handle(event);
+}
+
 fn parse_to_usize(number: Option<String>) -> Option<usize> {
     match number {
         Some(s) => {
@@ -59,6 +64,4 @@ fn parse_to_usize(number: Option<String>) -> Option<usize> {
 }
 
 #[wasm_bindgen(start)]
-fn main_js() {
-    event_listener::add_message_listener_to_window();
-}
+fn main_js() {}
