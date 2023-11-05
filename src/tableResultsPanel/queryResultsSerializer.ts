@@ -43,7 +43,8 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
             && startIndex !== undefined
             && jobIndex !== undefined) {
 
-            const token = await getBigQueryClient().getToken();
+            const bqClient = await getBigQueryClient();
+            const token = await bqClient.getToken();
 
             const request = {
                 jobReferences: queryResultsMappingItem.jobReferences,

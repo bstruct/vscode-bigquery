@@ -23,7 +23,8 @@ export class BigqueryTableSchemaService {
 
             let q = this.schemas.filter(c => c.project_id === projectId && c.dataset_name === datasetName && c.table_name === tableName);
             if (q.length === 0) {
-                let tableSchema: BigqueryTableSchema[] = await getBigQueryClient().getTableSchema(projectId, datasetName, tableName);
+                const bqClient = await getBigQueryClient();
+                let tableSchema: BigqueryTableSchema[] = await bqClient.getTableSchema(projectId, datasetName, tableName);
                 this.schemas.push(...tableSchema);
 
                 return true;

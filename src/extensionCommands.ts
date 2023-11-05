@@ -141,10 +141,12 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 	}
 
 	try {
-		const token = await getBigQueryClient().getToken();
-		console.log('token:', token);
-		const projectId = await getBigQueryClient().getProjectId();
+		const bqClient = await getBigQueryClient();
+
+		const projectId = await bqClient.getProjectId();
 		console.log('projectId:', projectId);
+		const token = await bqClient.getToken();
+		console.log('token:', token);
 
 		let postMessageResult = await resultsGridRender.postMessage({
 			requestType: ResultsGridRenderRequestV2Type.executeQuery.toString(),
@@ -154,7 +156,6 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		} as ResultsGridRenderRequestV2);
 
 		console.log('postMessageResult:', postMessageResult);
-
 
 		// 	const jobs: Job[] = await queryResponse;
 		// 	const jobReferences = jobs.map(c => { return { jobId: c.metadata.jobReference.jobId, projectId: c.metadata.jobReference.projectId, location: c.metadata.jobReference.location } as JobReference; });
@@ -294,7 +295,9 @@ export const commandViewTable = async function (...args: any[]) {
 		return;
 	}
 
-	const table = getBigQueryClient().getTable(item.projectId, item.datasetId, item.tableId);
+	const bqClient = await getBigQueryClient();
+
+	const table = bqClient.getTable(item.projectId, item.datasetId, item.tableId);
 	const metadata = await table.getMetadata();
 
 	let panel: vscode.WebviewPanel;
@@ -308,7 +311,7 @@ export const commandViewTable = async function (...args: any[]) {
 
 	if (metadata[0].type === 'EXTERNAL' || metadata[0].type === 'VIEW') {
 		try {
-			const queryResponse = await getBigQueryClient().runQuery(
+			const queryResponse = await bqClient.runQuery(
 				`SELECT * FROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``);
 
 			const jobReferences = [
@@ -347,7 +350,7 @@ export const commandViewTable = async function (...args: any[]) {
 	getTelemetryReporter()?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
 };
 
-export const commandViewTableSchema = function (...args: any[]) {
+export const commandViewTableSchema = async function (...args: any[]) {
 
 	const t1 = Date.now();
 
@@ -358,8 +361,9 @@ export const commandViewTableSchema = function (...args: any[]) {
 	if (item.projectId === null || item.datasetId === null || item.tableId === null) {
 		return;
 	}
+	const bqClient = await getBigQueryClient();
 
-	const metadataPromise = getBigQueryClient().getMetadata(item.projectId, item.datasetId, item.tableId);
+	const metadataPromise = bqClient.getMetadata(item.projectId, item.datasetId, item.tableId);
 	const panel = vscode.window.createWebviewPanel("vscode-bigquery-table-schema", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
 	const schemaRender = new SchemaRender(panel.webview);
 
@@ -381,8 +385,8 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 
 	let query = QueryGeneratorService.generateSelectQuerySimple(item.projectId, item.datasetId, item.tableId);
 	try {
-
-		const metadata = await getBigQueryClient().getMetadata(item.projectId, item.datasetId, item.tableId);
+		const bqClient = await getBigQueryClient();
+		const metadata = await bqClient.getMetadata(item.projectId, item.datasetId, item.tableId);
 		query = QueryGeneratorService.generateSelectQuery(metadata);
 	} catch (error) { }
 
@@ -408,9 +412,11 @@ export const commandOpenDdl = async function (...args: any[]) {
 	}
 
 	try {
-		let query = QueryGeneratorService.generateDdlQuery(item);
 
-		const queryRun = await getBigQueryClient().runQuery(query);
+		let query = QueryGeneratorService.generateDdlQuery(item);
+		const bqClient = await getBigQueryClient();
+
+		const queryRun = await bqClient.runQuery(query);
 		const queryResult = await queryRun[0].getQueryResults();
 		const ddl = queryResult[0][0].ddl;
 
@@ -452,6 +458,7 @@ export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 	if (activeTab === undefined || activeTab.input === undefined) {
 		return;
 	}
+	const bqClient = await getBigQueryClient();
 
 	const viewType = ((activeTab.input as any).viewType as string);
 	if (viewType?.endsWith('-bigquery-query-results')) {
@@ -464,16 +471,16 @@ export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 
 			const item = queryResultsMapping.find(c => c.uuid === uuid);
 			if (item && item.jobReferences && item.jobIndex !== undefined) {
-				await DownloadCsv.download(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+				await DownloadCsv.download(bqClient, item.jobReferences[item.jobIndex]);
 			}
 		}
 	} else {
 		if (viewType?.endsWith('-bigquery-table-results')) {
 
 			const tableId = activeTab.label.split('.');
-			const table = getBigQueryClient().getTable(tableId[0], tableId[1], tableId[2]);
+			const table = bqClient.getTable(tableId[0], tableId[1], tableId[2]);
 
-			await DownloadCsv.downloadTable(getBigQueryClient(), table);
+			await DownloadCsv.downloadTable(bqClient, table);
 
 		}
 	}
@@ -494,6 +501,8 @@ export const commandDownloadJsonl = async function (this: any, ...args: any[]) {
 	}
 
 	const viewType = ((activeTab.input as any).viewType as string);
+	const bqClient = await getBigQueryClient();
+
 	if (viewType?.endsWith('-bigquery-query-results')) {
 
 		const uuid = activeTab.label.substring(activeTab.label.length - 8);
@@ -504,16 +513,16 @@ export const commandDownloadJsonl = async function (this: any, ...args: any[]) {
 
 			const item = queryResultsMapping.find(c => c.uuid === uuid);
 			if (item && item.jobReferences && item.jobIndex !== undefined) {
-				await DownloadJsonl.download(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+				await DownloadJsonl.download(bqClient, item.jobReferences[item.jobIndex]);
 			}
 		}
 	} else {
 		if (viewType?.endsWith('-bigquery-table-results')) {
 
 			const tableId = activeTab.label.split('.');
-			const table = getBigQueryClient().getTable(tableId[0], tableId[1], tableId[2]);
+			const table = bqClient.getTable(tableId[0], tableId[1], tableId[2]);
 
-			await DownloadJsonl.downloadTable(getBigQueryClient(), table);
+			await DownloadJsonl.downloadTable(bqClient, table);
 
 		}
 	}
@@ -544,7 +553,8 @@ export const commandSendPubsub = async function (this: any, ...args: any[]) {
 
 			const item = queryResultsMapping.find(c => c.uuid === uuid);
 			if (item && item.jobReferences && item.jobIndex !== undefined) {
-				await SendToPubsub.sendJobResult(getBigQueryClient(), item.jobReferences[item.jobIndex]);
+				const bqClient = await getBigQueryClient();
+				await SendToPubsub.sendJobResult(bqClient, item.jobReferences[item.jobIndex]);
 			}
 		}
 	}
@@ -711,10 +721,11 @@ export const commandOpenSettingTables = async function (this: any, ...args: any[
 
 let bigQueryClient: BigQueryClient | null;
 
-export const getBigQueryClient = function (): BigQueryClient {
+export const getBigQueryClient = async function (): Promise<BigQueryClient> {
 	if (!bigQueryClient) {
 		const t1 = Date.now();
-		bigQueryClient = new BigQueryClient();
+		const projectId = await Authentication.getDefaultProjectId();
+		bigQueryClient = new BigQueryClient(projectId);
 		getTelemetryReporter()?.sendTelemetryEvent('CreateBigQueryClient', {}, { elapsedMs: Date.now() - t1 });
 	}
 

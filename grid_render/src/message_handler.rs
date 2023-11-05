@@ -47,15 +47,12 @@ pub async fn handle(event: &web_sys::MessageEvent) {
 
         if response.is_some() {
 
-            q1.unwrap().set_inner_html(&format!("{:?}", serde_json::json!(&response)));
-
-        }else{
+            q1.unwrap()
+                .set_inner_html(&format!("{:?}", serde_json::json!(&response)));
+        } else {
             q1.unwrap().set_inner_html("no response");
-
         }
-
-    }else{
+    } else {
         console::log_1(&JsValue::from_str("q1 not found"));
-
     }
 }

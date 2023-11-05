@@ -87,7 +87,8 @@ export class ResultsChartRender {
 
         if (request.jobReferences && request.jobReferences.length > 0) {
             const jobsReference = request.jobReferences[request.jobIndex];
-            const job = getBigQueryClient().getJob(jobsReference);
+            const bqClient = await getBigQueryClient();
+            const job = bqClient.getJob(jobsReference);
             const queryResultOptions: QueryResultsOptions = {startIndex: '0', maxResults: 1_000_000};
             const queryRowsResponse = (await job.getQueryResults(queryResultOptions));
             data = JSON.stringify(queryRowsResponse[0]);

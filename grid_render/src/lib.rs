@@ -47,8 +47,8 @@ pub fn register_custom_element(custom_component_name: &JsValue, element: web_sys
 }
 
 #[wasm_bindgen]
-pub fn on_window_message_received(event: &web_sys::MessageEvent) {
-    message_handler::handle(event);
+pub async fn on_window_message_received(event: &web_sys::MessageEvent) {
+    message_handler::handle(event).await;
 }
 
 fn parse_to_usize(number: Option<String>) -> Option<usize> {

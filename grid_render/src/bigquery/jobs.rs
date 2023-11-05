@@ -58,6 +58,7 @@ pub struct QueryResponse {
     pub dml_stats: QueryResponseSessionDmlStats,
 }
 
+#[derive(Debug)]
 pub struct GetQueryResultsRequest {
     pub project_id: String,
     pub job_id: String,
