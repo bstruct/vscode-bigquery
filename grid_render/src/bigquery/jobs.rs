@@ -7,6 +7,169 @@ pub struct Jobs {
     token: String,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct JobConfiguration {
+    #[serde(alias = "jobType")]
+    pub job_type: String,
+    pub query: JobConfigurationQuery,
+    pub load: Option<JobConfigurationLoad>,
+    pub copy: Option<JobConfigurationTableCopy>,
+    pub extract: Option<JobConfigurationExtract>,
+    #[serde(alias = "dryRun")]
+    pub dry_run: bool,
+    #[serde(alias = "jobTimeoutMs")]
+    pub job_timeout_ms: Option<String>,
+    // "labels": {
+    //   string: string,
+    //   ...
+    // }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct JobConfigurationQuery {
+    pub query: String,
+    //   "destinationTable": {
+    //     object (TableReference)
+    //   },
+    //   "tableDefinitions": {
+    //     string: {
+    //       object (ExternalDataConfiguration)
+    //     },
+    //     ...
+    //   },
+    //   "userDefinedFunctionResources": [
+    //     {
+    //       object (UserDefinedFunctionResource)
+    //     }
+    //   ],
+    //   "createDisposition": string,
+    //   "writeDisposition": string,
+    //   "defaultDataset": {
+    //     object (DatasetReference)
+    //   },
+    //   "priority": string,
+    //   "preserveNulls": boolean,
+    //   "allowLargeResults": boolean,
+    //   "useQueryCache": boolean,
+    //   "flattenResults": boolean,
+    //   "maximumBillingTier": integer,
+    //   "maximumBytesBilled": string,
+    //   "useLegacySql": boolean,
+    //   "parameterMode": string,
+    //   "queryParameters": [
+    //     {
+    //       object (QueryParameter)
+    //     }
+    //   ],
+    //   "schemaUpdateOptions": [
+    //     string
+    //   ],
+    //   "timePartitioning": {
+    //     object (TimePartitioning)
+    //   },
+    //   "rangePartitioning": {
+    //     object (RangePartitioning)
+    //   },
+    //   "clustering": {
+    //     object (Clustering)
+    //   },
+    //   "destinationEncryptionConfiguration": {
+    //     object (EncryptionConfiguration)
+    //   },
+    //   "scriptOptions": {
+    //     object (ScriptOptions)
+    //   },
+    //   "connectionProperties": [
+    //     {
+    //       object (ConnectionProperty)
+    //     }
+    //   ],
+    //   "createSession": boolean,
+    //   "systemVariables": {
+    //     object (SystemVariables)
+    //   }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct JobConfigurationLoad {}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct JobConfigurationTableCopy {}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct JobConfigurationExtract {}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct JobStatistics {
+    // "creationTime": string,
+    // "startTime": string,
+    // "endTime": string,
+    // "totalBytesProcessed": string,
+    // "completionRatio": number,
+    // "quotaDeferments": [
+    //   string
+    // ],
+    // "query": {
+    //   object (JobStatistics2)
+    // },
+    // "load": {
+    //   object (JobStatistics3)
+    // },
+    // "extract": {
+    //   object (JobStatistics4)
+    // },
+    // "totalSlotMs": string,
+    // "reservationUsage": [
+    //   {
+    //     "name": string,
+    //     "slotMs": string
+    //   }
+    // ],
+    // "reservation_id": string,
+    // "numChildJobs": string,
+    // "parentJobId": string,
+    // "scriptStatistics": {
+    //   object (ScriptStatistics)
+    // },
+    // "rowLevelSecurityStatistics": {
+    //   object (RowLevelSecurityStatistics)
+    // },
+    // "dataMaskingStatistics": {
+    //   object (DataMaskingStatistics)
+    // },
+    // "transactionInfo": {
+    //   object (TransactionInfo)
+    // },
+    // "sessionInfo": {
+    //   object (SessionInfo)
+    // },
+    // "finalExecutionDurationMs": string
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct JobStatus {
+    #[serde(alias = "errorResult")]
+    pub error_result: Option<ErrorProto>,
+    pub errors: Option<Vec<ErrorProto>>,
+    pub state: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Job {
+    pub kind: Option<String>,
+    pub etag: Option<String>,
+    pub id: Option<String>,
+    #[serde(alias = "selfLink")]
+    pub self_link: Option<String>,
+    pub user_email: Option<String>,
+    pub configuration: JobConfiguration,
+    #[serde(alias = "jobReference")]
+    pub job_reference: Option<JobReference>,
+    pub statistics: Option<JobStatistics>,
+    pub status: Option<JobStatus>,
+    pub principal_subject: Option<String>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct QueryRequest {
     pub query: String,
@@ -143,16 +306,12 @@ impl Jobs {
         }
     }
 
-    /* https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
-    */
-    pub async fn query(
-        self: &Self,
-        project_id: &str,
-        request: QueryRequest,
-    ) -> Option<QueryResponse> {
+    /* https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/insert
+     */
+    pub async fn insert(self: &Self, project_id: &str, request: Job) -> Option<Job> {
         let mut opts = web_sys::RequestInit::new();
         opts.method("POST");
-        opts.mode(web_sys::RequestMode::Cors);
+        opts.mode(web_sys::RequestMode::NoCors);
         let headers = web_sys::Headers::new().unwrap();
         // headers.set("Accept", "application/json").unwrap();
         headers.set("Content-Type", "application/json").unwrap();
@@ -164,7 +323,62 @@ impl Jobs {
         opts.body(Some(&body));
 
         let url = format!(
-            "https://bigquery.googleapis.com/bigquery/v2/projects/{}",
+            "https://bigquery.googleapis.com/bigquery/v2/projects/{}/jobs",
+            project_id
+        );
+
+        let request = web_sys::Request::new_with_str_and_init(&url, &opts).unwrap();
+
+        let window = web_sys::window().unwrap();
+        let resp_value = JsFuture::from(window.fetch_with_request(&request))
+            .await
+            .unwrap();
+
+        assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
+            &resp_value
+        ));
+        let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
+
+        if resp.status() == 200 {
+            let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
+            // Use serde to parse the JSON into a struct.
+            let bq_response = serde_wasm_bindgen::from_value::<Job>(json);
+
+            if bq_response.is_err() {
+                console::log_1(&JsValue::from_str(&format!(
+                    "error: {:?}",
+                    bq_response.err().unwrap().to_string()
+                )));
+            } else {
+                return Some(bq_response.unwrap());
+            }
+        }
+
+        None
+    }
+
+    /* https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
+     */
+    pub async fn query(
+        self: &Self,
+        project_id: &str,
+        request: QueryRequest,
+    ) -> Option<QueryResponse> {
+        let mut opts = web_sys::RequestInit::new();
+        opts.method("POST");
+        opts.mode(web_sys::RequestMode::NoCors);
+        let headers = web_sys::Headers::new().unwrap();
+        // headers.set("Accept", "application/json").unwrap();
+        headers.set("Content-Type", "application/json").unwrap();
+        headers
+            .set("Authorization", &format!("Bearer {}", &self.token))
+            .unwrap();
+        opts.headers(&headers);
+        let body = serde_wasm_bindgen::to_value(&request).unwrap();
+        opts.body(Some(&body));
+
+        let url = format!(
+            "https://bigquery.googleapis.com/bigquery/v2/projects/{}/queries",
             project_id
         );
 
@@ -264,29 +478,6 @@ impl Jobs {
                 return Some(bq_response.unwrap());
             }
         }
-        // else {
-        // let text_response = JsFuture::from(resp.text().unwrap()).await.unwrap();
-
-        // let job_reference = JobReference {
-        //     project_id: String::from("1"),
-        //     location: String::from("2"),
-        //     job_id: String::from("3"),
-        // };
-
-        // Some(GetQueryResultsResponse {
-        //     kind: text_response.as_string().unwrap(),
-        //     etag: String::from("sss"),
-        //     total_rows: String::from("sss"),
-        //     total_bytes_processed: String::from("sss"),
-        //     cache_hit: true,
-        //     job_complete: true,
-        //     num_dml_affected_rows: None,
-        //     page_token: None,
-        //     schema: None,
-        //     errors: None,
-        //     job_reference: job_reference,
-        // })
-        // }
         None
     }
 }
