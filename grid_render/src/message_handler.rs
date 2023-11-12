@@ -3,7 +3,7 @@ use wasm_bindgen::JsValue;
 use web_sys::console;
 
 use crate::{
-    bigquery::jobs::{Jobs, QueryRequest},
+    bigquery::jobs::{Job, JobConfiguration, JobConfigurationQuery, Jobs, QueryRequest},
     getElementById,
 };
 
@@ -38,15 +38,35 @@ pub async fn handle(event: &web_sys::MessageEvent) {
         // launch query
         let bq_jobs = Jobs::new(&p.token);
         let project_id = &p.project_id;
-        let request = QueryRequest {
-            query: String::from(&p.query),
-            max_results: Some(50),
+        // let request = QueryRequest {
+        //     query: String::from(&p.query),
+        //     max_results: Some(50),
+        // };
+
+        // let response = bq_jobs.query(project_id, request).await;
+
+        let request = Job {
+            // kind: (),
+            // etag: (),
+            // id: (),
+            // self_link: (),
+            // user_email: (),
+            configuration: JobConfiguration {
+                dry_run: false,
+                query: JobConfigurationQuery { query: p.query.to_owned() },
+                ..Default::default()
+            },
+            ..Default::default()
+            // job_reference: (),
+            // statistics: (),
+            // status: (),
+            // principal_subject: (),
+
         };
 
-        let response = bq_jobs.query(project_id, request).await;
+        let response = bq_jobs.insert(project_id, request).await;
 
         if response.is_some() {
-
             q1.unwrap()
                 .set_inner_html(&format!("{:?}", serde_json::json!(&response)));
         } else {

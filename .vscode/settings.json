@@ -13,5 +13,8 @@
     "rust-analyzer.linkedProjects": [
         "./grid_render/Cargo.toml"
     ],
-    "rust-analyzer.showUnlinkedFileNotification": false
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    "vscode-bigquery.projects": [
+        "rca-stream-loader-dev"
+    ]
 }

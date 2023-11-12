@@ -7,7 +7,7 @@ pub struct Jobs {
     token: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct JobConfiguration {
     #[serde(alias = "jobType")]
     pub job_type: String,
@@ -25,7 +25,7 @@ pub struct JobConfiguration {
     // }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct JobConfigurationQuery {
     pub query: String,
     //   "destinationTable": {
@@ -154,7 +154,7 @@ pub struct JobStatus {
     pub state: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Job {
     pub kind: Option<String>,
     pub etag: Option<String>,
@@ -309,21 +309,34 @@ impl Jobs {
     /* https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/insert
      */
     pub async fn insert(self: &Self, project_id: &str, request: Job) -> Option<Job> {
-        let mut opts = web_sys::RequestInit::new();
-        opts.method("POST");
-        opts.mode(web_sys::RequestMode::NoCors);
+        // headers
         let headers = web_sys::Headers::new().unwrap();
-        // headers.set("Accept", "application/json").unwrap();
-        headers.set("Content-Type", "application/json").unwrap();
+        //Access-Control-Allow-Origin
+        headers.set("Access-Control-Request-Headers", "Authorization").unwrap();
+        headers.set("Accept", "application/json").unwrap();
+        headers
+            .set("Content-Type", "application/json; charset=utf-8")
+            .unwrap();
         headers
             .set("Authorization", &format!("Bearer {}", &self.token))
             .unwrap();
-        opts.headers(&headers);
+
+        // console::log_1(&JsValue::from_str(&headers.get("Accept").unwrap().unwrap()));
+        // console::log_1(&JsValue::from_str(&headers.get("Content-Type").unwrap().unwrap()));
+        // console::log_1(&JsValue::from_str(&headers.get("Authorization").unwrap().unwrap()));
+
+        //body
         let body = serde_wasm_bindgen::to_value(&request).unwrap();
-        opts.body(Some(&body));
+
+        //method, mode and headers
+        let mut opts = web_sys::RequestInit::new();
+        opts.method("POST")
+            // .mode(web_sys::RequestMode::Cors)
+            .headers(&headers)
+            .body(Some(&body));
 
         let url = format!(
-            "https://bigquery.googleapis.com/bigquery/v2/projects/{}/jobs",
+            "https://content-bigquery.googleapis.com/bigquery/v2/projects/{}/jobs",
             project_id
         );
 
@@ -353,6 +366,12 @@ impl Jobs {
                 return Some(bq_response.unwrap());
             }
         }
+        // else {
+        //     console::log_1(&JsValue::from_str(&format!(
+        //         "response: {:?}",
+        //         wasm_bindgen::JsValue::from(&resp).as_string()
+        //     )));
+        // }
 
         None
     }
