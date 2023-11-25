@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use wasm_bindgen::JsValue;
 
-use crate::{bigquery::jobs::Job, getElementById};
+use crate::{bigquery::{jobs::{Job, self, GetQueryResultsRequest}, self}, getElementById};
 
 #[derive(Debug, Deserialize)]
 pub struct ExternalRequest {
@@ -23,10 +23,10 @@ pub async fn handle(event: &web_sys::MessageEvent) {
             parse_event.as_ref().unwrap_err()
         )));
     } else {
-        let p = parse_event.as_ref().unwrap();
+        let external_request = parse_event.as_ref().unwrap();
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
             "parsed: {}: {}",
-            p.request_type, p.query
+            external_request.request_type, external_request.query
         )));
 
         let q1 = getElementById("q1");
@@ -34,10 +34,8 @@ pub async fn handle(event: &web_sys::MessageEvent) {
             let q1 = &q1.unwrap();
 
             q1.set_inner_html(&"Loading...");
-            // launch query
-            // let bq_jobs = Jobs::new(&p.token);
-            // let project_id = &p.project_id;
-            let job = &p.job;
+
+            let job = &external_request.job;
             if job.is_some() {
                 let job = job.as_ref().unwrap();
 
@@ -45,13 +43,36 @@ pub async fn handle(event: &web_sys::MessageEvent) {
                     "Loading job {}",
                     job.id.clone().unwrap_or_default()
                 ));
+
+                let job_reference = &job.job_reference.as_ref().unwrap();
+
+                let bq_jobs = bigquery::jobs::Jobs::new(&external_request.token);
+                let request = GetQueryResultsRequest{
+                    project_id: String::from(job_reference.project_id.clone()),
+                    job_id: String::from(job_reference.job_id.clone()),
+                    start_index: Some(String::from("0")),
+                    page_token: None,
+                    max_results: Some(50),
+                    timeout_ms: None,
+                    location: Some(String::from(job_reference.location.clone())),
+                };
+
+                let results = bq_jobs.get_query_results(request).await;
+                if results.is_some(){
+
+                    let results = results.unwrap();
+
+                    q1.set_inner_html(&format!(
+                        "total_rows {}",
+                        results.total_rows
+                    ));
+                    
+                }
+
             } else {
                 q1.set_inner_html(&"Unexpected error occured.");
             }
-            // let request = QueryRequest {
-            //     query: String::from(&p.query),
-            //     max_results: Some(50),
-            // };
+    
         } else {
             web_sys::console::log_1(&JsValue::from("q1 not found"));
         }
