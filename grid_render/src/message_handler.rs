@@ -15,15 +15,6 @@ pub struct ExternalRequest {
 }
 
 pub async fn handle(event: &web_sys::MessageEvent) {
-    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-    //     "event {}: {:?}",
-    //     event.type_(),
-    //     event.data()
-    // )));
-
-    // let event_data: ExternalRequest = event.data().into();
-    // let job_response = JSON::parse(event_data).expect(&"error 2");
-
     let parse_event = &serde_wasm_bindgen::from_value::<ExternalRequest>(event.data());
 
     if parse_event.is_err() {
@@ -40,44 +31,27 @@ pub async fn handle(event: &web_sys::MessageEvent) {
 
         let q1 = getElementById("q1");
         if q1.is_some() {
-            //     // launch query
-            //     let bq_jobs = Jobs::new(&p.token);
-            //     let project_id = &p.project_id;
+            let q1 = &q1.unwrap();
+
+            q1.set_inner_html(&"Loading...");
+            // launch query
+            // let bq_jobs = Jobs::new(&p.token);
+            // let project_id = &p.project_id;
             let job = &p.job;
-            //     // let request = QueryRequest {
-            //     //     query: String::from(&p.query),
-            //     //     max_results: Some(50),
-            //     // };
+            if job.is_some() {
+                let job = job.as_ref().unwrap();
 
-            //     // let response = bq_jobs.query(project_id, request).await;
-
-            //     // let request = Job {
-            //     //     // kind: (),
-            //     //     // etag: (),
-            //     //     // id: (),
-            //     //     // self_link: (),
-            //     //     // user_email: (),
-            //     //     configuration: JobConfiguration {
-            //     //         dry_run: false,
-            //     //         query: JobConfigurationQuery { query: p.query.to_owned() },
-            //     //         ..Default::default()
-            //     //     },
-            //     //     ..Default::default()
-            //     //     // job_reference: (),
-            //     //     // statistics: (),
-            //     //     // status: (),
-            //     //     // principal_subject: (),
-
-            //     // };
-
-            //     // let response = bq_jobs.insert(project_id, request).await;
-
-            //     // if response.is_some() {
-            q1.unwrap()
-                .set_inner_html(&format!("job {:?}", serde_json::json!(&job)));
-            //     // } else {
-            //     //     q1.unwrap().set_inner_html("no response");
-            //     // }
+                q1.set_inner_html(&format!(
+                    "Loading job {}",
+                    job.id.clone().unwrap_or_default()
+                ));
+            } else {
+                q1.set_inner_html(&"Unexpected error occured.");
+            }
+            // let request = QueryRequest {
+            //     query: String::from(&p.query),
+            //     max_results: Some(50),
+            // };
         } else {
             web_sys::console::log_1(&JsValue::from("q1 not found"));
         }
