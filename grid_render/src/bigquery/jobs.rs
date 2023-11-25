@@ -16,7 +16,7 @@ pub struct JobConfiguration {
     pub copy: Option<JobConfigurationTableCopy>,
     pub extract: Option<JobConfigurationExtract>,
     #[serde(alias = "dryRun")]
-    pub dry_run: bool,
+    pub dry_run: Option<bool>,
     #[serde(alias = "jobTimeoutMs")]
     pub job_timeout_ms: Option<String>,
     // "labels": {
@@ -154,10 +154,10 @@ pub struct JobStatus {
     pub state: String,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Job {
-    pub kind: Option<String>,
-    pub etag: Option<String>,
+    pub kind: String,
+    pub etag: String,
     pub id: Option<String>,
     #[serde(alias = "selfLink")]
     pub self_link: Option<String>,
@@ -306,130 +306,132 @@ impl Jobs {
         }
     }
 
-    /* https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/insert
-     */
-    pub async fn insert(self: &Self, project_id: &str, request: Job) -> Option<Job> {
-        // headers
-        let headers = web_sys::Headers::new().unwrap();
-        //Access-Control-Allow-Origin
-        headers.set("Access-Control-Request-Headers", "Authorization").unwrap();
-        headers.set("Accept", "application/json").unwrap();
-        headers
-            .set("Content-Type", "application/json; charset=utf-8")
-            .unwrap();
-        headers
-            .set("Authorization", &format!("Bearer {}", &self.token))
-            .unwrap();
+    // POST functions need CORS requests. :/
 
-        // console::log_1(&JsValue::from_str(&headers.get("Accept").unwrap().unwrap()));
-        // console::log_1(&JsValue::from_str(&headers.get("Content-Type").unwrap().unwrap()));
-        // console::log_1(&JsValue::from_str(&headers.get("Authorization").unwrap().unwrap()));
+    // /* https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/insert
+    //  */
+    // pub async fn insert(self: &Self, project_id: &str, request: Job) -> Option<Job> {
+    //     // headers
+    //     let headers = web_sys::Headers::new().unwrap();
+    //     //Access-Control-Allow-Origin
+    //     headers.set("Access-Control-Request-Headers", "Authorization").unwrap();
+    //     headers.set("Accept", "application/json").unwrap();
+    //     headers
+    //         .set("Content-Type", "application/json; charset=utf-8")
+    //         .unwrap();
+    //     headers
+    //         .set("Authorization", &format!("Bearer {}", &self.token))
+    //         .unwrap();
 
-        //body
-        let body = serde_wasm_bindgen::to_value(&request).unwrap();
+    //     // console::log_1(&JsValue::from_str(&headers.get("Accept").unwrap().unwrap()));
+    //     // console::log_1(&JsValue::from_str(&headers.get("Content-Type").unwrap().unwrap()));
+    //     // console::log_1(&JsValue::from_str(&headers.get("Authorization").unwrap().unwrap()));
 
-        //method, mode and headers
-        let mut opts = web_sys::RequestInit::new();
-        opts.method("POST")
-            // .mode(web_sys::RequestMode::Cors)
-            .headers(&headers)
-            .body(Some(&body));
+    //     //body
+    //     let body = serde_wasm_bindgen::to_value(&request).unwrap();
 
-        let url = format!(
-            "https://content-bigquery.googleapis.com/bigquery/v2/projects/{}/jobs",
-            project_id
-        );
+    //     //method, mode and headers
+    //     let mut opts = web_sys::RequestInit::new();
+    //     opts.method("POST")
+    //         // .mode(web_sys::RequestMode::Cors)
+    //         .headers(&headers)
+    //         .body(Some(&body));
 
-        let request = web_sys::Request::new_with_str_and_init(&url, &opts).unwrap();
+    //     let url = format!(
+    //         "https://content-bigquery.googleapis.com/bigquery/v2/projects/{}/jobs",
+    //         project_id
+    //     );
 
-        let window = web_sys::window().unwrap();
-        let resp_value = JsFuture::from(window.fetch_with_request(&request))
-            .await
-            .unwrap();
+    //     let request = web_sys::Request::new_with_str_and_init(&url, &opts).unwrap();
 
-        assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
-            &resp_value
-        ));
-        let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
+    //     let window = web_sys::window().unwrap();
+    //     let resp_value = JsFuture::from(window.fetch_with_request(&request))
+    //         .await
+    //         .unwrap();
 
-        if resp.status() == 200 {
-            let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
-            // Use serde to parse the JSON into a struct.
-            let bq_response = serde_wasm_bindgen::from_value::<Job>(json);
+    //     assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
+    //         &resp_value
+    //     ));
+    //     let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
 
-            if bq_response.is_err() {
-                console::log_1(&JsValue::from_str(&format!(
-                    "error: {:?}",
-                    bq_response.err().unwrap().to_string()
-                )));
-            } else {
-                return Some(bq_response.unwrap());
-            }
-        }
-        // else {
-        //     console::log_1(&JsValue::from_str(&format!(
-        //         "response: {:?}",
-        //         wasm_bindgen::JsValue::from(&resp).as_string()
-        //     )));
-        // }
+    //     if resp.status() == 200 {
+    //         let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
+    //         // Use serde to parse the JSON into a struct.
+    //         let bq_response = serde_wasm_bindgen::from_value::<Job>(json);
 
-        None
-    }
+    //         if bq_response.is_err() {
+    //             console::log_1(&JsValue::from_str(&format!(
+    //                 "error: {:?}",
+    //                 bq_response.err().unwrap().to_string()
+    //             )));
+    //         } else {
+    //             return Some(bq_response.unwrap());
+    //         }
+    //     }
+    //     // else {
+    //     //     console::log_1(&JsValue::from_str(&format!(
+    //     //         "response: {:?}",
+    //     //         wasm_bindgen::JsValue::from(&resp).as_string()
+    //     //     )));
+    //     // }
 
-    /* https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
-     */
-    pub async fn query(
-        self: &Self,
-        project_id: &str,
-        request: QueryRequest,
-    ) -> Option<QueryResponse> {
-        let mut opts = web_sys::RequestInit::new();
-        opts.method("POST");
-        opts.mode(web_sys::RequestMode::NoCors);
-        let headers = web_sys::Headers::new().unwrap();
-        // headers.set("Accept", "application/json").unwrap();
-        headers.set("Content-Type", "application/json").unwrap();
-        headers
-            .set("Authorization", &format!("Bearer {}", &self.token))
-            .unwrap();
-        opts.headers(&headers);
-        let body = serde_wasm_bindgen::to_value(&request).unwrap();
-        opts.body(Some(&body));
+    //     None
+    // }
 
-        let url = format!(
-            "https://bigquery.googleapis.com/bigquery/v2/projects/{}/queries",
-            project_id
-        );
+    // /* https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
+    //  */
+    // pub async fn query(
+    //     self: &Self,
+    //     project_id: &str,
+    //     request: QueryRequest,
+    // ) -> Option<QueryResponse> {
+    //     let mut opts = web_sys::RequestInit::new();
+    //     opts.method("POST");
+    //     opts.mode(web_sys::RequestMode::NoCors);
+    //     let headers = web_sys::Headers::new().unwrap();
+    //     // headers.set("Accept", "application/json").unwrap();
+    //     headers.set("Content-Type", "application/json").unwrap();
+    //     headers
+    //         .set("Authorization", &format!("Bearer {}", &self.token))
+    //         .unwrap();
+    //     opts.headers(&headers);
+    //     let body = serde_wasm_bindgen::to_value(&request).unwrap();
+    //     opts.body(Some(&body));
 
-        let request = web_sys::Request::new_with_str_and_init(&url, &opts).unwrap();
+    //     let url = format!(
+    //         "https://bigquery.googleapis.com/bigquery/v2/projects/{}/queries",
+    //         project_id
+    //     );
 
-        let window = web_sys::window().unwrap();
-        let resp_value = JsFuture::from(window.fetch_with_request(&request))
-            .await
-            .unwrap();
+    //     let request = web_sys::Request::new_with_str_and_init(&url, &opts).unwrap();
 
-        assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
-            &resp_value
-        ));
-        let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
+    //     let window = web_sys::window().unwrap();
+    //     let resp_value = JsFuture::from(window.fetch_with_request(&request))
+    //         .await
+    //         .unwrap();
 
-        if resp.status() == 200 {
-            let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
-            // Use serde to parse the JSON into a struct.
-            let bq_response = serde_wasm_bindgen::from_value::<QueryResponse>(json);
+    //     assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
+    //         &resp_value
+    //     ));
+    //     let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
 
-            if bq_response.is_err() {
-                console::log_1(&JsValue::from_str(&format!(
-                    "error: {:?}",
-                    bq_response.err().unwrap().to_string()
-                )));
-            } else {
-                return Some(bq_response.unwrap());
-            }
-        }
+    //     if resp.status() == 200 {
+    //         let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
+    //         // Use serde to parse the JSON into a struct.
+    //         let bq_response = serde_wasm_bindgen::from_value::<QueryResponse>(json);
 
-        None
-    }
+    //         if bq_response.is_err() {
+    //             console::log_1(&JsValue::from_str(&format!(
+    //                 "error: {:?}",
+    //                 bq_response.err().unwrap().to_string()
+    //             )));
+    //         } else {
+    //             return Some(bq_response.unwrap());
+    //         }
+    //     }
+
+    //     None
+    // }
 
     /*
     https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/getQueryResults#http-request
@@ -498,5 +500,79 @@ impl Jobs {
             }
         }
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    
+    use js_sys::JSON;
+    use wasm_bindgen_test::{wasm_bindgen_test_configure, wasm_bindgen_test};
+
+    wasm_bindgen_test_configure!(run_in_browser);
+
+    //* try out some stuff */
+    #[wasm_bindgen_test]
+    pub fn deserialize_json_to_job() {
+        let json_job_response = r#"
+            {
+                "kind": "bigquery#job",
+                "etag": "i5chOreAELANLzXLPFIRZA==",
+                "id": "xxx-project-1:EU.0db7c357-9d1b-xxxx-a641-ca0f009342df",
+                "selfLink": "https://bigquery.googleapis.com/bigquery/v2/projects/damiao-project-1/jobs/0db7c357-9d1b-48c9-a641-ca0f009342df?location=EU",
+                "user_email": "xxxx@gmail.com",
+                "configuration": {
+                    "query": {
+                        "query": "WITH tBase AS (\nSELECT \n    pimExportDate, \n    Combi_number,\n    Width_accessoires,\n    Lining,    \n    Width_accessoires,\n    Additional_info,\n    Sleeve_Length,\n    Pim_Value,\n    Colour_PDP,\n    Not_searchable,\n    ROW_NUMBER() OVER(ORDER BY Combi_number ASC) AS row_number\nFROM `damiao-project-1.PvhTest.PimExport` pim\nWHERE \n    pimExportDate <= \"2022-03-23\"\n)\n\n-- projects/damiao-project-1/topics/test_topic_no_schema\n\nSELECT \n    (\n        SELECT AS STRUCT\n            CAST(row_number AS STRING) AS row_number,\n            \"dsdfdsd\" AS data_type\n    ) AS attributes,\n    TO_JSON(tBase) AS data,\n\nFROM tBase\nLIMIT 10;",
+                        "destinationTable": {
+                            "projectId": "damiao-project-1",
+                            "datasetId": "_9b1179fxxxxad7e9c3af3ff30",
+                            "tableId": "anondc2ef39266xxx4b35af6572d83c79e4c84f33e2cc31c8a0a0941"
+                        },
+                        "writeDisposition": "WRITE_TRUNCATE",
+                        "priority": "INTERACTIVE",
+                        "useQueryCache": true,
+                        "useLegacySql": false
+                    },
+                    "jobType": "QUERY"
+                },
+                "jobReference": {
+                    "projectId": "xxxx-project-1",
+                    "jobId": "0db7c357-9d1b-xxxx-a641-ca0f009342df",
+                    "location": "EU"
+                },
+                "statistics": {
+                    "creationTime": "1700418877577",
+                    "startTime": "1700418877849",
+                    "endTime": "1700418877968",
+                    "totalBytesProcessed": "0",
+                    "query": {
+                        "totalBytesProcessed": "0",
+                        "totalBytesBilled": "0",
+                        "cacheHit": true,
+                        "statementType": "SELECT"
+                    }
+                },
+                "status": {
+                    "state": "DONE"
+                },
+                "principal_subject": "user:xxxx@gmail.com",
+                "jobCreationReason": {
+                    "code": "REQUESTED"
+                }
+            }
+        "#;
+
+        let job_response = JSON::parse(json_job_response).unwrap();
+        let parse_event = &serde_wasm_bindgen::from_value::<super::Job>(job_response).unwrap();
+
+        assert_eq!(parse_event.kind, "bigquery#job");
+        assert_eq!(parse_event.etag, "i5chOreAELANLzXLPFIRZA==");
+        assert_eq!(parse_event.principal_subject, Some("user:xxxx@gmail.com".to_owned()));
+        assert_eq!(parse_event.job_reference.as_ref().unwrap().job_id, "0db7c357-9d1b-xxxx-a641-ca0f009342df".to_owned());
+        assert_eq!(parse_event.configuration.query.query, "WITH tBase AS (\nSELECT \n    pimExportDate, \n    Combi_number,\n    Width_accessoires,\n    Lining,    \n    Width_accessoires,\n    Additional_info,\n    Sleeve_Length,\n    Pim_Value,\n    Colour_PDP,\n    Not_searchable,\n    ROW_NUMBER() OVER(ORDER BY Combi_number ASC) AS row_number\nFROM `damiao-project-1.PvhTest.PimExport` pim\nWHERE \n    pimExportDate <= \"2022-03-23\"\n)\n\n-- projects/damiao-project-1/topics/test_topic_no_schema\n\nSELECT \n    (\n        SELECT AS STRUCT\n            CAST(row_number AS STRING) AS row_number,\n            \"dsdfdsd\" AS data_type\n    ) AS attributes,\n    TO_JSON(tBase) AS data,\n\nFROM tBase\nLIMIT 10;".to_owned());
+        assert_eq!(parse_event.configuration.dry_run, None);
+        assert!(parse_event.statistics.is_some());
+
     }
 }

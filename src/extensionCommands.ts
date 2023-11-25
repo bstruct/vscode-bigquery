@@ -144,36 +144,22 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		const bqClient = await getBigQueryClient();
 
 		const projectId = await bqClient.getProjectId();
-		console.log('projectId:', projectId);
+		// console.log('projectId:', projectId);
 		const token = await bqClient.getToken();
-		console.log('token:', token);
+		// console.log('token:', token);
+		
+		const jobs = await bqClient.runQuery(queryText);
 
 		let postMessageResult = await resultsGridRender.postMessage({
 			requestType: ResultsGridRenderRequestV2Type.executeQuery.toString(),
 			projectId: projectId,
 			token: token,
 			query: queryText,
+			jobs: jobs.map(c=> c.metadata)
 		} as ResultsGridRenderRequestV2);
 
 		console.log('postMessageResult:', postMessageResult);
 
-		// 	const jobs: Job[] = await queryResponse;
-		// 	const jobReferences = jobs.map(c => { return { jobId: c.metadata.jobReference.jobId, projectId: c.metadata.jobReference.projectId, location: c.metadata.jobReference.location } as JobReference; });
-
-		// const request = {
-		// 	jobReferences: jobReferences,
-		// 	startIndex: 0,
-		// 	maxResults: 50,
-		// 	jobIndex: 0,
-		// 	openInTabVisible: true,
-		// 	token: token
-		// } as ResultsGridRenderRequest;
-
-		// resultsGridRender.render(request);
-
-		// 	QueryResultsMappingService.updateQueryResultsMapping(globalState, uuid, request);
-
-		// 	return jobs.length;
 	} catch (error) {
 		resultsGridRender.renderException(error);
 	}
