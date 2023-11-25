@@ -148,14 +148,14 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		const token = await bqClient.getToken();
 		// console.log('token:', token);
 		
-		const jobs = await bqClient.runQuery(queryText);
+		const job = await bqClient.runQuery(queryText);
 
 		let postMessageResult = await resultsGridRender.postMessage({
 			requestType: ResultsGridRenderRequestV2Type.executeQuery.toString(),
 			projectId: projectId,
 			token: token,
 			query: queryText,
-			jobs: jobs.map(c=> c.metadata)
+			job: job.metadata
 		} as ResultsGridRenderRequestV2);
 
 		console.log('postMessageResult:', postMessageResult);
@@ -302,9 +302,9 @@ export const commandViewTable = async function (...args: any[]) {
 
 			const jobReferences = [
 				{
-					jobId: queryResponse[0].id,
-					location: queryResponse[0].location,
-					projectId: queryResponse[0].projectId
+					jobId: queryResponse.id,
+					location: queryResponse.location,
+					projectId: queryResponse.projectId
 				} as JobReference];
 
 			const request = {
@@ -403,7 +403,7 @@ export const commandOpenDdl = async function (...args: any[]) {
 		const bqClient = await getBigQueryClient();
 
 		const queryRun = await bqClient.runQuery(query);
-		const queryResult = await queryRun[0].getQueryResults();
+		const queryResult = await queryRun.getQueryResults();
 		const ddl = queryResult[0][0].ddl;
 
 		const doc = await vscode.workspace.openTextDocument({

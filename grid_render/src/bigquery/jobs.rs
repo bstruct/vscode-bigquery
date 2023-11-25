@@ -154,27 +154,35 @@ pub struct JobStatus {
     pub state: String,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct JobCreationReason{
+    pub code: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Job {
-    pub kind: String,
-    pub etag: String,
+    pub kind: Option<String>,
+    pub etag: Option<String>,
     pub id: Option<String>,
     #[serde(alias = "selfLink")]
     pub self_link: Option<String>,
     pub user_email: Option<String>,
-    pub configuration: JobConfiguration,
+    pub configuration: Option<JobConfiguration>,
     #[serde(alias = "jobReference")]
     pub job_reference: Option<JobReference>,
     pub statistics: Option<JobStatistics>,
     pub status: Option<JobStatus>,
     pub principal_subject: Option<String>,
+    //jobCreationReason
+    #[serde(alias = "jobCreationReason")]
+    pub job_creation_reason: Option<JobCreationReason>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct QueryRequest {
     pub query: String,
-    #[serde(alias = "maxResults")]
-    pub max_results: Option<usize>,
+    // #[serde(alias = "maxResults")]
+    // pub max_results: Option<u64>,
     //incomplete
     // https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#QueryRequest
 }
@@ -525,7 +533,7 @@ mod tests {
                     "query": {
                         "query": "WITH tBase AS (\nSELECT \n    pimExportDate, \n    Combi_number,\n    Width_accessoires,\n    Lining,    \n    Width_accessoires,\n    Additional_info,\n    Sleeve_Length,\n    Pim_Value,\n    Colour_PDP,\n    Not_searchable,\n    ROW_NUMBER() OVER(ORDER BY Combi_number ASC) AS row_number\nFROM `damiao-project-1.PvhTest.PimExport` pim\nWHERE \n    pimExportDate <= \"2022-03-23\"\n)\n\n-- projects/damiao-project-1/topics/test_topic_no_schema\n\nSELECT \n    (\n        SELECT AS STRUCT\n            CAST(row_number AS STRING) AS row_number,\n            \"dsdfdsd\" AS data_type\n    ) AS attributes,\n    TO_JSON(tBase) AS data,\n\nFROM tBase\nLIMIT 10;",
                         "destinationTable": {
-                            "projectId": "damiao-project-1",
+                            "projectId": "xxx-project-1",
                             "datasetId": "_9b1179fxxxxad7e9c3af3ff30",
                             "tableId": "anondc2ef39266xxx4b35af6572d83c79e4c84f33e2cc31c8a0a0941"
                         },
@@ -566,13 +574,15 @@ mod tests {
         let job_response = JSON::parse(json_job_response).unwrap();
         let parse_event = &serde_wasm_bindgen::from_value::<super::Job>(job_response).unwrap();
 
-        assert_eq!(parse_event.kind, "bigquery#job");
-        assert_eq!(parse_event.etag, "i5chOreAELANLzXLPFIRZA==");
+        assert_eq!(parse_event.kind.as_ref().unwrap(), "bigquery#job");
+        assert_eq!(parse_event.etag.as_ref().unwrap(), "i5chOreAELANLzXLPFIRZA==");
         assert_eq!(parse_event.principal_subject, Some("user:xxxx@gmail.com".to_owned()));
         assert_eq!(parse_event.job_reference.as_ref().unwrap().job_id, "0db7c357-9d1b-xxxx-a641-ca0f009342df".to_owned());
-        assert_eq!(parse_event.configuration.query.query, "WITH tBase AS (\nSELECT \n    pimExportDate, \n    Combi_number,\n    Width_accessoires,\n    Lining,    \n    Width_accessoires,\n    Additional_info,\n    Sleeve_Length,\n    Pim_Value,\n    Colour_PDP,\n    Not_searchable,\n    ROW_NUMBER() OVER(ORDER BY Combi_number ASC) AS row_number\nFROM `damiao-project-1.PvhTest.PimExport` pim\nWHERE \n    pimExportDate <= \"2022-03-23\"\n)\n\n-- projects/damiao-project-1/topics/test_topic_no_schema\n\nSELECT \n    (\n        SELECT AS STRUCT\n            CAST(row_number AS STRING) AS row_number,\n            \"dsdfdsd\" AS data_type\n    ) AS attributes,\n    TO_JSON(tBase) AS data,\n\nFROM tBase\nLIMIT 10;".to_owned());
-        assert_eq!(parse_event.configuration.dry_run, None);
+        assert_eq!(parse_event.configuration.as_ref().unwrap().query.query, "WITH tBase AS (\nSELECT \n    pimExportDate, \n    Combi_number,\n    Width_accessoires,\n    Lining,    \n    Width_accessoires,\n    Additional_info,\n    Sleeve_Length,\n    Pim_Value,\n    Colour_PDP,\n    Not_searchable,\n    ROW_NUMBER() OVER(ORDER BY Combi_number ASC) AS row_number\nFROM `damiao-project-1.PvhTest.PimExport` pim\nWHERE \n    pimExportDate <= \"2022-03-23\"\n)\n\n-- projects/damiao-project-1/topics/test_topic_no_schema\n\nSELECT \n    (\n        SELECT AS STRUCT\n            CAST(row_number AS STRING) AS row_number,\n            \"dsdfdsd\" AS data_type\n    ) AS attributes,\n    TO_JSON(tBase) AS data,\n\nFROM tBase\nLIMIT 10;".to_owned());
+        assert_eq!(parse_event.configuration.as_ref().unwrap().dry_run, None);
+        assert_eq!(parse_event.status.as_ref().unwrap().state, "DONE");
         assert!(parse_event.statistics.is_some());
+        assert_eq!(parse_event.job_creation_reason.as_ref().unwrap().code, "REQUESTED");
 
     }
 }
