@@ -47,7 +47,7 @@ fn append_bq_table_header(
             Some(n) => format!("{}.{}", n, field.name),
             None => String::from(field.name.clone()),
         };
-        if complex_object { 
+        if complex_object {
             if field.fields.is_some() {
                 append_bq_table_header(
                     header_columns,
@@ -65,14 +65,26 @@ fn get_bq_table_rows(
     schema: &Option<crate::bigquery::jobs::TableSchema>,
     rows: &Vec<serde_json::Value>,
 ) -> Vec<Vec<TableItem>> {
-    todo!()
+    let mut output_rows: Vec<Vec<TableItem>> = Vec::new();
+
+    let index = 0;
+    for row in rows {
+        let mut output_row: Vec<TableItem> = Vec::new();
+        let _ = &output_row.push(TableItem::new(false, true, Some(format!("{}", index))));
+
+
+
+        let _ = &output_rows.push(output_row);
+    }
+
+    output_rows
 }
 
 #[cfg(test)]
 mod tests {
 
     #[test]
-    pub fn get_bq_table_header_1() {
+    pub fn get_bq_table_header_test_1() {
         let complex_object_array_test = include_str!("complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
@@ -81,7 +93,7 @@ mod tests {
 
         let header = &super::get_bq_table_header(&complex_object_array_test.schema);
 
-        // assert_eq!(header.len(), 30);
+        assert_eq!(header.len(), 62);
         assert_eq!(header[0], "#");
 
         let field_names = [
@@ -144,7 +156,7 @@ mod tests {
 
         for i in 0..28 {
             let name = &field_names[i];
-            assert_eq!(&header[i+1], name)
+            assert_eq!(&header[i + 1], name)
         }
 
         assert_eq!(&header[29], &"Delete_Flag.#");
@@ -153,220 +165,37 @@ mod tests {
 
         for i in 29..37 {
             let name = field_names[i];
-            assert_eq!(&header[i+3], name);
+            assert_eq!(&header[i + 3], name);
         }
 
-        //     thead_td = thead_td.next_element_sibling().unwrap();
-        //     assert_eq!(thead_td.tag_name(), "TH");
-        //     assert_eq!(thead_td.inner_html(), "Structure_assignments.#");
+        assert_eq!(&header[40], "Structure_assignments.#");
+        assert_eq!(&header[41], "Structure_assignments.assignment");
+        assert_eq!(&header[42], "Structure_assignments.structure_system");
 
-        //     thead_td = thead_td.next_element_sibling().unwrap();
-        //     assert_eq!(thead_td.tag_name(), "TH");
-        //     assert_eq!(thead_td.inner_html(), "Structure_assignments.assignment");
+        assert_eq!(&header[43], "Functionality");
+        assert_eq!(&header[44], "Promo_Flag.#");
+        assert_eq!(&header[45], "Promo_Flag.value");
+        assert_eq!(&header[46], "Promo_Flag.country");
 
-        //     thead_td = thead_td.next_element_sibling().unwrap();
-        //     assert_eq!(thead_td.tag_name(), "TH");
-        //     assert_eq!(
-        //         thead_td.inner_html(),
-        //         "Structure_assignments.structure_system"
-        //     );
-
-        //     thead_td = thead_td.next_element_sibling().unwrap();
-        //     assert_eq!(thead_td.tag_name(), "TH");
-        //     assert_eq!(thead_td.inner_html(), "Functionality");
-
-        //     thead_td = thead_td.next_element_sibling().unwrap();
-        //     assert_eq!(thead_td.tag_name(), "TH");
-        //     assert_eq!(thead_td.inner_html(), "Promo_Flag.#");
-
-        //     thead_td = thead_td.next_element_sibling().unwrap();
-        //     assert_eq!(thead_td.tag_name(), "TH");
-        //     assert_eq!(thead_td.inner_html(), "Promo_Flag.value");
-
-        //     thead_td = thead_td.next_element_sibling().unwrap();
-        //     assert_eq!(thead_td.tag_name(), "TH");
-        //     assert_eq!(thead_td.inner_html(), "Promo_Flag.country");
-
-        //     for i in 40..55 {
-        //         let name = field_names[i];
-        //         // console_log!("i: {}, name: {}", i, name);
-        //         thead_td = thead_td.next_element_sibling().unwrap();
-        //         assert_eq!(thead_td.tag_name(), "TH");
-        //         assert_eq!(thead_td.inner_html(), name);
-        //     }
+        for i in 40..55 {
+            let name = field_names[i];
+            assert_eq!(&header[i + 7], name);
+        }
     }
 
-    // #[wasm_bindgen_test]
-    // fn complex_object_array_test_1() {
-    //     let complex_object_array_test = include_str!("complex_object_array_test.json");
-    //     let complex_object_array_test = js_sys::JSON::parse(complex_object_array_test).unwrap();
-    //     let complex_object_array_test = &serde_wasm_bindgen::from_value::<
-    //         crate::bigquery::jobs::GetQueryResultsResponse,
-    //     >(complex_object_array_test)
-    //     .unwrap();
+    #[test]
+    fn get_bq_table_rows_test_1() {
+        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
 
-    //     let element = &createElement("div");
-    //     complex_object_array_test.plot_table(element);
+        let rows = &super::get_bq_table_rows(
+            &complex_object_array_test.schema,
+            &complex_object_array_test.rows,
+        );
 
-    //     let shadow = element.shadow_root().unwrap();
-    //     let child = shadow.first_element_child().unwrap();
-    //     assert_eq!(child.tag_name(), "STYLE");
-
-    //     let child = child.next_element_sibling().unwrap();
-    //     assert_eq!(child.tag_name(), "DIV");
-    //     assert_eq!(child.id(), "controls-background");
-
-    //     let child = child.next_element_sibling().unwrap();
-    //     assert_eq!(child.tag_name(), "DIV");
-    //     assert_eq!(child.id(), "controls");
-
-    //     let table = child.next_element_sibling().unwrap();
-    //     assert_eq!(table.tag_name(), "TABLE");
-
-    //     let mut thead_td = table
-    //         .first_element_child()
-    //         .unwrap()
-    //         .first_element_child()
-    //         .unwrap()
-    //         .first_element_child()
-    //         .unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(thead_td.inner_html(), "#");
-
-    //     let field_names = [
-    //         "Pim_Value",
-    //         "AttributeValueCategory",
-    //         "Colour_PDP",
-    //         "Width_accessoires",
-    //         "Height_accessoires",
-    //         "Lining",
-    //         "Shop_by_Sport",
-    //         "Not_searchable",
-    //         "Exclusive_Access",
-    //         "Promo_Activity",
-    //         "Additional_info",
-    //         "Lifestyle",
-    //         "Ranking",
-    //         "Product_GBPC",
-    //         "TradebyteActive_Combi",
-    //         "MainColorPDP",
-    //         "Sleeve_Length",
-    //         "Padding",
-    //         "Soldout",
-    //         "Neck_Line",
-    //         "Key_Looks",
-    //         "pimExportDate",
-    //         "ProductGroupCategory",
-    //         "Heel_Height",
-    //         "USP_flag",
-    //         "Material_2",
-    //         "Combi_number",
-    //         "Flavour_Copy",
-    //         "Delete_Flag",
-    //         "New_Arrivals",
-    //         "Combi_Reference",
-    //         "RISE",
-    //         "CTP_date",
-    //         "STYLE",
-    //         "Proper_style_name",
-    //         "StyleLength",
-    //         "Actual_Online_Date",
-    //         "Structure_assignments",
-    //         "Functionality",
-    //         "Promo_Flag",
-    //         "Fit_for_bottoms",
-    //         "Sustainable",
-    //         "Material_3",
-    //         "Fit_for_tops",
-    //         "Material",
-    //         "Program",
-    //         "ImageCount",
-    //         "Collection",
-    //         "Occasion",
-    //         "Shop_by_Activity",
-    //         "Brand",
-    //         "Length_accessoires",
-    //         "Backfill_AboutYou",
-    //         "DETAIL",
-    //         "row_number",
-    //     ];
-
-    //     for i in 0..28 {
-    //         let name = field_names[i];
-    //         // console_log!("i: {}, name: {}", i, name);
-    //         thead_td = thead_td.next_element_sibling().unwrap();
-    //         assert_eq!(thead_td.tag_name(), "TH");
-    //         assert_eq!(thead_td.inner_html(), name);
-    //     }
-
-    //     thead_td = thead_td.next_element_sibling().unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(thead_td.inner_html(), "Delete_Flag.#");
-
-    //     thead_td = thead_td.next_element_sibling().unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(thead_td.inner_html(), "Delete_Flag.value");
-
-    //     thead_td = thead_td.next_element_sibling().unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(thead_td.inner_html(), "Delete_Flag.level");
-
-    //     for i in 29..37 {
-    //         let name = field_names[i];
-    //         // console_log!("i: {}, name: {}", i, name);
-    //         thead_td = thead_td.next_element_sibling().unwrap();
-    //         assert_eq!(thead_td.tag_name(), "TH");
-    //         assert_eq!(thead_td.inner_html(), name);
-    //     }
-
-    //     thead_td = thead_td.next_element_sibling().unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(thead_td.inner_html(), "Structure_assignments.#");
-
-    //     thead_td = thead_td.next_element_sibling().unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(thead_td.inner_html(), "Structure_assignments.assignment");
-
-    //     thead_td = thead_td.next_element_sibling().unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(
-    //         thead_td.inner_html(),
-    //         "Structure_assignments.structure_system"
-    //     );
-
-    //     thead_td = thead_td.next_element_sibling().unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(thead_td.inner_html(), "Functionality");
-
-    //     thead_td = thead_td.next_element_sibling().unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(thead_td.inner_html(), "Promo_Flag.#");
-
-    //     thead_td = thead_td.next_element_sibling().unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(thead_td.inner_html(), "Promo_Flag.value");
-
-    //     thead_td = thead_td.next_element_sibling().unwrap();
-    //     assert_eq!(thead_td.tag_name(), "TH");
-    //     assert_eq!(thead_td.inner_html(), "Promo_Flag.country");
-
-    //     for i in 40..55 {
-    //         let name = field_names[i];
-    //         // console_log!("i: {}, name: {}", i, name);
-    //         thead_td = thead_td.next_element_sibling().unwrap();
-    //         assert_eq!(thead_td.tag_name(), "TH");
-    //         assert_eq!(thead_td.inner_html(), name);
-    //     }
-
-    //     // values
-
-    //     let tbody = table
-    //         .first_element_child()
-    //         .unwrap()
-    //         .next_element_sibling()
-    //         .unwrap();
-    //     assert_eq!(tbody.tag_name(), "TBODY");
-
-    //     // assert_eq!(thead_td.inner_html(), "Row");
-    // }
+        assert_eq!(rows.len(), 50);
+    }
 }

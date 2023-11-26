@@ -6,7 +6,21 @@ pub(crate) struct TableItem {
     pub value: Option<String>,
 }
 
-pub(crate) fn render_table(element: &HtmlElement, header: &Vec<String>, rows: &Vec<Vec<TableItem>>) {
+impl TableItem {
+    pub fn new(is_none: bool, is_main_index: bool, value: Option<String>) -> TableItem {
+        TableItem {
+            is_none,
+            is_main_index,
+            value,
+        }
+    }
+}
+
+pub(crate) fn render_table(
+    element: &HtmlElement,
+    header: &Vec<String>,
+    rows: &Vec<Vec<TableItem>>,
+) {
     let shadow = &shadow_init(element);
 
     // render_control(shadow, query_response, start_index);
@@ -298,7 +312,6 @@ fn shadow_init(element: &HtmlElement) -> ShadowRoot {
 //     cell.append_child(element).unwrap();
 //     cell
 // }
-
 
 #[cfg(test)]
 mod tests {
