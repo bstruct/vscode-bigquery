@@ -141,6 +141,13 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 	}
 
 	try {
+		let postMessageResult = await resultsGridRender.postMessage({
+			requestType: ResultsGridRenderRequestV2Type.clear.toString(),
+			projectId: null,
+			token: null,
+			query: null
+		} as ResultsGridRenderRequestV2);
+
 		const bqClient = await getBigQueryClient();
 
 		const projectId = await bqClient.getProjectId();
@@ -150,15 +157,13 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		
 		const job = await bqClient.runQuery(queryText);
 
-		let postMessageResult = await resultsGridRender.postMessage({
+		postMessageResult = await resultsGridRender.postMessage({
 			requestType: ResultsGridRenderRequestV2Type.executeQuery.toString(),
 			projectId: projectId,
 			token: token,
 			query: queryText,
 			job: job.metadata
 		} as ResultsGridRenderRequestV2);
-
-		console.log('postMessageResult:', postMessageResult);
 
 	} catch (error) {
 		resultsGridRender.renderException(error);

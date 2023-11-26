@@ -1,10 +1,8 @@
-// use wasm_bindgen::JsValue;
-// use web_sys::{console, HtmlElement};
+use crate::{bigquery::jobs::TableFieldSchema, parse_to_usize};
+use js_sys::Math::max;
 use web_sys::{HtmlElement, ShadowRoot};
 
-use crate::{bigquery::jobs::TableFieldSchema, parse_to_usize};
-
-pub fn render_table_v2(
+fn render_table_v2(
     element: &HtmlElement,
     query_response: &crate::bigquery::jobs::GetQueryResultsResponse,
     start_index: usize,
@@ -37,7 +35,12 @@ fn render_control(
     let row_count = query_response.rows.len();
     let total_rows = parse_to_usize(Some(query_response.total_rows.to_owned())).unwrap_or_default();
 
-    // control's div
+    // control"s background div
+    let div = crate::createElement("div");
+    div.set_id("controls-background");
+    shadow.append_child(&div).unwrap();
+
+    // control"s div
     let div = crate::createElement("div");
     div.set_id("controls");
     shadow.append_child(&div).unwrap();
@@ -45,37 +48,41 @@ fn render_control(
     //span for page information
     let span_page_information = crate::createElement("span");
     span_page_information.set_id("paging");
-    span_page_information.set_inner_html(&format!("{} - {} of {}", start_index + 1, start_index + row_count, total_rows));
+    span_page_information.set_inner_html(&format!(
+        "{} - {} of {}",
+        start_index + 1,
+        start_index + row_count,
+        total_rows
+    ));
     div.append_child(&span_page_information).unwrap();
 
     //first page
-    let button = crate::createElement("span");
-    button.set_inner_html("First page");
-    button.set_class_name("button");
+    let button = crate::createElement("button");
+    button.set_inner_html("<< First page");
+    // button.set_class_name("button");
     button.set_id("btn_first_page");
     div.append_child(&button).unwrap();
 
     // previous page
-    let button = crate::createElement("span");
-    button.set_inner_html("Previous page");
-    button.set_class_name("button");
+    let button = crate::createElement("button");
+    button.set_inner_html("< Previous page");
+    // button.set_class_name("button");
     button.set_id("btn_first_page");
     div.append_child(&button).unwrap();
 
     //next page
-    let button = crate::createElement("span");
-    button.set_inner_html("Next page");
-    button.set_class_name("button");
+    let button = crate::createElement("button");
+    button.set_inner_html("> Next page");
+    // button.set_class_name("button");
     button.set_id("btn_next_page");
     div.append_child(&button).unwrap();
 
     // last page
-    let button = crate::createElement("span");
-    button.set_inner_html("Last page");
-    button.set_class_name("button");
+    let button = crate::createElement("button");
+    button.set_inner_html(">> Last page");
+    // button.set_class_name("button");
     button.set_id("btn_last_page");
     div.append_child(&button).unwrap();
-
 }
 
 fn render_table(
@@ -90,19 +97,21 @@ fn render_table(
     shadow.append_child(&table).unwrap();
 
     //<thead>
-    let thead: web_sys::Element = crate::createElement("thead");
+    let thead = crate::createElement("thead");
     table.append_child(&thead).unwrap();
-    let tr: web_sys::Element = crate::createElement("tr");
+    let tr = crate::createElement("tr");
     thead.append_child(&tr).unwrap();
     append_header_columns(&tr, &fields_schema, 1, &None);
 
     //<tbody>
-    let tbody: web_sys::Element = crate::createElement("tbody");
+    let tbody = crate::createElement("tbody");
     table.append_child(&tbody).unwrap();
 
     //rows with data
     let mut row_index = 1;
     for query_response_row in &query_response.rows {
+        let number_of_rows = calculate_number_of_table_rows(query_response_row);
+
         let row = crate::createElement("tr");
         tbody.append_child(&row).unwrap();
 
@@ -130,6 +139,42 @@ fn render_table(
     }
 }
 
+fn calculate_number_of_table_rows(query_response_row: &serde_json::Value) -> u64 {
+    let mut number_of_rows: u64 = 1;
+
+    let f = query_response_row.pointer("/f");
+
+    if f.is_some() && f.unwrap().is_array() {
+        let len = f.unwrap().as_array().unwrap().len();
+        for i in 0..len {
+            let value = query_response_row.pointer(&format!("/f/{}/v", i));
+            if value.is_some() && value.unwrap().is_array() {
+                let count = value.unwrap().as_array().unwrap().len() as u64;
+                if count > number_of_rows {
+                    number_of_rows = count;
+                }
+            }
+        }
+    }
+
+    number_of_rows
+}
+
+// fn calculate_number_of_table_rows_inner_array(query_response_row: &Vec<serde_json::Value>) -> u64 {
+//     let mut number_of_rows: u64 = 1;
+//     if query_response_row[0].is_array() {
+//         let f = query_response_row[0].as_array().unwrap();
+//         for item in f {
+//             let size = calculate_number_of_table_rows_inner_array(item.as_array().unwrap());
+//             if size > 0 {
+//                 number_of_rows = max(number_of_rows as f64, size as f64) as u64;
+//             }
+//         }
+//     }
+
+//     number_of_rows
+// }
+
 fn append_header_columns(
     row: &web_sys::Element,
     fields_schema: &Vec<TableFieldSchema>,
@@ -140,7 +185,7 @@ fn append_header_columns(
 
     if column_index == 1 && column_prefix.is_none() {
         // "Row" header that contains the row index
-        row.append_child(&create_cell_with_text(true, 1, &"Row"))
+        row.append_child(&create_cell_with_text(true, 1, &"#"))
             .unwrap();
         local_column_index = local_column_index + 1;
     }
@@ -195,7 +240,7 @@ fn get_value_element(
     query_response_row: &serde_json::Value,
     field_schema_index: usize,
     field_schema: &TableFieldSchema,
-) -> web_sys::Element {
+) -> web_sys::HtmlElement {
     if field_schema.mode.is_some() && field_schema.mode.to_owned().unwrap().eq("REPEATED") {
         let default_element = crate::createElement("span");
         default_element
@@ -219,7 +264,7 @@ fn get_value_element(
     }
 }
 
-fn create_cell(column_header: bool, _grid_column: u8) -> web_sys::Element {
+fn create_cell(column_header: bool, _grid_column: u8) -> web_sys::HtmlElement {
     match column_header {
         true => crate::createElement("th"),
         false => crate::createElement("td"),
@@ -230,7 +275,7 @@ fn create_cell_with_text(
     column_header: bool,
     grid_column: u8,
     inner_html: &str,
-) -> web_sys::Element {
+) -> web_sys::HtmlElement {
     let cell = create_cell(column_header, grid_column);
     cell.set_inner_html(inner_html);
     cell
@@ -240,15 +285,24 @@ fn create_cell_with_element(
     column_header: bool,
     grid_column: u8,
     element: &web_sys::Element,
-) -> web_sys::Element {
+) -> web_sys::HtmlElement {
     let cell = create_cell(column_header, grid_column);
     cell.append_child(element).unwrap();
     cell
 }
 
+impl crate::bigquery::jobs::GetQueryResultsResponse {
+    pub fn plot_table(&self, element: &HtmlElement) {
+        render_table_v2(element, self, 0);
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::bigquery::jobs::{TableFieldSchema, TableSchema};
+    use crate::{
+        bigquery::jobs::{TableFieldSchema, TableSchema},
+        createElement,
+    };
     use wasm_bindgen_test::*;
 
     wasm_bindgen_test_configure!(run_in_browser);
@@ -278,6 +332,20 @@ mod tests {
             e1.unwrap().to_string(),
             r#""{\"Additional_info\":\"\",\"Colour_PDP\":\"\",\"Combi_number\":\"000000867878433060\",\"Lining\":\"\",\"Not_searchable\":false,\"Pim_Value\":\"\",\"Sleeve_Length\":\"\",\"Width_accessoires\":\"\",\"pimExportDate\":\"2022-02-23\",\"row_number\":1}""#
         );
+    }
+
+    #[test]
+    pub fn calculate_number_of_table_rows_1() {
+        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let row_count = crate::custom_elements::table_v2::calculate_number_of_table_rows(
+            &complex_object_array_test.rows[0],
+        );
+        assert_eq!(row_count, 27);
     }
 
     #[wasm_bindgen_test]
@@ -350,7 +418,7 @@ mod tests {
         assert!(&row.has_child_nodes());
         assert_eq!(&row.child_element_count(), &3);
         let child_element = &row.first_child().unwrap();
-        assert_eq!(child_element.text_content().unwrap(), "Row");
+        assert_eq!(child_element.text_content().unwrap(), "#");
         let child_element = child_element.next_sibling().unwrap();
         assert_eq!(&child_element.text_content().unwrap(), &"name1");
         let child_element = child_element.next_sibling().unwrap();
@@ -420,7 +488,7 @@ mod tests {
         assert!(&row.has_child_nodes());
         assert_eq!(&row.child_element_count(), &4);
         let child_element = &row.first_child().unwrap();
-        assert_eq!(child_element.text_content().unwrap(), "Row");
+        assert_eq!(child_element.text_content().unwrap(), "#");
         let child_element = child_element.next_sibling().unwrap();
         assert_eq!(&child_element.text_content().unwrap(), &"name1");
         let child_element = child_element.next_sibling().unwrap();
@@ -468,7 +536,7 @@ mod tests {
         assert!(&row.has_child_nodes());
         assert_eq!(&row.child_element_count(), &4);
         let child_element = &row.first_child().unwrap();
-        assert_eq!(child_element.text_content().unwrap(), "Row");
+        assert_eq!(child_element.text_content().unwrap(), "#");
         let child_element = child_element.next_sibling().unwrap();
         assert_eq!(&child_element.text_content().unwrap(), &"name1");
         let child_element = child_element.next_sibling().unwrap();
@@ -540,7 +608,7 @@ mod tests {
         assert!(&row.has_child_nodes());
         assert_eq!(&row.child_element_count(), &5);
         let child_element = &row.first_child().unwrap();
-        assert_eq!(child_element.text_content().unwrap(), "Row");
+        assert_eq!(child_element.text_content().unwrap(), "#");
         let child_element = child_element.next_sibling().unwrap();
         assert_eq!(&child_element.text_content().unwrap(), &"name1");
         let child_element = child_element.next_sibling().unwrap();
@@ -549,5 +617,179 @@ mod tests {
         assert_eq!(&child_element.text_content().unwrap(), &"name2.a");
         let child_element = child_element.next_sibling().unwrap();
         assert_eq!(&child_element.text_content().unwrap(), &"name2.b");
+    }
+
+    #[wasm_bindgen_test]
+    fn complex_object_array_test_1() {
+        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = js_sys::JSON::parse(complex_object_array_test).unwrap();
+        let complex_object_array_test = &serde_wasm_bindgen::from_value::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let element = &createElement("div");
+        complex_object_array_test.plot_table(element);
+
+        let shadow = element.shadow_root().unwrap();
+        let child = shadow.first_element_child().unwrap();
+        assert_eq!(child.tag_name(), "STYLE");
+
+        let child = child.next_element_sibling().unwrap();
+        assert_eq!(child.tag_name(), "DIV");
+        assert_eq!(child.id(), "controls-background");
+
+        let child = child.next_element_sibling().unwrap();
+        assert_eq!(child.tag_name(), "DIV");
+        assert_eq!(child.id(), "controls");
+
+        let table = child.next_element_sibling().unwrap();
+        assert_eq!(table.tag_name(), "TABLE");
+
+        let mut thead_td = table
+            .first_element_child()
+            .unwrap()
+            .first_element_child()
+            .unwrap()
+            .first_element_child()
+            .unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(thead_td.inner_html(), "#");
+
+        let field_names = [
+            "Pim_Value",
+            "AttributeValueCategory",
+            "Colour_PDP",
+            "Width_accessoires",
+            "Height_accessoires",
+            "Lining",
+            "Shop_by_Sport",
+            "Not_searchable",
+            "Exclusive_Access",
+            "Promo_Activity",
+            "Additional_info",
+            "Lifestyle",
+            "Ranking",
+            "Product_GBPC",
+            "TradebyteActive_Combi",
+            "MainColorPDP",
+            "Sleeve_Length",
+            "Padding",
+            "Soldout",
+            "Neck_Line",
+            "Key_Looks",
+            "pimExportDate",
+            "ProductGroupCategory",
+            "Heel_Height",
+            "USP_flag",
+            "Material_2",
+            "Combi_number",
+            "Flavour_Copy",
+            "Delete_Flag",
+            "New_Arrivals",
+            "Combi_Reference",
+            "RISE",
+            "CTP_date",
+            "STYLE",
+            "Proper_style_name",
+            "StyleLength",
+            "Actual_Online_Date",
+            "Structure_assignments",
+            "Functionality",
+            "Promo_Flag",
+            "Fit_for_bottoms",
+            "Sustainable",
+            "Material_3",
+            "Fit_for_tops",
+            "Material",
+            "Program",
+            "ImageCount",
+            "Collection",
+            "Occasion",
+            "Shop_by_Activity",
+            "Brand",
+            "Length_accessoires",
+            "Backfill_AboutYou",
+            "DETAIL",
+            "row_number",
+        ];
+
+        for i in 0..28 {
+            let name = field_names[i];
+            // console_log!("i: {}, name: {}", i, name);
+            thead_td = thead_td.next_element_sibling().unwrap();
+            assert_eq!(thead_td.tag_name(), "TH");
+            assert_eq!(thead_td.inner_html(), name);
+        }
+
+        thead_td = thead_td.next_element_sibling().unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(thead_td.inner_html(), "Delete_Flag.#");
+
+        thead_td = thead_td.next_element_sibling().unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(thead_td.inner_html(), "Delete_Flag.value");
+
+        thead_td = thead_td.next_element_sibling().unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(thead_td.inner_html(), "Delete_Flag.level");
+
+        for i in 29..37 {
+            let name = field_names[i];
+            // console_log!("i: {}, name: {}", i, name);
+            thead_td = thead_td.next_element_sibling().unwrap();
+            assert_eq!(thead_td.tag_name(), "TH");
+            assert_eq!(thead_td.inner_html(), name);
+        }
+
+        thead_td = thead_td.next_element_sibling().unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(thead_td.inner_html(), "Structure_assignments.#");
+
+        thead_td = thead_td.next_element_sibling().unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(thead_td.inner_html(), "Structure_assignments.assignment");
+
+        thead_td = thead_td.next_element_sibling().unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(
+            thead_td.inner_html(),
+            "Structure_assignments.structure_system"
+        );
+
+        thead_td = thead_td.next_element_sibling().unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(thead_td.inner_html(), "Functionality");
+
+        thead_td = thead_td.next_element_sibling().unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(thead_td.inner_html(), "Promo_Flag.#");
+
+        thead_td = thead_td.next_element_sibling().unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(thead_td.inner_html(), "Promo_Flag.value");
+
+        thead_td = thead_td.next_element_sibling().unwrap();
+        assert_eq!(thead_td.tag_name(), "TH");
+        assert_eq!(thead_td.inner_html(), "Promo_Flag.country");
+
+        for i in 40..55 {
+            let name = field_names[i];
+            // console_log!("i: {}, name: {}", i, name);
+            thead_td = thead_td.next_element_sibling().unwrap();
+            assert_eq!(thead_td.tag_name(), "TH");
+            assert_eq!(thead_td.inner_html(), name);
+        }
+
+        // values
+
+        let tbody = table
+            .first_element_child()
+            .unwrap()
+            .next_element_sibling()
+            .unwrap();
+        assert_eq!(tbody.tag_name(), "TBODY");
+
+        // assert_eq!(thead_td.inner_html(), "Row");
     }
 }

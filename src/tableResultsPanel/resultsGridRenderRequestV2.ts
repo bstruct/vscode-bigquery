@@ -1,10 +1,11 @@
 export enum ResultsGridRenderRequestV2Type {
-  executeQuery = 1,
+  clear = "clear",
+  executeQuery = "execute_query",
 }
 
 export interface ResultsGridRenderRequestV2 {
   requestType: String;
-  projectId: String;
-  token: String;
-  query: String;
+  projectId: String | null;
+  token: String | null;
+  query: String | null;
 }

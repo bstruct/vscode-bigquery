@@ -46,7 +46,7 @@ export class ResultsGridRender {
                     const vscode = acquireVsCodeApi();
                 </script>
         	</head>
-        	<body>
+        	<body style="padding:0;">
                 <bq id="q1"></bq>
                 <script type="module" src="${gridJs}"></script>
         	</body>

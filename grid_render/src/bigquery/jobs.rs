@@ -476,7 +476,7 @@ impl Jobs {
             url = format!("{}&startIndex={}", url, request.start_index.unwrap());
         }
 
-        console::log_1(&JsValue::from_str(&url));
+        // console::log_1(&JsValue::from_str(&url));
 
         // if (request.pageToken) { url.searchParams.append("pageToken", request.pageToken); }
         // if (request.timeoutMs !== null) { url.searchParams.append("timeoutMs", request.timeoutMs.toString()); }
@@ -491,10 +491,14 @@ impl Jobs {
         assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
             &resp_value
         ));
+
         let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
 
         if resp.status() == 200 {
             let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
+
+            // console::log_1(json.as_ref());
+
             // Use serde to parse the JSON into a struct.
             let bq_response = serde_wasm_bindgen::from_value::<GetQueryResultsResponse>(json);
 

@@ -19,7 +19,7 @@ extern "C" {
     #[wasm_bindgen(js_namespace = document)]
     fn getElementsByTagName(qualifiedName: &str) -> Vec<Element>;
     #[wasm_bindgen(js_namespace = document)]
-    fn createElement(tagName: &str) -> Element;
+    fn createElement(tagName: &str) -> web_sys::HtmlElement;
     #[wasm_bindgen(js_namespace = document)]
     fn getElementById(elementId: &str) -> Option<Element>;
 }

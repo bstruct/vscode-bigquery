@@ -1,16 +1,30 @@
+div#controls-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: var(--vscode-activityBar-border);
+    width: 100%;
+    height: 30px;
+}
+
 div#controls {
     top: 0;
+    left: 0;
     position: fixed;
-    background: var(--background);
-    left: 20px;
-    width: 100%;
+    background: var(--vscode-activityBar-border);
+    /* left: 20px;
+    width: 100%; */
 }
 
 div#controls span {
     padding: 5px 10px;
     display: inline-block;
-    background-color: var(--button-secondary-background);
-    color: var(--button-secondary-foreground);
+    /* background-color: var(--button-secondary-background);
+    color: var(--button-secondary-foreground); */
+    margin-right: 5px;
+}
+
+div#controls button {
     margin-right: 5px;
 }
 
@@ -33,7 +47,7 @@ table {
 table thead {
     top: 30px;
     position: sticky;
-    background-color: var(--dropdown-background);
+    background-color: var(--vscode-banner-background);
 }
 
 th,
