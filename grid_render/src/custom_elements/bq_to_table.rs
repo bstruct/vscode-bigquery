@@ -72,7 +72,7 @@ fn get_bq_table_rows(
         let mut output_row: Vec<TableItem> = Vec::new();
         let _ = &output_row.push(TableItem::new(false, true, Some(format!("{}", index))));
 
-
+        
 
         let _ = &output_rows.push(output_row);
     }
