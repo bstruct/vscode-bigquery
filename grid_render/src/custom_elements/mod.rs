@@ -1,6 +1,7 @@
 mod custom_element_definition;
 mod table_with_controls;
-mod table_v2;
+mod table_plot;
+mod bq_to_table;
 
 use self::custom_element_definition::CustomElementDefinition;
 use std::{error::Error, fmt, str::FromStr};
