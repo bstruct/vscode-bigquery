@@ -1,8 +1,10 @@
+use serde_json::Value;
 use web_sys::{HtmlElement, ShadowRoot};
 
+#[derive(Debug, Clone)]
 pub(crate) struct TableItem {
     pub is_none: bool,
-    pub is_main_index: bool,
+    pub is_index: bool,
     pub value: Option<String>,
 }
 
@@ -10,8 +12,20 @@ impl TableItem {
     pub fn new(is_none: bool, is_main_index: bool, value: Option<String>) -> TableItem {
         TableItem {
             is_none,
-            is_main_index,
+            is_index: is_main_index,
             value,
+        }
+    }
+    pub fn from_value(value: &Option<&Value>) -> TableItem {
+        let text = match value {
+            Some(v) => Some(String::from(v.to_string().clone())),
+            None => None,
+        };
+
+        TableItem {
+            is_none: value.is_some().clone(),
+            is_index: false,
+            value: text,
         }
     }
 }
@@ -19,7 +33,7 @@ impl TableItem {
 pub(crate) fn render_table(
     element: &HtmlElement,
     header: &Vec<String>,
-    rows: &Vec<Vec<TableItem>>,
+    rows: &Vec<Vec<Option<TableItem>>>,
 ) {
     let shadow = &shadow_init(element);
 
@@ -315,12 +329,7 @@ fn shadow_init(element: &HtmlElement) -> ShadowRoot {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        bigquery::jobs::{TableFieldSchema, TableSchema},
-        createElement,
-    };
     use wasm_bindgen_test::*;
-
     wasm_bindgen_test_configure!(run_in_browser);
 
     //* try out some stuff */

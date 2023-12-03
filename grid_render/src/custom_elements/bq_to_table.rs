@@ -4,21 +4,27 @@ use super::table_plot::{render_table, TableItem};
 
 impl crate::bigquery::jobs::GetQueryResultsResponse {
     pub fn plot_table(&self, element: &web_sys::HtmlElement) {
-        let header = &get_bq_table_header(&self.schema);
-        let rows = &get_bq_table_rows(&self.schema, &self.rows);
-        // let total_rows = parse_to_usize(Some(self.total_rows));
+        if self.schema.is_some() {
+            let schema = self.schema.as_ref().unwrap();
 
-        render_table(element, header, rows);
+            let header = &get_bq_table_header(&schema);
+            let number_columns = header.len();
+            let number_rows = calculate_number_rows(&self.rows);
+            let mut rows: Vec<Vec<Option<TableItem>>> =
+                vec![vec![None; number_columns]; number_rows];
+
+            place_bq_table_rows(&mut rows, &schema.fields, &self.rows);
+
+            render_table(element, header, &rows);
+        }
     }
 }
 
-fn get_bq_table_header(schema: &Option<crate::bigquery::jobs::TableSchema>) -> Vec<String> {
+fn get_bq_table_header(schema: &crate::bigquery::jobs::TableSchema) -> Vec<String> {
     let mut header_columns = Vec::new();
     header_columns.push(String::from("#"));
 
-    if let Some(table_schema) = &schema {
-        append_bq_table_header(&mut header_columns, &table_schema.fields, &None);
-    }
+    append_bq_table_header(&mut header_columns, &schema.fields, &None);
 
     header_columns
 }
@@ -29,10 +35,7 @@ fn append_bq_table_header(
     parent_name: &Option<String>,
 ) {
     for field in fields {
-        let is_array = field.mode.as_ref().is_some() && field.mode.as_ref().unwrap() == "REPEATED";
-        let complex_object = field.r#type == "RECORD";
-
-        if is_array {
+        if field.is_array() {
             if parent_name.as_ref().is_some() {
                 header_columns.push(format!(
                     "{}.{}.#",
@@ -47,7 +50,7 @@ fn append_bq_table_header(
             Some(n) => format!("{}.{}", n, field.name),
             None => String::from(field.name.clone()),
         };
-        if complex_object {
+        if field.is_complex_object() {
             if field.fields.is_some() {
                 append_bq_table_header(
                     header_columns,
@@ -61,27 +64,94 @@ fn append_bq_table_header(
     }
 }
 
-fn get_bq_table_rows(
-    schema: &Option<crate::bigquery::jobs::TableSchema>,
-    rows: &Vec<serde_json::Value>,
-) -> Vec<Vec<TableItem>> {
-    let mut output_rows: Vec<Vec<TableItem>> = Vec::new();
+fn place_bq_table_rows(
+    rows: &mut Vec<Vec<Option<TableItem>>>,
+    schema_fields: &Vec<crate::bigquery::jobs::TableFieldSchema>,
+    data_rows: &Vec<serde_json::Value>,
+) {
+    // let schema_length = (&schema_fields.len()).clone();
 
-    let index = 0;
-    for row in rows {
-        let mut output_row: Vec<TableItem> = Vec::new();
-        let _ = &output_row.push(TableItem::new(false, true, Some(format!("{}", index))));
+    let mut data_row_index = 0;
+    for data_row in data_rows {
+        // let mut output_row: Vec<TableItem> = Vec::new();
 
-        
+        rows[data_row_index][0] = Some(TableItem::new(
+            false,
+            true,
+            Some(format!("{}", data_row_index + 1)),
+        ));
 
-        let _ = &output_rows.push(output_row);
+        // let _ = &output_row.push(TableItem::new(
+        //     false,
+        //     true,
+        //     Some(format!("{}", data_row_index + 1)),
+        // ));
+
+        // let value = data_row.pointer(&format!("/f/{}/v", col_index));
+
+        // for col_index in 0..schema_length {
+        //     let field = &schema_fields[col_index];
+        //     let value = data_row.pointer(&format!("/f/{}/v", col_index));
+
+        //     if field.is_array()
+        //         && field.is_complex_object()
+        //         && value.is_some()
+        //         && value.unwrap().is_array()
+        //     {
+        //         let value_array = value.unwrap().as_array().unwrap();
+        //         // let inner_rows = get_bq_table_rows(&field.fields.as_ref().unwrap(), value_array);
+        //         // consolidate_rows(&mut output_rows, &mut output_row, &inner_rows);
+        //     }
+
+        //     let _ = &output_row.push(TableItem::from_value(&value));
+        //     data_row_index += 1;
+        // }
+
+        data_row_index += 1;
+    }
+}
+
+fn calculate_number_rows(data_rows: &Vec<serde_json::Value>) -> usize {
+    let mut count: usize = 0;
+
+    for data_row in data_rows {
+        let mut col_index: usize = 0;
+        let mut increment = 1;
+        let mut value = data_row.pointer(&format!("/f/{}/v", col_index));
+        while value.is_some() {
+            if value.unwrap().is_array() {
+                let x = calculate_number_rows(&value.unwrap().as_array().unwrap());
+                increment = match increment >= x - 1 {
+                    true => increment,
+                    false => x - 1,
+                };
+            }
+
+            col_index += 1;
+            value = data_row.pointer(&format!("/f/{}/v", col_index));
+        }
+
+        count += increment;
     }
 
-    output_rows
+    count
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::custom_elements::table_plot::TableItem;
+
+    #[test]
+    pub fn calculate_number_rows_test_1() {
+        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
+        assert_eq!(number_rows, 1746);
+    }
 
     #[test]
     pub fn get_bq_table_header_test_1() {
@@ -91,7 +161,8 @@ mod tests {
         >(complex_object_array_test)
         .unwrap();
 
-        let header = &super::get_bq_table_header(&complex_object_array_test.schema);
+        let header =
+            &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
 
         assert_eq!(header.len(), 62);
         assert_eq!(header[0], "#");
@@ -181,21 +252,36 @@ mod tests {
             let name = field_names[i];
             assert_eq!(&header[i + 7], name);
         }
+
+        assert_eq!(&header[61], "row_number");
     }
 
     #[test]
-    fn get_bq_table_rows_test_1() {
+    fn place_bq_table_rows_test_1() {
         let complex_object_array_test = include_str!("complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
         .unwrap();
 
-        let rows = &super::get_bq_table_rows(
-            &complex_object_array_test.schema,
+        let header =
+            &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
+        let number_columns = header.len();
+        let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
+        let mut rows: Vec<Vec<Option<TableItem>>> = vec![vec![None; number_columns]; number_rows];
+
+        super::place_bq_table_rows(
+            &mut rows,
+            &complex_object_array_test.schema.as_ref().unwrap().fields,
             &complex_object_array_test.rows,
         );
 
-        assert_eq!(rows.len(), 50);
+        assert_eq!(rows.len(), 1746);
+        assert_eq!(rows[0].len(), 62);
+
+        assert!(rows[0][0].clone().unwrap().is_index);
+        assert_eq!(rows[0][0].clone().unwrap().value.unwrap(), "1");
+        assert_eq!(rows[0][1].clone().unwrap().value.unwrap(), "");
+        assert_eq!(rows[0][2].clone().unwrap().value.unwrap(), "SKIRTS");
     }
 }

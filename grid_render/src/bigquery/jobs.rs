@@ -155,7 +155,7 @@ pub struct JobStatus {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct JobCreationReason{
+pub struct JobCreationReason {
     pub code: String,
 }
 
@@ -277,6 +277,15 @@ pub struct TableFieldSchema {
     pub collation: Option<String>,
     #[serde(alias = "defaultValueExpression")]
     pub default_value_expression: Option<String>,
+}
+
+impl TableFieldSchema {
+    pub fn is_array(&self) -> bool {
+        self.mode.as_ref().is_some() && self.mode.as_ref().unwrap() == "REPEATED"
+    }
+    pub fn is_complex_object(&self) -> bool {
+        self.r#type == "RECORD"
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -517,9 +526,9 @@ impl Jobs {
 
 #[cfg(test)]
 mod tests {
-    
+
     use js_sys::JSON;
-    use wasm_bindgen_test::{wasm_bindgen_test_configure, wasm_bindgen_test};
+    use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
 
     wasm_bindgen_test_configure!(run_in_browser);
 
@@ -579,14 +588,25 @@ mod tests {
         let parse_event = &serde_wasm_bindgen::from_value::<super::Job>(job_response).unwrap();
 
         assert_eq!(parse_event.kind.as_ref().unwrap(), "bigquery#job");
-        assert_eq!(parse_event.etag.as_ref().unwrap(), "i5chOreAELANLzXLPFIRZA==");
-        assert_eq!(parse_event.principal_subject, Some("user:xxxx@gmail.com".to_owned()));
-        assert_eq!(parse_event.job_reference.as_ref().unwrap().job_id, "0db7c357-9d1b-xxxx-a641-ca0f009342df".to_owned());
+        assert_eq!(
+            parse_event.etag.as_ref().unwrap(),
+            "i5chOreAELANLzXLPFIRZA=="
+        );
+        assert_eq!(
+            parse_event.principal_subject,
+            Some("user:xxxx@gmail.com".to_owned())
+        );
+        assert_eq!(
+            parse_event.job_reference.as_ref().unwrap().job_id,
+            "0db7c357-9d1b-xxxx-a641-ca0f009342df".to_owned()
+        );
         assert_eq!(parse_event.configuration.as_ref().unwrap().query.query, "WITH tBase AS (\nSELECT \n    pimExportDate, \n    Combi_number,\n    Width_accessoires,\n    Lining,    \n    Width_accessoires,\n    Additional_info,\n    Sleeve_Length,\n    Pim_Value,\n    Colour_PDP,\n    Not_searchable,\n    ROW_NUMBER() OVER(ORDER BY Combi_number ASC) AS row_number\nFROM `damiao-project-1.PvhTest.PimExport` pim\nWHERE \n    pimExportDate <= \"2022-03-23\"\n)\n\n-- projects/damiao-project-1/topics/test_topic_no_schema\n\nSELECT \n    (\n        SELECT AS STRUCT\n            CAST(row_number AS STRING) AS row_number,\n            \"dsdfdsd\" AS data_type\n    ) AS attributes,\n    TO_JSON(tBase) AS data,\n\nFROM tBase\nLIMIT 10;".to_owned());
         assert_eq!(parse_event.configuration.as_ref().unwrap().dry_run, None);
         assert_eq!(parse_event.status.as_ref().unwrap().state, "DONE");
         assert!(parse_event.statistics.is_some());
-        assert_eq!(parse_event.job_creation_reason.as_ref().unwrap().code, "REQUESTED");
-
+        assert_eq!(
+            parse_event.job_creation_reason.as_ref().unwrap().code,
+            "REQUESTED"
+        );
     }
 }
