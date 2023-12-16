@@ -13,7 +13,7 @@ impl crate::bigquery::jobs::GetQueryResultsResponse {
             let mut rows: Vec<Vec<Option<TableItem>>> =
                 vec![vec![None; number_columns]; number_rows];
 
-            place_bq_table_rows(&mut rows, &schema.fields, &self.rows);
+            place_bq_table_rows(&mut rows, &schema.fields, &self.rows,0,0);
 
             render_table(element, header, &rows);
         }
@@ -68,44 +68,35 @@ fn place_bq_table_rows(
     rows: &mut Vec<Vec<Option<TableItem>>>,
     schema_fields: &Vec<crate::bigquery::jobs::TableFieldSchema>,
     data_rows: &Vec<serde_json::Value>,
+    start_row_index: usize,
+    start_col_index: usize,
 ) {
-    // let schema_length = (&schema_fields.len()).clone();
-
-    let mut data_row_index = 0;
+    let mut data_row_index = start_row_index;
     for data_row in data_rows {
-        // let mut output_row: Vec<TableItem> = Vec::new();
 
-        rows[data_row_index][0] = Some(TableItem::new(
-            false,
-            true,
-            Some(format!("{}", data_row_index + 1)),
-        ));
+        rows[data_row_index][start_col_index] = Some(TableItem::new_main_index(data_row_index + 1));
 
-        // let _ = &output_row.push(TableItem::new(
-        //     false,
-        //     true,
-        //     Some(format!("{}", data_row_index + 1)),
-        // ));
+        for col_index in 0..schema_fields.len() {
+            let field = &schema_fields[col_index];
+            let value = data_row.pointer(&format!("/f/{}/v", col_index));
 
-        // let value = data_row.pointer(&format!("/f/{}/v", col_index));
+            if field.is_array()
+                && field.is_complex_object()
+                && value.is_some()
+                && value.unwrap().is_array()
+            {
 
-        // for col_index in 0..schema_length {
-        //     let field = &schema_fields[col_index];
-        //     let value = data_row.pointer(&format!("/f/{}/v", col_index));
+                let inner_schema_fields = &field.fields.clone().unwrap();
+                let inner_data_rows = value.unwrap().as_array().unwrap();
 
-        //     if field.is_array()
-        //         && field.is_complex_object()
-        //         && value.is_some()
-        //         && value.unwrap().is_array()
-        //     {
-        //         let value_array = value.unwrap().as_array().unwrap();
-        //         // let inner_rows = get_bq_table_rows(&field.fields.as_ref().unwrap(), value_array);
-        //         // consolidate_rows(&mut output_rows, &mut output_row, &inner_rows);
-        //     }
-
-        //     let _ = &output_row.push(TableItem::from_value(&value));
-        //     data_row_index += 1;
-        // }
+                place_bq_table_rows(rows, inner_schema_fields, inner_data_rows, data_row_index,  col_index);
+                // let value_array = value.unwrap().as_array().unwrap();
+                // let inner_rows = get_bq_table_rows(&field.fields.as_ref().unwrap(), value_array);
+                // consolidate_rows(&mut output_rows, &mut output_row, &inner_rows);
+            } else {
+                rows[data_row_index][col_index + 1] = Some(TableItem::from_value(&value));
+            }
+        }
 
         data_row_index += 1;
     }
@@ -274,14 +265,26 @@ mod tests {
             &mut rows,
             &complex_object_array_test.schema.as_ref().unwrap().fields,
             &complex_object_array_test.rows,
+            0,0
         );
 
         assert_eq!(rows.len(), 1746);
         assert_eq!(rows[0].len(), 62);
 
-        assert!(rows[0][0].clone().unwrap().is_index);
-        assert_eq!(rows[0][0].clone().unwrap().value.unwrap(), "1");
-        assert_eq!(rows[0][1].clone().unwrap().value.unwrap(), "");
-        assert_eq!(rows[0][2].clone().unwrap().value.unwrap(), "SKIRTS");
+        let v = rows[0][0].clone().unwrap();
+        assert!(v.is_index);
+        assert_eq!(v.value.unwrap(), "1");
+        let v = rows[0][1].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "");
+        let v = rows[0][2].clone();
+        assert!(v.is_some());
+        assert_eq!(v.unwrap().value.unwrap(), "SKIRTS");
+
+        let v = rows[0][61].clone();
+        assert!(v.is_some());
+        assert_eq!(v.unwrap().value.unwrap(), "452216");
     }
 }

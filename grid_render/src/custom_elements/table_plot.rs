@@ -3,27 +3,33 @@ use web_sys::{HtmlElement, ShadowRoot};
 
 #[derive(Debug, Clone)]
 pub(crate) struct TableItem {
-    pub is_none: bool,
+    pub is_null: bool,
     pub is_index: bool,
     pub value: Option<String>,
 }
 
 impl TableItem {
-    pub fn new(is_none: bool, is_main_index: bool, value: Option<String>) -> TableItem {
+    pub fn new_main_index(index: usize) -> TableItem {
         TableItem {
-            is_none,
-            is_index: is_main_index,
-            value,
+            is_null: false,
+            is_index: true,
+            value: Some(format!("{}", index)),
         }
     }
     pub fn from_value(value: &Option<&Value>) -> TableItem {
         let text = match value {
-            Some(v) => Some(String::from(v.to_string().clone())),
+            Some(v) => {
+                if v.is_string() {
+                    Some(String::from(v.as_str().unwrap()))
+                } else {
+                    Some(String::from(v.to_string()))
+                }
+            }
             None => None,
         };
 
         TableItem {
-            is_none: value.is_some().clone(),
+            is_null: !value.is_some().clone(),
             is_index: false,
             value: text,
         }
