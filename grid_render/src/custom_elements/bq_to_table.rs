@@ -71,18 +71,17 @@ fn place_bq_table_rows(
     array_row_index: usize,
     array_col_index: usize,
 ) -> (usize, usize) {
-    
-    // 2 sets of variables are in use. 
+    // 2 sets of variables are in use.
     // "data_..." to control the position of the data
     // "array_.." to control the position and increments of the TableItem array
-    
+
     // control the vertical position of the array
     let mut array_row_increment = 0;
     //when the data row has inner arrays, the max size of the inner array(s) is controlled here
     let mut array_max_inner_row_increment = 0;
 
     // variable to move horizontally the placement in the TableItem array
-    let mut array_col_increment = 0;    
+    let mut array_col_increment = 0;
 
     //
     for data_row_index in 0..data_rows.len() {
@@ -95,8 +94,7 @@ fn place_bq_table_rows(
         array_col_increment = 0;
 
         //index column
-        rows[array_row_index + array_row_increment]
-            [array_col_index + array_col_increment] =
+        rows[array_row_index + array_row_increment][array_col_index + array_col_increment] =
             Some(TableItem::new_main_index(data_row_index + 1));
         array_col_increment += 1;
 
@@ -111,16 +109,18 @@ fn place_bq_table_rows(
                 && value.unwrap().is_array()
             {
                 let inner_schema_fields = &field.fields.clone().unwrap();
-                let inner_data_rows = value.unwrap().as_array().unwrap();
-
-
-                let _value_xxx = &inner_data_rows.iter().map(|i| i.pointer("/v").unwrap().clone()).collect::<Vec<serde_json::Value>>();
-
+                let inner_data_rows = &value
+                    .unwrap()
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|i| i.pointer("/v").unwrap().clone())
+                    .collect::<Vec<serde_json::Value>>();
 
                 let positions = place_bq_table_rows(
                     rows,
                     inner_schema_fields,
-                    _value_xxx,
+                    inner_data_rows,
                     array_row_index + array_row_increment,
                     array_col_index + array_col_increment,
                 );
@@ -133,14 +133,17 @@ fn place_bq_table_rows(
                 array_col_increment += positions.1;
             } else {
                 rows[array_row_index + array_row_increment]
-                    [array_col_index + array_col_increment] =
-                    Some(TableItem::from_value(&value));
+                    [array_col_index + array_col_increment] = Some(TableItem::from_value(&value));
                 array_col_increment += 1;
             }
         }
-        
+
         //
-        array_row_increment += array_max_inner_row_increment + 1;
+        if array_max_inner_row_increment > 0 {
+            array_row_increment += array_max_inner_row_increment;
+        } else {
+            array_row_increment += 1;
+        }
     }
 
     (array_row_increment, array_col_increment)
@@ -155,10 +158,18 @@ fn calculate_number_rows(data_rows: &Vec<serde_json::Value>) -> usize {
         let mut value = data_row.pointer(&format!("/f/{}/v", col_index));
         while value.is_some() {
             if value.unwrap().is_array() {
-                let x = calculate_number_rows(&value.unwrap().as_array().unwrap());
+                let inner_data_rows = &value
+                    .unwrap()
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|i| i.pointer("/v").unwrap().clone())
+                    .collect::<Vec<serde_json::Value>>();
+
+                let x = calculate_number_rows(inner_data_rows);
                 increment = match increment >= x - 1 {
                     true => increment,
-                    false => x - 1,
+                    false => x,
                 };
             }
 
@@ -185,7 +196,7 @@ mod tests {
         .unwrap();
 
         let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
-        assert_eq!(number_rows, 1746);
+        assert_eq!(number_rows, 1796);
     }
 
     #[test]
@@ -303,7 +314,8 @@ mod tests {
             &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
         let number_columns = header.len();
         let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
-        let mut rows: Vec<Vec<Option<TableItem>>> = vec![vec![None; number_columns]; number_rows + 99];
+        let mut rows: Vec<Vec<Option<TableItem>>> =
+            vec![vec![None; number_columns]; number_rows];
 
         super::place_bq_table_rows(
             &mut rows,
@@ -315,7 +327,7 @@ mod tests {
 
         // println!("row 0: \n{:?}", rows[0]);
         // println!("row 28: \n{:?}", rows[28]);
-        // assert_eq!(rows.len(), 1746);
+        assert_eq!(rows.len(), 1796);
         assert_eq!(rows[0].len(), 62);
 
         let v = rows[0][0].clone().unwrap();
@@ -336,7 +348,6 @@ mod tests {
         assert!(!v.is_index);
         assert!(v.is_null);
         assert!(v.value.is_none());
-
 
         let v = rows[0][27].clone();
         assert!(v.is_some());
@@ -401,8 +412,6 @@ mod tests {
         assert!(!v.is_null);
         assert_eq!(v.value.unwrap(), "Combi");
 
-
-
         let v = rows[0][61].clone();
         assert!(v.is_some());
         assert_eq!(v.unwrap().value.unwrap(), "452216");
@@ -410,7 +419,7 @@ mod tests {
         let v = rows[1][0].clone();
         assert!(v.is_none());
 
-        let v = rows[28][0].clone().unwrap();
+        let v = rows[27][0].clone().unwrap();
         assert!(v.is_index);
         assert_eq!(v.value.unwrap(), "2");
     }
