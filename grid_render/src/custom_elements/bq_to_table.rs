@@ -1,3 +1,6 @@
+use wasm_bindgen::JsValue;
+use web_sys::console;
+
 use crate::bigquery::jobs::TableFieldSchema;
 
 use super::table_plot::{render_table, TableItem};
@@ -6,16 +9,25 @@ impl crate::bigquery::jobs::GetQueryResultsResponse {
     pub fn plot_table(&self, element: &web_sys::HtmlElement) {
         if self.schema.is_some() {
             let schema = self.schema.as_ref().unwrap();
+            console::log_1(&JsValue::from_str(&"0 - zzzzzzz"));
 
             let header = &get_bq_table_header(&schema);
             let number_columns = header.len();
             let number_rows = calculate_number_rows(&self.rows);
+
+            console::log_1(&JsValue::from_str(&"1 - zzzzzzz"));
+
             let mut rows: Vec<Vec<Option<TableItem>>> =
                 vec![vec![None; number_columns]; number_rows];
 
+            console::log_1(&JsValue::from_str(&"2 - zzzzzzz"));
+
             place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0);
+            console::log_1(&JsValue::from_str(&"3 - zzzzzzz"));
 
             render_table(element, header, &rows);
+            console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));
+
         }
     }
 }
@@ -186,6 +198,9 @@ fn calculate_number_rows(data_rows: &Vec<serde_json::Value>) -> usize {
 #[cfg(test)]
 mod tests {
     use crate::custom_elements::table_plot::TableItem;
+    use wasm_bindgen_test::*;
+
+    wasm_bindgen_test_configure!(run_in_browser);
 
     #[test]
     pub fn calculate_number_rows_test_1() {
@@ -314,8 +329,7 @@ mod tests {
             &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
         let number_columns = header.len();
         let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
-        let mut rows: Vec<Vec<Option<TableItem>>> =
-            vec![vec![None; number_columns]; number_rows];
+        let mut rows: Vec<Vec<Option<TableItem>>> = vec![vec![None; number_columns]; number_rows];
 
         super::place_bq_table_rows(
             &mut rows,
@@ -422,5 +436,68 @@ mod tests {
         let v = rows[27][0].clone().unwrap();
         assert!(v.is_index);
         assert_eq!(v.value.unwrap(), "2");
+
+        let v = rows[1762][0].clone().unwrap();
+        assert!(v.is_index);
+        assert_eq!(v.value.unwrap(), "50");
     }
+
+    #[wasm_bindgen_test]
+    fn plot_table_1() {
+        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let element = &crate::createElement("div");
+
+        complex_object_array_test.plot_table(element);
+
+        assert!(element.shadow_root().is_some());
+        assert!(element.shadow_root().unwrap().has_child_nodes());
+
+        let table = element.shadow_root().unwrap().last_child();
+        assert!(table.is_some());
+        let table = table.unwrap();
+        assert_eq!(table.node_name(), "TABLE");
+    }
+
+
+    #[wasm_bindgen_test]
+    fn plot_table_twice() {
+        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let element = &crate::createElement("div");
+
+        complex_object_array_test.plot_table(element);
+
+        assert!(element.shadow_root().is_some());
+        assert!(element.shadow_root().unwrap().has_child_nodes());
+        assert_eq!(element.shadow_root().unwrap().child_element_count(), 4);
+
+        let table = element.shadow_root().unwrap().last_child();
+        assert!(table.is_some());
+        let table = table.unwrap();
+        assert_eq!(table.node_name(), "TABLE");
+
+        //second plot
+        complex_object_array_test.plot_table(element);
+
+        assert!(element.shadow_root().is_some());
+        assert!(element.shadow_root().unwrap().has_child_nodes());
+        assert_eq!(element.shadow_root().unwrap().child_element_count(), 4);
+
+        let table = element.shadow_root().unwrap().last_child();
+        assert!(table.is_some());
+        let table = table.unwrap();
+        assert_eq!(table.node_name(), "TABLE");
+
+    }
+
+
 }

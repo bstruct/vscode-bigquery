@@ -149,12 +149,10 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		} as ResultsGridRenderRequestV2);
 
 		const bqClient = await getBigQueryClient();
-
 		const projectId = await bqClient.getProjectId();
 		// console.log('projectId:', projectId);
 		const token = await bqClient.getToken();
 		// console.log('token:', token);
-		
 		const job = await bqClient.runQuery(queryText);
 
 		postMessageResult = await resultsGridRender.postMessage({
