@@ -68,13 +68,17 @@ fn place_bq_table_rows(
     rows: &mut Vec<Vec<Option<TableItem>>>,
     schema_fields: &Vec<crate::bigquery::jobs::TableFieldSchema>,
     data_rows: &Vec<serde_json::Value>,
-    start_row_index: usize,
-    start_col_index: usize,
-) {
-    let mut data_row_index = start_row_index;
-    for data_row in data_rows {
+    positional_row_index: usize,
+    positional_col_index: usize,
+) -> usize {
 
-        rows[data_row_index][start_col_index] = Some(TableItem::new_main_index(data_row_index + 1));
+    let mut data_row_index = 0;
+    let mut positional_col_increment = 0;
+    for data_row in data_rows {
+        positional_col_increment = 0;
+
+        rows[positional_row_index + data_row_index][positional_col_index + positional_col_increment] = Some(TableItem::new_main_index(data_row_index + 1));
+        positional_col_increment += 1;
 
         for col_index in 0..schema_fields.len() {
             let field = &schema_fields[col_index];
@@ -89,17 +93,18 @@ fn place_bq_table_rows(
                 let inner_schema_fields = &field.fields.clone().unwrap();
                 let inner_data_rows = value.unwrap().as_array().unwrap();
 
-                place_bq_table_rows(rows, inner_schema_fields, inner_data_rows, data_row_index,  col_index);
-                // let value_array = value.unwrap().as_array().unwrap();
-                // let inner_rows = get_bq_table_rows(&field.fields.as_ref().unwrap(), value_array);
-                // consolidate_rows(&mut output_rows, &mut output_row, &inner_rows);
+                positional_col_increment += place_bq_table_rows(rows, inner_schema_fields, inner_data_rows, positional_row_index + data_row_index,  positional_col_index + col_index + 1);
+                
             } else {
-                rows[data_row_index][col_index + 1] = Some(TableItem::from_value(&value));
+                rows[positional_row_index + data_row_index][positional_col_index + positional_col_increment] = Some(TableItem::from_value(&value));
+                positional_col_increment += 1;
             }
         }
 
         data_row_index += 1;
     }
+
+    positional_col_increment
 }
 
 fn calculate_number_rows(data_rows: &Vec<serde_json::Value>) -> usize {
@@ -270,6 +275,7 @@ mod tests {
 
         assert_eq!(rows.len(), 1746);
         assert_eq!(rows[0].len(), 62);
+        println!("{:?}", rows[0]);
 
         let v = rows[0][0].clone().unwrap();
         assert!(v.is_index);
