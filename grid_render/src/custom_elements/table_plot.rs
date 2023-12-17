@@ -19,17 +19,21 @@ impl TableItem {
     pub fn from_value(value: &Option<&Value>) -> TableItem {
         let text = match value {
             Some(v) => {
-                if v.is_string() {
-                    Some(String::from(v.as_str().unwrap()))
+                if v.is_null() {
+                    None
                 } else {
-                    Some(String::from(v.to_string()))
+                    if v.is_string() {
+                        Some(String::from(v.as_str().unwrap()))
+                    } else {
+                        Some(String::from(v.to_string()))
+                    }
                 }
             }
             None => None,
         };
 
         TableItem {
-            is_null: !value.is_some().clone(),
+            is_null: !text.is_some().clone(),
             is_index: false,
             value: text,
         }

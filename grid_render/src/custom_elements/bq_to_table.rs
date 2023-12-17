@@ -13,7 +13,7 @@ impl crate::bigquery::jobs::GetQueryResultsResponse {
             let mut rows: Vec<Vec<Option<TableItem>>> =
                 vec![vec![None; number_columns]; number_rows];
 
-            place_bq_table_rows(&mut rows, &schema.fields, &self.rows,0,0);
+            place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0);
 
             render_table(element, header, &rows);
         }
@@ -68,18 +68,39 @@ fn place_bq_table_rows(
     rows: &mut Vec<Vec<Option<TableItem>>>,
     schema_fields: &Vec<crate::bigquery::jobs::TableFieldSchema>,
     data_rows: &Vec<serde_json::Value>,
-    positional_row_index: usize,
-    positional_col_index: usize,
-) -> usize {
+    array_row_index: usize,
+    array_col_index: usize,
+) -> (usize, usize) {
+    
+    // 2 sets of variables are in use. 
+    // "data_..." to control the position of the data
+    // "array_.." to control the position and increments of the TableItem array
+    
+    // control the vertical position of the array
+    let mut array_row_increment = 0;
+    //when the data row has inner arrays, the max size of the inner array(s) is controlled here
+    let mut array_max_inner_row_increment = 0;
 
-    let mut data_row_index = 0;
-    let mut positional_col_increment = 0;
-    for data_row in data_rows {
-        positional_col_increment = 0;
+    // variable to move horizontally the placement in the TableItem array
+    let mut array_col_increment = 0;    
 
-        rows[positional_row_index + data_row_index][positional_col_index + positional_col_increment] = Some(TableItem::new_main_index(data_row_index + 1));
-        positional_col_increment += 1;
+    //
+    for data_row_index in 0..data_rows.len() {
+        let data_row = &data_rows[data_row_index];
 
+        //reset internal row increment
+        array_max_inner_row_increment = 0;
+
+        //reset the variable of horizontal movement in a new data row
+        array_col_increment = 0;
+
+        //index column
+        rows[array_row_index + array_row_increment]
+            [array_col_index + array_col_increment] =
+            Some(TableItem::new_main_index(data_row_index + 1));
+        array_col_increment += 1;
+
+        // go through the schema of the data
         for col_index in 0..schema_fields.len() {
             let field = &schema_fields[col_index];
             let value = data_row.pointer(&format!("/f/{}/v", col_index));
@@ -89,22 +110,40 @@ fn place_bq_table_rows(
                 && value.is_some()
                 && value.unwrap().is_array()
             {
-
                 let inner_schema_fields = &field.fields.clone().unwrap();
                 let inner_data_rows = value.unwrap().as_array().unwrap();
 
-                positional_col_increment += place_bq_table_rows(rows, inner_schema_fields, inner_data_rows, positional_row_index + data_row_index,  positional_col_index + col_index + 1);
-                
+
+                let _value_xxx = &inner_data_rows.iter().map(|i| i.pointer("/v").unwrap().clone()).collect::<Vec<serde_json::Value>>();
+
+
+                let positions = place_bq_table_rows(
+                    rows,
+                    inner_schema_fields,
+                    _value_xxx,
+                    array_row_index + array_row_increment,
+                    array_col_index + array_col_increment,
+                );
+                //establish the max rows to progress
+                array_max_inner_row_increment = match array_max_inner_row_increment > positions.0 {
+                    true => array_max_inner_row_increment,
+                    false => positions.0,
+                };
+                //move the col index further
+                array_col_increment += positions.1;
             } else {
-                rows[positional_row_index + data_row_index][positional_col_index + positional_col_increment] = Some(TableItem::from_value(&value));
-                positional_col_increment += 1;
+                rows[array_row_index + array_row_increment]
+                    [array_col_index + array_col_increment] =
+                    Some(TableItem::from_value(&value));
+                array_col_increment += 1;
             }
         }
-
-        data_row_index += 1;
+        
+        //
+        array_row_increment += array_max_inner_row_increment + 1;
     }
 
-    positional_col_increment
+    (array_row_increment, array_col_increment)
 }
 
 fn calculate_number_rows(data_rows: &Vec<serde_json::Value>) -> usize {
@@ -264,18 +303,20 @@ mod tests {
             &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
         let number_columns = header.len();
         let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
-        let mut rows: Vec<Vec<Option<TableItem>>> = vec![vec![None; number_columns]; number_rows];
+        let mut rows: Vec<Vec<Option<TableItem>>> = vec![vec![None; number_columns]; number_rows + 99];
 
         super::place_bq_table_rows(
             &mut rows,
             &complex_object_array_test.schema.as_ref().unwrap().fields,
             &complex_object_array_test.rows,
-            0,0
+            0,
+            0,
         );
 
-        assert_eq!(rows.len(), 1746);
+        // println!("row 0: \n{:?}", rows[0]);
+        // println!("row 28: \n{:?}", rows[28]);
+        // assert_eq!(rows.len(), 1746);
         assert_eq!(rows[0].len(), 62);
-        println!("{:?}", rows[0]);
 
         let v = rows[0][0].clone().unwrap();
         assert!(v.is_index);
@@ -289,8 +330,88 @@ mod tests {
         assert!(v.is_some());
         assert_eq!(v.unwrap().value.unwrap(), "SKIRTS");
 
+        let v = rows[0][8].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(v.is_null);
+        assert!(v.value.is_none());
+
+
+        let v = rows[0][27].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "J20J215714BEH");
+
+        let v = rows[0][28].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "• stretch jersey and mesh<CRLF>• double layered design<CRLF>• pleated waist<CRLF>• midi length<CRLF>• pulls on<CRLF>• Calvin Klein broad logo elastic waistband<CRLF><CRLF>Our model is 1.80m (5ft 11in) and is wearing a size S.<CRLF><CRLF>84% polyester 16% elastane <CRLF>delicate machine wash<CRLF>do not tumble dry<CRLF>fits true to size");
+
+        let v = rows[0][29].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "1");
+
+        let v = rows[0][30].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(v.is_null);
+        assert!(v.value.is_none());
+
+        let v = rows[0][31].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "Style");
+
+        let v = rows[0][32].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "false");
+
+        let v = rows[1][29].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "2");
+
+        let v = rows[1][30].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "true");
+
+        let v = rows[1][31].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "Combi");
+
+
+
         let v = rows[0][61].clone();
         assert!(v.is_some());
         assert_eq!(v.unwrap().value.unwrap(), "452216");
+
+        let v = rows[1][0].clone();
+        assert!(v.is_none());
+
+        let v = rows[28][0].clone().unwrap();
+        assert!(v.is_index);
+        assert_eq!(v.value.unwrap(), "2");
     }
 }
