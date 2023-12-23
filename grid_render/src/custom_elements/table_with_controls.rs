@@ -42,7 +42,7 @@ impl TableWithControls {
 
         let start_index = element.get_attribute("startIndex");
         let max_results = parse_to_usize(element.get_attribute("maxResults"));
-        // // let xxx = element.get_attribute("openInTabVisible").unwrap();
+        // let xxx = element.get_attribute("openInTabVisible").unwrap();
 
         let jobs = Jobs::new(&token);
         let request = GetQueryResultsRequest {

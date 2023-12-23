@@ -1,4 +1,4 @@
-use crate::bigquery::jobs::TableFieldSchema;
+use crate::{bigquery::jobs::TableFieldSchema, parse_to_usize};
 
 use super::table_plot::{render_table, TableItem};
 
@@ -16,7 +16,9 @@ impl crate::bigquery::jobs::GetQueryResultsResponse {
 
             place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
 
-            render_table(true, element, header, &rows);
+            let number_of_rows_total = parse_to_usize(Some(self.total_rows.clone())).unwrap();
+
+            render_table(true, element, header, &rows, number_of_rows_total);
             // console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));
         }
     }

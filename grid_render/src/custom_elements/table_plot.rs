@@ -1,6 +1,9 @@
 use serde_json::Value;
 use web_sys::{HtmlElement, ShadowRoot};
 
+// //number of high level rows that 
+// const PAGE_SIZE: usize = 50;
+
 #[derive(Debug, Clone)]
 pub(crate) struct TableItem {
     pub is_null: bool,
@@ -53,6 +56,7 @@ pub(crate) fn render_table(
     element: &HtmlElement,
     header: &Vec<String>,
     rows: &Vec<Vec<Option<TableItem>>>,
+    number_of_rows_total: usize,
 ) {
     // console::log_1(&JsValue::from_str(&"0 - xxxxxx"));
 
@@ -68,8 +72,8 @@ pub(crate) fn render_table(
     };
 
     if show_controls {
-        let number_of_rows_in_batch = 50;
-        let number_of_rows_total = 500;
+        let number_of_rows_in_batch = rows.len();
+        // let number_of_rows_total = 500;
 
         render_control(&shadow, number_of_rows_in_batch, number_of_rows_total, 0);
     }
@@ -216,16 +220,6 @@ fn create_cell_with_table_item(table_item: &Option<TableItem>) -> web_sys::HtmlE
     }
     cell
 }
-
-// fn create_cell_with_element(
-//     column_header: bool,
-//     grid_column: u8,
-//     element: &web_sys::Element,
-// ) -> web_sys::HtmlElement {
-//     let cell = create_cell(column_header, grid_column);
-//     cell.append_child(element).unwrap();
-//     cell
-// }
 
 #[cfg(test)]
 mod tests {

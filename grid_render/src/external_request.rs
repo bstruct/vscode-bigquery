@@ -33,6 +33,6 @@ impl ExternalRequestError {
         .to_vec()]
         .to_vec();
 
-        render_table(false, element, header, &rows);
+        render_table(false, element, header, &rows, 1);
     }
 }
