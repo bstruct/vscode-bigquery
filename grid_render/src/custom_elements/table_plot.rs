@@ -1,6 +1,6 @@
 use serde_json::Value;
 use wasm_bindgen::JsValue;
-use web_sys::{HtmlElement, ShadowRoot, console};
+use web_sys::{console, HtmlElement, ShadowRoot};
 
 #[derive(Debug, Clone)]
 pub(crate) struct TableItem {
@@ -39,15 +39,22 @@ impl TableItem {
             value: text,
         }
     }
+
+    pub(crate) fn from_string(domain: &String) -> TableItem {
+        TableItem {
+            is_null: false,
+            is_index: false,
+            value: Some(domain.clone()),
+        }
+    }
 }
 
 pub(crate) fn render_table(
+    show_controls: bool,
     element: &HtmlElement,
     header: &Vec<String>,
     rows: &Vec<Vec<Option<TableItem>>>,
 ) {
-
-
     console::log_1(&JsValue::from_str(&"0 - xxxxxx"));
 
     let shadow = match element.shadow_root() {
@@ -57,22 +64,23 @@ pub(crate) fn render_table(
             root.remove_child(&root.last_child().unwrap()).unwrap();
 
             root
-        },
+        }
         None => shadow_init(element),
     };
 
-    let number_of_rows_in_batch = 50;
-    let number_of_rows_total = 500;
+    if show_controls {
+        let number_of_rows_in_batch = 50;
+        let number_of_rows_total = 500;
 
-    console::log_1(&JsValue::from_str(&"1 - xxxxxx"));
+        console::log_1(&JsValue::from_str(&"1 - xxxxxx"));
 
-    render_control(&shadow, number_of_rows_in_batch, number_of_rows_total, 0);
+        render_control(&shadow, number_of_rows_in_batch, number_of_rows_total, 0);
 
-    console::log_1(&JsValue::from_str(&"2 - xxxxxx"));
+        console::log_1(&JsValue::from_str(&"2 - xxxxxx"));
+    }
 
     render_html_table(&shadow, header, rows);
     console::log_1(&JsValue::from_str(&"3 - xxxxxx"));
-
 }
 
 fn shadow_init(element: &HtmlElement) -> ShadowRoot {

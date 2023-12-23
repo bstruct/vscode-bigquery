@@ -141,11 +141,12 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 	}
 
 	try {
-		let postMessageResult = await resultsGridRender.postMessage({
+		let _postMessageResult1 = await resultsGridRender.postMessage({
 			requestType: ResultsGridRenderRequestV2Type.clear.toString(),
 			projectId: null,
 			token: null,
-			query: null
+			query: null,
+			error: null
 		} as ResultsGridRenderRequestV2);
 
 		const bqClient = await getBigQueryClient();
@@ -155,16 +156,31 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		// console.log('token:', token);
 		const job = await bqClient.runQuery(queryText);
 
-		postMessageResult = await resultsGridRender.postMessage({
+		let _postMessageResult2 = await resultsGridRender.postMessage({
 			requestType: ResultsGridRenderRequestV2Type.executeQuery.toString(),
 			projectId: projectId,
 			token: token,
 			query: queryText,
-			job: job.metadata
+			job: job.metadata,
+			error: null
 		} as ResultsGridRenderRequestV2);
 
-	} catch (error) {
-		resultsGridRender.renderException(error);
+	} catch (errorx) {
+		// resultsGridRender.renderException(error);
+		const error = 
+			  {
+				message: (errorx as any).message || 'undefined message',
+				reason: ''
+			  };
+		  
+		let _postMessageResult3 = await resultsGridRender.postMessage({
+			requestType: ResultsGridRenderRequestV2Type.error.toString(),
+			projectId: null,
+			token: null,
+			query: null,
+			job: null,
+			error: error
+		} as ResultsGridRenderRequestV2);
 	}
 
 	return 0;

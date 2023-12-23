@@ -293,7 +293,7 @@ pub struct TableSchema {
     pub fields: Vec<TableFieldSchema>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GetQueryResultsResponse {
     pub kind: String,
     pub etag: String,

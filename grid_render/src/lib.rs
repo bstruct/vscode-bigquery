@@ -1,6 +1,7 @@
 mod bigquery;
 mod custom_elements;
 mod message_handler;
+mod external_request;
 
 use custom_elements::CustomElement;
 use std::str::FromStr;

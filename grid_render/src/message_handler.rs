@@ -1,24 +1,13 @@
-use serde::Deserialize;
 use wasm_bindgen::JsValue;
+use web_sys::console;
 
 use crate::{
     bigquery::{
         self,
-        jobs::{GetQueryResultsRequest, Job},
+        jobs::GetQueryResultsRequest,
     },
-    createElement, getElementById,
+    createElement, getElementById, external_request::{ExternalRequestError, ExternalRequest},
 };
-
-#[derive(Debug, Deserialize)]
-pub struct ExternalRequest {
-    #[serde(alias = "requestType")]
-    pub request_type: String,
-    #[serde(alias = "projectId")]
-    pub project_id: Option<String>,
-    pub token: Option<String>,
-    pub query: Option<String>,
-    pub job: Option<Job>,
-}
 
 pub async fn handle(event: &web_sys::MessageEvent) {
     let parse_event = &serde_wasm_bindgen::from_value::<ExternalRequest>(event.data());
@@ -45,6 +34,9 @@ pub async fn handle(event: &web_sys::MessageEvent) {
                 }
                 "execute_query" => {
                     execute_query(q1, external_request).await;
+                }
+                "error" => {
+                    show_error(q1, external_request).await;
                 }
                 _ => {}
             }
@@ -79,12 +71,36 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
         if results.is_some() {
             let query_result_response = results.unwrap();
 
+            console::log_1(&JsValue::from_str(&serde_json::to_string(&query_result_response).unwrap()));
+
             let div_for_table = &createElement("div");
             q1.set_inner_html(&"");
             q1.append_child(div_for_table).unwrap();
 
             query_result_response.plot_table(div_for_table);
         }
+    } else {
+        q1.set_inner_html(&"Unexpected error occured.");
+    }
+}
+
+async fn show_error(q1: &web_sys::Element, external_request: &ExternalRequest) {
+    q1.set_inner_html(&"Loading...");
+
+    let error: &Option<ExternalRequestError> = &external_request.error;
+    if error.is_some() {
+        let error = error.as_ref().unwrap();
+        q1.set_inner_html(&"");
+        
+        let title = &createElement("h1");
+        title.set_inner_text(&"ERROR");
+        q1.append_child(title).unwrap();
+
+        let div_for_table = &createElement("div");
+        q1.append_child(div_for_table).unwrap();
+
+        error.plot_table(div_for_table);
+
     } else {
         q1.set_inner_html(&"Unexpected error occured.");
     }

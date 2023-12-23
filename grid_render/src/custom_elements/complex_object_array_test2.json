@@ -1,0 +1,495 @@
+{
+    "kind": "bigquery#getQueryResultsResponse",
+    "etag": "k2D4TlH7/GwO5m/nqFoUkg==",
+    "schema": {
+        "fields": [
+            {
+                "name": "Pim_Value",
+                "type": "STRING",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "AttributeValueCategory",
+                "type": "STRING",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "Colour_PDP",
+                "type": "STRING",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "Width_accessoires",
+                "type": "STRING",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "Height_accessoires",
+                "type": "STRING",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "Delete_Flag",
+                "type": "RECORD",
+                "mode": "REPEATED",
+                "fields": [
+                    {
+                        "name": "value",
+                        "type": "BOOLEAN",
+                        "mode": "NULLABLE",
+                        "fields": null,
+                        "description": null,
+                        "max_length": null,
+                        "precision": null,
+                        "scale": null,
+                        "collation": null,
+                        "default_value_expression": null
+                    },
+                    {
+                        "name": "level",
+                        "type": "STRING",
+                        "mode": "NULLABLE",
+                        "fields": null,
+                        "description": null,
+                        "max_length": null,
+                        "precision": null,
+                        "scale": null,
+                        "collation": null,
+                        "default_value_expression": null
+                    }
+                ],
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            }
+        ]
+    },
+    "job_reference": {
+        "project_id": "damiao-project-1",
+        "job_id": "ecf90eec-bbda-4af4-806b-bf00ce80e1e9",
+        "location": "EU"
+    },
+    "total_rows": "8",
+    "page_token": null,
+    "rows": [
+        {
+            "f": [
+                {
+                    "v": ""
+                },
+                {
+                    "v": "TRAINERS"
+                },
+                {
+                    "v": "BlackMono"
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "3.8"
+                },
+                {
+                    "v": [
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Style"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Combi"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "f": [
+                {
+                    "v": ""
+                },
+                {
+                    "v": "TRAINERS"
+                },
+                {
+                    "v": "Blackk"
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "2.7"
+                },
+                {
+                    "v": [
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Style"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Combi"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "f": [
+                {
+                    "v": ""
+                },
+                {
+                    "v": "TRAINERS"
+                },
+                {
+                    "v": "BrightWhite"
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "2.7"
+                },
+                {
+                    "v": [
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Style"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Combi"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "f": [
+                {
+                    "v": ""
+                },
+                {
+                    "v": "TRAINERS"
+                },
+                {
+                    "v": "BrightWhite"
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "3"
+                },
+                {
+                    "v": [
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Style"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Combi"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "f": [
+                {
+                    "v": ""
+                },
+                {
+                    "v": "TRAINERS"
+                },
+                {
+                    "v": "BlackMono"
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "3.8"
+                },
+                {
+                    "v": [
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Style"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Combi"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "f": [
+                {
+                    "v": ""
+                },
+                {
+                    "v": "TRAINERS"
+                },
+                {
+                    "v": "BrightWhite"
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "3"
+                },
+                {
+                    "v": [
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Style"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Combi"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "f": [
+                {
+                    "v": ""
+                },
+                {
+                    "v": "TRAINERS"
+                },
+                {
+                    "v": "Blackk"
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "2.7"
+                },
+                {
+                    "v": [
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Style"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Combi"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "f": [
+                {
+                    "v": ""
+                },
+                {
+                    "v": "TRAINERS"
+                },
+                {
+                    "v": "BrightWhite"
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "2.7"
+                },
+                {
+                    "v": [
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Style"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "v": {
+                                "f": [
+                                    {
+                                        "v": null
+                                    },
+                                    {
+                                        "v": "Combi"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "total_bytes_processed": "0",
+    "job_complete": true,
+    "errors": null,
+    "cache_hit": true,
+    "num_dml_affected_rows": null
+}

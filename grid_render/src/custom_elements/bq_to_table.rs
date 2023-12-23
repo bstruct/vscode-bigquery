@@ -1,6 +1,3 @@
-use wasm_bindgen::JsValue;
-use web_sys::console;
-
 use crate::bigquery::jobs::TableFieldSchema;
 
 use super::table_plot::{render_table, TableItem};
@@ -9,25 +6,18 @@ impl crate::bigquery::jobs::GetQueryResultsResponse {
     pub fn plot_table(&self, element: &web_sys::HtmlElement) {
         if self.schema.is_some() {
             let schema = self.schema.as_ref().unwrap();
-            console::log_1(&JsValue::from_str(&"0 - zzzzzzz"));
 
             let header = &get_bq_table_header(&schema);
             let number_columns = header.len();
             let number_rows = calculate_number_rows(&self.rows);
 
-            console::log_1(&JsValue::from_str(&"1 - zzzzzzz"));
-
             let mut rows: Vec<Vec<Option<TableItem>>> =
                 vec![vec![None; number_columns]; number_rows];
 
-            console::log_1(&JsValue::from_str(&"2 - zzzzzzz"));
-
             place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0);
-            console::log_1(&JsValue::from_str(&"3 - zzzzzzz"));
 
-            render_table(element, header, &rows);
-            console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));
-
+            render_table(true, element, header, &rows);
+            // console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));
         }
     }
 }
@@ -179,7 +169,7 @@ fn calculate_number_rows(data_rows: &Vec<serde_json::Value>) -> usize {
                     .collect::<Vec<serde_json::Value>>();
 
                 let x = calculate_number_rows(inner_data_rows);
-                increment = match increment >= x - 1 {
+                increment = match increment >= x {
                     true => increment,
                     false => x,
                 };
@@ -212,6 +202,18 @@ mod tests {
 
         let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
         assert_eq!(number_rows, 1796);
+    }
+
+    #[test]
+    pub fn calculate_number_rows_test_2() {
+        let complex_object_array_test = include_str!("complex_object_array_test2.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
+        assert_eq!(number_rows, 16);
     }
 
     #[test]
@@ -315,6 +317,30 @@ mod tests {
         }
 
         assert_eq!(&header[61], "row_number");
+    }
+
+    #[test]
+    pub fn get_bq_table_header_test_2() {
+        let complex_object_array_test = include_str!("complex_object_array_test2.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let header =
+            &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
+
+        assert_eq!(header.len(), 9);
+        assert_eq!(header[0], "#");
+        assert_eq!(&header[1], &"Pim_Value");
+        assert_eq!(&header[2], &"AttributeValueCategory");
+        assert_eq!(&header[3], &"Colour_PDP");
+        assert_eq!(&header[4], &"Width_accessoires");
+        assert_eq!(&header[5], &"Height_accessoires");
+        assert_eq!(&header[6], &"Delete_Flag.#");
+        assert_eq!(&header[7], &"Delete_Flag.value");
+        assert_eq!(&header[8], &"Delete_Flag.level");
+
     }
 
     #[test]
@@ -442,6 +468,48 @@ mod tests {
         assert_eq!(v.value.unwrap(), "50");
     }
 
+    #[test]
+    fn place_bq_table_rows_test_2() {
+        let complex_object_array_test = include_str!("complex_object_array_test2.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let header =
+            &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
+        let number_columns = header.len();
+        let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
+        let mut rows: Vec<Vec<Option<TableItem>>> = vec![vec![None; number_columns]; number_rows];
+
+        super::place_bq_table_rows(
+            &mut rows,
+            &complex_object_array_test.schema.as_ref().unwrap().fields,
+            &complex_object_array_test.rows,
+            0,
+            0,
+        );
+
+        assert_eq!(rows.len(), 16);
+        assert_eq!(rows[0].len(), 9);
+
+        let v = rows[0][0].clone().unwrap();
+        assert!(v.is_index);
+        assert_eq!(v.value.unwrap(), "1");
+        let v = rows[0][1].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "");
+        let v = rows[0][2].clone();
+        assert!(v.is_some());
+        assert_eq!(v.unwrap().value.unwrap(), "TRAINERS");
+        let v = rows[0][3].clone();
+        assert!(v.is_some());
+        assert_eq!(v.unwrap().value.unwrap(), "BlackMono");
+
+    }
+
     #[wasm_bindgen_test]
     fn plot_table_1() {
         let complex_object_array_test = include_str!("complex_object_array_test.json");
@@ -462,7 +530,6 @@ mod tests {
         let table = table.unwrap();
         assert_eq!(table.node_name(), "TABLE");
     }
-
 
     #[wasm_bindgen_test]
     fn plot_table_twice() {
@@ -496,8 +563,5 @@ mod tests {
         assert!(table.is_some());
         let table = table.unwrap();
         assert_eq!(table.node_name(), "TABLE");
-
     }
-
-
 }
