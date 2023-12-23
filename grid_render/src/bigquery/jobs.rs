@@ -100,18 +100,25 @@ pub struct JobConfigurationTableCopy {}
 pub struct JobConfigurationExtract {}
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct JobStatistics2 {
+    #[serde(alias = "statementType")]
+    pub statement_type: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct JobStatistics {
-    // "creationTime": string,
-    // "startTime": string,
-    // "endTime": string,
+    #[serde(alias = "creationTime")]
+    pub creation_time: Option<String>,
+    #[serde(alias = "startTime")]
+    pub start_time: Option<String>,
+    #[serde(alias = "endTime")]
+    pub end_time: Option<String>,
     // "totalBytesProcessed": string,
     // "completionRatio": number,
     // "quotaDeferments": [
     //   string
     // ],
-    // "query": {
-    //   object (JobStatistics2)
-    // },
+    pub query: Option<JobStatistics2>,
     // "load": {
     //   object (JobStatistics3)
     // },
@@ -178,6 +185,18 @@ pub struct Job {
     pub job_creation_reason: Option<JobCreationReason>,
 }
 
+impl Job {
+    pub(crate) fn is_query_script(&self) -> bool {
+        if let Some(stats) = self.statistics.as_ref() {
+            if let Some(query) = stats.query.as_ref() {
+                return query.statement_type == "SCRIPT";
+            }
+        }
+
+        false
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub struct QueryRequest {
     pub query: String,
@@ -220,7 +239,7 @@ pub struct QueryResponse {
     pub job_complete: bool,
     pub errors: Vec<serde_json::Value>,
     #[serde(alias = "cacheHit")]
-    pub cache_hit: bool,
+    pub cache_hit: Option<bool>,
     #[serde(alias = "numDmlAffectedRows")]
     pub num_dml_affected_rows: String,
     #[serde(alias = "sessionInfo")]
@@ -311,7 +330,7 @@ pub struct GetQueryResultsResponse {
     pub job_complete: bool,
     pub errors: Option<Vec<ErrorProto>>,
     #[serde(alias = "cacheHit")]
-    pub cache_hit: bool,
+    pub cache_hit: Option<bool>,
     #[serde(alias = "numDmlAffectedRows")]
     pub num_dml_affected_rows: Option<String>,
 }

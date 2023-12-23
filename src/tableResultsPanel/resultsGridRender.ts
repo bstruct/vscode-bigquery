@@ -59,7 +59,7 @@ export class ResultsGridRender {
                 </script>
         	</head>
         	<body style="padding:0;">
-                <bq id="q1"></bq>
+                <div id="q1"></div>
                 <script type="module" src="${gridJs}"></script>
         	</body>
             <script>vscode.postMessage({command:'load_complete'});</script>

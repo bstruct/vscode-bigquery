@@ -25,23 +25,7 @@ window.addEventListener('external_message', on_window_message_received);
 window.addEventListener('message', async event => {
 
     await p;
-
     let e = new MessageEvent("external_message", { data: event.data });
-
     window.dispatchEvent(e);
-
-//     // //of the type ResultsGridRenderRequest
-//     // const message = event.data;
-
-//     // const q1 = document.getElementById('q1');
-//     // q1.setAttribute("startIndex", message.startIndex);
-//     // q1.setAttribute("maxResults", message.maxResults);
-//     // // q1.setAttribute("jobIndex", message.jobIndex);
-//     // q1.setAttribute("openInTabVisible", message.openInTabVisible);
-//     // q1.setAttribute("projectId", message.jobReferences[message.jobIndex].projectId);
-//     // q1.setAttribute("jobId", message.jobReferences[message.jobIndex].jobId);
-//     // q1.setAttribute("location", message.jobReferences[message.jobIndex].location);
-//     // q1.setAttribute("token", message.token);
-//     // q1.dispatchEvent(new Event("render_table"));
 
 });

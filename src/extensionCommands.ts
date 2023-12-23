@@ -156,6 +156,9 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		// console.log('token:', token);
 		const job = await bqClient.runQuery(queryText);
 
+		// const jobReferences = job.map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
+
+
 		let _postMessageResult2 = await resultsGridRender.postMessage({
 			requestType: ResultsGridRenderRequestV2Type.executeQuery.toString(),
 			projectId: projectId,

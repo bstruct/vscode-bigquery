@@ -2,11 +2,10 @@ use wasm_bindgen::JsValue;
 use web_sys::console;
 
 use crate::{
-    bigquery::{
-        self,
-        jobs::GetQueryResultsRequest,
-    },
-    createElement, getElementById, external_request::{ExternalRequestError, ExternalRequest},
+    bigquery::{self, jobs::GetQueryResultsRequest},
+    createElement,
+    external_request::{ExternalRequest, ExternalRequestError},
+    getElementById,
 };
 
 pub async fn handle(event: &web_sys::MessageEvent) {
@@ -54,30 +53,38 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
         let job = job.as_ref().unwrap();
         let job_reference = job.job_reference.as_ref().unwrap();
 
-        q1.set_inner_html(&format!("Loading job {}", job_reference.job_id));
+        // let job_type = job.statistics.as_ref().unwrap().query.statement_type.clone();
+        if job.is_query_script() {
+            q1.set_inner_html(&format!("multiple results {}", job_reference.job_id));
 
-        let bq_jobs = bigquery::jobs::Jobs::new(&external_request.token.as_ref().unwrap());
-        let request = GetQueryResultsRequest {
-            project_id: String::from(job_reference.project_id.clone()),
-            job_id: String::from(job_reference.job_id.clone()),
-            start_index: Some(String::from("0")),
-            page_token: None,
-            max_results: Some(50),
-            timeout_ms: None,
-            location: Some(String::from(job_reference.location.clone())),
-        };
+        } else {
+            q1.set_inner_html(&format!("Loading job {}", job_reference.job_id));
 
-        let results = bq_jobs.get_query_results(request).await;
-        if results.is_some() {
-            let query_result_response = results.unwrap();
+            let bq_jobs = bigquery::jobs::Jobs::new(&external_request.token.as_ref().unwrap());
+            let request = GetQueryResultsRequest {
+                project_id: String::from(job_reference.project_id.clone()),
+                job_id: String::from(job_reference.job_id.clone()),
+                start_index: Some(String::from("0")),
+                page_token: None,
+                max_results: Some(50),
+                timeout_ms: None,
+                location: Some(String::from(job_reference.location.clone())),
+            };
 
-            console::log_1(&JsValue::from_str(&serde_json::to_string(&query_result_response).unwrap()));
+            let results = bq_jobs.get_query_results(request).await;
+            if results.is_some() {
+                let query_result_response = results.unwrap();
 
-            let div_for_table = &createElement("div");
-            q1.set_inner_html(&"");
-            q1.append_child(div_for_table).unwrap();
+                console::log_1(&JsValue::from_str(
+                    &serde_json::to_string(&query_result_response).unwrap(),
+                ));
 
-            query_result_response.plot_table(div_for_table);
+                let div_for_table = &createElement("div");
+                q1.set_inner_html(&"");
+                q1.append_child(div_for_table).unwrap();
+
+                query_result_response.plot_table(div_for_table);
+            }
         }
     } else {
         q1.set_inner_html(&"Unexpected error occured.");
@@ -91,7 +98,7 @@ async fn show_error(q1: &web_sys::Element, external_request: &ExternalRequest) {
     if error.is_some() {
         let error = error.as_ref().unwrap();
         q1.set_inner_html(&"");
-        
+
         let title = &createElement("h3");
         title.set_inner_text(&"ERROR");
         q1.append_child(title).unwrap();
@@ -100,7 +107,6 @@ async fn show_error(q1: &web_sys::Element, external_request: &ExternalRequest) {
         q1.append_child(div_for_table).unwrap();
 
         error.plot_table(div_for_table);
-
     } else {
         q1.set_inner_html(&"Unexpected error occured.");
     }
