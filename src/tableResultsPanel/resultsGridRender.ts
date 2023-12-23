@@ -29,7 +29,7 @@ export class ResultsGridRender {
     //     this.webViewPanel.webview.html = this.getWaitingHtml(50, false, 0, 0);
     // }
 
-    public render1() {
+    public async render1(): Promise<boolean> {
 
         const extensionUri = getExtensionUri();
 
@@ -37,6 +37,18 @@ export class ResultsGridRender {
             'resources',
             'grid.js']
         );
+
+        const pageLoaded = new Promise((resolve, reject) => {
+
+            const timer = setTimeout(() => { resolve(null); }, 10 * 1000);
+
+            this.webViewPanel.webview.onDidReceiveMessage(c => {
+                if ((c as any).command === 'load_complete') {
+                    clearTimeout(timer);
+                    resolve(null);
+                }
+            });
+        });
 
         this.webViewPanel.webview.html = `<!DOCTYPE html>
         <html lang="en">
@@ -50,7 +62,12 @@ export class ResultsGridRender {
                 <bq id="q1"></bq>
                 <script type="module" src="${gridJs}"></script>
         	</body>
+            <script>vscode.postMessage({command:'load_complete'});</script>
         </html>`;
+
+        await pageLoaded;
+
+        return Promise.resolve(true);
     }
 
     public postMessage(message: ResultsGridRenderRequestV2): Thenable<boolean> {

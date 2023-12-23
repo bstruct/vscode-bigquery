@@ -129,7 +129,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 			await vscode.commands.executeCommand("workbench.action.focusPreviousGroup");
 		}
 
-		resultsGridRender.render1();
+		await resultsGridRender.render1();
 
 		QueryResultsMappingService.updateQueryResultsMappingWebviewPanel(queryResultsWebviewMapping, uuid, resultsGridRender);
 
