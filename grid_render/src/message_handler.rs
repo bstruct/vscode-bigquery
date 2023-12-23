@@ -92,7 +92,7 @@ async fn show_error(q1: &web_sys::Element, external_request: &ExternalRequest) {
         let error = error.as_ref().unwrap();
         q1.set_inner_html(&"");
         
-        let title = &createElement("h1");
+        let title = &createElement("h3");
         title.set_inner_text(&"ERROR");
         q1.append_child(title).unwrap();
 

@@ -7,3 +7,5 @@
 
 wasm-pack test --headless --chrome 
 # wasm-pack test --chrome
+
+cargo test

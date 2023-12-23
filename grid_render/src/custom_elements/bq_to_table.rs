@@ -14,7 +14,7 @@ impl crate::bigquery::jobs::GetQueryResultsResponse {
             let mut rows: Vec<Vec<Option<TableItem>>> =
                 vec![vec![None; number_columns]; number_rows];
 
-            place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0);
+            place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
 
             render_table(true, element, header, &rows);
             // console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));
@@ -72,6 +72,7 @@ fn place_bq_table_rows(
     data_rows: &Vec<serde_json::Value>,
     array_row_index: usize,
     array_col_index: usize,
+    include_index_column: bool,
 ) -> (usize, usize) {
     // 2 sets of variables are in use.
     // "data_..." to control the position of the data
@@ -79,8 +80,6 @@ fn place_bq_table_rows(
 
     // control the vertical position of the array
     let mut array_row_increment = 0;
-    //when the data row has inner arrays, the max size of the inner array(s) is controlled here
-    let mut array_max_inner_row_increment = 0;
 
     // variable to move horizontally the placement in the TableItem array
     let mut array_col_increment = 0;
@@ -89,16 +88,18 @@ fn place_bq_table_rows(
     for data_row_index in 0..data_rows.len() {
         let data_row = &data_rows[data_row_index];
 
-        //reset internal row increment
-        array_max_inner_row_increment = 0;
+        //when the data row has inner arrays, the max size of the inner array(s) is controlled here
+        let mut array_max_inner_row_increment = 0;
 
         //reset the variable of horizontal movement in a new data row
         array_col_increment = 0;
 
         //index column
-        rows[array_row_index + array_row_increment][array_col_index + array_col_increment] =
-            Some(TableItem::new_main_index(data_row_index + 1));
-        array_col_increment += 1;
+        if include_index_column {
+            rows[array_row_index + array_row_increment][array_col_index + array_col_increment] =
+                Some(TableItem::new_main_index(data_row_index + 1));
+            array_col_increment += 1;
+        }
 
         // go through the schema of the data
         for col_index in 0..schema_fields.len() {
@@ -125,6 +126,7 @@ fn place_bq_table_rows(
                     inner_data_rows,
                     array_row_index + array_row_increment,
                     array_col_index + array_col_increment,
+                    true,
                 );
                 //establish the max rows to progress
                 array_max_inner_row_increment = match array_max_inner_row_increment > positions.0 {
@@ -134,9 +136,26 @@ fn place_bq_table_rows(
                 //move the col index further
                 array_col_increment += positions.1;
             } else {
-                rows[array_row_index + array_row_increment]
-                    [array_col_index + array_col_increment] = Some(TableItem::from_value(&value));
-                array_col_increment += 1;
+                if field.is_complex_object() && value.is_some() {
+                    let inner_schema_fields = &field.fields.clone().unwrap();
+                    let inner_data_rows = &vec![value.unwrap().clone()];
+
+                    let positions = place_bq_table_rows(
+                        rows,
+                        inner_schema_fields,
+                        inner_data_rows,
+                        array_row_index + array_row_increment,
+                        array_col_index + array_col_increment,
+                        false,
+                    );
+
+                    array_col_increment += positions.1;
+                } else {
+                    rows[array_row_index + array_row_increment]
+                        [array_col_index + array_col_increment] =
+                        Some(TableItem::from_value(&value));
+                    array_col_increment += 1;
+                }
             }
         }
 
@@ -214,6 +233,18 @@ mod tests {
 
         let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
         assert_eq!(number_rows, 16);
+    }
+
+    #[test]
+    pub fn calculate_number_rows_test_3() {
+        let complex_object_array_test = include_str!("struct_json_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
+        assert_eq!(number_rows, 50);
     }
 
     #[test]
@@ -340,7 +371,24 @@ mod tests {
         assert_eq!(&header[6], &"Delete_Flag.#");
         assert_eq!(&header[7], &"Delete_Flag.value");
         assert_eq!(&header[8], &"Delete_Flag.level");
+    }
 
+    #[test]
+    pub fn get_bq_table_header_test_3() {
+        let complex_object_array_test = include_str!("struct_json_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let header =
+            &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
+
+        assert_eq!(header.len(), 4);
+        assert_eq!(header[0], "#");
+        assert_eq!(&header[1], &"attributes.row_number");
+        assert_eq!(&header[2], &"attributes.data_type");
+        assert_eq!(&header[3], &"data");
     }
 
     #[test]
@@ -363,6 +411,7 @@ mod tests {
             &complex_object_array_test.rows,
             0,
             0,
+            true,
         );
 
         // println!("row 0: \n{:?}", rows[0]);
@@ -488,6 +537,7 @@ mod tests {
             &complex_object_array_test.rows,
             0,
             0,
+            true,
         );
 
         assert_eq!(rows.len(), 16);
@@ -507,6 +557,88 @@ mod tests {
         let v = rows[0][3].clone();
         assert!(v.is_some());
         assert_eq!(v.unwrap().value.unwrap(), "BlackMono");
+    }
+
+    #[test]
+    fn place_bq_table_rows_test_3() {
+        let complex_object_array_test = include_str!("struct_json_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let header =
+            &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
+        let number_columns = header.len();
+        let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
+        let mut rows: Vec<Vec<Option<TableItem>>> = vec![vec![None; number_columns]; number_rows];
+
+        super::place_bq_table_rows(
+            &mut rows,
+            &complex_object_array_test.schema.as_ref().unwrap().fields,
+            &complex_object_array_test.rows,
+            0,
+            0,
+            true,
+        );
+
+        assert_eq!(rows.len(), 50);
+        assert_eq!(rows[0].len(), 4);
+
+        let v = rows[0][0].clone().unwrap();
+        assert!(v.is_index);
+        assert_eq!(v.value.unwrap(), "1");
+        let v = rows[0][1].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "163517");
+        let v = rows[0][2].clone();
+        assert!(v.is_some());
+        assert_eq!(v.unwrap().value.unwrap(), "dsdfdsd");
+        let v = rows[0][3].clone();
+        assert!(v.is_some());
+        let v = &v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert!(v.value.as_ref().unwrap().len() > 100);
+
+        let v = rows[1][0].clone().unwrap();
+        assert!(v.is_index);
+        assert_eq!(v.value.unwrap(), "2");
+        let v = rows[1][1].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "163518");
+        let v = rows[1][2].clone();
+        assert!(v.is_some());
+        assert_eq!(v.unwrap().value.unwrap(), "dsdfdsd");
+        let v = rows[1][3].clone();
+        assert!(v.is_some());
+        let v = &v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert!(v.value.as_ref().unwrap().len() > 100);
+
+
+        let v = rows[49][0].clone().unwrap();
+        assert!(v.is_index);
+        assert_eq!(v.value.unwrap(), "50");
+        let v = rows[49][1].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "163566");
+        let v = rows[49][2].clone();
+        assert!(v.is_some());
+        assert_eq!(v.unwrap().value.unwrap(), "dsdfdsd");
+        let v = rows[49][3].clone();
+        assert!(v.is_some());
+        let v = &v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert!(v.value.as_ref().unwrap().len() > 100);
 
     }
 

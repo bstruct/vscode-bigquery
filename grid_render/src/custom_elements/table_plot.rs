@@ -1,6 +1,5 @@
 use serde_json::Value;
-use wasm_bindgen::JsValue;
-use web_sys::{console, HtmlElement, ShadowRoot};
+use web_sys::{HtmlElement, ShadowRoot};
 
 #[derive(Debug, Clone)]
 pub(crate) struct TableItem {
@@ -55,7 +54,7 @@ pub(crate) fn render_table(
     header: &Vec<String>,
     rows: &Vec<Vec<Option<TableItem>>>,
 ) {
-    console::log_1(&JsValue::from_str(&"0 - xxxxxx"));
+    // console::log_1(&JsValue::from_str(&"0 - xxxxxx"));
 
     let shadow = match element.shadow_root() {
         Some(root) => {
@@ -72,15 +71,10 @@ pub(crate) fn render_table(
         let number_of_rows_in_batch = 50;
         let number_of_rows_total = 500;
 
-        console::log_1(&JsValue::from_str(&"1 - xxxxxx"));
-
         render_control(&shadow, number_of_rows_in_batch, number_of_rows_total, 0);
-
-        console::log_1(&JsValue::from_str(&"2 - xxxxxx"));
     }
 
     render_html_table(&shadow, header, rows);
-    console::log_1(&JsValue::from_str(&"3 - xxxxxx"));
 }
 
 fn shadow_init(element: &HtmlElement) -> ShadowRoot {
