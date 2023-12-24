@@ -23,6 +23,8 @@ extern "C" {
     fn createElement(tagName: &str) -> web_sys::HtmlElement;
     #[wasm_bindgen(js_namespace = document)]
     fn getElementById(elementId: &str) -> Option<Element>;
+    #[wasm_bindgen(js_namespace = document)]
+    fn observe(elementId: &str);
 }
 
 #[wasm_bindgen]

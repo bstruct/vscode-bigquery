@@ -1,11 +1,13 @@
 use wasm_bindgen::JsValue;
-use web_sys::console;
+// use web_sys::console;
 
 use crate::{
-    bigquery::{self, jobs::GetQueryResultsRequest},
+    // bigquery::{self, jobs::GetQueryResultsRequest},
     createElement,
+    custom_elements::bq_table_custom_element::BigqueryTableCustomElement,
     external_request::{ExternalRequest, ExternalRequestError},
     getElementById,
+    observe,
 };
 
 pub async fn handle(event: &web_sys::MessageEvent) {
@@ -46,7 +48,8 @@ pub async fn handle(event: &web_sys::MessageEvent) {
 }
 
 async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest) {
-    q1.set_inner_html(&"Loading...");
+    //clear the div
+    q1.set_inner_html(&"");
 
     let job = &external_request.job;
     if job.is_some() {
@@ -56,35 +59,40 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
         // let job_type = job.statistics.as_ref().unwrap().query.statement_type.clone();
         if job.is_query_script() {
             q1.set_inner_html(&format!("multiple results {}", job_reference.job_id));
-
         } else {
-            q1.set_inner_html(&format!("Loading job {}", job_reference.job_id));
+            let token = external_request.token.as_ref().expect("token not found");
 
-            let bq_jobs = bigquery::jobs::Jobs::new(&external_request.token.as_ref().unwrap());
-            let request = GetQueryResultsRequest {
-                project_id: String::from(job_reference.project_id.clone()),
-                job_id: String::from(job_reference.job_id.clone()),
-                start_index: Some(String::from("0")),
-                page_token: None,
-                max_results: Some(50),
-                timeout_ms: None,
-                location: Some(String::from(job_reference.location.clone())),
-            };
+            let bq_table_custom_element = &BigqueryTableCustomElement::from_job(token, job);
+            q1.append_child(bq_table_custom_element).unwrap();
+            observe(&bq_table_custom_element.id());
 
-            let results = bq_jobs.get_query_results(request).await;
-            if results.is_some() {
-                let query_result_response = results.unwrap();
+            // q1.set_inner_html(&format!("Loading job {}", job_reference.job_id));
 
-                console::log_1(&JsValue::from_str(
-                    &serde_json::to_string(&query_result_response).unwrap(),
-                ));
+            // let bq_jobs = bigquery::jobs::Jobs::new(&external_request.token.as_ref().unwrap());
+            // let request = GetQueryResultsRequest {
+            //     project_id: String::from(job_reference.project_id.clone()),
+            //     job_id: String::from(job_reference.job_id.clone()),
+            //     start_index: Some(String::from("0")),
+            //     page_token: None,
+            //     max_results: Some(50),
+            //     timeout_ms: None,
+            //     location: Some(String::from(job_reference.location.clone())),
+            // };
 
-                let div_for_table = &createElement("div");
-                q1.set_inner_html(&"");
-                q1.append_child(div_for_table).unwrap();
+            // let results = bq_jobs.get_query_results(request).await;
+            // if results.is_some() {
+            //     let query_result_response = results.unwrap();
 
-                query_result_response.plot_table(div_for_table);
-            }
+            //     console::log_1(&JsValue::from_str(
+            //         &serde_json::to_string(&query_result_response).unwrap(),
+            //     ));
+
+            //     let div_for_table = &createElement("div");
+            //     q1.set_inner_html(&"");
+            //     q1.append_child(div_for_table).unwrap();
+
+            //     query_result_response.plot_table(div_for_table);
+            // }
         }
     } else {
         q1.set_inner_html(&"Unexpected error occured.");

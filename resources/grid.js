@@ -29,3 +29,31 @@ window.addEventListener('message', async event => {
     window.dispatchEvent(e);
 
 });
+
+let observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+
+        console.log(entry);
+      // Each entry describes an intersection change for one observed
+      // target element:
+      //   entry.boundingClientRect
+      //   entry.intersectionRatio
+      //   entry.intersectionRect
+      //   entry.isIntersecting
+      //   entry.rootBounds
+      //   entry.target
+      //   entry.time
+    });
+  }, {
+    root: document.querySelector("#q1"),
+    rootMargin: "0px",
+    threshold: 1.0,
+});
+
+function observe(elementId) {
+    let element = document.getElementById(elementId);
+    console.log("element with id '" + elementId + "' is being observed");
+    observer.observe(element);
+}
+
+document.observe = observe;

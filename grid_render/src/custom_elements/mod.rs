@@ -1,5 +1,5 @@
 mod custom_element_definition;
-mod table_with_controls;
+pub(crate) mod bq_table_custom_element;
 pub(crate) mod table_plot;
 mod bq_to_table;
 
@@ -13,7 +13,7 @@ ADD NEW COMPONENT STEP 1: add the name and respective HTML tag to the enum
 #[wasm_bindgen]
 #[derive(Copy, Clone, Debug)]
 pub enum CustomElement {
-    TableWithControls = "table-with-controls",
+    BqTable = "bq-table",
     // QueryResultsWithControls = "query-results-with-controls",
 }
 
@@ -22,7 +22,7 @@ impl CustomElement {
     ADD NEW COMPONENT STEP 2: make it available on the full list
     */
     pub fn get_all() -> Vec<CustomElement> {
-        vec![CustomElement::TableWithControls]
+        vec![CustomElement::BqTable]
     }
 
     /**
@@ -39,7 +39,7 @@ impl CustomElement {
 
         match self {
             // CustomElement::QueryResultsWithControls => query_results_with_controls::QueryResultsWithControls::define(document, element),
-            CustomElement::TableWithControls => table_with_controls::TableWithControls::define(document, element),
+            CustomElement::BqTable => bq_table_custom_element::BigqueryTableCustomElement::define(document, element),
             _ => eprintln!("definition for custom element not found"),
         };
 
