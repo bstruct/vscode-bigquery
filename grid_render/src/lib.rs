@@ -1,7 +1,7 @@
 mod bigquery;
 mod custom_elements;
-mod message_handler;
 mod external_request;
+mod message_handler;
 
 use custom_elements::CustomElement;
 use std::str::FromStr;
@@ -23,6 +23,8 @@ extern "C" {
     fn createElement(tagName: &str) -> web_sys::HtmlElement;
     #[wasm_bindgen(js_namespace = document)]
     fn getElementById(elementId: &str) -> Option<Element>;
+
+    //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
     #[wasm_bindgen(js_namespace = document)]
     fn observe(elementId: &str);
 }

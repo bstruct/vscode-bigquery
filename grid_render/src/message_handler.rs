@@ -1,8 +1,6 @@
 use wasm_bindgen::JsValue;
-// use web_sys::console;
 
 use crate::{
-    // bigquery::{self, jobs::GetQueryResultsRequest},
     createElement,
     custom_elements::bq_table_custom_element::BigqueryTableCustomElement,
     external_request::{ExternalRequest, ExternalRequestError},
@@ -54,17 +52,19 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
     let job = &external_request.job;
     if job.is_some() {
         let job = job.as_ref().unwrap();
-        let job_reference = job.job_reference.as_ref().unwrap();
 
-        // let job_type = job.statistics.as_ref().unwrap().query.statement_type.clone();
         if job.is_query_script() {
+            let job_reference = job.job_reference.as_ref().unwrap();
             q1.set_inner_html(&format!("multiple results {}", job_reference.job_id));
         } else {
             let token = external_request.token.as_ref().expect("token not found");
+            let bq_table_custom_element =
+                &BigqueryTableCustomElement::new_html_element_from_job(token, job);
+            q1.append_child(&bq_table_custom_element.html_element())
+                .unwrap();
 
-            let bq_table_custom_element = &BigqueryTableCustomElement::from_job(token, job);
-            q1.append_child(bq_table_custom_element).unwrap();
-            observe(&bq_table_custom_element.id());
+            //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
+            observe(&bq_table_custom_element.html_element().id());
 
             // q1.set_inner_html(&format!("Loading job {}", job_reference.job_id));
 
