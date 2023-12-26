@@ -20,7 +20,7 @@ pub struct ExternalRequest {
 }
 
 impl ExternalRequestError {
-    pub fn plot_table(&self, element: &web_sys::HtmlElement) {
+    pub fn plot_table(&self, element: &web_sys::Element) {
         let header = &[
             "message".to_string(),
             "reason".to_string(),

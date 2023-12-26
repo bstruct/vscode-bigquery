@@ -30,7 +30,7 @@ impl CustomElement {
     */
     pub fn define_custom_component(
         &self,
-        element: &web_sys::HtmlElement,
+        element: &web_sys::Element,
     ) -> Result<(), Box<dyn Error>> {
         let window = &web_sys::window().expect("no window exists");
         let document = &window.document().expect("window should have a document");

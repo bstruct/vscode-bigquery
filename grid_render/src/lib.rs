@@ -20,7 +20,7 @@ extern "C" {
     #[wasm_bindgen(js_namespace = document)]
     fn getElementsByTagName(qualifiedName: &str) -> Vec<Element>;
     #[wasm_bindgen(js_namespace = document)]
-    fn createElement(tagName: &str) -> web_sys::HtmlElement;
+    fn createElement(tagName: &str) -> web_sys::Element;
     #[wasm_bindgen(js_namespace = document)]
     fn getElementById(elementId: &str) -> Option<Element>;
 
@@ -38,7 +38,7 @@ pub fn get_web_components_list() -> Vec<JsValue> {
 }
 
 #[wasm_bindgen]
-pub fn register_custom_element(custom_component_name: &JsValue, element: web_sys::HtmlElement) {
+pub fn register_custom_element(custom_component_name: &JsValue, element: web_sys::Element) {
     let custom_component_string = custom_component_name
         .as_string()
         .expect("custom_component name not provided");

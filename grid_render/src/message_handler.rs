@@ -108,7 +108,7 @@ async fn show_error(q1: &web_sys::Element, external_request: &ExternalRequest) {
         q1.set_inner_html(&"");
 
         let title = &createElement("h3");
-        title.set_inner_text(&"ERROR");
+        title.set_inner_html(&"ERROR");
         q1.append_child(title).unwrap();
 
         let div_for_table = &createElement("div");

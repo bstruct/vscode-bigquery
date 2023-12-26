@@ -5,7 +5,7 @@ use crate::{
 };
 use wasm_bindgen::{prelude::Closure, JsCast};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::HtmlElement;
+use web_sys::Element;
 
 pub(crate) struct BigqueryTableCustomElement {
     job_id: String,
@@ -14,11 +14,11 @@ pub(crate) struct BigqueryTableCustomElement {
     token: String,
     start_index: Option<usize>,
     max_results: Option<usize>,
-    html_element: Box<HtmlElement>,
+    html_element: Box<Element>,
 }
 
 impl CustomElementDefinition for BigqueryTableCustomElement {
-    fn define(_document: &web_sys::Document, element: &web_sys::HtmlElement) {
+    fn define(_document: &web_sys::Document, element: &web_sys::Element) {
         // element.add_event_listener_with_callback("type_", listener)
 
         let on_event_type_closure =
@@ -61,7 +61,7 @@ impl BigqueryTableCustomElement {
 
     }
 
-    pub(crate) fn from_html_element(element: &HtmlElement) -> BigqueryTableCustomElement {
+    pub(crate) fn from_html_element(element: &Element) -> BigqueryTableCustomElement {
         let job_id = element.get_attribute("jobId").unwrap();
         let project_id = element.get_attribute("projectId").unwrap();
         let location = element.get_attribute("location").unwrap();
@@ -81,7 +81,7 @@ impl BigqueryTableCustomElement {
         }
     }
 
-    pub(crate) fn html_element(&self) -> &Box<HtmlElement> {
+    pub(crate) fn html_element(&self) -> &Box<Element> {
         &self.html_element
     }
 
@@ -92,7 +92,7 @@ impl BigqueryTableCustomElement {
         token: &String,
         start_index: &Option<usize>,
         max_results: &Option<usize>,
-    ) -> HtmlElement {
+    ) -> Element {
         let bq_table_custom_element =
             crate::createElement(&super::CustomElement::BqTable.to_string());
 
@@ -142,7 +142,7 @@ impl BigqueryTableCustomElement {
         let element = event
             .target()
             .unwrap()
-            .dyn_into::<web_sys::HtmlElement>()
+            .dyn_into::<web_sys::Element>()
             .unwrap();
 
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
@@ -159,7 +159,7 @@ impl BigqueryTableCustomElement {
             if let Some(response) = response {
                 response.plot_table(&element);
             } else {
-                element.set_inner_text(&format!("unexpected response: {:?}", response));
+                element.set_inner_html(&format!("unexpected response: {:?}", response));
             }
         });
     }

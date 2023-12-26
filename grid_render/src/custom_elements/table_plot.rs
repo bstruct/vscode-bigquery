@@ -1,5 +1,5 @@
 use serde_json::Value;
-use web_sys::{HtmlElement, ShadowRoot};
+use web_sys::{Element, ShadowRoot};
 
 // //number of high level rows that 
 // const PAGE_SIZE: usize = 50;
@@ -53,7 +53,7 @@ impl TableItem {
 
 pub(crate) fn render_table(
     show_controls: bool,
-    element: &HtmlElement,
+    element: &Element,
     header: &Vec<String>,
     rows: &Vec<Vec<Option<TableItem>>>,
     number_of_rows_total: usize,
@@ -81,7 +81,7 @@ pub(crate) fn render_table(
     render_html_table(&shadow, header, rows);
 }
 
-fn shadow_init(element: &HtmlElement) -> ShadowRoot {
+fn shadow_init(element: &Element) -> ShadowRoot {
     let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
     let shadow = element.attach_shadow(&shadow_init).unwrap();
 
@@ -195,20 +195,20 @@ fn append_header_columns(row: &web_sys::Element, column_headers: &Vec<String>) {
     }
 }
 
-fn create_cell(column_header: bool) -> web_sys::HtmlElement {
+fn create_cell(column_header: bool) -> web_sys::Element {
     match column_header {
         true => crate::createElement("th"),
         false => crate::createElement("td"),
     }
 }
 
-fn create_cell_with_text(column_header: bool, inner_html: &str) -> web_sys::HtmlElement {
+fn create_cell_with_text(column_header: bool, inner_html: &str) -> web_sys::Element {
     let cell = create_cell(column_header);
     cell.set_inner_html(inner_html);
     cell
 }
 
-fn create_cell_with_table_item(table_item: &Option<TableItem>) -> web_sys::HtmlElement {
+fn create_cell_with_table_item(table_item: &Option<TableItem>) -> web_sys::Element {
     let cell = create_cell(false);
     if table_item.is_some() {
         let table_item = &table_item.as_ref().unwrap().clone();

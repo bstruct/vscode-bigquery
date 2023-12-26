@@ -3,7 +3,7 @@ use crate::{bigquery::jobs::TableFieldSchema, parse_to_usize};
 use super::table_plot::{render_table, TableItem};
 
 impl crate::bigquery::jobs::GetQueryResultsResponse {
-    pub fn plot_table(&self, element: &web_sys::HtmlElement) {
+    pub fn plot_table(&self, element: &web_sys::Element) {
         if self.schema.is_some() {
             let schema = self.schema.as_ref().unwrap();
 
