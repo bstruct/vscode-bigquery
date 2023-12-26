@@ -14,7 +14,7 @@ pub(crate) struct BigqueryTableCustomElement {
     token: String,
     start_index: Option<usize>,
     max_results: Option<usize>,
-    html_element: Box<Element>,
+    element: Box<Element>,
 }
 
 impl CustomElementDefinition for BigqueryTableCustomElement {
@@ -37,10 +37,10 @@ impl CustomElementDefinition for BigqueryTableCustomElement {
 }
 
 impl BigqueryTableCustomElement {
-    pub(crate) fn new_html_element_from_job(token: &String, job: &Job) -> BigqueryTableCustomElement {
+    pub(crate) fn from_job(token: &String, job: &Job) -> BigqueryTableCustomElement {
         let job_reference = job.job_reference.as_ref().expect("job reference not found");
 
-        let element = BigqueryTableCustomElement::new_html_element(
+        let element = BigqueryTableCustomElement::new_element(
             &job_reference.job_id,
             &job_reference.project_id,
             &job_reference.location,
@@ -56,12 +56,12 @@ impl BigqueryTableCustomElement {
             token: token.clone(),
             start_index: Some(0),
             max_results: Some(50),
-            html_element: Box::new(element),
+            element: Box::new(element),
         }
 
     }
 
-    pub(crate) fn from_html_element(element: &Element) -> BigqueryTableCustomElement {
+    pub(crate) fn from_element(element: &Element) -> BigqueryTableCustomElement {
         let job_id = element.get_attribute("jobId").unwrap();
         let project_id = element.get_attribute("projectId").unwrap();
         let location = element.get_attribute("location").unwrap();
@@ -77,15 +77,15 @@ impl BigqueryTableCustomElement {
             token,
             start_index,
             max_results,
-            html_element: Box::new(element.to_owned()),
+            element: Box::new(element.to_owned()),
         }
     }
 
-    pub(crate) fn html_element(&self) -> &Box<Element> {
-        &self.html_element
+    pub(crate) fn element(&self) -> &Box<Element> {
+        &self.element
     }
 
-    fn new_html_element(
+    fn new_element(
         job_id: &String,
         project_id: &String,
         location: &String,
@@ -150,7 +150,7 @@ impl BigqueryTableCustomElement {
             element.id()
         )));
 
-        let bq_table_element = BigqueryTableCustomElement::from_html_element(&element);
+        let bq_table_element = BigqueryTableCustomElement::from_element(&element);
         let jobs = Jobs::new(&bq_table_element.token);
         let request = bq_table_element.as_query_results_request();
 

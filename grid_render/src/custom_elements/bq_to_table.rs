@@ -215,7 +215,7 @@ mod tests {
 
     #[test]
     pub fn calculate_number_rows_test_1() {
-        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = include_str!("test_resources/complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -227,7 +227,7 @@ mod tests {
 
     #[test]
     pub fn calculate_number_rows_test_2() {
-        let complex_object_array_test = include_str!("complex_object_array_test2.json");
+        let complex_object_array_test = include_str!("test_resources/complex_object_array_test2.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -239,7 +239,7 @@ mod tests {
 
     #[test]
     pub fn calculate_number_rows_test_3() {
-        let complex_object_array_test = include_str!("struct_json_test.json");
+        let complex_object_array_test = include_str!("test_resources/struct_json_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -251,7 +251,7 @@ mod tests {
 
     #[test]
     pub fn get_bq_table_header_test_1() {
-        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = include_str!("test_resources/complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -354,7 +354,7 @@ mod tests {
 
     #[test]
     pub fn get_bq_table_header_test_2() {
-        let complex_object_array_test = include_str!("complex_object_array_test2.json");
+        let complex_object_array_test = include_str!("test_resources/complex_object_array_test2.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -377,7 +377,7 @@ mod tests {
 
     #[test]
     pub fn get_bq_table_header_test_3() {
-        let complex_object_array_test = include_str!("struct_json_test.json");
+        let complex_object_array_test = include_str!("test_resources/struct_json_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -395,7 +395,7 @@ mod tests {
 
     #[test]
     fn place_bq_table_rows_test_1() {
-        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = include_str!("test_resources/complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -521,7 +521,7 @@ mod tests {
 
     #[test]
     fn place_bq_table_rows_test_2() {
-        let complex_object_array_test = include_str!("complex_object_array_test2.json");
+        let complex_object_array_test = include_str!("test_resources/complex_object_array_test2.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -563,7 +563,7 @@ mod tests {
 
     #[test]
     fn place_bq_table_rows_test_3() {
-        let complex_object_array_test = include_str!("struct_json_test.json");
+        let complex_object_array_test = include_str!("test_resources/struct_json_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -646,7 +646,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn plot_table_1() {
-        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = include_str!("test_resources/complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -667,7 +667,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn plot_table_twice() {
-        let complex_object_array_test = include_str!("complex_object_array_test.json");
+        let complex_object_array_test = include_str!("test_resources/complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
