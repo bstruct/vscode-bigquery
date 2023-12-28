@@ -1,8 +1,14 @@
-use crate::{bigquery::jobs::TableFieldSchema, parse_to_usize};
+use super::{
+    data_table_controls_element::DataTableControls,
+    data_table_element::{DataTable, DataTableItem},
+    data_table_shadow_element::DataTableShadow,
+};
+use crate::{
+    bigquery::jobs::{GetQueryResultsResponse, TableFieldSchema},
+    parse_to_usize,
+};
 
-use super::table_plot::{render_table, TableItem};
-
-impl crate::bigquery::jobs::GetQueryResultsResponse {
+impl GetQueryResultsResponse {
     pub fn plot_table(&self, element: &web_sys::Element) {
         if self.schema.is_some() {
             let schema = self.schema.as_ref().unwrap();
@@ -10,15 +16,25 @@ impl crate::bigquery::jobs::GetQueryResultsResponse {
             let header = &get_bq_table_header(&schema);
             let number_columns = header.len();
             let number_rows = calculate_number_rows(&self.rows);
+            let start_index = 0;
 
-            let mut rows: Vec<Vec<Option<TableItem>>> =
+            let mut rows: Vec<Vec<Option<DataTableItem>>> =
                 vec![vec![None; number_columns]; number_rows];
 
             place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
 
             let number_of_rows_total = parse_to_usize(Some(self.total_rows.clone())).unwrap();
 
-            render_table(true, element, header, &rows, number_of_rows_total);
+            let shadow_root = &DataTableShadow::init_shadow(element);
+
+            DataTableControls::render_control(
+                shadow_root,
+                number_rows,
+                number_of_rows_total,
+                start_index,
+            );
+
+            DataTable::render_table(shadow_root, header, &rows);
             // console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));
         }
     }
@@ -69,7 +85,7 @@ fn append_bq_table_header(
 }
 
 fn place_bq_table_rows(
-    rows: &mut Vec<Vec<Option<TableItem>>>,
+    rows: &mut Vec<Vec<Option<DataTableItem>>>,
     schema_fields: &Vec<crate::bigquery::jobs::TableFieldSchema>,
     data_rows: &Vec<serde_json::Value>,
     array_row_index: usize,
@@ -99,7 +115,7 @@ fn place_bq_table_rows(
         //index column
         if include_index_column {
             rows[array_row_index + array_row_increment][array_col_index + array_col_increment] =
-                Some(TableItem::new_main_index(data_row_index + 1));
+                Some(DataTableItem::new_main_index(data_row_index + 1));
             array_col_increment += 1;
         }
 
@@ -155,7 +171,7 @@ fn place_bq_table_rows(
                 } else {
                     rows[array_row_index + array_row_increment]
                         [array_col_index + array_col_increment] =
-                        Some(TableItem::from_value(&value));
+                        Some(DataTableItem::from_value(&value));
                     array_col_increment += 1;
                 }
             }
@@ -208,14 +224,15 @@ fn calculate_number_rows(data_rows: &Vec<serde_json::Value>) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use crate::custom_elements::table_plot::TableItem;
+    use crate::custom_elements::data_table_element::DataTableItem;
     use wasm_bindgen_test::*;
 
     wasm_bindgen_test_configure!(run_in_browser);
 
     #[test]
     pub fn calculate_number_rows_test_1() {
-        let complex_object_array_test = include_str!("test_resources/complex_object_array_test.json");
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -227,7 +244,8 @@ mod tests {
 
     #[test]
     pub fn calculate_number_rows_test_2() {
-        let complex_object_array_test = include_str!("test_resources/complex_object_array_test2.json");
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test2.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -251,7 +269,8 @@ mod tests {
 
     #[test]
     pub fn get_bq_table_header_test_1() {
-        let complex_object_array_test = include_str!("test_resources/complex_object_array_test.json");
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -354,7 +373,8 @@ mod tests {
 
     #[test]
     pub fn get_bq_table_header_test_2() {
-        let complex_object_array_test = include_str!("test_resources/complex_object_array_test2.json");
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test2.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -395,7 +415,8 @@ mod tests {
 
     #[test]
     fn place_bq_table_rows_test_1() {
-        let complex_object_array_test = include_str!("test_resources/complex_object_array_test.json");
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -405,7 +426,8 @@ mod tests {
             &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
         let number_columns = header.len();
         let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
-        let mut rows: Vec<Vec<Option<TableItem>>> = vec![vec![None; number_columns]; number_rows];
+        let mut rows: Vec<Vec<Option<DataTableItem>>> =
+            vec![vec![None; number_columns]; number_rows];
 
         super::place_bq_table_rows(
             &mut rows,
@@ -521,7 +543,8 @@ mod tests {
 
     #[test]
     fn place_bq_table_rows_test_2() {
-        let complex_object_array_test = include_str!("test_resources/complex_object_array_test2.json");
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test2.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -531,7 +554,8 @@ mod tests {
             &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
         let number_columns = header.len();
         let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
-        let mut rows: Vec<Vec<Option<TableItem>>> = vec![vec![None; number_columns]; number_rows];
+        let mut rows: Vec<Vec<Option<DataTableItem>>> =
+            vec![vec![None; number_columns]; number_rows];
 
         super::place_bq_table_rows(
             &mut rows,
@@ -573,7 +597,8 @@ mod tests {
             &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
         let number_columns = header.len();
         let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
-        let mut rows: Vec<Vec<Option<TableItem>>> = vec![vec![None; number_columns]; number_rows];
+        let mut rows: Vec<Vec<Option<DataTableItem>>> =
+            vec![vec![None; number_columns]; number_rows];
 
         super::place_bq_table_rows(
             &mut rows,
@@ -623,7 +648,6 @@ mod tests {
         assert!(!v.is_null);
         assert!(v.value.as_ref().unwrap().len() > 100);
 
-
         let v = rows[49][0].clone().unwrap();
         assert!(v.is_index);
         assert_eq!(v.value.unwrap(), "50");
@@ -641,12 +665,12 @@ mod tests {
         assert!(!v.is_index);
         assert!(!v.is_null);
         assert!(v.value.as_ref().unwrap().len() > 100);
-
     }
 
     #[wasm_bindgen_test]
     fn plot_table_1() {
-        let complex_object_array_test = include_str!("test_resources/complex_object_array_test.json");
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)
@@ -667,7 +691,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn plot_table_twice() {
-        let complex_object_array_test = include_str!("test_resources/complex_object_array_test.json");
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
         >(complex_object_array_test)

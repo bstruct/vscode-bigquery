@@ -1,4 +1,4 @@
-use crate::custom_elements::table_plot::{render_table, TableItem};
+use crate::custom_elements::{data_table_element::{DataTableItem, DataTable}, data_table_shadow_element::DataTableShadow};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -21,18 +21,16 @@ pub struct ExternalRequest {
 
 impl ExternalRequestError {
     pub fn plot_table(&self, element: &web_sys::Element) {
-        let header = &[
-            "message".to_string(),
-            "reason".to_string(),
-        ]
-        .to_vec();
+        let header = &["message".to_string(), "reason".to_string()].to_vec();
         let rows = [[
-            Some(TableItem::from_string(&self.message)),
-            Some(TableItem::from_string(&self.reason)),
+            Some(DataTableItem::from_string(&self.message)),
+            Some(DataTableItem::from_string(&self.reason)),
         ]
         .to_vec()]
         .to_vec();
 
-        render_table(false, element, header, &rows, 1);
+        let shadow_root = &DataTableShadow::init_shadow(element);
+
+        DataTable::render_table(shadow_root, header, &rows);
     }
 }
