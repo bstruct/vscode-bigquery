@@ -1,4 +1,6 @@
-use web_sys::ShadowRoot;
+use web_sys::{Element, ShadowRoot};
+
+use super::base_element::BaseElement;
 
 pub(crate) struct DataTableControls;
 
@@ -62,3 +64,41 @@ impl DataTableControls {
         div.append_child(&button).unwrap();
     }
 }
+
+fn create_self(parent_element: &Element) {
+
+
+    BaseElement::new_and_append(parent_element, "div", "controls-background")
+        .append_child("div", "controls")
+        .append_child("span", "paging")
+        ;
+
+}
+
+// #[cfg(test)]
+// mod tests {
+//     use wasm_bindgen_test::*;
+
+//     use super::create_self;
+
+//     wasm_bindgen_test_configure!(run_in_browser);
+
+//     #[wasm_bindgen_test]
+//     fn generate_html() {
+      
+//         let element = &crate::createElement("div");
+
+//         create_self(element);
+
+//         assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>");
+
+//         create_self(element);
+
+//         assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>");
+
+//         create_self(element);
+
+//         assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>");
+
+//     }
+// }
