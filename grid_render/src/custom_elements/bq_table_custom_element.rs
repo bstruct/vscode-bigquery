@@ -19,7 +19,6 @@ pub(crate) struct BigqueryTableCustomElement {
 
 impl CustomElementDefinition for BigqueryTableCustomElement {
     fn define(_document: &web_sys::Document, element: &web_sys::Element) {
-        // element.add_event_listener_with_callback("type_", listener)
 
         let on_event_type_closure =
             Closure::wrap(Box::new(BigqueryTableCustomElement::on_render_table)

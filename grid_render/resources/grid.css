@@ -1,4 +1,4 @@
-div#controls-background {
+div[be_id='controls-background'] {
     position: fixed;
     top: 0;
     left: 0;
@@ -7,7 +7,7 @@ div#controls-background {
     height: 30px;
 }
 
-div#controls {
+div[be_id='controls']{
     top: 0;
     left: 0;
     position: fixed;
@@ -16,7 +16,7 @@ div#controls {
     width: 100%; */
 }
 
-div#controls span {
+div[be_id='controls'] span {
     padding: 5px 10px;
     display: inline-block;
     /* background-color: var(--button-secondary-background);
@@ -24,11 +24,11 @@ div#controls span {
     margin-right: 5px;
 }
 
-div#controls button {
+div[be_id='controls'] button {
     margin-right: 5px;
 }
 
-div#controls span.button {
+div[be_id='controls'] span.button {
     cursor: pointer;
     min-width: 80px;
     text-align: center;

@@ -1,5 +1,6 @@
 use super::base_element::BaseElement;
-use web_sys::ShadowRoot;
+use wasm_bindgen::{closure::Closure, JsCast};
+use web_sys::{Element, ShadowRoot};
 
 pub(crate) struct DataTableControls {
     page_start_index: usize,
@@ -40,7 +41,6 @@ impl DataTableControls {
 }
 
 fn modify_controls(base_element: &BaseElement, values: Option<&DataTableControls>) {
-
     let rows_in_page = values.unwrap().rows_in_page;
     let rows_total = values.unwrap().rows_total;
     let page_start_index = values.unwrap().page_start_index;
@@ -55,19 +55,50 @@ fn modify_controls(base_element: &BaseElement, values: Option<&DataTableControls
             ));
         }
         BTN_FIRST_PAGE => {
-            base_element.element().set_inner_html("<< First page");
+            let element = base_element.element();
+            add_event_listener(element);
+            element.set_inner_html("<< First page");
         }
         BTN_PREV_PAGE => {
-            base_element.element().set_inner_html("< Previous page");
+            let element = base_element.element();
+            add_event_listener(element);
+            element.set_inner_html("< Previous page");
         }
         BTN_NEXT_PAGE => {
-            base_element.element().set_inner_html("> Next page");
+            let element = base_element.element();
+            add_event_listener(element);
+            element.set_inner_html("> Next page");
         }
         BTN_LAST_PAGE => {
-            base_element.element().set_inner_html(">> Last page");
+            let element = base_element.element();
+            add_event_listener(element);
+            element.set_inner_html(">> Last page");
         }
         _ => {}
     }
+}
+
+fn add_event_listener(element: &Box<Element>) {
+    let on_event_type_closure = Closure::wrap(Box::new(on_click) as Box<dyn Fn(&web_sys::Event)>);
+
+    element
+        .add_event_listener_with_callback("click", on_event_type_closure.as_ref().unchecked_ref())
+        .unwrap();
+
+    on_event_type_closure.forget();
+}
+
+fn on_click(event: &web_sys::Event) {
+    let element = event
+        .target()
+        .unwrap()
+        .dyn_into::<web_sys::Element>()
+        .unwrap();
+
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        "on_click event on element: {:?}",
+        element.id()
+    )));
 }
 
 #[cfg(test)]
@@ -97,6 +128,5 @@ mod tests {
         DataTableControls::new(30, 10, 100).render_control(parent_element);
 
         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">31 - 40 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
-
     }
 }

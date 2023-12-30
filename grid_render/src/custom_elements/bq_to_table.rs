@@ -9,7 +9,7 @@ use crate::{
 };
 
 impl GetQueryResultsResponse {
-    pub fn plot_table(&self, element: &web_sys::Element) {
+    pub fn plot_table(&self, parent_element: &web_sys::Element) {
         if self.schema.is_some() {
             let schema = self.schema.as_ref().unwrap();
 
@@ -25,7 +25,7 @@ impl GetQueryResultsResponse {
 
             let number_of_rows_total = parse_to_usize(Some(self.total_rows.clone())).unwrap();
 
-            let shadow_root = &DataTableShadow::init_shadow(element);
+            let shadow_root = &DataTableShadow::init_shadow(parent_element);
 
             DataTableControls::new(start_index, number_rows, number_of_rows_total)
                 .render_control(shadow_root);
