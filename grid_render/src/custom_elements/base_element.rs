@@ -1,3 +1,5 @@
+
+use serde::de::value;
 use web_sys::Element;
 
 pub(crate) struct BaseElement {
@@ -33,7 +35,7 @@ impl BaseElement {
             element: Box::new(element.to_owned()),
         }
     }
-   
+
     pub fn from(element: &Element) -> BaseElement {
         let id = element.get_attribute("be_id").expect("not a base element");
         BaseElement {
@@ -41,21 +43,61 @@ impl BaseElement {
             element: Box::new(element.to_owned()),
         }
     }
-   
+
     pub fn append_child(&self, tag_name: &str, base_element_id: &str) -> BaseElement {
-        BaseElement::append(&self, tag_name, base_element_id, true)
+        BaseElement::append(
+            &self,
+            tag_name,
+            base_element_id,
+            &|| self.element.first_element_child(),
+            &|| self.element.to_owned(),
+        )
+    }
+
+    pub fn append_child_f<T>(&self, 
+        tag_name: &str, 
+        base_element_id: &str,
+        funct: &dyn Fn(&BaseElement, T),
+        value:T
+    ) -> BaseElement {
+
+
+        funct(self, value);
+
+
+        BaseElement::append(
+            &self,
+            tag_name,
+            base_element_id,
+            &|| self.element.first_element_child(),
+            &|| self.element.to_owned(),
+        )
     }
 
     pub fn append_sibling(&self, tag_name: &str, base_element_id: &str) -> BaseElement {
-        BaseElement::append(&self, tag_name, base_element_id, false)
+        BaseElement::append(
+            &self,
+            tag_name,
+            base_element_id,
+            &|| self.element.next_element_sibling(),
+            &|| {
+                Box::new(
+                    self.element
+                        .parent_element()
+                        .expect("parent element not found"),
+                )
+            },
+        )
     }
- 
-    fn append(&self, tag_name: &str, base_element_id: &str, is_child: bool) -> BaseElement {
-        let fetched_element = match is_child {
-            true => self.element.first_element_child(),
-            false => self.element.next_element_sibling(),
-        };
-        if let Some(existing_element) = fetched_element {
+
+    fn append(
+        &self,
+        tag_name: &str,
+        base_element_id: &str,
+        get_element: &dyn Fn() -> Option<Element>,
+        get_parent: &dyn Fn() -> Box<Element>,
+    ) -> BaseElement {
+        if let Some(existing_element) = get_element() {
             let existing_element_be_id = existing_element
                 .get_attribute("be_id")
                 .expect("not a base element");
@@ -65,15 +107,7 @@ impl BaseElement {
             BaseElement::from(&existing_element)
         } else {
             let new_element = BaseElement::new(tag_name, base_element_id);
-            if is_child {
-                self.element.append_child(&new_element.element).unwrap();
-            } else {
-                self.element
-                    .parent_element()
-                    .unwrap()
-                    .append_child(&new_element.element)
-                    .unwrap();
-            }
+            get_parent().append_child(&new_element.element).unwrap();
             new_element
         }
     }
@@ -81,7 +115,7 @@ impl BaseElement {
 
 #[cfg(test)]
 mod tests {
-    use wasm_bindgen_test::*;
+    use wasm_bindgen_test::{*, __rt::__wbgtest_console_info};
 
     use crate::custom_elements::base_element::BaseElement;
 
@@ -89,29 +123,31 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn generate_html_1() {
+        let expected_output = "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>";
         let element = &crate::createElement("div");
 
         BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging");
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>");
+        assert_eq!(&element.outer_html(), expected_output);
 
         BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging");
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>");
+        assert_eq!(&element.outer_html(), expected_output);
 
         BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging");
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>");
+        assert_eq!(&element.outer_html(), expected_output);
     }
 
     #[wasm_bindgen_test]
     fn generate_html_2() {
+        let expected_output = "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span><button be_id=\"btn_first_page\"></button></div></div></div>";
         let element = &crate::createElement("div");
 
         BaseElement::new_and_append(element, "div", "controls-background")
@@ -119,53 +155,91 @@ mod tests {
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page");
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span><button be_id=\"btn_first_page\"></button></div></div></div>");
+        assert_eq!(&element.outer_html(), expected_output);
 
         BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page");
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span><button be_id=\"btn_first_page\"></button></div></div></div>");
+        assert_eq!(&element.outer_html(), expected_output);
 
         BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page");
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span><button be_id=\"btn_first_page\"></button></div></div></div>");
+        assert_eq!(&element.outer_html(), expected_output);
     }
 
     #[wasm_bindgen_test]
     fn generate_html_3() {
+        let expected_output = "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span><button be_id=\"btn_first_page\"></button><button be_id=\"btn_previous_page\"></button></div></div></div>";
         let element = &crate::createElement("div");
 
         BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page")
-            .append_sibling("button", "btn_previous_page")
-            ;
+            .append_sibling("button", "btn_previous_page");
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span><button be_id=\"btn_first_page\"></button><button be_id=\"btn_previous_page\"></button></div></div></div>");
-
-        BaseElement::new_and_append(element, "div", "controls-background")
-            .append_child("div", "controls")
-            .append_child("span", "paging")
-            .append_sibling("button", "btn_first_page")
-            .append_sibling("button", "btn_previous_page")
-            ;
-
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span><button be_id=\"btn_first_page\"></button><button be_id=\"btn_previous_page\"></button></div></div></div>");
+        assert_eq!(&element.outer_html(), expected_output);
 
         BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page")
-            .append_sibling("button", "btn_previous_page")
-            ;
+            .append_sibling("button", "btn_previous_page");
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span><button be_id=\"btn_first_page\"></button><button be_id=\"btn_previous_page\"></button></div></div></div>");
+        assert_eq!(&element.outer_html(), expected_output);
 
+        BaseElement::new_and_append(element, "div", "controls-background")
+            .append_child("div", "controls")
+            .append_child("span", "paging")
+            .append_sibling("button", "btn_first_page")
+            .append_sibling("button", "btn_previous_page");
+
+        assert_eq!(&element.outer_html(), expected_output);
+    }
+
+
+    #[wasm_bindgen_test]
+    fn generate_html_with_function_1() {
+        // let expected_output = "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>";
+        let element = &crate::createElement("div");
+
+
+        let test_number = 1;
+
+
+        let test_f = &|base_element: &BaseElement, number: i32| {
+            base_element.element.set_inner_html(&format!("{}", number));
+        };
+
+
+
+        BaseElement::new_and_append(element, "div", "controls-background")
+            .append_child("div", "controls")
+            .append_child_f("span", "paging", test_f, test_number);
+
+
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                ": {:?}",
+                &element.outer_html()
+            )));
+
+        // assert_eq!(&element.outer_html(), expected_output);
+
+        // BaseElement::new_and_append(element, "div", "controls-background")
+        //     .append_child("div", "controls")
+        //     .append_child("span", "paging");
+
+        // assert_eq!(&element.outer_html(), expected_output);
+
+        // BaseElement::new_and_append(element, "div", "controls-background")
+        //     .append_child("div", "controls")
+        //     .append_child("span", "paging");
+
+        // assert_eq!(&element.outer_html(), expected_output);
     }
 }
