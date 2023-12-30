@@ -1,7 +1,7 @@
 use super::{
     data_table_controls_element::DataTableControls,
     data_table_element::{DataTable, DataTableItem},
-    data_table_shadow_element::DataTableShadow,
+    data_table_shadow_element::DataTableShadow, base_element::BaseElement,
 };
 use crate::{
     bigquery::jobs::{GetQueryResultsResponse, TableFieldSchema},
@@ -24,6 +24,11 @@ impl GetQueryResultsResponse {
             place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
 
             let number_of_rows_total = parse_to_usize(Some(self.total_rows.clone())).unwrap();
+
+
+            // BaseElement::new
+
+
 
             let shadow_root = &DataTableShadow::init_shadow(parent_element);
 
