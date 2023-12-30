@@ -1,104 +1,99 @@
-use web_sys::{Element, ShadowRoot};
-
 use super::base_element::BaseElement;
+use web_sys::ShadowRoot;
 
-pub(crate) struct DataTableControls;
+pub(crate) struct DataTableControls {
+    page_start_index: usize,
+    rows_in_page: usize,
+    rows_total: usize,
+}
+
+const PAGING: &str = "paging";
+const BTN_FIRST_PAGE: &str = "btn_first_page";
+const BTN_PREV_PAGE: &str = "btn_prev_page";
+const BTN_NEXT_PAGE: &str = "btn_next_page";
+const BTN_LAST_PAGE: &str = "btn_last_page";
 
 impl DataTableControls {
-    pub(crate) fn render_control(
-        shadow: &ShadowRoot,
-        number_of_rows_in_batch: usize,
-        number_of_rows_total: usize,
-        start_index: usize,
-    ) {
-        // let row_count = number_of_rows_in_batch;
-        // let total_rows = crate::parse_to_usize(Some(query_response.total_rows.to_owned())).unwrap_or_default();
+    pub(crate) fn new(
+        page_start_index: usize,
+        rows_in_page: usize,
+        rows_total: usize,
+    ) -> DataTableControls {
+        DataTableControls {
+            page_start_index,
+            rows_in_page,
+            rows_total,
+        }
+    }
 
-        // control"s background div
-        let div = crate::createElement("div");
-        div.set_id("controls-background");
-        shadow.append_child(&div).unwrap();
+    pub(crate) fn render_control(&self, parent_element: &ShadowRoot) {
+        let parameter_1 = Some(self);
 
-        // control"s div
-        let div = crate::createElement("div");
-        div.set_id("controls");
-        shadow.append_child(&div).unwrap();
-
-        //span for page information
-        let span_page_information = crate::createElement("span");
-        span_page_information.set_id("paging");
-        span_page_information.set_inner_html(&format!(
-            "{} - {} of {}",
-            start_index + 1,
-            start_index + number_of_rows_in_batch,
-            number_of_rows_total
-        ));
-        div.append_child(&span_page_information).unwrap();
-
-        //first page
-        let button = crate::createElement("button");
-        button.set_inner_html("<< First page");
-        // button.set_class_name("button");
-        button.set_id("btn_first_page");
-        div.append_child(&button).unwrap();
-
-        // previous page
-        let button = crate::createElement("button");
-        button.set_inner_html("< Previous page");
-        // button.set_class_name("button");
-        button.set_id("btn_first_page");
-        div.append_child(&button).unwrap();
-
-        //next page
-        let button = crate::createElement("button");
-        button.set_inner_html("> Next page");
-        // button.set_class_name("button");
-        button.set_id("btn_next_page");
-        div.append_child(&button).unwrap();
-
-        // last page
-        let button = crate::createElement("button");
-        button.set_inner_html(">> Last page");
-        // button.set_class_name("button");
-        button.set_id("btn_last_page");
-        div.append_child(&button).unwrap();
+        BaseElement::new_and_shadow_append(parent_element, "div", "controls-background")
+            .append_child("div", "controls")
+            .append_child_fn("span", PAGING, &modify_controls, parameter_1)
+            .append_sibling_fn("button", BTN_FIRST_PAGE, &modify_controls, parameter_1)
+            .append_sibling_fn("button", BTN_PREV_PAGE, &modify_controls, parameter_1)
+            .append_sibling_fn("button", BTN_NEXT_PAGE, &modify_controls, parameter_1)
+            .append_sibling_fn("button", BTN_LAST_PAGE, &modify_controls, parameter_1);
     }
 }
 
-fn create_self(parent_element: &Element) {
+fn modify_controls(base_element: &BaseElement, values: Option<&DataTableControls>) {
 
+    let rows_in_page = values.unwrap().rows_in_page;
+    let rows_total = values.unwrap().rows_total;
+    let page_start_index = values.unwrap().page_start_index;
 
-    BaseElement::new_and_append(parent_element, "div", "controls-background")
-        .append_child("div", "controls")
-        .append_child("span", "paging")
-        ;
-
+    match base_element.id().as_str() {
+        PAGING => {
+            base_element.element().set_inner_html(&format!(
+                "{} - {} of {}",
+                page_start_index + 1,
+                page_start_index + rows_in_page,
+                rows_total
+            ));
+        }
+        BTN_FIRST_PAGE => {
+            base_element.element().set_inner_html("<< First page");
+        }
+        BTN_PREV_PAGE => {
+            base_element.element().set_inner_html("< Previous page");
+        }
+        BTN_NEXT_PAGE => {
+            base_element.element().set_inner_html("> Next page");
+        }
+        BTN_LAST_PAGE => {
+            base_element.element().set_inner_html(">> Last page");
+        }
+        _ => {}
+    }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use wasm_bindgen_test::*;
+#[cfg(test)]
+mod tests {
+    use super::DataTableControls;
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
 
-//     use super::create_self;
+    #[wasm_bindgen_test]
+    fn generate_html() {
+        let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
+        let element = &crate::createElement("div");
+        let parent_element = &element.attach_shadow(&shadow_init).unwrap();
 
-//     wasm_bindgen_test_configure!(run_in_browser);
+        DataTableControls::new(0, 10, 100).render_control(parent_element);
 
-//     #[wasm_bindgen_test]
-//     fn generate_html() {
-      
-//         let element = &crate::createElement("div");
+        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        //     "data_table_controls_element: {:?}",
+        //     &parent_element.inner_html()
+        // )));
 
-//         create_self(element);
+        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">1 - 10 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
 
-//         assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>");
+        DataTableControls::new(10, 10, 100).render_control(parent_element);
 
-//         create_self(element);
+        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">11 - 20 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
 
-//         assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>");
-
-//         create_self(element);
-
-//         assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>");
-
-//     }
-// }
+    }
+}

@@ -27,12 +27,8 @@ impl GetQueryResultsResponse {
 
             let shadow_root = &DataTableShadow::init_shadow(element);
 
-            DataTableControls::render_control(
-                shadow_root,
-                number_rows,
-                number_of_rows_total,
-                start_index,
-            );
+            DataTableControls::new(start_index, number_rows, number_of_rows_total)
+                .render_control(shadow_root);
 
             DataTable::render_table(shadow_root, header, &rows);
             // console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));
