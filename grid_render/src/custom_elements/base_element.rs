@@ -21,7 +21,7 @@ impl BaseElement {
         base_element_id: &str,
     ) -> BaseElement {
         BaseElement::new_and_append(
-            &|selectors: &str| element.query_selector(selectors),
+            &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
             &|node: &Node| element.append_child(node),
             tag_name,
             base_element_id,
@@ -34,7 +34,7 @@ impl BaseElement {
         base_element_id: &str,
     ) -> BaseElement {
         BaseElement::new_and_append(
-            &|selectors: &str| element.query_selector(selectors),
+            &|| element.query_selector(&format!(":scope > [be_id='{0}']", base_element_id)),
             &|node: &Node| element.append_child(node),
             tag_name,
             base_element_id,
@@ -42,13 +42,12 @@ impl BaseElement {
     }
 
     fn new_and_append(
-        query_selector: &dyn Fn(&str) -> Result<Option<Element>, JsValue>,
+        query_selector: &dyn Fn() -> Result<Option<Element>, JsValue>,
         append_child: &dyn Fn(&Node) -> Result<Node, JsValue>,
         tag_name: &str,
         base_element_id: &str,
     ) -> BaseElement {
-        let query = &format!(":scope > [be_id='{0}']", base_element_id);
-        let existing_element = query_selector(query);
+        let existing_element = query_selector();
 
         assert!(existing_element.is_ok());
 
@@ -388,16 +387,15 @@ mod tests {
             .append_child("div", "c3")
             ;
 
-            //https://drafts.csswg.org/selectors-4/#the-scope-pseudo
-
-            let c0 = parent_element.parent_element().unwrap().query_selector("*::shadow > [be_id='c0']").unwrap();
+            //https://chromium.googlesource.com/chromium/blink/+/36dc1140906c0a8dc074df283029cb9d6ade46a9/LayoutTests/fast/dom/shadow/querySelector-with-shadow-all-and-shadow-deep.html#53
+            let c0 = parent_element.query_selector(":host > [be_id='c0']").unwrap();
             assert!(c0.is_some());
-            // let c1 = parent_element.query_selector(":scope > [be_id='c1']").unwrap();
-            // assert!(!c1.is_some());
-            // let c2 = parent_element.query_selector("[be_id='c2']").unwrap();
-            // assert!(c2.is_some());
-            // let c3 = parent_element.query_selector("[be_id='c3']").unwrap();
-            // assert!(c3.is_some());
+            let c1 = parent_element.query_selector(":host > [be_id='c1']").unwrap();
+            assert!(!c1.is_some());
+            let c2 = parent_element.query_selector(":host > [be_id='c2']").unwrap();
+            assert!(!c2.is_some());
+            let c3 = parent_element.query_selector(":host > [be_id='c3']").unwrap();
+            assert!(!c3.is_some());
 
     }
 }
