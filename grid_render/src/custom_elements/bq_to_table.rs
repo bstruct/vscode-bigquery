@@ -664,28 +664,6 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    fn plot_table_1() {
-        let complex_object_array_test =
-            include_str!("test_resources/complex_object_array_test.json");
-        let complex_object_array_test = &serde_json::from_str::<
-            crate::bigquery::jobs::GetQueryResultsResponse,
-        >(complex_object_array_test)
-        .unwrap();
-
-        let element = &crate::createElement("div");
-
-        complex_object_array_test.plot_table(element);
-
-        assert!(element.shadow_root().is_some());
-        assert!(element.shadow_root().unwrap().has_child_nodes());
-
-        let table = element.shadow_root().unwrap().last_child();
-        assert!(table.is_some());
-        let table = table.unwrap();
-        assert_eq!(table.node_name(), "TABLE");
-    }
-
-    #[wasm_bindgen_test]
     fn plot_table_twice() {
         let complex_object_array_test =
             include_str!("test_resources/complex_object_array_test.json");
@@ -695,28 +673,45 @@ mod tests {
         .unwrap();
 
         let element = &crate::createElement("div");
-
         complex_object_array_test.plot_table(element);
 
         assert!(element.shadow_root().is_some());
         assert!(element.shadow_root().unwrap().has_child_nodes());
-        assert_eq!(element.shadow_root().unwrap().child_element_count(), 4);
+        assert_eq!(element.shadow_root().unwrap().child_element_count(), 3);
 
-        let table = element.shadow_root().unwrap().last_child();
-        assert!(table.is_some());
-        let table = table.unwrap();
-        assert_eq!(table.node_name(), "TABLE");
+        let child = element
+            .shadow_root()
+            .unwrap()
+            .first_element_child()
+            .unwrap();
+        assert_eq!(child.node_name(), "STYLE");
+
+        let child = child.next_element_sibling().unwrap();
+        assert_eq!(child.node_name(), "DIV");
+        assert_eq!(child.get_attribute("be_id").unwrap(), "controls-background");
+
+        let child = child.next_element_sibling().unwrap();
+        assert_eq!(child.node_name(), "TABLE");
 
         //second plot
         complex_object_array_test.plot_table(element);
 
         assert!(element.shadow_root().is_some());
         assert!(element.shadow_root().unwrap().has_child_nodes());
-        assert_eq!(element.shadow_root().unwrap().child_element_count(), 4);
+        assert_eq!(element.shadow_root().unwrap().child_element_count(), 3);
 
-        let table = element.shadow_root().unwrap().last_child();
-        assert!(table.is_some());
-        let table = table.unwrap();
-        assert_eq!(table.node_name(), "TABLE");
+        let child = element
+            .shadow_root()
+            .unwrap()
+            .first_element_child()
+            .unwrap();
+        assert_eq!(child.node_name(), "STYLE");
+
+        let child = child.next_element_sibling().unwrap();
+        assert_eq!(child.node_name(), "DIV");
+        assert_eq!(child.get_attribute("be_id").unwrap(), "controls-background");
+
+        let child = child.next_element_sibling().unwrap();
+        assert_eq!(child.node_name(), "TABLE");
     }
 }
