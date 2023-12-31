@@ -26,8 +26,7 @@
 Inside render
 
 ```
-    BaseElement::new("bq-table", "some_id")
-        .append_to_element(some_element)
+    BaseElement::new_and_append("bq-table", "some_id", some_element)
         .append_shadow()
         .append_child_style("some css path")
         .append_sibling_base_element(DataTableControls::new("some_id_1"))

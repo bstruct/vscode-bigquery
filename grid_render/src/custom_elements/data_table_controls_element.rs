@@ -1,4 +1,9 @@
-use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
+use crate::getElementById;
+
+use super::{
+    base_element::BaseElement, base_element_trait::BaseElementTrait,
+    bq_table_custom_element::BigqueryTableCustomElement,
+};
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::Element;
 
@@ -31,7 +36,7 @@ pub(crate) struct DataTableControls {
 
 const PAGING: &str = "paging";
 const BTN_FIRST_PAGE: &str = "btn_first_page";
-const BTN_PREV_PAGE: &str = "btn_prev_page";
+const BTN_PREVIOUS_PAGE: &str = "btn_prev_page";
 const BTN_NEXT_PAGE: &str = "btn_next_page";
 const BTN_LAST_PAGE: &str = "btn_last_page";
 
@@ -60,7 +65,7 @@ impl BaseElementTrait<DataTableControlsSettings> for DataTableControls {
             .append_child("div", "controls")
             .append_child_fn("span", PAGING, &modify_controls, parameter_1)
             .append_sibling_fn("button", BTN_FIRST_PAGE, &modify_controls, parameter_1)
-            .append_sibling_fn("button", BTN_PREV_PAGE, &modify_controls, parameter_1)
+            .append_sibling_fn("button", BTN_PREVIOUS_PAGE, &modify_controls, parameter_1)
             .append_sibling_fn("button", BTN_NEXT_PAGE, &modify_controls, parameter_1)
             .append_sibling_fn("button", BTN_LAST_PAGE, &modify_controls, parameter_1);
     }
@@ -89,7 +94,7 @@ fn modify_controls(base_element: &BaseElement, values: Option<&DataTableControls
             add_event_listener(element);
             element.set_inner_html("<< First page");
         }
-        BTN_PREV_PAGE => {
+        BTN_PREVIOUS_PAGE => {
             let element = base_element.element();
             add_event_listener(element);
             element.set_inner_html("< Previous page");
@@ -125,10 +130,26 @@ fn on_click(event: &web_sys::Event) {
         .dyn_into::<web_sys::Element>()
         .unwrap();
 
+    let base_element = BaseElement::from(&element);
+
     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
         "on_click event on element: {:?}",
-        element.id()
+        element.get_attribute("be_id").unwrap_or(element.id())
     )));
+
+    let bq_table = getElementById("test-1");
+
+    if let Some(bq_table) = bq_table {
+        let bq_table = BigqueryTableCustomElement::from_element(&bq_table);
+
+        match base_element.id().as_str() {
+            BTN_FIRST_PAGE => bq_table.first_page(),
+            BTN_PREVIOUS_PAGE => bq_table.previous_page(),
+            BTN_NEXT_PAGE => bq_table.next_page(),
+            BTN_LAST_PAGE => bq_table.last_page(),
+            _ => {}
+        };
+    }
 }
 
 #[cfg(test)]

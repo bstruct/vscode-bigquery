@@ -26,63 +26,34 @@ impl BaseElement {
             "base elements can only be appended to element nodes like `div` or `p` or shadow elements"
         );
 
-        if parent_element.node_type() == Node::DOCUMENT_FRAGMENT_NODE {
-            let element: DocumentFragment =
-                wasm_bindgen::JsCast::dyn_into(parent_element.value_of())
-                    .expect("unexpected error on casting Node to DocumentFragment");
+        match parent_element.node_type() {
+            Node::DOCUMENT_FRAGMENT_NODE => {
+                let element: DocumentFragment =
+                    wasm_bindgen::JsCast::dyn_into(parent_element.value_of())
+                        .expect("unexpected error on casting Node to DocumentFragment");
+    
+                BaseElement::new_and_append_internal(
+                    &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
+                    &|node: &Node| element.append_child(node),
+                    tag_name,
+                    base_element_id,
+                )
+            },
+            Node::ELEMENT_NODE => {
+                let element: Element = wasm_bindgen::JsCast::dyn_into(parent_element.value_of())
+                    .expect("unexpected error on casting Node to Element");
 
-            BaseElement::new_and_append_internal(
-                &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
-                &|node: &Node| element.append_child(node),
-                tag_name,
-                base_element_id,
-            )
-        } else {
-            let element: Element = wasm_bindgen::JsCast::dyn_into(parent_element.value_of())
-                .expect("unexpected error on casting Node to Element");
+                BaseElement::new_and_append_internal(
+                    &|| element.query_selector(&format!(":scope > [be_id='{0}']", base_element_id)),
+                    &|node: &Node| element.append_child(node),
+                    tag_name,
+                    base_element_id,
+                )
+            },
+            _ => panic!("base elements can only be appended to element nodes like `div` or `p` or shadow elements")
 
-            BaseElement::new_and_append_internal(
-                &|| element.query_selector(&format!(":scope > [be_id='{0}']", base_element_id)),
-                &|node: &Node| element.append_child(node),
-                tag_name,
-                base_element_id,
-            )
         }
-
-        // todo!()
-        // BaseElement::new_and_append(
-        //     &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
-        //     &|node: &Node| element.append_child(node),
-        //     tag_name,
-        //     base_element_id,
-        // )
     }
-
-    // pub(crate) fn new_and_shadow_append(
-    //     element: &ShadowRoot,
-    //     tag_name: &str,
-    //     base_element_id: &str,
-    // ) -> BaseElement {
-    //     BaseElement::new_and_append_internal(
-    //         &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
-    //         &|node: &Node| element.append_child(node),
-    //         tag_name,
-    //         base_element_id,
-    //     )
-    // }
-
-    // pub(crate) fn new_and_element_append(
-    //     element: &Element,
-    //     tag_name: &str,
-    //     base_element_id: &str,
-    // ) -> BaseElement {
-    //     BaseElement::new_and_append_internal(
-    //         &|| element.query_selector(&format!(":scope > [be_id='{0}']", base_element_id)),
-    //         &|node: &Node| element.append_child(node),
-    //         tag_name,
-    //         base_element_id,
-    //     )
-    // }
 
     fn new_and_append_internal(
         query_selector: &dyn Fn() -> Result<Option<Element>, JsValue>,

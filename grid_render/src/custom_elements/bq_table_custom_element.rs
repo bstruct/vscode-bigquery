@@ -1,6 +1,6 @@
 use super::custom_element_definition::CustomElementDefinition;
 use crate::{
-    bigquery::jobs::{GetQueryResultsRequest, Jobs, Job},
+    bigquery::jobs::{GetQueryResultsRequest, Job, Jobs},
     parse_to_usize,
 };
 use wasm_bindgen::{prelude::Closure, JsCast};
@@ -19,7 +19,6 @@ pub(crate) struct BigqueryTableCustomElement {
 
 impl CustomElementDefinition for BigqueryTableCustomElement {
     fn define(_document: &web_sys::Document, element: &web_sys::Element) {
-
         let on_event_type_closure =
             Closure::wrap(Box::new(BigqueryTableCustomElement::on_render_table)
                 as Box<dyn Fn(&web_sys::Event)>);
@@ -48,7 +47,7 @@ impl BigqueryTableCustomElement {
             &Some(50),
         );
 
-        BigqueryTableCustomElement{
+        BigqueryTableCustomElement {
             job_id: job_reference.job_id.clone(),
             project_id: job_reference.project_id.clone(),
             location: job_reference.location.clone(),
@@ -57,7 +56,6 @@ impl BigqueryTableCustomElement {
             max_results: Some(50),
             element: Box::new(element),
         }
-
     }
 
     pub(crate) fn from_element(element: &Element) -> BigqueryTableCustomElement {
@@ -133,7 +131,7 @@ impl BigqueryTableCustomElement {
             page_token: None,
             max_results: self.max_results.clone(),
             timeout_ms: None,
-            location: Some(self.location.clone())
+            location: Some(self.location.clone()),
         }
     }
 
@@ -161,5 +159,34 @@ impl BigqueryTableCustomElement {
                 element.set_inner_html(&format!("unexpected response: {:?}", response));
             }
         });
+    }
+
+    pub(crate) fn first_page(&self) {
+        self.element
+            .set_attribute("startIndex", "0").unwrap();
+    }
+
+    pub(crate) fn previous_page(&self) {
+        let start_index = parse_to_usize(self.element.get_attribute("startIndex")).unwrap_or(0);
+        let max_results = parse_to_usize(self.element.get_attribute("maxResults")).unwrap_or(50);
+
+        self.element
+            .set_attribute("startIndex", &format!("{0}", start_index - max_results)).unwrap();
+    }
+
+    pub(crate) fn next_page(&self) {
+        let start_index = parse_to_usize(self.element.get_attribute("startIndex")).unwrap_or(0);
+        let max_results = parse_to_usize(self.element.get_attribute("maxResults")).unwrap_or(50);
+
+        self.element
+            .set_attribute("startIndex", &format!("{0}", start_index + max_results)).unwrap();
+    }
+
+    pub(crate) fn last_page(&self) {
+        let start_index = parse_to_usize(self.element.get_attribute("startIndex")).unwrap_or(0);
+        let max_results = parse_to_usize(self.element.get_attribute("maxResults")).unwrap_or(50);
+
+        self.element
+            .set_attribute("startIndex", &format!("{0}", start_index + max_results)).unwrap();
     }
 }
