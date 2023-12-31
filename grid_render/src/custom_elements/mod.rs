@@ -5,6 +5,7 @@ mod bq_to_table;
 mod data_table_controls_element;
 pub(crate) mod data_table_shadow_element;
 mod base_element;
+mod base_element_trait;
 
 use self::custom_element_definition::CustomElementDefinition;
 use std::{error::Error, fmt, str::FromStr};

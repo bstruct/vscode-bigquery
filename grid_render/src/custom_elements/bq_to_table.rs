@@ -1,7 +1,8 @@
 use super::{
-    data_table_controls_element::DataTableControls,
+    base_element_trait::BaseElementTrait,
+    data_table_controls_element::{DataTableControls, DataTableControlsSettings},
     data_table_element::{DataTable, DataTableItem},
-    data_table_shadow_element::DataTableShadow, base_element::BaseElement,
+    data_table_shadow_element::DataTableShadow,
 };
 use crate::{
     bigquery::jobs::{GetQueryResultsResponse, TableFieldSchema},
@@ -25,15 +26,19 @@ impl GetQueryResultsResponse {
 
             let number_of_rows_total = parse_to_usize(Some(self.total_rows.clone())).unwrap();
 
-
             // BaseElement::new
-
-
 
             let shadow_root = &DataTableShadow::init_shadow(parent_element);
 
-            DataTableControls::new(start_index, number_rows, number_of_rows_total)
-                .render_control(shadow_root);
+            DataTableControls::new(
+                DataTableControls::BASE_ID,
+                &Some(DataTableControlsSettings::new(
+                    start_index,
+                    number_rows,
+                    number_of_rows_total,
+                )),
+            )
+            .render(shadow_root);
 
             DataTable::render_table(shadow_root, header, &rows);
             // console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));

@@ -1,5 +1,5 @@
 use wasm_bindgen::JsValue;
-use web_sys::{Element, Node, ShadowRoot};
+use web_sys::{DocumentFragment, Element, Node};
 
 pub(crate) struct BaseElement {
     id: String,
@@ -15,33 +15,76 @@ impl BaseElement {
         &self.element
     }
 
-    pub(crate) fn new_and_shadow_append(
-        element: &ShadowRoot,
+    pub(crate) fn new_and_append(
+        parent_element: &Node,
         tag_name: &str,
         base_element_id: &str,
     ) -> BaseElement {
-        BaseElement::new_and_append(
-            &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
-            &|node: &Node| element.append_child(node),
-            tag_name,
-            base_element_id,
-        )
+        assert!(
+            parent_element.node_type() == Node::DOCUMENT_FRAGMENT_NODE
+                || parent_element.node_type() == Node::ELEMENT_NODE,
+            "base elements can only be appended to element nodes like `div` or `p` or shadow elements"
+        );
+
+        if parent_element.node_type() == Node::DOCUMENT_FRAGMENT_NODE {
+            let element: DocumentFragment =
+                wasm_bindgen::JsCast::dyn_into(parent_element.value_of())
+                    .expect("unexpected error on casting Node to DocumentFragment");
+
+            BaseElement::new_and_append_internal(
+                &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
+                &|node: &Node| element.append_child(node),
+                tag_name,
+                base_element_id,
+            )
+        } else {
+            let element: Element = wasm_bindgen::JsCast::dyn_into(parent_element.value_of())
+                .expect("unexpected error on casting Node to Element");
+
+            BaseElement::new_and_append_internal(
+                &|| element.query_selector(&format!(":scope > [be_id='{0}']", base_element_id)),
+                &|node: &Node| element.append_child(node),
+                tag_name,
+                base_element_id,
+            )
+        }
+
+        // todo!()
+        // BaseElement::new_and_append(
+        //     &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
+        //     &|node: &Node| element.append_child(node),
+        //     tag_name,
+        //     base_element_id,
+        // )
     }
 
-    pub(crate) fn new_and_element_append(
-        element: &Element,
-        tag_name: &str,
-        base_element_id: &str,
-    ) -> BaseElement {
-        BaseElement::new_and_append(
-            &|| element.query_selector(&format!(":scope > [be_id='{0}']", base_element_id)),
-            &|node: &Node| element.append_child(node),
-            tag_name,
-            base_element_id,
-        )
-    }
+    // pub(crate) fn new_and_shadow_append(
+    //     element: &ShadowRoot,
+    //     tag_name: &str,
+    //     base_element_id: &str,
+    // ) -> BaseElement {
+    //     BaseElement::new_and_append_internal(
+    //         &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
+    //         &|node: &Node| element.append_child(node),
+    //         tag_name,
+    //         base_element_id,
+    //     )
+    // }
 
-    fn new_and_append(
+    // pub(crate) fn new_and_element_append(
+    //     element: &Element,
+    //     tag_name: &str,
+    //     base_element_id: &str,
+    // ) -> BaseElement {
+    //     BaseElement::new_and_append_internal(
+    //         &|| element.query_selector(&format!(":scope > [be_id='{0}']", base_element_id)),
+    //         &|node: &Node| element.append_child(node),
+    //         tag_name,
+    //         base_element_id,
+    //     )
+    // }
+
+    fn new_and_append_internal(
         query_selector: &dyn Fn() -> Result<Option<Element>, JsValue>,
         append_child: &dyn Fn(&Node) -> Result<Node, JsValue>,
         tag_name: &str,
@@ -54,13 +97,13 @@ impl BaseElement {
         if let Some(existing_element) = existing_element.unwrap() {
             BaseElement::from(&existing_element)
         } else {
-            let new_element = BaseElement::new(tag_name, base_element_id);
+            let new_element = BaseElement::create_element(tag_name, base_element_id);
             append_child(&new_element.element).unwrap();
             new_element
         }
     }
 
-    fn new(tag_name: &str, base_element_id: &str) -> BaseElement {
+    fn create_element(tag_name: &str, base_element_id: &str) -> BaseElement {
         let element = &crate::createElement(tag_name);
         element.set_attribute("be_id", base_element_id).unwrap();
         BaseElement {
@@ -171,7 +214,7 @@ impl BaseElement {
             }
             existing_element
         } else {
-            let new_element = BaseElement::new(tag_name, base_element_id);
+            let new_element = BaseElement::create_element(tag_name, base_element_id);
             get_parent().append_child(&new_element.element).unwrap();
             if let Some(element_fn) = element_fn {
                 element_fn(&new_element, fn_parameter);
@@ -194,19 +237,19 @@ mod tests {
         let expected_output = "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span></div></div></div>";
         let element = &crate::createElement("div");
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging");
 
         assert_eq!(&element.outer_html(), expected_output);
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging");
 
         assert_eq!(&element.outer_html(), expected_output);
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging");
 
@@ -218,21 +261,21 @@ mod tests {
         let expected_output = "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span><button be_id=\"btn_first_page\"></button></div></div></div>";
         let element = &crate::createElement("div");
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page");
 
         assert_eq!(&element.outer_html(), expected_output);
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page");
 
         assert_eq!(&element.outer_html(), expected_output);
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page");
@@ -245,7 +288,7 @@ mod tests {
         let expected_output = "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\"></span><button be_id=\"btn_first_page\"></button><button be_id=\"btn_previous_page\"></button></div></div></div>";
         let element = &crate::createElement("div");
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page")
@@ -253,7 +296,7 @@ mod tests {
 
         assert_eq!(&element.outer_html(), expected_output);
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page")
@@ -261,7 +304,7 @@ mod tests {
 
         assert_eq!(&element.outer_html(), expected_output);
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child("span", "paging")
             .append_sibling("button", "btn_first_page")
@@ -282,7 +325,7 @@ mod tests {
                 .set_inner_html(&format!("{}", number.unwrap_or(10)));
         };
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child_fn("span", "paging", test_f, test_number);
 
@@ -295,7 +338,7 @@ mod tests {
 
         let test_number = Some(2);
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child_fn("span", "paging", test_f, test_number);
 
@@ -303,7 +346,7 @@ mod tests {
 
         let test_number = Some(3);
 
-        BaseElement::new_and_element_append(element, "div", "controls-background")
+        BaseElement::new_and_append(element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child_fn("span", "paging", test_f, test_number);
 
@@ -314,8 +357,7 @@ mod tests {
     fn generate_html_with_function_2() {
         let element = &crate::createElement("div");
         let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
-        let parent_element = element.attach_shadow(&shadow_init)
-            .unwrap();
+        let parent_element = element.attach_shadow(&shadow_init).unwrap();
 
         let test_number = Some(1);
 
@@ -325,7 +367,7 @@ mod tests {
                 .set_inner_html(&format!("{}", number.unwrap_or(10)));
         };
 
-        BaseElement::new_and_shadow_append(&parent_element, "div", "controls-background")
+        BaseElement::new_and_append(&parent_element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child_fn("span", "paging", test_f, test_number);
 
@@ -338,7 +380,7 @@ mod tests {
 
         let test_number = Some(2);
 
-        BaseElement::new_and_shadow_append(&parent_element, "div", "controls-background")
+        BaseElement::new_and_append(&parent_element, "div", "controls-background")
             .append_child("div", "controls")
             .append_child_fn("span", "paging", test_f, test_number);
 
@@ -346,7 +388,7 @@ mod tests {
 
         // let test_number = Some(3);
 
-        // BaseElement::new_and_shadow_append(&parent_element, "div", "controls-background")
+        // BaseElement::new_and_append(&parent_element, "div", "controls-background")
         //     .append_child("div", "controls")
         //     .append_child_fn("span", "paging", test_f, test_number);
 
@@ -357,45 +399,78 @@ mod tests {
     fn query_element_test() {
         let element = &crate::createElement("div");
 
-        BaseElement::new_and_element_append(element, "div", "c0")
+        BaseElement::new_and_append(element, "div", "c0")
             .append_child("div", "c1")
             .append_child("div", "c2")
-            .append_child("div", "c3")
-            ;
+            .append_child("div", "c3");
 
-            let c0 = element.query_selector(":scope > [be_id='c0']").unwrap();
-            assert!(c0.is_some());
-            let c1 = element.query_selector(":scope > [be_id='c1']").unwrap();
-            assert!(!c1.is_some());
-            let c2 = element.query_selector(":scope > [be_id='c2']").unwrap();
-            assert!(!c2.is_some());
-            let c3 = element.query_selector(":scope > [be_id='c3']").unwrap();
-            assert!(!c3.is_some());
-
+        let c0 = element.query_selector(":scope > [be_id='c0']").unwrap();
+        assert!(c0.is_some());
+        let c1 = element.query_selector(":scope > [be_id='c1']").unwrap();
+        assert!(!c1.is_some());
+        let c2 = element.query_selector(":scope > [be_id='c2']").unwrap();
+        assert!(!c2.is_some());
+        let c3 = element.query_selector(":scope > [be_id='c3']").unwrap();
+        assert!(!c3.is_some());
     }
 
     #[wasm_bindgen_test]
     fn query_shadow_test() {
         let element = &crate::createElement("div");
         let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
-        let parent_element = element.attach_shadow(&shadow_init)
-            .unwrap();
+        let parent_element = element.attach_shadow(&shadow_init).unwrap();
 
-        BaseElement::new_and_shadow_append(&parent_element, "div", "c0")
+        BaseElement::new_and_append(&parent_element, "div", "c0")
             .append_child("div", "c1")
             .append_child("div", "c2")
-            .append_child("div", "c3")
-            ;
+            .append_child("div", "c3");
 
-            //https://chromium.googlesource.com/chromium/blink/+/36dc1140906c0a8dc074df283029cb9d6ade46a9/LayoutTests/fast/dom/shadow/querySelector-with-shadow-all-and-shadow-deep.html#53
-            let c0 = parent_element.query_selector(":host > [be_id='c0']").unwrap();
-            assert!(c0.is_some());
-            let c1 = parent_element.query_selector(":host > [be_id='c1']").unwrap();
-            assert!(!c1.is_some());
-            let c2 = parent_element.query_selector(":host > [be_id='c2']").unwrap();
-            assert!(!c2.is_some());
-            let c3 = parent_element.query_selector(":host > [be_id='c3']").unwrap();
-            assert!(!c3.is_some());
+        //https://chromium.googlesource.com/chromium/blink/+/36dc1140906c0a8dc074df283029cb9d6ade46a9/LayoutTests/fast/dom/shadow/querySelector-with-shadow-all-and-shadow-deep.html#53
+        let c0 = parent_element
+            .query_selector(":host > [be_id='c0']")
+            .unwrap();
+        assert!(c0.is_some());
+        let c1 = parent_element
+            .query_selector(":host > [be_id='c1']")
+            .unwrap();
+        assert!(!c1.is_some());
+        let c2 = parent_element
+            .query_selector(":host > [be_id='c2']")
+            .unwrap();
+        assert!(!c2.is_some());
+        let c3 = parent_element
+            .query_selector(":host > [be_id='c3']")
+            .unwrap();
+        assert!(!c3.is_some());
+    }
 
+    #[wasm_bindgen_test]
+    fn node_test() {
+        let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
+        let element = &crate::createElement("div");
+        let parent_element = &element.attach_shadow(&shadow_init).unwrap();
+
+        let node: &web_sys::Node = parent_element;
+
+        assert_eq!("#document-fragment", &node.node_name());
+    }
+
+    #[wasm_bindgen_test]
+    fn node_test_2() {
+        let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
+        let element = &crate::createElement("div");
+        let parent_element = &element.attach_shadow(&shadow_init).unwrap();
+
+        let node: &web_sys::Node = parent_element;
+
+        assert_eq!("#document-fragment", &node.node_name());
+        assert_eq!(web_sys::Node::DOCUMENT_FRAGMENT_NODE, node.node_type());
+
+        let document_fragment: web_sys::DocumentFragment =
+            wasm_bindgen::JsCast::dyn_into(parent_element.value_of()).expect("msg");
+
+        document_fragment
+            .append_child(&crate::createElement("span"))
+            .unwrap();
     }
 }

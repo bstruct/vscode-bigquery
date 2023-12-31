@@ -59,6 +59,7 @@ impl DataTableItem {
             value: Some(format!("{}", index)),
         }
     }
+   
     pub fn from_value(value: &Option<&Value>) -> DataTableItem {
         let text = match value {
             Some(v) => {
