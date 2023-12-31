@@ -20,12 +20,6 @@ impl BaseElement {
         tag_name: &str,
         base_element_id: &str,
     ) -> BaseElement {
-        assert!(
-            parent_element.node_type() == Node::DOCUMENT_FRAGMENT_NODE
-                || parent_element.node_type() == Node::ELEMENT_NODE,
-            "base elements can only be appended to element nodes like `div` or `p` or shadow elements"
-        );
-
         match parent_element.node_type() {
             Node::DOCUMENT_FRAGMENT_NODE => {
                 let element: DocumentFragment =
@@ -51,7 +45,6 @@ impl BaseElement {
                 )
             },
             _ => panic!("base elements can only be appended to element nodes like `div` or `p` or shadow elements")
-
         }
     }
 
