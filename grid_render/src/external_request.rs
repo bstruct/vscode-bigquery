@@ -1,11 +1,9 @@
-use crate::custom_elements::{data_table_element::{DataTableItem, DataTable}, data_table_shadow_element::DataTableShadow};
+use crate::custom_elements::{
+    bq_table_custom_element::BigqueryTableCustomElementSettings,
+    data_table_element::{DataTable, DataTableItem},
+    // data_table_shadow_element::DataTableShadow,
+};
 use serde::Deserialize;
-
-#[derive(Debug, Deserialize)]
-pub struct ExternalRequestError {
-    pub message: String,
-    pub reason: String,
-}
 
 #[derive(Debug, Deserialize)]
 pub struct ExternalRequest {
@@ -19,6 +17,25 @@ pub struct ExternalRequest {
     pub error: Option<ExternalRequestError>,
 }
 
+impl ExternalRequest {
+    pub fn to_bq_table_settings(&self) -> BigqueryTableCustomElementSettings {
+
+        let job = self.job.as_ref().unwrap().job_reference.as_ref().unwrap();
+        let job_id = job.job_id.to_string();
+        let location = job.location.to_string();
+        let project_id = self.project_id.as_ref().unwrap().to_string();
+        let token = (&self.token.as_ref().unwrap()).to_string();
+
+        BigqueryTableCustomElementSettings::base_new(job_id, project_id, location, token)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ExternalRequestError {
+    pub message: String,
+    pub reason: String,
+}
+
 impl ExternalRequestError {
     pub fn plot_table(&self, element: &web_sys::Element) {
         let header = &["message".to_string(), "reason".to_string()].to_vec();
@@ -29,8 +46,8 @@ impl ExternalRequestError {
         .to_vec()]
         .to_vec();
 
-        let shadow_root = &DataTableShadow::init_shadow(element);
+        // let shadow_root = &DataTableShadow::init_shadow(element);
 
-        DataTable::render_table(shadow_root, header, &rows);
+        // DataTable::render_table(shadow_root, header, &rows);
     }
 }

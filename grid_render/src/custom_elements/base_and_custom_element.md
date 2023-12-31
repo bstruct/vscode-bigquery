@@ -9,7 +9,7 @@
 
 - id
 - element
-- new_and_shadow_append
+- new_and_append
 - ...
 
 

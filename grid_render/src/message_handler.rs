@@ -1,8 +1,10 @@
+use crate::custom_elements::base_element_trait::BaseElementTrait;
 use wasm_bindgen::JsValue;
 
 use crate::{
     createElement,
     custom_elements::bq_table_custom_element::BigqueryTableCustomElement,
+    // custom_elements::bq_table_custom_element::BigqueryTableCustomElement,
     external_request::{ExternalRequest, ExternalRequestError},
     getElementById,
     observe,
@@ -57,42 +59,20 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
             let job_reference = job.job_reference.as_ref().unwrap();
             q1.set_inner_html(&format!("multiple results {}", job_reference.job_id));
         } else {
-            let token = external_request.token.as_ref().expect("token not found");
-            let bq_table_custom_element =
-                &BigqueryTableCustomElement::from_job(token, job);
-            q1.append_child(&bq_table_custom_element.element())
-                .unwrap();
+            let settings = &Some(external_request.to_bq_table_settings());
+
+            let element_id = "bq_table_1";
+
+            BigqueryTableCustomElement::new(element_id, settings).render(q1);
+
+            // let token = external_request.token.as_ref().expect("token not found");
+            // let bq_table_custom_element =
+            //     &BigqueryTableCustomElement::from_job(token, job);
+            // q1.append_child(&bq_table_custom_element.element())
+            //     .unwrap();
 
             //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-            observe(&bq_table_custom_element.element().id());
-
-            // q1.set_inner_html(&format!("Loading job {}", job_reference.job_id));
-
-            // let bq_jobs = bigquery::jobs::Jobs::new(&external_request.token.as_ref().unwrap());
-            // let request = GetQueryResultsRequest {
-            //     project_id: String::from(job_reference.project_id.clone()),
-            //     job_id: String::from(job_reference.job_id.clone()),
-            //     start_index: Some(String::from("0")),
-            //     page_token: None,
-            //     max_results: Some(50),
-            //     timeout_ms: None,
-            //     location: Some(String::from(job_reference.location.clone())),
-            // };
-
-            // let results = bq_jobs.get_query_results(request).await;
-            // if results.is_some() {
-            //     let query_result_response = results.unwrap();
-
-            //     console::log_1(&JsValue::from_str(
-            //         &serde_json::to_string(&query_result_response).unwrap(),
-            //     ));
-
-            //     let div_for_table = &createElement("div");
-            //     q1.set_inner_html(&"");
-            //     q1.append_child(div_for_table).unwrap();
-
-            //     query_result_response.plot_table(div_for_table);
-            // }
+            observe(element_id);
         }
     } else {
         q1.set_inner_html(&"Unexpected error occured.");

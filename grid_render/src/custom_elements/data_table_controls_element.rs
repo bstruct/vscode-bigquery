@@ -1,8 +1,9 @@
-use crate::getElementById;
+// use crate::getElementById;
 
 use super::{
-    base_element::BaseElement, base_element_trait::BaseElementTrait,
-    bq_table_custom_element::BigqueryTableCustomElement,
+    base_element::BaseElement,
+    base_element_trait::BaseElementTrait,
+    // bq_table_custom_element::BigqueryTableCustomElement,
 };
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::Element;
@@ -58,8 +59,8 @@ impl BaseElementTrait<DataTableControlsSettings> for DataTableControls {
         }
     }
 
-    fn render(&self, parent_node: &web_sys::Node) {
-        let parameter_1 = Some(self);
+    fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
+        let parameter_1 = &Some(self);
 
         BaseElement::new_and_append(parent_node, "div", &self.element_id)
             .append_child("div", "controls")
@@ -67,7 +68,7 @@ impl BaseElementTrait<DataTableControlsSettings> for DataTableControls {
             .append_sibling_fn("button", BTN_FIRST_PAGE, &modify_controls, parameter_1)
             .append_sibling_fn("button", BTN_PREVIOUS_PAGE, &modify_controls, parameter_1)
             .append_sibling_fn("button", BTN_NEXT_PAGE, &modify_controls, parameter_1)
-            .append_sibling_fn("button", BTN_LAST_PAGE, &modify_controls, parameter_1);
+            .append_sibling_fn("button", BTN_LAST_PAGE, &modify_controls, parameter_1)
     }
 }
 
@@ -75,12 +76,12 @@ impl DataTableControls {
     pub const BASE_ID: &'static str = "controls-background";
 }
 
-fn modify_controls(base_element: &BaseElement, values: Option<&DataTableControls>) {
+fn modify_controls(base_element: &BaseElement, values: &Option<&DataTableControls>) {
     let rows_in_page = values.unwrap().rows_in_page.unwrap_or(0);
     let rows_total = values.unwrap().rows_total.unwrap_or(0);
     let page_start_index = values.unwrap().page_start_index.unwrap_or(0);
 
-    match base_element.id().as_str() {
+    match base_element.id().as_ref().unwrap().as_str() {
         PAGING => {
             base_element.element().set_inner_html(&format!(
                 "{} - {} of {}",
@@ -90,22 +91,22 @@ fn modify_controls(base_element: &BaseElement, values: Option<&DataTableControls
             ));
         }
         BTN_FIRST_PAGE => {
-            let element = base_element.element();
+            let element = &base_element.element();
             add_event_listener(element);
             element.set_inner_html("<< First page");
         }
         BTN_PREVIOUS_PAGE => {
-            let element = base_element.element();
+            let element = &base_element.element();
             add_event_listener(element);
             element.set_inner_html("< Previous page");
         }
         BTN_NEXT_PAGE => {
-            let element = base_element.element();
+            let element = &base_element.element();
             add_event_listener(element);
             element.set_inner_html("> Next page");
         }
         BTN_LAST_PAGE => {
-            let element = base_element.element();
+            let element = &base_element.element();
             add_event_listener(element);
             element.set_inner_html(">> Last page");
         }
@@ -113,7 +114,7 @@ fn modify_controls(base_element: &BaseElement, values: Option<&DataTableControls
     }
 }
 
-fn add_event_listener(element: &Box<Element>) {
+fn add_event_listener(element: &Element) {
     let on_event_type_closure = Closure::wrap(Box::new(on_click) as Box<dyn Fn(&web_sys::Event)>);
 
     element
@@ -130,26 +131,26 @@ fn on_click(event: &web_sys::Event) {
         .dyn_into::<web_sys::Element>()
         .unwrap();
 
-    let base_element = BaseElement::from(&element);
+    let base_element = BaseElement::from_element(&element);
 
     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
         "on_click event on element: {:?}",
         element.get_attribute("be_id").unwrap_or(element.id())
     )));
 
-    let bq_table = getElementById("test-1");
+    // let bq_table = getElementById("test-1");
 
-    if let Some(bq_table) = bq_table {
-        let bq_table = BigqueryTableCustomElement::from_element(&bq_table);
+    // if let Some(bq_table) = bq_table {
+    //     let bq_table = BigqueryTableCustomElement::from_element(&bq_table);
 
-        match base_element.id().as_str() {
-            BTN_FIRST_PAGE => bq_table.first_page(),
-            BTN_PREVIOUS_PAGE => bq_table.previous_page(),
-            BTN_NEXT_PAGE => bq_table.next_page(),
-            BTN_LAST_PAGE => bq_table.last_page(),
-            _ => {}
-        };
-    }
+    //     match base_element.id().as_str() {
+    //         BTN_FIRST_PAGE => bq_table.first_page(),
+    //         BTN_PREVIOUS_PAGE => bq_table.previous_page(),
+    //         BTN_NEXT_PAGE => bq_table.next_page(),
+    //         BTN_LAST_PAGE => bq_table.last_page(),
+    //         _ => {}
+    //     };
+    // }
 }
 
 #[cfg(test)]
