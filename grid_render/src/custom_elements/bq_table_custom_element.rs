@@ -2,6 +2,7 @@ use std::{borrow::Borrow, ops::Deref};
 
 use super::{
     base_element_trait::BaseElementTrait, custom_element_definition::CustomElementDefinition,
+    data_table_controls_element::DataTableControls,
 };
 use crate::{
     // bigquery::jobs::{GetQueryResultsRequest, Job, Jobs},
@@ -52,18 +53,8 @@ impl BigqueryTableCustomElementSettings {
 }
 
 pub(crate) struct BigqueryTableCustomElement {
-    // job_id: String,
-    // project_id: String,
-    // location: String,
-    // token: String,
-
-    // page_start_index: Option<usize>,
-    // page_size: usize,
-    // rows_in_page: Option<usize>,
-    // rows_total: Option<usize>,
     element_id: String,
     settings: Box<Option<BigqueryTableCustomElementSettings>>,
-    // element: Box<Element>,
 }
 
 impl CustomElementDefinition for BigqueryTableCustomElement {
@@ -99,17 +90,14 @@ impl BaseElementTrait<BigqueryTableCustomElementSettings> for BigqueryTableCusto
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
         // let fn_parameter = self.settings.as_ref();
 
+        let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
+
         BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
             .apply_fn(&set_attributes, &Some(self))
             .append_shadow()
-            
-        // BaseElement::new_and_append("bq-table", "some_id", some_element)
-        // .append_shadow()
-        // .append_child_style("some css path")
-        // .append_sibling_base_element(DataTableControls::new("some_id_1"))
-        // .append_sibling_base_element(DataTable::new("some_id_2"))
-        // ;
-
+            .append_child_style(css_content, "style1")
+            .append_sibling_base_element(&DataTableControls::new(DataTableControls::BASE_ID, &None))
+        // .append_sibling_base_element(DataTable::new("t1", &None))
     }
 }
 

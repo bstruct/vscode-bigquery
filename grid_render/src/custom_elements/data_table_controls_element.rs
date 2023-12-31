@@ -1,5 +1,6 @@
-// use crate::getElementById;
+use std::ops::Deref;
 
+// use crate::getElementById;
 use super::{
     base_element::BaseElement,
     base_element_trait::BaseElementTrait,
@@ -8,6 +9,7 @@ use super::{
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::Element;
 
+#[derive(Debug, Clone)]
 pub(crate) struct DataTableControlsSettings {
     page_start_index: Option<usize>,
     rows_in_page: Option<usize>,
@@ -29,10 +31,8 @@ impl DataTableControlsSettings {
 }
 
 pub(crate) struct DataTableControls {
-    page_start_index: Option<usize>,
-    rows_in_page: Option<usize>,
-    rows_total: Option<usize>,
     element_id: String,
+    settings: Option<DataTableControlsSettings>,
 }
 
 const PAGING: &str = "paging";
@@ -49,18 +49,14 @@ impl BaseElementTrait<DataTableControlsSettings> for DataTableControls {
             "please use the the constant `DataTableControls::BASE_ID` as id parameter"
         );
 
-        let value = value.as_ref().unwrap();
-
         DataTableControls {
-            page_start_index: value.page_start_index,
-            rows_in_page: value.rows_in_page,
-            rows_total: value.rows_total,
             element_id: id.to_owned(),
+            settings: value.clone(),
         }
     }
 
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
-        let parameter_1 = &Some(self);
+        let parameter_1 = &self.settings;
 
         BaseElement::new_and_append(parent_node, "div", &self.element_id)
             .append_child("div", "controls")
@@ -76,24 +72,34 @@ impl DataTableControls {
     pub const BASE_ID: &'static str = "controls-background";
 }
 
-fn modify_controls(base_element: &BaseElement, values: &Option<&DataTableControls>) {
-    let rows_in_page = values.unwrap().rows_in_page.unwrap_or(0);
-    let rows_total = values.unwrap().rows_total.unwrap_or(0);
-    let page_start_index = values.unwrap().page_start_index.unwrap_or(0);
-
+fn modify_controls(base_element: &BaseElement, settings: &Option<DataTableControlsSettings>) {
     match base_element.id().as_ref().unwrap().as_str() {
-        PAGING => {
-            base_element.element().set_inner_html(&format!(
-                "{} - {} of {}",
-                page_start_index + 1,
-                page_start_index + rows_in_page,
-                rows_total
-            ));
-        }
+        PAGING => match settings {
+            Some(set) => {
+                let rows_in_page = set.rows_in_page.unwrap_or(0);
+                let rows_total = set.rows_total.unwrap_or(0);
+                let page_start_index = set.page_start_index.unwrap_or(0);
+
+                base_element.element().set_inner_html(&format!(
+                    "{} - {} of {}",
+                    page_start_index + 1,
+                    page_start_index + rows_in_page,
+                    rows_total
+                ));
+            }
+            None => {
+                base_element.element().set_inner_html("---");
+            }
+        },
         BTN_FIRST_PAGE => {
             let element = &base_element.element();
             add_event_listener(element);
             element.set_inner_html("<< First page");
+            if settings.is_none() {
+                element.set_attribute("disabled", "disabled").unwrap();
+            } else {
+                element.remove_attribute("disabled").unwrap();
+            }
         }
         BTN_PREVIOUS_PAGE => {
             let element = &base_element.element();
@@ -103,7 +109,7 @@ fn modify_controls(base_element: &BaseElement, values: &Option<&DataTableControl
         BTN_NEXT_PAGE => {
             let element = &base_element.element();
             add_event_listener(element);
-            element.set_inner_html("> Next page");
+            element.set_inner_html("> Next page");            
         }
         BTN_LAST_PAGE => {
             let element = &base_element.element();

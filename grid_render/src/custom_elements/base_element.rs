@@ -1,6 +1,8 @@
 use wasm_bindgen::JsValue;
 use web_sys::{DocumentFragment, Element, Node, ShadowRoot};
 
+use super::base_element_trait::BaseElementTrait;
+
 pub(crate) struct BaseElement {
     id: Option<String>,
     node_type: u16,
@@ -233,6 +235,27 @@ impl BaseElement {
         new_element
         
     }
+
+    pub(crate) fn append_child_style(&self, css_content:&str, base_element_id: &str) -> BaseElement{
+        self
+            .append_child("style", base_element_id)
+            .apply_fn(
+                &|base_element:&BaseElement, value:&Option<&str>| {
+                    base_element.element().set_inner_html(value.unwrap());
+                }, 
+                &Some(css_content)
+            )    
+    }
+
+    pub(crate) fn append_sibling_base_element<T, A>(&self, base_element: &T) -> BaseElement where T: BaseElementTrait<A> {
+        // self.append_sibling_base_element(base_element)
+
+        // &base_element.render(&self.node)
+
+        base_element.render(&self.node.parent_node().unwrap())
+        
+    }
+
 }
 
 #[cfg(test)]
