@@ -1,11 +1,10 @@
 use serde_json::Value;
-use web_sys::ShadowRoot;
+use super::{base_element_trait::BaseElementTrait, base_element::BaseElement};
 
-// //number of high level rows that
-// const PAGE_SIZE: usize = 50;
-
-#[derive(Debug, Clone)]
-pub(crate) struct DataTable;
+#[derive(Debug)]
+pub(crate) struct DataTable{
+    element_id: String,
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct DataTableItem {
@@ -14,40 +13,50 @@ pub(crate) struct DataTableItem {
     pub value: Option<String>,
 }
 
-impl DataTable {
-    pub(crate) fn render_table(
-        shadow: &ShadowRoot,
-        header: &Vec<String>,
-        rows: &Vec<Vec<Option<DataTableItem>>>,
-    ) {
-        //<table>
-        let table = crate::createElement("table");
-        shadow.append_child(&table).unwrap();
+// impl DataTable {
+//     pub(crate) fn render_table(
+//         shadow: &ShadowRoot,
+//         header: &Vec<String>,
+//         rows: &Vec<Vec<Option<DataTableItem>>>,
+//     ) {
+//         //<table>
+//         let table = crate::createElement("table");
+//         shadow.append_child(&table).unwrap();
 
-        //<thead>
-        let thead = crate::createElement("thead");
-        table.append_child(&thead).unwrap();
-        let tr = crate::createElement("tr");
-        thead.append_child(&tr).unwrap();
-        append_header_columns(&tr, &header);
+//         //<thead>
+//         let thead = crate::createElement("thead");
+//         table.append_child(&thead).unwrap();
+//         let tr = crate::createElement("tr");
+//         thead.append_child(&tr).unwrap();
+//         append_header_columns(&tr, &header);
 
-        //<tbody>
-        let tbody = crate::createElement("tbody");
-        table.append_child(&tbody).unwrap();
+//         //<tbody>
+//         let tbody = crate::createElement("tbody");
+//         table.append_child(&tbody).unwrap();
 
-        //rows with data
-        for row_index in 0..rows.len() {
-            let row = &rows[row_index];
+//         //rows with data
+//         for row_index in 0..rows.len() {
+//             let row = &rows[row_index];
 
-            let tr = crate::createElement("tr");
-            tbody.append_child(&tr).unwrap();
+//             let tr = crate::createElement("tr");
+//             tbody.append_child(&tr).unwrap();
 
-            for col_index in 0..row.len() {
-                let table_item = &row[col_index];
-                tr.append_child(&create_cell_with_table_item(table_item))
-                    .unwrap();
-            }
-        }
+//             for col_index in 0..row.len() {
+//                 let table_item = &row[col_index];
+//                 tr.append_child(&create_cell_with_table_item(table_item))
+//                     .unwrap();
+//             }
+//         }
+//     }
+// }
+
+impl BaseElementTrait for DataTable {
+    fn get_element_id(&self) -> &str{
+        &self.element_id
+    }
+    
+    fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
+        todo!()
     }
 }
 

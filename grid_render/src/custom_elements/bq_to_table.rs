@@ -1,9 +1,4 @@
-use super::{
-    base_element_trait::BaseElementTrait,
-    data_table_controls_element::{DataTableControls, DataTableControlsSettings},
-    data_table_element::{DataTable, DataTableItem},
-    // data_table_shadow_element::DataTableShadow,
-};
+use super::data_table_element::DataTableItem;
 use crate::{
     bigquery::jobs::{GetQueryResultsResponse, TableFieldSchema},
     parse_to_usize,

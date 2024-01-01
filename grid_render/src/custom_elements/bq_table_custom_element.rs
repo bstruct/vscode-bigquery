@@ -1,21 +1,14 @@
-use std::{borrow::Borrow, ops::Deref};
-
 use super::{
     base_element_trait::BaseElementTrait, custom_element_definition::CustomElementDefinition,
     data_table_controls_element::DataTableControls,
 };
-use crate::{
-    // bigquery::jobs::{GetQueryResultsRequest, Job, Jobs},
-    custom_elements::{base_element::BaseElement, CustomElement},
-    // parse_to_usize,
-};
+use crate::custom_elements::base_element::BaseElement;
 use wasm_bindgen::{prelude::Closure, JsCast};
-// use wasm_bindgen_futures::spawn_local;
-// use web_sys::Element;
 
 const TAG_NAME: &'static str = "bq-table";
 
-pub(crate) struct BigqueryTableCustomElementSettings {
+pub(crate) struct BigqueryTableCustomElement {
+    element_id: String,
     job_id: String,
     project_id: String,
     location: String,
@@ -25,18 +18,18 @@ pub(crate) struct BigqueryTableCustomElementSettings {
     page_size: usize,
     rows_in_page: Option<usize>,
     rows_total: Option<usize>,
-    // element_id: String,
-    // element: Box<Element>,
 }
 
-impl BigqueryTableCustomElementSettings {
+impl BigqueryTableCustomElement {
     pub(crate) fn base_new(
+        element_id: String,
         job_id: String,
         project_id: String,
         location: String,
         token: String,
-    ) -> BigqueryTableCustomElementSettings {
-        BigqueryTableCustomElementSettings {
+    ) -> BigqueryTableCustomElement {
+        BigqueryTableCustomElement {
+            element_id,
             job_id,
             project_id,
             location,
@@ -50,11 +43,6 @@ impl BigqueryTableCustomElementSettings {
             // element: Box<Element>,
         }
     }
-}
-
-pub(crate) struct BigqueryTableCustomElement {
-    element_id: String,
-    settings: Box<Option<BigqueryTableCustomElementSettings>>,
 }
 
 impl CustomElementDefinition for BigqueryTableCustomElement {
@@ -74,17 +62,9 @@ impl CustomElementDefinition for BigqueryTableCustomElement {
     }
 }
 
-impl BaseElementTrait<BigqueryTableCustomElementSettings> for BigqueryTableCustomElement {
-    fn new(id: &str, value: &Option<BigqueryTableCustomElementSettings>) -> Self {
-        assert!(
-            value.is_some(),
-            "must pass initializing values to the bq-table element"
-        );
-
-        BigqueryTableCustomElement {
-            element_id: id.to_string(),
-            settings: Box::new(None),
-        }
+impl BaseElementTrait for BigqueryTableCustomElement {
+    fn get_element_id(&self) -> &str {
+        &self.element_id
     }
 
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
@@ -93,42 +73,41 @@ impl BaseElementTrait<BigqueryTableCustomElementSettings> for BigqueryTableCusto
         let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
 
         BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
-            .apply_fn(&set_attributes, &Some(self))
+            .apply_fn(&set_attributes, self)
             .append_shadow()
             .append_child_style(css_content, "style1")
-            .append_sibling_base_element(&DataTableControls::new(DataTableControls::BASE_ID, &None))
+            .append_sibling_base_element(&DataTableControls::new(
+                self.page_start_index,
+                self.rows_in_page,
+                self.rows_total,
+            ))
         // .append_sibling_base_element(DataTable::new("t1", &None))
     }
 }
 
-fn set_attributes(base_element: &BaseElement, bq_table: &Option<&BigqueryTableCustomElement>) {
-    let element = base_element.element();
+fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryTableCustomElement) {
+    // let element = base_element.element();
+    // element.set_id(&bq_table.element_id);
 
-    if let Some(bq_table) = bq_table {
-        element.set_id(&bq_table.element_id);
-
-        if let Some(settings) = bq_table.settings.as_ref() {
-            element
-                .set_attribute("jobId", settings.job_id.as_str())
-                .unwrap();
-            //     bq_table_custom_element
-            //         .set_attribute("projectId", project_id)
-            //         .unwrap();
-            //     bq_table_custom_element
-            //         .set_attribute("location", location)
-            //         .unwrap();
-            //     bq_table_custom_element
-            //         .set_attribute("token", token)
-            //         .unwrap();
-            //     if start_index.is_some() {
-            //         bq_table_custom_element
-            //             .set_attribute("startIndex", &start_index.unwrap().to_string())
-            //             .unwrap();
-            //     }
-        }
-    } else {
-        element.remove_attribute("jobId").unwrap();
-    }
+    // if let Some(settings) = bq_table.settings.as_ref() {
+    //     element
+    //         .set_attribute("jobId", settings.job_id.as_str())
+    //         .unwrap();
+    //     //     bq_table_custom_element
+    //     //         .set_attribute("projectId", project_id)
+    //     //         .unwrap();
+    //     //     bq_table_custom_element
+    //     //         .set_attribute("location", location)
+    //     //         .unwrap();
+    //     //     bq_table_custom_element
+    //     //         .set_attribute("token", token)
+    //     //         .unwrap();
+    //     //     if start_index.is_some() {
+    //     //         bq_table_custom_element
+    //     //             .set_attribute("startIndex", &start_index.unwrap().to_string())
+    //     //             .unwrap();
+    //     //     }
+    // }
 }
 
 impl BigqueryTableCustomElement {

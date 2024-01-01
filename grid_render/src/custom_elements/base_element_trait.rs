@@ -1,7 +1,7 @@
 use web_sys::Node;
 use super::base_element::BaseElement;
 
-pub trait BaseElementTrait<T> {
-    fn new(id: &str, value: &Option<T>) -> Self;
+pub trait BaseElementTrait {
+    fn get_element_id(&self) -> &str;
     fn render(&self, parent_node: &Node) -> BaseElement;
 }

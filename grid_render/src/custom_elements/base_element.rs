@@ -28,8 +28,8 @@ impl BaseElement {
 
     pub(crate) fn apply_fn<T>(
         &self,
-        element_fn: &dyn Fn(&BaseElement, &Option<T>),
-        fn_parameter: &Option<T>,
+        element_fn: &dyn Fn(&BaseElement, &T),
+        fn_parameter: &T,
     ) -> BaseElement {
         
         element_fn(self, fn_parameter);
@@ -155,8 +155,8 @@ impl BaseElement {
         &self,
         tag_name: &str,
         base_element_id: &str,
-        element_fn: &dyn Fn(&BaseElement, &Option<T>),
-        fn_parameter: &Option<T>,
+        element_fn: &dyn Fn(&BaseElement, &T),
+        fn_parameter: &T,
     ) -> BaseElement {
         BaseElement::append_child(
             &self,
@@ -187,8 +187,8 @@ impl BaseElement {
         &self,
         tag_name: &str,
         base_element_id: &str,
-        element_fn: &dyn Fn(&BaseElement, &Option<T>),
-        fn_parameter: &Option<T>,
+        element_fn: &dyn Fn(&BaseElement, &T),
+        fn_parameter: &T,
     ) -> BaseElement {
         BaseElement::append_sibling(
             &self,
@@ -203,7 +203,7 @@ impl BaseElement {
         base_element_id: &str,
         get_node: &dyn Fn() -> Option<Node>,
         get_parent: &dyn Fn() -> Box<Node>,
-        element_fn: Option<&dyn Fn(&BaseElement, Option<T>)>,
+        element_fn: Option<&dyn Fn(&BaseElement, T)>,
         fn_parameter: Option<T>,
     ) -> BaseElement {
         if let Some(existing_node) = get_node() {
@@ -221,7 +221,7 @@ impl BaseElement {
 
                 let existing_element = BaseElement::from_element(&existing_element);
                 if let Some(element_fn) = element_fn {
-                    element_fn(&existing_element, fn_parameter);
+                    element_fn(&existing_element, fn_parameter.unwrap());
                 }
                 return existing_element;
             }
@@ -230,7 +230,7 @@ impl BaseElement {
         let new_element = BaseElement::create_element(tag_name, base_element_id);
         get_parent().append_child(&new_element.element()).unwrap();
         if let Some(element_fn) = element_fn {
-            element_fn(&new_element, fn_parameter);
+            element_fn(&new_element, fn_parameter.unwrap());
         }
         new_element
         
@@ -247,13 +247,8 @@ impl BaseElement {
             )    
     }
 
-    pub(crate) fn append_sibling_base_element<T, A>(&self, base_element: &T) -> BaseElement where T: BaseElementTrait<A> {
-        // self.append_sibling_base_element(base_element)
-
-        // &base_element.render(&self.node)
-
-        base_element.render(&self.node.parent_node().unwrap())
-        
+    pub(crate) fn append_sibling_base_element<T>(&self, base_element: &T) -> BaseElement where T: BaseElementTrait {
+        base_element.render(&self.node.parent_node().unwrap())        
     }
 
 }

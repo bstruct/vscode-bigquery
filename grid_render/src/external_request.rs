@@ -1,9 +1,6 @@
-use crate::custom_elements::{
-    bq_table_custom_element::BigqueryTableCustomElementSettings,
-    data_table_element::{DataTable, DataTableItem},
-    // data_table_shadow_element::DataTableShadow,
-};
 use serde::Deserialize;
+
+use crate::custom_elements::{bq_table_custom_element::BigqueryTableCustomElement, data_table_element::DataTableItem};
 
 #[derive(Debug, Deserialize)]
 pub struct ExternalRequest {
@@ -18,7 +15,7 @@ pub struct ExternalRequest {
 }
 
 impl ExternalRequest {
-    pub fn to_bq_table_settings(&self) -> BigqueryTableCustomElementSettings {
+    pub fn to_bq_table(&self, element_id: &str) -> BigqueryTableCustomElement {
 
         let job = self.job.as_ref().unwrap().job_reference.as_ref().unwrap();
         let job_id = job.job_id.to_string();
@@ -26,7 +23,7 @@ impl ExternalRequest {
         let project_id = self.project_id.as_ref().unwrap().to_string();
         let token = (&self.token.as_ref().unwrap()).to_string();
 
-        BigqueryTableCustomElementSettings::base_new(job_id, project_id, location, token)
+        BigqueryTableCustomElement::base_new(element_id.to_string(), job_id, project_id, location, token)
     }
 }
 

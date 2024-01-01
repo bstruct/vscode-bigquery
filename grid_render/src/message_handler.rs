@@ -3,8 +3,6 @@ use wasm_bindgen::JsValue;
 
 use crate::{
     createElement,
-    custom_elements::bq_table_custom_element::BigqueryTableCustomElement,
-    // custom_elements::bq_table_custom_element::BigqueryTableCustomElement,
     external_request::{ExternalRequest, ExternalRequestError},
     getElementById,
     observe,
@@ -59,11 +57,10 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
             let job_reference = job.job_reference.as_ref().unwrap();
             q1.set_inner_html(&format!("multiple results {}", job_reference.job_id));
         } else {
-            let settings = &Some(external_request.to_bq_table_settings());
 
             let element_id = "bq_table_1";
-
-            BigqueryTableCustomElement::new(element_id, settings).render(q1);
+            let bq_table = external_request.to_bq_table(element_id);
+            bq_table.render(q1);            
 
             // let token = external_request.token.as_ref().expect("token not found");
             // let bq_table_custom_element =
