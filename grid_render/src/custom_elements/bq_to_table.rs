@@ -1,44 +1,95 @@
-use super::data_table_element::DataTableItem;
+use super::{data_table_element::DataTableItem, bq_table_custom_element::BigqueryTableCustomElement};
 use crate::{
     bigquery::jobs::{GetQueryResultsResponse, TableFieldSchema},
     parse_to_usize,
 };
 
 impl GetQueryResultsResponse {
-    pub fn plot_table(&self, parent_element: &web_sys::Element) {
-        if self.schema.is_some() {
-            let schema = self.schema.as_ref().unwrap();
 
-            let header = &get_bq_table_header(&schema);
-            let number_columns = header.len();
-            let number_rows = calculate_number_rows(&self.rows);
-            let start_index = 0;
+    pub(crate) fn to_bq_table(&self, bq_table_requested: &BigqueryTableCustomElement) -> BigqueryTableCustomElement {
 
-            let mut rows: Vec<Vec<Option<DataTableItem>>> =
-                vec![vec![None; number_columns]; number_rows];
+        let header = self.get_header();
+        let number_columns = header.len();
+        let (rows_in_page, rows) = self.get_rows(number_columns);
+        let rows_total = self.get_rows_total();
 
-            place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
+        // let schema = self.schema.as_ref().unwrap();
+        // let header = &get_bq_table_header(&schema);
+        // let number_columns = header.len();
+        // let number_rows = calculate_number_rows(&self.rows);
 
-            let number_of_rows_total = parse_to_usize(Some(self.total_rows.clone())).unwrap();
+        // let mut rows: Vec<Vec<Option<DataTableItem>>> =
+        // vec![vec![None; number_columns]; number_rows];
 
-            // BaseElement::new
+        // place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
 
-            // let shadow_root = &DataTableShadow::init_shadow(parent_element);
+        bq_table_requested.with_table_info(header, rows, rows_in_page, rows_total)
 
-            // DataTableControls::new(
-            //     DataTableControls::BASE_ID,
-            //     &Some(DataTableControlsSettings::new(
-            //         start_index,
-            //         number_rows,
-            //         number_of_rows_total,
-            //     )),
-            // )
-            // .render(shadow_root);
-
-            // DataTable::render_table(shadow_root, header, &rows);
-            // console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));
-        }
     }
+
+
+    fn get_header(&self) -> Vec<String>{
+        assert!(self.schema.is_some(), "unexpected empty schema");
+
+        let schema = self.schema.as_ref().unwrap();
+        get_bq_table_header(&schema)
+    }
+
+    fn get_rows(&self, number_columns: usize) -> (usize, Vec<Vec<Option<DataTableItem>>>) {
+
+        assert!(self.schema.is_some(), "unexpected empty schema");
+        let schema = self.schema.as_ref().unwrap();
+
+        let rows_in_page = self.rows.len();
+        
+
+        let number_rows = calculate_number_rows(&self.rows);
+        let mut rows: Vec<Vec<Option<DataTableItem>>> =
+        vec![vec![None; number_columns]; number_rows];
+
+        place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
+
+        (rows_in_page, rows.to_owned())
+    }
+
+    fn get_rows_total(&self) -> usize {
+        parse_to_usize(Some(self.total_rows)).unwrap_or(0)
+    }
+
+    // pub fn plot_table(&self, parent_element: &web_sys::Element) {
+    //     if self.schema.is_some() {
+    //         let schema = self.schema.as_ref().unwrap();
+
+    //         let header = &get_bq_table_header(&schema);
+    //         let number_columns = header.len();
+    //         let number_rows = calculate_number_rows(&self.rows);
+    //         let start_index = 0;
+
+    //         let mut rows: Vec<Vec<Option<DataTableItem>>> =
+    //             vec![vec![None; number_columns]; number_rows];
+
+    //         place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
+
+    //         let number_of_rows_total = parse_to_usize(Some(self.total_rows.clone())).unwrap();
+
+    //         // BaseElement::new
+
+    //         // let shadow_root = &DataTableShadow::init_shadow(parent_element);
+
+    //         // DataTableControls::new(
+    //         //     DataTableControls::BASE_ID,
+    //         //     &Some(DataTableControlsSettings::new(
+    //         //         start_index,
+    //         //         number_rows,
+    //         //         number_of_rows_total,
+    //         //     )),
+    //         // )
+    //         // .render(shadow_root);
+
+    //         // DataTable::render_table(shadow_root, header, &rows);
+    //         // console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));
+    //     }
+    // }
 }
 
 fn get_bq_table_header(schema: &crate::bigquery::jobs::TableSchema) -> Vec<String> {
@@ -668,55 +719,56 @@ mod tests {
         assert!(v.value.as_ref().unwrap().len() > 100);
     }
 
-    #[wasm_bindgen_test]
-    fn plot_table_twice() {
-        let complex_object_array_test =
-            include_str!("test_resources/complex_object_array_test.json");
-        let complex_object_array_test = &serde_json::from_str::<
-            crate::bigquery::jobs::GetQueryResultsResponse,
-        >(complex_object_array_test)
-        .unwrap();
+    // #[wasm_bindgen_test]
+    // fn plot_table_twice() {
+    //     let complex_object_array_test =
+    //         include_str!("test_resources/complex_object_array_test.json");
+    //     let complex_object_array_test = &serde_json::from_str::<
+    //         crate::bigquery::jobs::GetQueryResultsResponse,
+    //     >(complex_object_array_test)
+    //     .unwrap();
 
-        let element = &crate::createElement("div");
-        complex_object_array_test.plot_table(element);
+    //     let element = &crate::createElement("div");
+    //     complex_object_array_test.plot_table(element);
 
-        assert!(element.shadow_root().is_some());
-        assert!(element.shadow_root().unwrap().has_child_nodes());
-        assert_eq!(element.shadow_root().unwrap().child_element_count(), 3);
+    //     assert!(element.shadow_root().is_some());
+    //     assert!(element.shadow_root().unwrap().has_child_nodes());
+    //     assert_eq!(element.shadow_root().unwrap().child_element_count(), 3);
 
-        let child = element
-            .shadow_root()
-            .unwrap()
-            .first_element_child()
-            .unwrap();
-        assert_eq!(child.node_name(), "STYLE");
+    //     let child = element
+    //         .shadow_root()
+    //         .unwrap()
+    //         .first_element_child()
+    //         .unwrap();
+    //     assert_eq!(child.node_name(), "STYLE");
 
-        let child = child.next_element_sibling().unwrap();
-        assert_eq!(child.node_name(), "DIV");
-        assert_eq!(child.get_attribute("be_id").unwrap(), "controls-background");
+    //     let child = child.next_element_sibling().unwrap();
+    //     assert_eq!(child.node_name(), "DIV");
+    //     assert_eq!(child.get_attribute("be_id").unwrap(), "controls-background");
 
-        let child = child.next_element_sibling().unwrap();
-        assert_eq!(child.node_name(), "TABLE");
+    //     let child = child.next_element_sibling().unwrap();
+    //     assert_eq!(child.node_name(), "TABLE");
 
-        //second plot
-        complex_object_array_test.plot_table(element);
+    //     //second plot
+    //     complex_object_array_test.plot_table(element);
 
-        assert!(element.shadow_root().is_some());
-        assert!(element.shadow_root().unwrap().has_child_nodes());
-        assert_eq!(element.shadow_root().unwrap().child_element_count(), 3);
+    //     assert!(element.shadow_root().is_some());
+    //     assert!(element.shadow_root().unwrap().has_child_nodes());
+    //     assert_eq!(element.shadow_root().unwrap().child_element_count(), 3);
 
-        let child = element
-            .shadow_root()
-            .unwrap()
-            .first_element_child()
-            .unwrap();
-        assert_eq!(child.node_name(), "STYLE");
+    //     let child = element
+    //         .shadow_root()
+    //         .unwrap()
+    //         .first_element_child()
+    //         .unwrap();
+    //     assert_eq!(child.node_name(), "STYLE");
 
-        let child = child.next_element_sibling().unwrap();
-        assert_eq!(child.node_name(), "DIV");
-        assert_eq!(child.get_attribute("be_id").unwrap(), "controls-background");
+    //     let child = child.next_element_sibling().unwrap();
+    //     assert_eq!(child.node_name(), "DIV");
+    //     assert_eq!(child.get_attribute("be_id").unwrap(), "controls-background");
 
-        let child = child.next_element_sibling().unwrap();
-        assert_eq!(child.node_name(), "TABLE");
-    }
+    //     let child = child.next_element_sibling().unwrap();
+    //     assert_eq!(child.node_name(), "TABLE");
+    // }
+
 }

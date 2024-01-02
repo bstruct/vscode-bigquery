@@ -1,9 +1,102 @@
+use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
 use serde_json::Value;
-use super::{base_element_trait::BaseElementTrait, base_element::BaseElement};
 
 #[derive(Debug)]
-pub(crate) struct DataTable{
+pub(crate) struct DataTable {
     element_id: String,
+    header: Option<Vec<String>>,
+    rows: Option<Vec<Vec<DataTableItem>>>,
+}
+
+impl DataTable {
+    pub(crate) fn new(
+        element_id: &str,
+        header: &Option<Vec<String>>,
+        rows: &Option<Vec<Vec<DataTableItem>>>,
+    ) -> DataTable {
+        DataTable {
+            element_id: element_id.to_string(),
+            header: header.to_owned(),
+            rows: rows.to_owned(),
+        }
+    }
+
+    //     pub(crate) fn render_table(
+    //         shadow: &ShadowRoot,
+    //         header: &Vec<String>,
+    //         rows: &Vec<Vec<Option<DataTableItem>>>,
+    //     ) {
+    //         //<table>
+    //         let table = crate::createElement("table");
+    //         shadow.append_child(&table).unwrap();
+
+    //         //<thead>
+    //         let thead = crate::createElement("thead");
+    //         table.append_child(&thead).unwrap();
+    //         let tr = crate::createElement("tr");
+    //         thead.append_child(&tr).unwrap();
+    //         append_header_columns(&tr, &header);
+
+    //         //<tbody>
+    //         let tbody = crate::createElement("tbody");
+    //         table.append_child(&tbody).unwrap();
+
+    //         //rows with data
+    //         for row_index in 0..rows.len() {
+    //             let row = &rows[row_index];
+
+    //             let tr = crate::createElement("tr");
+    //             tbody.append_child(&tr).unwrap();
+
+    //             for col_index in 0..row.len() {
+    //                 let table_item = &row[col_index];
+    //                 tr.append_child(&create_cell_with_table_item(table_item))
+    //                     .unwrap();
+    //             }
+    //         }
+    //     }
+}
+
+impl BaseElementTrait for DataTable {
+    fn get_element_id(&self) -> &str {
+        &self.element_id
+    }
+
+    fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
+        BaseElement::new_and_append(parent_node, "table", &self.element_id)
+            .append_child("thead", "thead1")
+            .resolve_header(&self.header)
+            .append_sibling("tbody", "tbody1")
+            .resolve_rows(&self.rows)
+    }
+}
+
+impl BaseElement {
+    fn resolve_header(&self, header: &Option<Vec<String>>) -> BaseElement {
+        if let Some(header) = header {
+            let tr = BaseElement::new_and_append(&self.element(), "tr", "tr1");
+
+            for col_index in 0..header.len() {
+                let text = &header[col_index];
+                BaseElement::new_and_append(&tr.element(), "th", &format!("th{}", col_index))
+                    .apply_fn(&set_text, &text);
+            }
+        } else {
+            while let Some(child) = self.first_child() {
+                self.remove_child(&child);
+            }
+        }
+
+        self.clone()
+    }
+
+    fn resolve_rows(&self, _rows: &Option<Vec<Vec<DataTableItem>>>) -> BaseElement {
+        self.clone()
+    }
+}
+
+fn set_text(base_element: &BaseElement, text: &String) {
+    base_element.element().set_inner_html(text);
 }
 
 #[derive(Debug, Clone)]
@@ -11,53 +104,6 @@ pub(crate) struct DataTableItem {
     pub is_null: bool,
     pub is_index: bool,
     pub value: Option<String>,
-}
-
-// impl DataTable {
-//     pub(crate) fn render_table(
-//         shadow: &ShadowRoot,
-//         header: &Vec<String>,
-//         rows: &Vec<Vec<Option<DataTableItem>>>,
-//     ) {
-//         //<table>
-//         let table = crate::createElement("table");
-//         shadow.append_child(&table).unwrap();
-
-//         //<thead>
-//         let thead = crate::createElement("thead");
-//         table.append_child(&thead).unwrap();
-//         let tr = crate::createElement("tr");
-//         thead.append_child(&tr).unwrap();
-//         append_header_columns(&tr, &header);
-
-//         //<tbody>
-//         let tbody = crate::createElement("tbody");
-//         table.append_child(&tbody).unwrap();
-
-//         //rows with data
-//         for row_index in 0..rows.len() {
-//             let row = &rows[row_index];
-
-//             let tr = crate::createElement("tr");
-//             tbody.append_child(&tr).unwrap();
-
-//             for col_index in 0..row.len() {
-//                 let table_item = &row[col_index];
-//                 tr.append_child(&create_cell_with_table_item(table_item))
-//                     .unwrap();
-//             }
-//         }
-//     }
-// }
-
-impl BaseElementTrait for DataTable {
-    fn get_element_id(&self) -> &str{
-        &self.element_id
-    }
-    
-    fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
-        todo!()
-    }
 }
 
 impl DataTableItem {
@@ -68,7 +114,7 @@ impl DataTableItem {
             value: Some(format!("{}", index)),
         }
     }
-   
+
     pub fn from_value(value: &Option<&Value>) -> DataTableItem {
         let text = match value {
             Some(v) => {

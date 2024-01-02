@@ -34,7 +34,7 @@ impl BaseElement {
         
         element_fn(self, fn_parameter);
 
-        BaseElement::clone(self)
+        self.clone()
     }
 
     pub(crate) fn append_shadow(&self) -> BaseElement{
@@ -131,11 +131,32 @@ impl BaseElement {
         }
     }
 
-    pub fn clone(base_element: &BaseElement) -> BaseElement {
+    /*
+    When using this function, if the node is not of the type ELEMENT_NODE, 
+    it's not really possible to determine if it's a base element or not.
+    ( the id is missing ) 
+    */
+    pub fn from_node(node: &Node) -> BaseElement {
+        match node.node_type() {
+            Node::ELEMENT_NODE => {
+                let element: Element = wasm_bindgen::JsCast::dyn_into(node.value_of())
+                .expect("unexpected error on casting Node to Element");
+
+                BaseElement::from_element(&element)
+            }
+            _ => BaseElement {
+                id:None,
+                node_type: node.node_type(),
+                node: Box::new(node.to_owned().into()),
+            }
+        }
+    }
+
+    pub fn clone(&self) -> BaseElement {
         BaseElement {
-            id: base_element.id.clone(),
-            node_type: base_element.node_type,
-            node: base_element.node.to_owned(),
+            id: self.id.clone(),
+            node_type: self.node_type,
+            node: self.node.to_owned(),
         }
     }
 
@@ -248,8 +269,27 @@ impl BaseElement {
     }
 
     pub(crate) fn append_sibling_base_element<T>(&self, base_element: &T) -> BaseElement where T: BaseElementTrait {
-        base_element.render(&self.node.parent_node().unwrap())        
+
+        let parent_node = &self.node.parent_node().unwrap();
+
+        base_element.render(parent_node);
+
+        //return the top level of the item just added. 
+        // otherwise will return the element that was added last in the render method
+        // being inner element or not
+        BaseElement::from_node(&parent_node.last_child().unwrap())
     }
+
+    pub(crate) fn first_child(&self) -> Option<BaseElement>{
+        match self.node.first_child() {
+            Some(node) => Some(BaseElement::from_node(&node)),
+            None => None
+        }
+    }
+
+    pub(crate) fn remove_child(&self, child_base_element: &BaseElement) {
+        self.node.remove_child(&child_base_element.node).unwrap();
+    }    
 
 }
 
