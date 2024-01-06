@@ -1,34 +1,37 @@
-use super::{data_table_element::DataTableItem, bq_table_custom_element::BigqueryTableCustomElement};
+use super::{
+    bq_table_custom_element::BigqueryTableCustomElement, data_table_element::DataTableItem,
+};
 use crate::{
     bigquery::jobs::{GetQueryResultsResponse, TableFieldSchema},
     parse_to_usize,
 };
 
 impl GetQueryResultsResponse {
-
-    pub(crate) fn to_bq_table(&self, bq_table_requested: &BigqueryTableCustomElement) -> BigqueryTableCustomElement {
-
+    pub(crate) fn to_bq_table(
+        &self,
+        bq_table_requested: &BigqueryTableCustomElement,
+    ) -> BigqueryTableCustomElement {
         let header = self.get_header();
         let number_columns = header.len();
         let (rows_in_page, rows) = self.get_rows(number_columns);
         let rows_total = self.get_rows_total();
 
-        // let schema = self.schema.as_ref().unwrap();
-        // let header = &get_bq_table_header(&schema);
-        // let number_columns = header.len();
-        // let number_rows = calculate_number_rows(&self.rows);
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "rows_total: {}, rows_in_page: {}, rows len: {}",
+            rows_total,
+            rows_in_page,
+            rows.len()
+        )));
 
-        // let mut rows: Vec<Vec<Option<DataTableItem>>> =
-        // vec![vec![None; number_columns]; number_rows];
-
-        // place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
-
-        bq_table_requested.with_table_info(header, rows, rows_in_page, rows_total)
-
+        bq_table_requested.with_table_info(
+            Some(rows_in_page),
+            Some(rows_total),
+            Some(header),
+            Some(rows),
+        )
     }
 
-
-    fn get_header(&self) -> Vec<String>{
+    fn get_header(&self) -> Vec<String> {
         assert!(self.schema.is_some(), "unexpected empty schema");
 
         let schema = self.schema.as_ref().unwrap();
@@ -36,16 +39,14 @@ impl GetQueryResultsResponse {
     }
 
     fn get_rows(&self, number_columns: usize) -> (usize, Vec<Vec<Option<DataTableItem>>>) {
-
         assert!(self.schema.is_some(), "unexpected empty schema");
         let schema = self.schema.as_ref().unwrap();
 
         let rows_in_page = self.rows.len();
-        
 
         let number_rows = calculate_number_rows(&self.rows);
         let mut rows: Vec<Vec<Option<DataTableItem>>> =
-        vec![vec![None; number_columns]; number_rows];
+            vec![vec![None; number_columns]; number_rows];
 
         place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
 
@@ -53,43 +54,8 @@ impl GetQueryResultsResponse {
     }
 
     fn get_rows_total(&self) -> usize {
-        parse_to_usize(Some(self.total_rows)).unwrap_or(0)
+        parse_to_usize(Some(self.total_rows.to_string())).unwrap_or(0)
     }
-
-    // pub fn plot_table(&self, parent_element: &web_sys::Element) {
-    //     if self.schema.is_some() {
-    //         let schema = self.schema.as_ref().unwrap();
-
-    //         let header = &get_bq_table_header(&schema);
-    //         let number_columns = header.len();
-    //         let number_rows = calculate_number_rows(&self.rows);
-    //         let start_index = 0;
-
-    //         let mut rows: Vec<Vec<Option<DataTableItem>>> =
-    //             vec![vec![None; number_columns]; number_rows];
-
-    //         place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
-
-    //         let number_of_rows_total = parse_to_usize(Some(self.total_rows.clone())).unwrap();
-
-    //         // BaseElement::new
-
-    //         // let shadow_root = &DataTableShadow::init_shadow(parent_element);
-
-    //         // DataTableControls::new(
-    //         //     DataTableControls::BASE_ID,
-    //         //     &Some(DataTableControlsSettings::new(
-    //         //         start_index,
-    //         //         number_rows,
-    //         //         number_of_rows_total,
-    //         //     )),
-    //         // )
-    //         // .render(shadow_root);
-
-    //         // DataTable::render_table(shadow_root, header, &rows);
-    //         // console::log_1(&JsValue::from_str(&"4 - zzzzzzz"));
-    //     }
-    // }
 }
 
 fn get_bq_table_header(schema: &crate::bigquery::jobs::TableSchema) -> Vec<String> {
@@ -276,7 +242,10 @@ fn calculate_number_rows(data_rows: &Vec<serde_json::Value>) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use crate::custom_elements::data_table_element::DataTableItem;
+    use crate::custom_elements::{
+        base_element_trait::BaseElementTrait, bq_table_custom_element::BigqueryTableCustomElement,
+        data_table_element::DataTableItem,
+    };
     use wasm_bindgen_test::*;
 
     wasm_bindgen_test_configure!(run_in_browser);
@@ -719,56 +688,45 @@ mod tests {
         assert!(v.value.as_ref().unwrap().len() > 100);
     }
 
-    // #[wasm_bindgen_test]
-    // fn plot_table_twice() {
-    //     let complex_object_array_test =
-    //         include_str!("test_resources/complex_object_array_test.json");
-    //     let complex_object_array_test = &serde_json::from_str::<
-    //         crate::bigquery::jobs::GetQueryResultsResponse,
-    //     >(complex_object_array_test)
-    //     .unwrap();
+    #[wasm_bindgen_test]
+    fn to_bq_table_test_1() {
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
 
-    //     let element = &crate::createElement("div");
-    //     complex_object_array_test.plot_table(element);
+        let bq_table = &BigqueryTableCustomElement::base_new(
+            "element_id".to_string(),
+            "jobId".to_string(),
+            "projectId".to_string(),
+            "location".to_string(),
+            "token".to_string(),
+        );
 
-    //     assert!(element.shadow_root().is_some());
-    //     assert!(element.shadow_root().unwrap().has_child_nodes());
-    //     assert_eq!(element.shadow_root().unwrap().child_element_count(), 3);
+        let bq_table_2 = complex_object_array_test.to_bq_table(bq_table);
+        let parent_node = &crate::createElement("div");
+        bq_table_2.to_data_table("element_id").render(parent_node);
 
-    //     let child = element
-    //         .shadow_root()
-    //         .unwrap()
-    //         .first_element_child()
-    //         .unwrap();
-    //     assert_eq!(child.node_name(), "STYLE");
+        let inner_html = &parent_node.inner_html();
+        assert!(inner_html.contains("Included_BE+ Sales Catalog"));
+        assert!(inner_html.contains("Pim_Value"));
+        assert!(inner_html.contains("J20J215714BEH"));
+    }
 
-    //     let child = child.next_element_sibling().unwrap();
-    //     assert_eq!(child.node_name(), "DIV");
-    //     assert_eq!(child.get_attribute("be_id").unwrap(), "controls-background");
+    #[test]
+    fn get_rows_test_1() {
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+        let number_columns = 62;
 
-    //     let child = child.next_element_sibling().unwrap();
-    //     assert_eq!(child.node_name(), "TABLE");
+        let rows = complex_object_array_test.get_rows(number_columns);
 
-    //     //second plot
-    //     complex_object_array_test.plot_table(element);
-
-    //     assert!(element.shadow_root().is_some());
-    //     assert!(element.shadow_root().unwrap().has_child_nodes());
-    //     assert_eq!(element.shadow_root().unwrap().child_element_count(), 3);
-
-    //     let child = element
-    //         .shadow_root()
-    //         .unwrap()
-    //         .first_element_child()
-    //         .unwrap();
-    //     assert_eq!(child.node_name(), "STYLE");
-
-    //     let child = child.next_element_sibling().unwrap();
-    //     assert_eq!(child.node_name(), "DIV");
-    //     assert_eq!(child.get_attribute("be_id").unwrap(), "controls-background");
-
-    //     let child = child.next_element_sibling().unwrap();
-    //     assert_eq!(child.node_name(), "TABLE");
-    // }
-
+        assert_eq!(rows.1.len(), 1796);
+    }
 }

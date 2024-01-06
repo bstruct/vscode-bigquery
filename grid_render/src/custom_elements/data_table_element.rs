@@ -5,14 +5,14 @@ use serde_json::Value;
 pub(crate) struct DataTable {
     element_id: String,
     header: Option<Vec<String>>,
-    rows: Option<Vec<Vec<DataTableItem>>>,
+    rows: Option<Vec<Vec<Option<DataTableItem>>>>,
 }
 
 impl DataTable {
     pub(crate) fn new(
         element_id: &str,
         header: &Option<Vec<String>>,
-        rows: &Option<Vec<Vec<DataTableItem>>>,
+        rows: &Option<Vec<Vec<Option<DataTableItem>>>>,
     ) -> DataTable {
         DataTable {
             element_id: element_id.to_string(),
@@ -21,40 +21,14 @@ impl DataTable {
         }
     }
 
-    //     pub(crate) fn render_table(
-    //         shadow: &ShadowRoot,
-    //         header: &Vec<String>,
-    //         rows: &Vec<Vec<Option<DataTableItem>>>,
-    //     ) {
-    //         //<table>
-    //         let table = crate::createElement("table");
-    //         shadow.append_child(&table).unwrap();
+    pub(crate) fn render_standalone(&self, parent_node: &web_sys::Node) -> BaseElement {
+        let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
 
-    //         //<thead>
-    //         let thead = crate::createElement("thead");
-    //         table.append_child(&thead).unwrap();
-    //         let tr = crate::createElement("tr");
-    //         thead.append_child(&tr).unwrap();
-    //         append_header_columns(&tr, &header);
-
-    //         //<tbody>
-    //         let tbody = crate::createElement("tbody");
-    //         table.append_child(&tbody).unwrap();
-
-    //         //rows with data
-    //         for row_index in 0..rows.len() {
-    //             let row = &rows[row_index];
-
-    //             let tr = crate::createElement("tr");
-    //             tbody.append_child(&tr).unwrap();
-
-    //             for col_index in 0..row.len() {
-    //                 let table_item = &row[col_index];
-    //                 tr.append_child(&create_cell_with_table_item(table_item))
-    //                     .unwrap();
-    //             }
-    //         }
-    //     }
+        BaseElement::new_and_append(parent_node, "div", "st1")
+            .append_shadow()
+            .append_child_style(css_content, "style1")
+            .append_sibling_base_element(self)
+    }
 }
 
 impl BaseElementTrait for DataTable {
@@ -63,7 +37,7 @@ impl BaseElementTrait for DataTable {
     }
 
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
-        BaseElement::new_and_append(parent_node, "table", &self.element_id)
+        BaseElement::new_and_append(parent_node, "table", &self.get_element_id())
             .append_child("thead", "thead1")
             .resolve_header(&self.header)
             .append_sibling("tbody", "tbody1")
@@ -90,13 +64,36 @@ impl BaseElement {
         self.clone()
     }
 
-    fn resolve_rows(&self, _rows: &Option<Vec<Vec<DataTableItem>>>) -> BaseElement {
+    fn resolve_rows(&self, rows: &Option<Vec<Vec<Option<DataTableItem>>>>) -> BaseElement {
+        if let Some(rows) = rows {
+            for row_index in 0..rows.len() {
+                let tr =
+                    BaseElement::new_and_append(&self.element(), "tr", &format!("tr{}", row_index));
+
+                for col_index in 0..rows[row_index].len() {
+                    let table_item = &rows[row_index][col_index];
+                    BaseElement::new_and_append(&tr.element(), "td", &format!("td{}", col_index))
+                        .apply_fn(&set_table_item, &table_item);
+                }
+            }
+        }
+
         self.clone()
     }
 }
 
 fn set_text(base_element: &BaseElement, text: &String) {
     base_element.element().set_inner_html(text);
+}
+
+fn set_table_item(base_element: &BaseElement, table_item: &Option<DataTableItem>) {
+    if let Some(table_item) = &table_item {
+        base_element
+            .element()
+            .set_inner_html(&table_item.value.as_ref().unwrap_or(&"".to_string()));
+    } else {
+        base_element.element().set_inner_html("");
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -145,41 +142,6 @@ impl DataTableItem {
             value: Some(domain.clone()),
         }
     }
-}
-
-fn append_header_columns(row: &web_sys::Element, column_headers: &Vec<String>) {
-    for column_header_index in 0..column_headers.len() {
-        let column_header = &column_headers[column_header_index];
-
-        row.append_child(&create_cell_with_text(true, column_header))
-            .unwrap();
-    }
-}
-
-fn create_cell(column_header: bool) -> web_sys::Element {
-    match column_header {
-        true => crate::createElement("th"),
-        false => crate::createElement("td"),
-    }
-}
-
-fn create_cell_with_text(column_header: bool, inner_html: &str) -> web_sys::Element {
-    let cell = create_cell(column_header);
-    cell.set_inner_html(inner_html);
-    cell
-}
-
-fn create_cell_with_table_item(table_item: &Option<DataTableItem>) -> web_sys::Element {
-    let cell = create_cell(false);
-    if table_item.is_some() {
-        let table_item = &table_item.as_ref().unwrap().clone();
-        if table_item.is_null {
-            cell.set_inner_html("null");
-        } else {
-            cell.set_inner_html(&table_item.value.as_ref().unwrap());
-        }
-    }
-    cell
 }
 
 #[cfg(test)]

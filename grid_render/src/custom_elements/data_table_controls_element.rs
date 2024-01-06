@@ -16,13 +16,6 @@ pub(crate) struct DataTableControls {
 }
 
 impl DataTableControls {
-    pub(crate) fn new_empty() -> DataTableControls {
-        DataTableControls {
-            page_start_index: None,
-            rows_in_page: None,
-            rows_total: None,
-        }
-    }
     pub(crate) fn new(
         page_start_index: Option<usize>,
         rows_in_page: Option<usize>,
@@ -32,17 +25,6 @@ impl DataTableControls {
             page_start_index: page_start_index,
             rows_in_page: rows_in_page,
             rows_total: rows_total,
-        }
-    }
-    pub(crate) fn new_with_values(
-        page_start_index: usize,
-        rows_in_page: usize,
-        rows_total: usize,
-    ) -> DataTableControls {
-        DataTableControls {
-            page_start_index: Some(page_start_index),
-            rows_in_page: Some(rows_in_page),
-            rows_total: Some(rows_total),
         }
     }
 }
@@ -63,24 +45,26 @@ impl BaseElementTrait for DataTableControls {
     }
 }
 
-// impl DataTableControls {
-//     pub const BASE_ID: &'static str = "controls-background";
-// }
-
 fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
     match base_element.id().as_ref().unwrap().as_str() {
         PAGING => {
+            if settings.rows_in_page.is_some()
+                && settings.rows_total.is_some()
+                && settings.page_start_index.is_some()
+            {
+                let rows_in_page = settings.rows_in_page.unwrap_or(0);
+                let rows_total = settings.rows_total.unwrap_or(0);
+                let page_start_index = settings.page_start_index.unwrap_or(0);
 
-            // let rows_in_page = set.rows_in_page.unwrap_or(0);
-            // let rows_total = set.rows_total.unwrap_or(0);
-            // let page_start_index = set.page_start_index.unwrap_or(0);
-
-            // base_element.element().set_inner_html(&format!(
-            //     "{} - {} of {}",
-            //     page_start_index + 1,
-            //     page_start_index + rows_in_page,
-            //     rows_total
-            //     ));
+                base_element.element().set_inner_html(&format!(
+                    "{} - {} of {}",
+                    page_start_index + 1,
+                    page_start_index + rows_in_page,
+                    rows_total
+                ));
+            } else {
+                base_element.element().set_inner_html("");
+            }
         }
         BTN_FIRST_PAGE => {
             let element = &base_element.element();
@@ -164,19 +148,19 @@ mod tests {
         let element = &crate::createElement("div");
         let parent_element = &element.attach_shadow(&shadow_init).unwrap();
 
-        DataTableControls::new_with_values(0, 10, 100).render(parent_element);
+        DataTableControls::new(Some(0), Some(10), Some(100)).render(parent_element);
 
         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">1 - 10 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
 
-        DataTableControls::new_with_values(10, 10, 100).render(parent_element);
+        DataTableControls::new(Some(10), Some(10), Some(100)).render(parent_element);
 
         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">11 - 20 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
 
-        DataTableControls::new_with_values(20, 10, 100).render(parent_element);
+        DataTableControls::new(Some(20), Some(10), Some(100)).render(parent_element);
 
         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">21 - 30 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
 
-        DataTableControls::new_with_values(30, 10, 100).render(parent_element);
+        DataTableControls::new(Some(30), Some(10), Some(100)).render(parent_element);
 
         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">31 - 40 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
     }
