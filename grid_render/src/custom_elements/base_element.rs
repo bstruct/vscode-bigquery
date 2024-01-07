@@ -58,7 +58,7 @@ impl BaseElement {
     ) -> BaseElement {
         match parent_node.node_type() {
             Node::DOCUMENT_FRAGMENT_NODE => {
-                web_sys::console::log_1(&JsValue::from(format!("DOCUMENT_FRAGMENT_NODE, {}, {}, {}", tag_name, base_element_id, parent_node.node_name())));
+                // web_sys::console::log_1(&JsValue::from(format!("DOCUMENT_FRAGMENT_NODE, {}, {}, {}", tag_name, base_element_id, parent_node.node_name())));
 
                 let element: DocumentFragment =
                     wasm_bindgen::JsCast::dyn_into(parent_node.value_of())
@@ -72,12 +72,10 @@ impl BaseElement {
                 )
             },
             Node::ELEMENT_NODE => {
-                // web_sys::console::log_1(&JsValue::from(format!("ELEMENT_NODE, {}, {}, {}", tag_name, base_element_id, parent_node.node_name())));
-
                 let element: Element = wasm_bindgen::JsCast::dyn_into(parent_node.value_of())
                     .expect("unexpected error on casting Node to Element");
 
-                    web_sys::console::log_1(&JsValue::from(format!("ELEMENT_NODE, {}, {}, {}, {:?}", tag_name, base_element_id, parent_node.node_name(), element.get_attribute("be_id"))));
+                // web_sys::console::log_1(&JsValue::from(format!("ELEMENT_NODE, {}, {}, {}, {:?}", tag_name, base_element_id, parent_node.node_name(), element.get_attribute("be_id"))));
 
                 BaseElement::new_and_append_internal(
                     &|| element.query_selector(&format!(":scope > [be_id='{0}']", base_element_id)),
@@ -101,11 +99,11 @@ impl BaseElement {
         assert!(existing_element.is_ok());
 
         if let Some(existing_element) = existing_element.unwrap() {
-            web_sys::console::log_1(&JsValue::from("existing_element exists"));
+            // web_sys::console::log_1(&JsValue::from("existing_element exists"));
 
             BaseElement::from_element(&existing_element)
         } else {
-            web_sys::console::log_1(&JsValue::from("existing_element does NOT exists"));
+            // web_sys::console::log_1(&JsValue::from("existing_element does NOT exists"));
 
             let new_element = BaseElement::create_element(tag_name, base_element_id);
             append_child(&new_element.element()).unwrap();

@@ -1,4 +1,9 @@
-use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
+use crate::getElementById;
+
+use super::{
+    base_element::BaseElement, base_element_trait::BaseElementTrait,
+    bq_table_custom_element::BigqueryTableCustomElement,
+};
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::Element;
 
@@ -7,9 +12,11 @@ const BTN_FIRST_PAGE: &str = "btn_first_page";
 const BTN_PREVIOUS_PAGE: &str = "btn_prev_page";
 const BTN_NEXT_PAGE: &str = "btn_next_page";
 const BTN_LAST_PAGE: &str = "btn_last_page";
+const PARENT_BQ_TABLE_ATT: &str = "parent_bq_table";
 
 #[derive(Debug)]
 pub(crate) struct DataTableControls {
+    parent_bq_table_id: String,
     page_start_index: Option<usize>,
     rows_in_page: Option<usize>,
     rows_total: Option<usize>,
@@ -17,11 +24,13 @@ pub(crate) struct DataTableControls {
 
 impl DataTableControls {
     pub(crate) fn new(
+        parent_bq_table_id: &str,
         page_start_index: Option<usize>,
         rows_in_page: Option<usize>,
         rows_total: Option<usize>,
     ) -> DataTableControls {
         DataTableControls {
+            parent_bq_table_id: parent_bq_table_id.to_string(),
             page_start_index: page_start_index,
             rows_in_page: rows_in_page,
             rows_total: rows_total,
@@ -46,6 +55,16 @@ impl BaseElementTrait for DataTableControls {
 }
 
 fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
+    //set the attribute PARENT_BQ_TABLE_ATT, with the id of the parent bq-table element, to later be possible to capture on the click event
+    base_element
+        .element()
+        .set_attribute(
+            PARENT_BQ_TABLE_ATT,
+            &settings.parent_bq_table_id.to_string(),
+        )
+        .unwrap();
+
+    //
     match base_element.id().as_ref().unwrap().as_str() {
         PAGING => {
             if settings.rows_in_page.is_some()
@@ -96,13 +115,26 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
 }
 
 fn add_event_listener(element: &Element) {
-    let on_event_type_closure = Closure::wrap(Box::new(on_click) as Box<dyn Fn(&web_sys::Event)>);
+    if element.get_attribute("bee").is_none() {
+        let on_event_type_closure =
+            Closure::wrap(Box::new(on_click) as Box<dyn Fn(&web_sys::Event)>);
 
-    element
-        .add_event_listener_with_callback("click", on_event_type_closure.as_ref().unchecked_ref())
-        .unwrap();
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "add_event_listener - {:?}",
+            element.get_attribute("be_id")
+        )));
 
-    on_event_type_closure.forget();
+        element
+            .add_event_listener_with_callback(
+                "click",
+                on_event_type_closure.as_ref().unchecked_ref(),
+            )
+            .unwrap();
+
+        element.set_attribute("bee", "1").unwrap();
+
+        on_event_type_closure.forget();
+    }
 }
 
 fn on_click(event: &web_sys::Event) {
@@ -112,26 +144,36 @@ fn on_click(event: &web_sys::Event) {
         .dyn_into::<web_sys::Element>()
         .unwrap();
 
-    // let base_element = BaseElement::from_element(&element);
+    let base_element = BaseElement::from_element(&element);
+
+    assert!(base_element.id().is_some());
+    assert!(base_element
+        .element()
+        .get_attribute(PARENT_BQ_TABLE_ATT)
+        .is_some());
 
     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
         "on_click event on element: {:?}",
         element.get_attribute("be_id").unwrap_or(element.id())
     )));
 
-    // let bq_table = getElementById("test-1");
+    let parent_bq_table_id = &base_element
+        .element()
+        .get_attribute(PARENT_BQ_TABLE_ATT)
+        .unwrap();
+    let bq_table = getElementById(parent_bq_table_id);
 
-    // if let Some(bq_table) = bq_table {
-    //     let bq_table = BigqueryTableCustomElement::from_element(&bq_table);
+    if let Some(bq_table) = bq_table {
+        let bq_table = BigqueryTableCustomElement::from_element(&bq_table);
 
-    //     match base_element.id().as_str() {
-    //         BTN_FIRST_PAGE => bq_table.first_page(),
-    //         BTN_PREVIOUS_PAGE => bq_table.previous_page(),
-    //         BTN_NEXT_PAGE => bq_table.next_page(),
-    //         BTN_LAST_PAGE => bq_table.last_page(),
-    //         _ => {}
-    //     };
-    // }
+        match base_element.id().as_ref().unwrap().as_str() {
+            BTN_FIRST_PAGE => bq_table.first_page(),
+            BTN_PREVIOUS_PAGE => bq_table.previous_page(),
+            BTN_NEXT_PAGE => bq_table.next_page(),
+            BTN_LAST_PAGE => bq_table.last_page(),
+            _ => {}
+        };
+    }
 }
 
 #[cfg(test)]
@@ -147,21 +189,26 @@ mod tests {
         let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
         let element = &crate::createElement("div");
         let parent_element = &element.attach_shadow(&shadow_init).unwrap();
+        let parent_bq_table_id = "parent_bq_table_id";
 
-        DataTableControls::new(Some(0), Some(10), Some(100)).render(parent_element);
+        DataTableControls::new(parent_bq_table_id, Some(0), Some(10), Some(100))
+            .render(parent_element);
 
-        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">1 - 10 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
+        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">1 - 10 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
 
-        DataTableControls::new(Some(10), Some(10), Some(100)).render(parent_element);
+        DataTableControls::new(parent_bq_table_id, Some(10), Some(10), Some(100))
+            .render(parent_element);
 
-        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">11 - 20 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
+        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">11 - 20 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
 
-        DataTableControls::new(Some(20), Some(10), Some(100)).render(parent_element);
+        DataTableControls::new(parent_bq_table_id, Some(20), Some(10), Some(100))
+            .render(parent_element);
 
-        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">21 - 30 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
+        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">21 - 30 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
 
-        DataTableControls::new(Some(30), Some(10), Some(100)).render(parent_element);
+        DataTableControls::new(parent_bq_table_id, Some(30), Some(10), Some(100))
+            .render(parent_element);
 
-        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">31 - 40 of 100</span><button be_id=\"btn_first_page\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\">&lt; Previous page</button><button be_id=\"btn_next_page\">&gt; Next page</button><button be_id=\"btn_last_page\">&gt;&gt; Last page</button></div></div>");
+        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">31 - 40 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
     }
 }
