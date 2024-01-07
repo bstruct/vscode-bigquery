@@ -112,7 +112,7 @@ fn on_click(event: &web_sys::Event) {
         .dyn_into::<web_sys::Element>()
         .unwrap();
 
-    let base_element = BaseElement::from_element(&element);
+    // let base_element = BaseElement::from_element(&element);
 
     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
         "on_click event on element: {:?}",

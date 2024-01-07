@@ -199,10 +199,12 @@ impl BigqueryTableCustomElement {
         let jobs = crate::bigquery::jobs::Jobs::new(&bq_table_element.token);
         let request = bq_table_element.as_query_results_request();
 
+        let parent_node = element.parent_node().unwrap();
+
         spawn_local(async move {
             let response = jobs.get_query_results(request).await;
             if let Some(response) = response {
-                response.to_bq_table(&bq_table_element).render(&element);
+                response.to_bq_table(&bq_table_element).render(&parent_node);
             } else {
                 element.set_inner_html(&format!("unexpected response: {:?}", response));
             }
@@ -311,4 +313,42 @@ mod tests {
 
         // assert_eq!(c.outer_html(), "...");
     }
+
+
+    #[wasm_bindgen_test]
+    pub fn render_twice_test_1() {
+        let parent_node = &crate::createElement("div");
+        let bq_table = &BigqueryTableCustomElement::base_new(
+            "element_id".to_string(),
+            "jobId".to_string(),
+            "projectId".to_string(),
+            "location".to_string(),
+            "token".to_string(),
+        );
+
+        let complex_object_array_test = include_str!("test_resources/all_types_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let bq_table_information = complex_object_array_test.to_bq_table(bq_table);
+
+        let rows_in_page = bq_table_information.rows_in_page;
+        let rows_total = bq_table_information.rows_total;
+        let header = bq_table_information.header;
+        let rows = bq_table_information.rows;
+
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        bq_table.render(parent_node);
+
+        let first_html_output = parent_node.outer_html();
+
+        //render again
+        bq_table.render(parent_node);
+
+        assert_eq!(parent_node.outer_html(), first_html_output);
+        
+    }
+
 }

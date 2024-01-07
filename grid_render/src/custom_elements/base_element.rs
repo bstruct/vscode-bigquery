@@ -10,18 +10,20 @@ pub(crate) struct BaseElement {
 }
 
 impl BaseElement {
-
     pub(crate) fn id(&self) -> &Option<String> {
         &self.id
     }
 
     pub(crate) fn element(&self) -> Element {
-
-        assert_eq!(self.node_type, Node::ELEMENT_NODE, "node is not of the type element");
+        assert_eq!(
+            self.node_type,
+            Node::ELEMENT_NODE,
+            "node is not of the type element"
+        );
 
         // &self.element
         let element: Element = wasm_bindgen::JsCast::dyn_into(self.node.value_of())
-        .expect("unexpected error on casting Node to Element");
+            .expect("unexpected error on casting Node to Element");
 
         element
     }
@@ -31,20 +33,17 @@ impl BaseElement {
         element_fn: &dyn Fn(&BaseElement, &T),
         fn_parameter: &T,
     ) -> BaseElement {
-        
         element_fn(self, fn_parameter);
 
         self.clone()
     }
 
-    pub(crate) fn append_shadow(&self) -> BaseElement{
-
+    pub(crate) fn append_shadow(&self) -> BaseElement {
         let element = self.element();
 
         if let Some(shadow_root) = element.shadow_root() {
             BaseElement::from_shadow(&shadow_root)
-        } else{
-
+        } else {
             let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
             let shadow_root = element.attach_shadow(&shadow_init).unwrap();
 
@@ -59,10 +58,12 @@ impl BaseElement {
     ) -> BaseElement {
         match parent_node.node_type() {
             Node::DOCUMENT_FRAGMENT_NODE => {
+                web_sys::console::log_1(&JsValue::from(format!("DOCUMENT_FRAGMENT_NODE, {}, {}, {}", tag_name, base_element_id, parent_node.node_name())));
+
                 let element: DocumentFragment =
                     wasm_bindgen::JsCast::dyn_into(parent_node.value_of())
                         .expect("unexpected error on casting Node to DocumentFragment");
-    
+
                 BaseElement::new_and_append_internal(
                     &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
                     &|node: &Node| element.append_child(node),
@@ -71,8 +72,12 @@ impl BaseElement {
                 )
             },
             Node::ELEMENT_NODE => {
+                // web_sys::console::log_1(&JsValue::from(format!("ELEMENT_NODE, {}, {}, {}", tag_name, base_element_id, parent_node.node_name())));
+
                 let element: Element = wasm_bindgen::JsCast::dyn_into(parent_node.value_of())
                     .expect("unexpected error on casting Node to Element");
+
+                    web_sys::console::log_1(&JsValue::from(format!("ELEMENT_NODE, {}, {}, {}, {:?}", tag_name, base_element_id, parent_node.node_name(), element.get_attribute("be_id"))));
 
                 BaseElement::new_and_append_internal(
                     &|| element.query_selector(&format!(":scope > [be_id='{0}']", base_element_id)),
@@ -96,8 +101,12 @@ impl BaseElement {
         assert!(existing_element.is_ok());
 
         if let Some(existing_element) = existing_element.unwrap() {
+            web_sys::console::log_1(&JsValue::from("existing_element exists"));
+
             BaseElement::from_element(&existing_element)
         } else {
+            web_sys::console::log_1(&JsValue::from("existing_element does NOT exists"));
+
             let new_element = BaseElement::create_element(tag_name, base_element_id);
             append_child(&new_element.element()).unwrap();
             new_element
@@ -117,7 +126,7 @@ impl BaseElement {
     pub fn from_element(element: &Element) -> BaseElement {
         let id = element.get_attribute("be_id").expect("not a base element");
         BaseElement {
-            id:Some(id),
+            id: Some(id),
             node_type: element.node_type(),
             node: Box::new(element.to_owned().into()),
         }
@@ -125,30 +134,30 @@ impl BaseElement {
 
     pub fn from_shadow(shadow_root: &ShadowRoot) -> BaseElement {
         BaseElement {
-            id:None,
+            id: None,
             node_type: shadow_root.node_type(),
             node: Box::new(shadow_root.to_owned().into()),
         }
     }
 
     /*
-    When using this function, if the node is not of the type ELEMENT_NODE, 
+    When using this function, if the node is not of the type ELEMENT_NODE,
     it's not really possible to determine if it's a base element or not.
-    ( the id is missing ) 
+    ( the id is missing )
     */
     pub fn from_node(node: &Node) -> BaseElement {
         match node.node_type() {
             Node::ELEMENT_NODE => {
                 let element: Element = wasm_bindgen::JsCast::dyn_into(node.value_of())
-                .expect("unexpected error on casting Node to Element");
+                    .expect("unexpected error on casting Node to Element");
 
                 BaseElement::from_element(&element)
             }
             _ => BaseElement {
-                id:None,
+                id: None,
                 node_type: node.node_type(),
                 node: Box::new(node.to_owned().into()),
-            }
+            },
         }
     }
 
@@ -179,11 +188,8 @@ impl BaseElement {
         element_fn: &dyn Fn(&BaseElement, &T),
         fn_parameter: &T,
     ) -> BaseElement {
-        BaseElement::append_child(
-            &self,
-            tag_name,
-            base_element_id
-        ).apply_fn(element_fn, fn_parameter)
+        BaseElement::append_child(&self, tag_name, base_element_id)
+            .apply_fn(element_fn, fn_parameter)
     }
 
     pub fn append_sibling(&self, tag_name: &str, base_element_id: &str) -> BaseElement {
@@ -192,13 +198,7 @@ impl BaseElement {
             tag_name,
             base_element_id,
             &|| self.node.next_sibling(),
-            &|| {
-                Box::new(
-                    self.node
-                        .parent_node()
-                        .expect("parent element not found"),
-                )
-            },
+            &|| Box::new(self.node.parent_node().expect("parent element not found")),
             None,
             None,
         )
@@ -211,11 +211,8 @@ impl BaseElement {
         element_fn: &dyn Fn(&BaseElement, &T),
         fn_parameter: &T,
     ) -> BaseElement {
-        BaseElement::append_sibling(
-            &self,
-            tag_name,
-            base_element_id,
-        ).apply_fn(element_fn, fn_parameter)
+        BaseElement::append_sibling(&self, tag_name, base_element_id)
+            .apply_fn(element_fn, fn_parameter)
     }
 
     fn append<T>(
@@ -228,12 +225,11 @@ impl BaseElement {
         fn_parameter: Option<T>,
     ) -> BaseElement {
         if let Some(existing_node) = get_node() {
-
             if existing_node.node_type() == Node::ELEMENT_NODE {
+                let existing_element: Element =
+                    wasm_bindgen::JsCast::dyn_into(existing_node.value_of())
+                        .expect("unexpected error on casting Node to Element");
 
-                let existing_element: Element = wasm_bindgen::JsCast::dyn_into(existing_node.value_of())
-                    .expect("unexpected error on casting Node to Element");
-                        
                 let existing_element_be_id = existing_element
                     .get_attribute("be_id")
                     .expect("not a base element");
@@ -246,7 +242,7 @@ impl BaseElement {
                 }
                 return existing_element;
             }
-        } 
+        }
 
         let new_element = BaseElement::create_element(tag_name, base_element_id);
         get_parent().append_child(&new_element.element()).unwrap();
@@ -254,43 +250,45 @@ impl BaseElement {
             element_fn(&new_element, fn_parameter.unwrap());
         }
         new_element
-        
     }
 
-    pub(crate) fn append_child_style(&self, css_content:&str, base_element_id: &str) -> BaseElement{
-        self
-            .append_child("style", base_element_id)
-            .apply_fn(
-                &|base_element:&BaseElement, value:&Option<&str>| {
-                    base_element.element().set_inner_html(value.unwrap());
-                }, 
-                &Some(css_content)
-            )    
+    pub(crate) fn append_child_style(
+        &self,
+        css_content: &str,
+        base_element_id: &str,
+    ) -> BaseElement {
+        self.append_child("style", base_element_id).apply_fn(
+            &|base_element: &BaseElement, value: &Option<&str>| {
+                base_element.element().set_inner_html(value.unwrap());
+            },
+            &Some(css_content),
+        )
     }
 
-    pub(crate) fn append_sibling_base_element<T>(&self, base_element: &T) -> BaseElement where T: BaseElementTrait {
-
+    pub(crate) fn append_sibling_base_element<T>(&self, base_element: &T) -> BaseElement
+    where
+        T: BaseElementTrait,
+    {
         let parent_node = &self.node.parent_node().unwrap();
 
         base_element.render(parent_node);
 
-        //return the top level of the item just added. 
+        //return the top level of the item just added.
         // otherwise will return the element that was added last in the render method
         // being inner element or not
         BaseElement::from_node(&parent_node.last_child().unwrap())
     }
 
-    pub(crate) fn first_child(&self) -> Option<BaseElement>{
+    pub(crate) fn first_child(&self) -> Option<BaseElement> {
         match self.node.first_child() {
             Some(node) => Some(BaseElement::from_node(&node)),
-            None => None
+            None => None,
         }
     }
 
     pub(crate) fn remove_child(&self, child_base_element: &BaseElement) {
         self.node.remove_child(&child_base_element.node).unwrap();
-    }    
-
+    }
 }
 
 #[cfg(test)]
