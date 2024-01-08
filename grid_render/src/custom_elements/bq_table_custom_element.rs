@@ -10,13 +10,14 @@ use crate::{
 };
 use wasm_bindgen::{prelude::Closure, JsCast};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::Element;
+use web_sys::{Element, Event};
 
 const TAG_NAME: &'static str = "bq-table";
 const PAGE_START_INDEX_ATT: &str = "page_start_index";
 const PAGE_SIZE_ATT: &str = "page_size";
 const ROWS_IN_PAGE_ATT: &str = "rows_in_page";
 const ROWS_TOTAL_ATT: &str = "rows_total";
+const RENDER_TABLE_EVENT_NAME: &str = "render_table";
 
 pub(crate) struct BigqueryTableCustomElement {
     element: Option<Element>,
@@ -138,14 +139,15 @@ impl BigqueryTableCustomElement {
             .dyn_into::<web_sys::Element>()
             .unwrap();
 
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "on_render_table event on element: {:?}",
-            element.id()
-        )));
-
         let bq_table_element = BigqueryTableCustomElement::from_element(&element);
         let jobs = crate::bigquery::jobs::Jobs::new(&bq_table_element.token);
         let request = bq_table_element.as_query_results_request();
+
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "on_render_table event on element: {:?}, request: {:?}",
+            element.id(),
+            request
+        )));
 
         let parent_node = element.parent_node().unwrap();
 
@@ -162,7 +164,14 @@ impl BigqueryTableCustomElement {
     pub(crate) fn first_page(&self) {
         assert!(self.element.is_some());
         let element = self.element.as_ref().unwrap();
+        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
         element.set_attribute(PAGE_START_INDEX_ATT, "0").unwrap();
+        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+
+        //trigger the on_render event
+        if previous_value != current_value {
+            dispatch_on_render_event(&element);
+        }
     }
 
     pub(crate) fn previous_page(&self) {
@@ -177,9 +186,16 @@ impl BigqueryTableCustomElement {
             0
         };
 
+        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
         element
             .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
             .unwrap();
+        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+
+        //trigger the on_render event
+        if previous_value != current_value {
+            dispatch_on_render_event(&element);
+        }
     }
 
     pub(crate) fn next_page(&self) {
@@ -204,9 +220,16 @@ impl BigqueryTableCustomElement {
             start_index + page_size
         };
 
+        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
         element
             .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
             .unwrap();
+        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+
+        //trigger the on_render event
+        if previous_value != current_value {
+            dispatch_on_render_event(&element);
+        }
     }
 
     pub(crate) fn last_page(&self) {
@@ -221,10 +244,23 @@ impl BigqueryTableCustomElement {
             (f64::floor(rows_total as f64 / page_size as f64) * page_size as f64) as usize
         };
 
+        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
         element
             .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
             .unwrap();
+        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+
+        //trigger the on_render event
+        if previous_value != current_value {
+            dispatch_on_render_event(&element);
+        }
     }
+}
+
+fn dispatch_on_render_event(element: &Element) {
+    element
+        .dispatch_event(&Event::new(RENDER_TABLE_EVENT_NAME).unwrap())
+        .unwrap();
 }
 
 impl CustomElementDefinition for BigqueryTableCustomElement {
@@ -235,7 +271,7 @@ impl CustomElementDefinition for BigqueryTableCustomElement {
 
         element
             .add_event_listener_with_callback(
-                "render_table",
+                RENDER_TABLE_EVENT_NAME,
                 on_event_type_closure.as_ref().unchecked_ref(),
             )
             .unwrap();
@@ -256,6 +292,8 @@ impl BaseElementTrait for BigqueryTableCustomElement {
             .apply_fn(&set_attributes, self)
             .append_shadow()
             .append_child_style(css_content, "style1")
+            .append_sibling("div", "spacer")
+            .apply_fn(&configure_spacer, &None)
             .append_sibling_base_element(&self.to_data_table_controls())
             .append_sibling_base_element(&self.to_data_table("t1"))
     }
@@ -269,7 +307,11 @@ fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryTableCustomElem
     set_attribute(&element, "project_id", bq_table.project_id.as_str());
     set_attribute(&element, "location", bq_table.location.as_str());
     set_attribute(&element, "token", bq_table.token.as_str());
-    set_optional_attribute(&element, PAGE_START_INDEX_ATT, &Some(bq_table.page_start_index));
+    set_optional_attribute(
+        &element,
+        PAGE_START_INDEX_ATT,
+        &Some(bq_table.page_start_index),
+    );
     set_attribute(&element, PAGE_SIZE_ATT, &bq_table.page_size.to_string());
     set_optional_attribute(&element, ROWS_IN_PAGE_ATT, &bq_table.rows_in_page);
     set_optional_attribute(&element, ROWS_TOTAL_ATT, &bq_table.rows_total);
@@ -304,6 +346,14 @@ fn get_num_attribute(element: &Element, attribute_name: &str) -> usize {
         Some(num) => num,
         None => panic!("attribute not found: {attribute_name}"),
     }
+}
+
+fn configure_spacer(element: &BaseElement, _: &Option<usize>) {
+    element.element().set_inner_html("&nbsp");
+    element
+        .element()
+        .set_attribute("style", "height: 30px")
+        .unwrap();
 }
 
 #[cfg(test)]
