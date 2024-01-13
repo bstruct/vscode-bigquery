@@ -284,6 +284,13 @@ impl BaseElement {
         }
     }
 
+    pub(crate) fn next_sibling(&self) -> Option<BaseElement> {
+        match self.node.next_sibling() {
+            Some(node) => Some(BaseElement::from_node(&node)),
+            None => None,
+        }
+    }
+
     pub(crate) fn remove_child(&self, child_base_element: &BaseElement) {
         self.node.remove_child(&child_base_element.node).unwrap();
     }

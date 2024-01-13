@@ -1,5 +1,6 @@
 use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
 use serde_json::Value;
+use web_sys::Element;
 
 #[derive(Debug)]
 pub(crate) struct DataTable {
@@ -66,14 +67,38 @@ impl BaseElement {
 
     fn resolve_rows(&self, rows: &Option<Vec<Vec<Option<DataTableItem>>>>) -> BaseElement {
         if let Some(rows) = rows {
-            for row_index in 0..rows.len() {
-                let tr =
-                    BaseElement::new_and_append(&self.element(), "tr", &format!("tr{}", row_index));
+            if rows.len() == 0 {
+                while let Some(child) = self.first_child() {
+                    self.remove_child(&child);
+                }
+            } else {
+                let mut last_pointer_tr: Option<Element> = None;
 
-                for col_index in 0..rows[row_index].len() {
-                    let table_item = &rows[row_index][col_index];
-                    BaseElement::new_and_append(&tr.element(), "td", &format!("td{}", col_index))
+                for row_index in 0..rows.len() {
+                    let tr = BaseElement::new_and_append(
+                        &self.element(),
+                        "tr",
+                        &format!("tr{}", row_index),
+                    );
+
+                    for col_index in 0..rows[row_index].len() {
+                        let table_item = &rows[row_index][col_index];
+                        BaseElement::new_and_append(
+                            &tr.element(),
+                            "td",
+                            &format!("td{}", col_index),
+                        )
                         .apply_fn(&set_table_item, &table_item);
+                    }
+
+                    last_pointer_tr = Some(tr.element());
+                }
+
+                if last_pointer_tr.is_some() {
+                    let last_pointer_tr = BaseElement::from_element(&last_pointer_tr.as_ref().unwrap());
+                    while let Some(next_sibling) = last_pointer_tr.next_sibling() {
+                        self.remove_child(&next_sibling);
+                    }
                 }
             }
         }
