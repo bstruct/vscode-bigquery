@@ -161,6 +161,10 @@ impl BigqueryTableCustomElement {
         });
     }
 
+    pub(crate) fn get_page_start_index(&self) -> usize {
+        self.page_start_index
+    }
+
     pub(crate) fn first_page(&self) {
         assert!(self.element.is_some());
         let element = self.element.as_ref().unwrap();

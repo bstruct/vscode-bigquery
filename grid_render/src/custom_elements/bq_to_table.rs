@@ -13,7 +13,9 @@ impl GetQueryResultsResponse {
     ) -> BigqueryTableCustomElement {
         let header = self.get_header();
         let number_columns = header.len();
-        let (rows_in_page, rows) = self.get_rows(number_columns);
+        let page_start_index = bq_table_requested.get_page_start_index();
+        
+        let (rows_in_page, rows) = self.get_rows(number_columns, page_start_index);
         let rows_total = self.get_rows_total();
 
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
@@ -38,7 +40,11 @@ impl GetQueryResultsResponse {
         get_bq_table_header(&schema)
     }
 
-    fn get_rows(&self, number_columns: usize) -> (usize, Vec<Vec<Option<DataTableItem>>>) {
+    fn get_rows(
+        &self,
+        number_columns: usize,
+        page_start_index: usize,
+    ) -> (usize, Vec<Vec<Option<DataTableItem>>>) {
         assert!(self.schema.is_some(), "unexpected empty schema");
         let schema = self.schema.as_ref().unwrap();
 
@@ -48,7 +54,15 @@ impl GetQueryResultsResponse {
         let mut rows: Vec<Vec<Option<DataTableItem>>> =
             vec![vec![None; number_columns]; number_rows];
 
-        place_bq_table_rows(&mut rows, &schema.fields, &self.rows, 0, 0, true);
+        place_bq_table_rows(
+            &mut rows,
+            &schema.fields,
+            &self.rows,
+            0,
+            0,
+            true,
+            page_start_index,
+        );
 
         (rows_in_page, rows.to_owned())
     }
@@ -109,6 +123,7 @@ fn place_bq_table_rows(
     array_row_index: usize,
     array_col_index: usize,
     include_index_column: bool,
+    page_start_index: usize,
 ) -> (usize, usize) {
     // 2 sets of variables are in use.
     // "data_..." to control the position of the data
@@ -133,7 +148,9 @@ fn place_bq_table_rows(
         //index column
         if include_index_column {
             rows[array_row_index + array_row_increment][array_col_index + array_col_increment] =
-                Some(DataTableItem::new_main_index(data_row_index + 1));
+                Some(DataTableItem::new_main_index(
+                    data_row_index + 1 + page_start_index,
+                ));
             array_col_increment += 1;
         }
 
@@ -163,6 +180,7 @@ fn place_bq_table_rows(
                     array_row_index + array_row_increment,
                     array_col_index + array_col_increment,
                     true,
+                    0,
                 );
                 //establish the max rows to progress
                 array_max_inner_row_increment = match array_max_inner_row_increment > positions.0 {
@@ -183,6 +201,7 @@ fn place_bq_table_rows(
                         array_row_index + array_row_increment,
                         array_col_index + array_col_increment,
                         false,
+                        0,
                     );
 
                     array_col_increment += positions.1;
@@ -457,6 +476,7 @@ mod tests {
             0,
             0,
             true,
+            0,
         );
 
         // println!("row 0: \n{:?}", rows[0]);
@@ -585,6 +605,7 @@ mod tests {
             0,
             0,
             true,
+            0,
         );
 
         assert_eq!(rows.len(), 16);
@@ -628,6 +649,7 @@ mod tests {
             0,
             0,
             true,
+            0,
         );
 
         assert_eq!(rows.len(), 50);
@@ -725,7 +747,7 @@ mod tests {
         .unwrap();
         let number_columns = 62;
 
-        let rows = complex_object_array_test.get_rows(number_columns);
+        let rows = complex_object_array_test.get_rows(number_columns, 0);
 
         assert_eq!(rows.1.len(), 1796);
     }
