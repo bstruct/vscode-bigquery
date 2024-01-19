@@ -30,7 +30,45 @@ window.addEventListener('message', async event => {
 
 });
 
-let observer = new IntersectionObserver((entries, observer) => {
+const bqQueryTagName = 'BQ-QUERY';
+
+
+
+let mutationObserver = new MutationObserver(function (mutations) {
+
+
+    for (let index = 0; index < mutations.length; index++) {
+        const mutation = mutations[index];
+
+
+        for (let index = 0; index < mutation.addedNodes.length; index++) {
+            const node = mutation.addedNodes[index];
+            
+
+            const tagName = node.tagName;
+            
+            console.log('node added', tagName);
+
+        }
+
+    }
+
+    // mutations.entries.forEach(mutation => {
+    //     console.log(mutation);
+    // });
+    // if (document.contains(myElement)) {
+    //      console.log("It's in the DOM!");
+    //      observer.disconnect();
+    //  }
+});
+
+mutationObserver.observe(document, { attributes: false, childList: true, characterData: false, subtree: true });
+
+
+// https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
+// IntersectionObserver
+
+let intersectionObserver = new IntersectionObserver((entries, observer) => {
     entries.forEach((entry) => {
 
         // console.log('boundingClientRect: ' + entry.boundingClientRect);
@@ -40,6 +78,8 @@ let observer = new IntersectionObserver((entries, observer) => {
         // console.log('rootBounds:' + entry.rootBounds);
         // console.log('target:' + entry.target);
         // console.log('time:' + entry.time);
+
+        // const tagName = entry.target.tagName;
 
         if (entry.isIntersecting) {
             console.log('element is now in visible scope: ' + entry.target.id);
@@ -56,7 +96,7 @@ let observer = new IntersectionObserver((entries, observer) => {
 function observe(elementId) {
     let element = document.getElementById(elementId);
     console.log("element with id '" + elementId + "' is being observed");
-    observer.observe(element);
+    intersectionObserver.observe(element);
 }
 
 document.observe = observe;
