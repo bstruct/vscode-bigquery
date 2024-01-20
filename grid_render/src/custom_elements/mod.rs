@@ -1,8 +1,9 @@
-mod custom_element_definition;
 pub(crate) mod bq_table_custom_element;
-pub(crate) mod data_table_element;
+pub(crate) mod bq_query_custom_element;
 mod bq_to_table;
+mod custom_element_definition;
 mod data_table_controls_element;
+pub(crate) mod data_table_element;
 // pub(crate) mod data_table_shadow_element;
 mod base_element;
 pub(crate) mod base_element_trait;
@@ -18,7 +19,7 @@ ADD NEW COMPONENT STEP 1: add the name and respective HTML tag to the enum
 #[derive(Copy, Clone, Debug)]
 pub enum CustomElement {
     BqTable = "bq-table",
-    // QueryResultsWithControls = "query-results-with-controls",
+    BqQuery = "bq-query",
 }
 
 impl CustomElement {
@@ -26,7 +27,7 @@ impl CustomElement {
     ADD NEW COMPONENT STEP 2: make it available on the full list
     */
     pub fn get_all() -> Vec<CustomElement> {
-        vec![CustomElement::BqTable]
+        vec![CustomElement::BqTable, CustomElement::BqQuery]
     }
 
     /**
@@ -43,7 +44,9 @@ impl CustomElement {
 
         match self {
             // CustomElement::QueryResultsWithControls => query_results_with_controls::QueryResultsWithControls::define(document, element),
-            CustomElement::BqTable => bq_table_custom_element::BigqueryTableCustomElement::define(document, element),
+            CustomElement::BqTable => {
+                bq_table_custom_element::BigqueryTableCustomElement::define(document, element)
+            }
             _ => eprintln!("definition for custom element not found"),
         };
 

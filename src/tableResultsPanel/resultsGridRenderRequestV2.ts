@@ -1,3 +1,5 @@
+import { Job } from "@google-cloud/bigquery";
+
 export enum ResultsGridRenderRequestV2Type {
   clear = "clear",
   executeQuery = "execute_query",
@@ -13,6 +15,6 @@ export interface ResultsGridRenderRequestV2 {
   requestType: String;
   projectId: String | null;
   token: String | null;
-  query: String | null;
+  job: Job | null;
   error: ResultsGridRenderRequestV2Error | null;
 }

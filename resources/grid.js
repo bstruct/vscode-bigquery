@@ -24,42 +24,47 @@ window.addEventListener('external_message', on_window_message_received);
 // pass along the messsage but guarantees that the custom elements are loaded
 window.addEventListener('message', async event => {
 
+    console.log('on message');
+
     await p;
     let e = new MessageEvent("external_message", { data: event.data });
     window.dispatchEvent(e);
 
 });
 
-const bqQueryTagName = 'BQ-QUERY';
+const bqQueryTagName = 'BQ-TABLE';
 
+let bqQueryOnRender = function (event) {
 
+    const bqTable = event.target;
+    const jobId = bqTable.getAttribute('job_id');
+    const projectId = bqTable.getAttribute('project_id');
+    const location = bqTable.getAttribute('location');
+
+    console.log('bqQueryOnRender');
+
+    if (!vscode) { vscode = acquireVsCodeApi(); }
+    vscode.setState({ jobId, projectId, location });
+
+};
 
 let mutationObserver = new MutationObserver(function (mutations) {
-
 
     for (let index = 0; index < mutations.length; index++) {
         const mutation = mutations[index];
 
-
         for (let index = 0; index < mutation.addedNodes.length; index++) {
             const node = mutation.addedNodes[index];
-            
 
             const tagName = node.tagName;
-            
-            console.log('node added', tagName);
 
+
+            if (tagName === bqQueryTagName) {
+                node.addEventListener('render_table', bqQueryOnRender);
+                console.log('node added', tagName, ' and event listener added');
+            }
         }
-
     }
-
-    // mutations.entries.forEach(mutation => {
-    //     console.log(mutation);
-    // });
-    // if (document.contains(myElement)) {
-    //      console.log("It's in the DOM!");
-    //      observer.disconnect();
-    //  }
 });
 
 mutationObserver.observe(document, { attributes: false, childList: true, characterData: false, subtree: true });

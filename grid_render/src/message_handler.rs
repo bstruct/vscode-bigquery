@@ -59,14 +59,8 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
         } else {
 
             let element_id = "bq_table_1";
-            let bq_table = external_request.to_bq_table(element_id);
+            let bq_table = external_request.to_bq_query(element_id);
             bq_table.render(q1);            
-
-            // let token = external_request.token.as_ref().expect("token not found");
-            // let bq_table_custom_element =
-            //     &BigqueryTableCustomElement::from_job(token, job);
-            // q1.append_child(&bq_table_custom_element.element())
-            //     .unwrap();
 
             //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
             observe(element_id);

@@ -1,8 +1,8 @@
 use super::{
-    bq_table_custom_element::BigqueryTableCustomElement, data_table_element::DataTableItem,
+    bq_table_custom_element::BigqueryTableCustomElement, data_table_element::DataTableItem, bq_query_custom_element::BigqueryQueryCustomElement,
 };
 use crate::{
-    bigquery::jobs::{GetQueryResultsResponse, TableFieldSchema},
+    bigquery::{jobs::GetQueryResultsResponse, base::{TableSchema, TableFieldSchema}},
     parse_to_usize,
 };
 
@@ -26,6 +26,32 @@ impl GetQueryResultsResponse {
         )));
 
         bq_table_requested.with_table_info(
+            Some(rows_in_page),
+            Some(rows_total),
+            Some(header),
+            Some(rows),
+        )
+    }
+
+    pub(crate) fn to_bq_query(
+        &self,
+        bq_query_requested: &BigqueryQueryCustomElement,
+    ) -> BigqueryQueryCustomElement {
+        let header = self.get_header();
+        let number_columns = header.len();
+        let page_start_index = bq_query_requested.get_page_start_index();
+        
+        let (rows_in_page, rows) = self.get_rows(number_columns, page_start_index);
+        let rows_total = self.get_rows_total();
+
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "rows_total: {}, rows_in_page: {}, rows len: {}",
+            rows_total,
+            rows_in_page,
+            rows.len()
+        )));
+
+        bq_query_requested.with_table_info(
             Some(rows_in_page),
             Some(rows_total),
             Some(header),
@@ -72,7 +98,7 @@ impl GetQueryResultsResponse {
     }
 }
 
-fn get_bq_table_header(schema: &crate::bigquery::jobs::TableSchema) -> Vec<String> {
+fn get_bq_table_header(schema: &TableSchema) -> Vec<String> {
     let mut header_columns = Vec::new();
     header_columns.push(String::from("#"));
 
@@ -118,7 +144,7 @@ fn append_bq_table_header(
 
 fn place_bq_table_rows(
     rows: &mut Vec<Vec<Option<DataTableItem>>>,
-    schema_fields: &Vec<crate::bigquery::jobs::TableFieldSchema>,
+    schema_fields: &Vec<TableFieldSchema>,
     data_rows: &Vec<serde_json::Value>,
     array_row_index: usize,
     array_col_index: usize,

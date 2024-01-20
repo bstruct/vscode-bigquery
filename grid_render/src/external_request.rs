@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 use crate::custom_elements::{
     bq_table_custom_element::BigqueryTableCustomElement,
-    data_table_element::{DataTable, DataTableItem},
+    data_table_element::{DataTable, DataTableItem}, bq_query_custom_element::BigqueryQueryCustomElement,
 };
 
 #[derive(Debug, Deserialize)]
@@ -12,7 +12,8 @@ pub struct ExternalRequest {
     #[serde(alias = "projectId")]
     pub project_id: Option<String>,
     pub token: Option<String>,
-    pub query: Option<String>,
+    pub dataset_id: Option<String>,
+    pub table_id: Option<String>,
     pub job: Option<crate::bigquery::jobs::Job>,
     pub error: Option<ExternalRequestError>,
 }
@@ -20,12 +21,28 @@ pub struct ExternalRequest {
 impl ExternalRequest {
     pub fn to_bq_table(&self, element_id: &str) -> BigqueryTableCustomElement {
         let job = self.job.as_ref().unwrap().job_reference.as_ref().unwrap();
+        let project_id = self.project_id.as_ref().unwrap().to_string();
+        let dataset_id = self.dataset_id.as_ref().unwrap().to_string();
+        let table_id = self.table_id.as_ref().unwrap().to_string();
+        let token = (&self.token.as_ref().unwrap()).to_string();
+
+        BigqueryTableCustomElement::base_new(
+            element_id.to_string(),
+            project_id,
+            dataset_id,
+            table_id,
+            token,
+        )
+    }
+
+    pub fn to_bq_query(&self, element_id: &str) -> BigqueryQueryCustomElement {
+        let job = self.job.as_ref().unwrap().job_reference.as_ref().unwrap();
         let job_id = job.job_id.to_string();
         let location = job.location.to_string();
         let project_id = self.project_id.as_ref().unwrap().to_string();
         let token = (&self.token.as_ref().unwrap()).to_string();
 
-        BigqueryTableCustomElement::base_new(
+        BigqueryQueryCustomElement::base_new(
             element_id.to_string(),
             job_id,
             project_id,

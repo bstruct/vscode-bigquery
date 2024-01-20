@@ -137,7 +137,6 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 		panel.onDidDispose(e => {
 			QueryResultsMappingService.deleteQueryResultsMapping(globalState, uuid);
 		});
-
 	}
 
 	try {
@@ -145,7 +144,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 			requestType: ResultsGridRenderRequestV2Type.clear.toString(),
 			projectId: null,
 			token: null,
-			query: null,
+			job: null,
 			error: null
 		} as ResultsGridRenderRequestV2);
 
@@ -163,7 +162,6 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 			requestType: ResultsGridRenderRequestV2Type.executeQuery.toString(),
 			projectId: projectId,
 			token: token,
-			query: queryText,
 			job: job.metadata,
 			error: null
 		} as ResultsGridRenderRequestV2);
@@ -180,7 +178,6 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 			requestType: ResultsGridRenderRequestV2Type.error.toString(),
 			projectId: null,
 			token: null,
-			query: null,
 			job: null,
 			error: error
 		} as ResultsGridRenderRequestV2);
@@ -317,43 +314,43 @@ export const commandViewTable = async function (...args: any[]) {
 
 	const newresultsGridRender = new ResultsGridRender(panel);
 
-	if (metadata[0].type === 'EXTERNAL' || metadata[0].type === 'VIEW') {
-		try {
-			const queryResponse = await bqClient.runQuery(
-				`SELECT * FROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``);
+	// if (metadata[0].type === 'EXTERNAL' || metadata[0].type === 'VIEW') {
+	// 	try {
+	// 		const queryResponse = await bqClient.runQuery(
+	// 			`SELECT * FROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``);
 
-			const jobReferences = [
-				{
-					jobId: queryResponse.id,
-					location: queryResponse.location,
-					projectId: queryResponse.projectId
-				} as JobReference];
+	// 		const jobReferences = [
+	// 			{
+	// 				jobId: queryResponse.id,
+	// 				location: queryResponse.location,
+	// 				projectId: queryResponse.projectId
+	// 			} as JobReference];
 
-			const request = {
-				jobReferences: jobReferences,
-				startIndex: 0,
-				maxResults: 50,
-				jobIndex: 0,
-				openInTabVisible: false
-			} as ResultsGridRenderRequest;
+	// 		const request = {
+	// 			jobReferences: jobReferences,
+	// 			startIndex: 0,
+	// 			maxResults: 50,
+	// 			jobIndex: 0,
+	// 			openInTabVisible: false
+	// 		} as ResultsGridRenderRequest;
 
-			newresultsGridRender.render(request);
-		} catch (error) {
-			newresultsGridRender.renderException(error);
-		}
+	// 		newresultsGridRender.render(request);
+	// 	} catch (error) {
+	// 		newresultsGridRender.renderException(error);
+	// 	}
 
-	} else {
+	// } else {
 
-		const request = {
-			tableReference: { projectId: item.projectId, datasetId: item.datasetId, tableId: item.tableId } as TableReference,
-			startIndex: 0,
-			maxResults: 50,
-			jobIndex: 0,
-			openInTabVisible: false
-		} as ResultsGridRenderRequest;
+	// 	const request = {
+	// 		tableReference: { projectId: item.projectId, datasetId: item.datasetId, tableId: item.tableId } as TableReference,
+	// 		startIndex: 0,
+	// 		maxResults: 50,
+	// 		jobIndex: 0,
+	// 		openInTabVisible: false
+	// 	} as ResultsGridRenderRequest;
 
-		newresultsGridRender.render(request);
-	}
+	// 	newresultsGridRender.render(request);
+	// }
 
 	getTelemetryReporter()?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
 };

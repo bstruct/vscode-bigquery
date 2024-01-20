@@ -4,23 +4,27 @@ use super::{
     data_table_controls_element::DataTableControls,
     data_table_element::{DataTable, DataTableItem},
 };
-use crate::{custom_elements::base_element::BaseElement, parse_to_usize};
+use crate::{
+    bigquery::jobs::GetQueryResultsRequest, custom_elements::base_element::BaseElement,
+    parse_to_usize,
+};
 use wasm_bindgen::{prelude::Closure, JsCast};
+use wasm_bindgen_futures::spawn_local;
 use web_sys::{Element, Event};
 
-const TAG_NAME: &'static str = "bq-table";
+const TAG_NAME: &'static str = "bq-query";
 const PAGE_START_INDEX_ATT: &str = "page_start_index";
 const PAGE_SIZE_ATT: &str = "page_size";
 const ROWS_IN_PAGE_ATT: &str = "rows_in_page";
 const ROWS_TOTAL_ATT: &str = "rows_total";
 const RENDER_TABLE_EVENT_NAME: &str = "render_table";
 
-pub(crate) struct BigqueryTableCustomElement {
+pub(crate) struct BigqueryQueryCustomElement {
     element: Option<Element>,
     element_id: String,
+    job_id: String,
     project_id: String,
-    dataset_id: String,
-    table_id: String,
+    location: String,
     token: String,
 
     page_start_index: usize,
@@ -32,20 +36,20 @@ pub(crate) struct BigqueryTableCustomElement {
     rows: Option<Vec<Vec<Option<DataTableItem>>>>,
 }
 
-impl BigqueryTableCustomElement {
+impl BigqueryQueryCustomElement {
     pub(crate) fn base_new(
         element_id: String,
+        job_id: String,
         project_id: String,
-        dataset_id: String,
-        table_id: String,
+        location: String,
         token: String,
-    ) -> BigqueryTableCustomElement {
-        BigqueryTableCustomElement {
+    ) -> BigqueryQueryCustomElement {
+        BigqueryQueryCustomElement {
             element: None,
             element_id,
+            job_id,
             project_id,
-            dataset_id,
-            table_id,
+            location,
             token,
 
             page_start_index: 0,
@@ -76,13 +80,13 @@ impl BigqueryTableCustomElement {
         rows_total: Option<usize>,
         header: Option<Vec<String>>,
         rows: Option<Vec<Vec<Option<DataTableItem>>>>,
-    ) -> BigqueryTableCustomElement {
-        BigqueryTableCustomElement {
+    ) -> BigqueryQueryCustomElement {
+        BigqueryQueryCustomElement {
             element: self.element.to_owned(),
             element_id: self.get_element_id().to_string(),
+            job_id: self.job_id.to_string(),
             project_id: self.project_id.to_string(),
-            dataset_id: self.dataset_id.to_string(),
-            table_id: self.table_id.to_string(),
+            location: self.location.to_string(),
             token: self.token.to_string(),
             page_start_index: self.page_start_index.clone(),
             page_size: self.page_size.clone(),
@@ -93,19 +97,19 @@ impl BigqueryTableCustomElement {
         }
     }
 
-    pub(crate) fn from_element(element: &Element) -> BigqueryTableCustomElement {
+    pub(crate) fn from_element(element: &Element) -> BigqueryQueryCustomElement {
         let element_id = BaseElement::from_element(element)
             .id()
             .as_ref()
             .unwrap()
             .to_string();
 
-        BigqueryTableCustomElement {
+        BigqueryQueryCustomElement {
             element: Some(element.to_owned()),
             element_id,
+            job_id: get_attribute(element, "job_id"),
             project_id: get_attribute(element, "project_id"),
-            dataset_id: get_attribute(element, "dataset_id"),
-            table_id: get_attribute(element, "table_id"),
+            location: get_attribute(element, "location"),
             token: get_attribute(element, "token"),
             page_start_index: get_opt_num_attribute(element, PAGE_START_INDEX_ATT).unwrap_or(0),
             page_size: get_num_attribute(element, PAGE_SIZE_ATT),
@@ -116,18 +120,17 @@ impl BigqueryTableCustomElement {
         }
     }
 
-    // fn as_query_results_request(&self) -> GetQueryResultsRequest {
-    //     GetQueryResultsRequest {
-    //         project_id: self.project_id.clone(),
-    //         dataset_id: self.dataset_id.clone(),
-    //         table_id: self.table_id.clone(),
-    //         start_index: Some(self.page_start_index.clone().to_string()),
-    //         page_token: None,
-    //         max_results: Some(self.page_size),
-    //         timeout_ms: None,
-    //         location: Some(self.location.clone()),
-    //     }
-    // }
+    fn as_query_results_request(&self) -> GetQueryResultsRequest {
+        GetQueryResultsRequest {
+            project_id: self.project_id.clone(),
+            job_id: self.job_id.clone(),
+            start_index: Some(self.page_start_index.clone().to_string()),
+            page_token: None,
+            max_results: Some(self.page_size),
+            timeout_ms: None,
+            location: Some(self.location.clone()),
+        }
+    }
 
     fn on_render_table(event: &web_sys::Event) {
         let element = event
@@ -136,26 +139,26 @@ impl BigqueryTableCustomElement {
             .dyn_into::<web_sys::Element>()
             .unwrap();
 
-        let bq_table_element = BigqueryTableCustomElement::from_element(&element);
-        // let jobs = crate::bigquery::jobs::Jobs::new(&bq_table_element.token);
-        // let request = bq_table_element.as_query_results_request();
+        let bq_query_element = BigqueryQueryCustomElement::from_element(&element);
+        let jobs = crate::bigquery::jobs::Jobs::new(&bq_query_element.token);
+        let request = bq_query_element.as_query_results_request();
 
-        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        //     "on_render_table event on element: {:?}, request: {:?}",
-        //     element.id(),
-        //     request
-        // )));
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "on_render_table event on element: {:?}, request: {:?}",
+            element.id(),
+            request
+        )));
 
-        // let parent_node = element.parent_node().unwrap();
+        let parent_node = element.parent_node().unwrap();
 
-        // spawn_local(async move {
-        //     let response = jobs.get_query_results(request).await;
-        //     if let Some(response) = response {
-        //         response.to_bq_table(&bq_table_element).render(&parent_node);
-        //     } else {
-        //         element.set_inner_html(&format!("unexpected response: {:?}", response));
-        //     }
-        // });
+        spawn_local(async move {
+            let response = jobs.get_query_results(request).await;
+            if let Some(response) = response {
+                response.to_bq_query(&bq_query_element).render(&parent_node);
+            } else {
+                element.set_inner_html(&format!("unexpected response: {:?}", response));
+            }
+        });
     }
 
     pub(crate) fn get_page_start_index(&self) -> usize {
@@ -264,10 +267,10 @@ fn dispatch_on_render_event(element: &Element) {
         .unwrap();
 }
 
-impl CustomElementDefinition for BigqueryTableCustomElement {
+impl CustomElementDefinition for BigqueryQueryCustomElement {
     fn define(_document: &web_sys::Document, element: &web_sys::Element) {
         let on_event_type_closure =
-            Closure::wrap(Box::new(BigqueryTableCustomElement::on_render_table)
+            Closure::wrap(Box::new(BigqueryQueryCustomElement::on_render_table)
                 as Box<dyn Fn(&web_sys::Event)>);
 
         element
@@ -281,7 +284,7 @@ impl CustomElementDefinition for BigqueryTableCustomElement {
     }
 }
 
-impl BaseElementTrait for BigqueryTableCustomElement {
+impl BaseElementTrait for BigqueryQueryCustomElement {
     fn get_element_id(&self) -> &str {
         &self.element_id
     }
@@ -300,13 +303,13 @@ impl BaseElementTrait for BigqueryTableCustomElement {
     }
 }
 
-fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryTableCustomElement) {
+fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryQueryCustomElement) {
     let element = base_element.element();
     element.set_id(&bq_table.element_id);
 
+    set_attribute(&element, "job_id", bq_table.job_id.as_str());
     set_attribute(&element, "project_id", bq_table.project_id.as_str());
-    set_attribute(&element, "dataset_id", bq_table.dataset_id.as_str());
-    set_attribute(&element, "table_id", bq_table.table_id.as_str());
+    set_attribute(&element, "location", bq_table.location.as_str());
     set_attribute(&element, "token", bq_table.token.as_str());
     set_optional_attribute(
         &element,
@@ -361,17 +364,17 @@ fn configure_spacer(element: &BaseElement, _: &Option<usize>) {
 mod tests {
     use wasm_bindgen_test::*;
 
-    use super::{set_attributes, BigqueryTableCustomElement};
+    use super::{set_attributes, BigqueryQueryCustomElement};
     use crate::custom_elements::{
         base_element_trait::BaseElementTrait,
-        bq_table_custom_element::{PAGE_START_INDEX_ATT, TAG_NAME},
+        bq_query_custom_element::{PAGE_START_INDEX_ATT, TAG_NAME},
     };
     wasm_bindgen_test_configure!(run_in_browser);
 
     #[wasm_bindgen_test]
     pub fn attributes_set_and_read() {
         let parent_node = &crate::createElement(super::TAG_NAME);
-        let bq_table = &BigqueryTableCustomElement::base_new(
+        let bq_table = &BigqueryQueryCustomElement::base_new(
             "element_id".to_string(),
             "jobId".to_string(),
             "projectId".to_string(),
@@ -382,11 +385,11 @@ mod tests {
 
         set_attributes(base_element, bq_table);
 
-        let bq_table_from = BigqueryTableCustomElement::from_element(&base_element.element());
+        let bq_table_from = BigqueryQueryCustomElement::from_element(&base_element.element());
 
+        assert_eq!(bq_table.job_id, bq_table_from.job_id);
         assert_eq!(bq_table.project_id, bq_table_from.project_id);
-        assert_eq!(bq_table.dataset_id, bq_table_from.dataset_id);
-        assert_eq!(bq_table.table_id, bq_table_from.table_id);
+        assert_eq!(bq_table.location, bq_table_from.location);
         assert_eq!(bq_table.token, bq_table_from.token);
         assert_eq!(bq_table.page_start_index, bq_table_from.page_start_index);
         assert_eq!(bq_table.page_size, bq_table_from.page_size);
@@ -397,7 +400,7 @@ mod tests {
     #[wasm_bindgen_test]
     pub fn render_test_1() {
         let parent_node = &crate::createElement("div");
-        let bq_table = &BigqueryTableCustomElement::base_new(
+        let bq_table = &BigqueryQueryCustomElement::base_new(
             "element_id".to_string(),
             "jobId".to_string(),
             "projectId".to_string(),
@@ -411,12 +414,12 @@ mod tests {
         >(complex_object_array_test)
         .unwrap();
 
-        let bq_table_information = complex_object_array_test.to_bq_table(bq_table);
+        let bq_query_information = complex_object_array_test.to_bq_query(bq_table);
 
-        let rows_in_page = bq_table_information.rows_in_page;
-        let rows_total = bq_table_information.rows_total;
-        let header = bq_table_information.header;
-        let rows = bq_table_information.rows;
+        let rows_in_page = bq_query_information.rows_in_page;
+        let rows_total = bq_query_information.rows_total;
+        let header = bq_query_information.header;
+        let rows = bq_query_information.rows;
 
         let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
         bq_table.render(parent_node);
@@ -446,7 +449,7 @@ mod tests {
     #[wasm_bindgen_test]
     pub fn render_thrice_test_1() {
         let parent_node = &crate::createElement("div");
-        let bq_table = &BigqueryTableCustomElement::base_new(
+        let bq_table = &BigqueryQueryCustomElement::base_new(
             "element_id".to_string(),
             "jobId".to_string(),
             "projectId".to_string(),
@@ -460,12 +463,12 @@ mod tests {
         >(complex_object_array_test)
         .unwrap();
 
-        let bq_table_information = complex_object_array_test.to_bq_table(bq_table);
+        let bq_query_information = complex_object_array_test.to_bq_query(bq_table);
 
-        let rows_in_page = bq_table_information.rows_in_page;
-        let rows_total = bq_table_information.rows_total;
-        let header = bq_table_information.header;
-        let rows = bq_table_information.rows;
+        let rows_in_page = bq_query_information.rows_in_page;
+        let rows_total = bq_query_information.rows_total;
+        let header = bq_query_information.header;
+        let rows = bq_query_information.rows;
 
         let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
         //1
@@ -487,7 +490,7 @@ mod tests {
     #[wasm_bindgen_test]
     pub fn last_page_test_1() {
         let parent_node = &crate::createElement("div");
-        let bq_table = &BigqueryTableCustomElement::base_new(
+        let bq_table = &BigqueryQueryCustomElement::base_new(
             "element_id".to_string(),
             "jobId".to_string(),
             "projectId".to_string(),
@@ -501,19 +504,19 @@ mod tests {
         >(complex_object_array_test)
         .unwrap();
 
-        let bq_table_information = complex_object_array_test.to_bq_table(bq_table);
+        let bq_query_information = complex_object_array_test.to_bq_query(bq_table);
 
-        let rows_in_page = bq_table_information.rows_in_page;
-        let rows_total = bq_table_information.rows_total;
-        let header = bq_table_information.header;
-        let rows = bq_table_information.rows;
+        let rows_in_page = bq_query_information.rows_in_page;
+        let rows_total = bq_query_information.rows_total;
+        let header = bq_query_information.header;
+        let rows = bq_query_information.rows;
 
         let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
         //1
         bq_table.render(parent_node);
 
         let element = &parent_node.first_element_child().unwrap();
-        let bq_table = BigqueryTableCustomElement::from_element(element);
+        let bq_table = BigqueryQueryCustomElement::from_element(element);
 
         bq_table.last_page();
 
@@ -525,7 +528,7 @@ mod tests {
     #[wasm_bindgen_test]
     pub fn last_page_test_2() {
         let parent_node = &crate::createElement("div");
-        let bq_table = &BigqueryTableCustomElement::base_new(
+        let bq_table = &BigqueryQueryCustomElement::base_new(
             "element_id".to_string(),
             "jobId".to_string(),
             "projectId".to_string(),
@@ -540,19 +543,19 @@ mod tests {
         >(complex_object_array_test)
         .unwrap();
 
-        let bq_table_information = complex_object_array_test.to_bq_table(bq_table);
+        let bq_query_information = complex_object_array_test.to_bq_query(bq_table);
 
-        let rows_in_page = bq_table_information.rows_in_page;
-        let rows_total = bq_table_information.rows_total;
-        let header = bq_table_information.header;
-        let rows = bq_table_information.rows;
+        let rows_in_page = bq_query_information.rows_in_page;
+        let rows_total = bq_query_information.rows_total;
+        let header = bq_query_information.header;
+        let rows = bq_query_information.rows;
 
         let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
         //1
         bq_table.render(parent_node);
 
         let element = &parent_node.first_element_child().unwrap();
-        let bq_table = BigqueryTableCustomElement::from_element(element);
+        let bq_table = BigqueryQueryCustomElement::from_element(element);
 
         bq_table.last_page();
 
