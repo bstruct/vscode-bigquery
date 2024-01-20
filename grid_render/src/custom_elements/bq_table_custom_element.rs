@@ -6,6 +6,7 @@ use super::{
 };
 use crate::{custom_elements::base_element::BaseElement, parse_to_usize};
 use wasm_bindgen::{prelude::Closure, JsCast};
+use wasm_bindgen_futures::spawn_local;
 use web_sys::{Element, Event};
 
 const TAG_NAME: &'static str = "bq-table";
@@ -116,18 +117,18 @@ impl BigqueryTableCustomElement {
         }
     }
 
-    // fn as_query_results_request(&self) -> GetQueryResultsRequest {
-    //     GetQueryResultsRequest {
-    //         project_id: self.project_id.clone(),
-    //         dataset_id: self.dataset_id.clone(),
-    //         table_id: self.table_id.clone(),
+    fn as_table_request(&self) -> crate::bigquery::base::TableReference {
+        crate::bigquery::base::TableReference {
+            project_id: Some(self.project_id.clone()),
+            dataset_id: Some(self.dataset_id.clone()),
+            table_id: Some(self.table_id.clone()),
     //         start_index: Some(self.page_start_index.clone().to_string()),
     //         page_token: None,
     //         max_results: Some(self.page_size),
     //         timeout_ms: None,
     //         location: Some(self.location.clone()),
-    //     }
-    // }
+        }
+    }
 
     fn on_render_table(event: &web_sys::Event) {
         let element = event
@@ -137,25 +138,25 @@ impl BigqueryTableCustomElement {
             .unwrap();
 
         let bq_table_element = BigqueryTableCustomElement::from_element(&element);
-        // let jobs = crate::bigquery::jobs::Jobs::new(&bq_table_element.token);
-        // let request = bq_table_element.as_query_results_request();
+        let tables = crate::bigquery::tables::Tables::new(&bq_table_element.token);
+        let request = bq_table_element.as_table_request();
 
-        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        //     "on_render_table event on element: {:?}, request: {:?}",
-        //     element.id(),
-        //     request
-        // )));
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "on_render_table event on element: {:?}, request: {:?}",
+            element.id(),
+            request
+        )));
 
-        // let parent_node = element.parent_node().unwrap();
+        let parent_node = element.parent_node().unwrap();
 
-        // spawn_local(async move {
-        //     let response = jobs.get_query_results(request).await;
-        //     if let Some(response) = response {
-        //         response.to_bq_table(&bq_table_element).render(&parent_node);
-        //     } else {
-        //         element.set_inner_html(&format!("unexpected response: {:?}", response));
-        //     }
-        // });
+        spawn_local(async move {
+            let response = tables.get(request).await;
+            if let Some(response) = response {
+                // response.to_bq_table(&bq_table_element).render(&parent_node);
+            } else {
+                element.set_inner_html(&format!("unexpected response: {:?}", response));
+            }
+        });
     }
 
     pub(crate) fn get_page_start_index(&self) -> usize {

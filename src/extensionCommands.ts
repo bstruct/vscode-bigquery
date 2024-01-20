@@ -168,12 +168,12 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	} catch (errorx) {
 		// resultsGridRender.renderException(error);
-		const error = 
-			  {
-				message: (errorx as any).message || 'undefined message',
-				reason: ''
-			  };
-		  
+		const error =
+		{
+			message: (errorx as any).message || 'undefined message',
+			reason: ''
+		};
+
 		let _postMessageResult3 = await resultsGridRender.postMessage({
 			requestType: ResultsGridRenderRequestV2Type.error.toString(),
 			projectId: null,
@@ -312,45 +312,95 @@ export const commandViewTable = async function (...args: any[]) {
 		panel = vscode.window.createWebviewPanel(TABLE_RESULTS_VIEW_TYPE, title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
 	}
 
-	const newresultsGridRender = new ResultsGridRender(panel);
+	const resultsGridRender = new ResultsGridRender(panel);
 
-	// if (metadata[0].type === 'EXTERNAL' || metadata[0].type === 'VIEW') {
-	// 	try {
-	// 		const queryResponse = await bqClient.runQuery(
-	// 			`SELECT * FROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``);
+	await resultsGridRender.render1();
 
-	// 		const jobReferences = [
-	// 			{
-	// 				jobId: queryResponse.id,
-	// 				location: queryResponse.location,
-	// 				projectId: queryResponse.projectId
-	// 			} as JobReference];
+	if (metadata[0].type === 'EXTERNAL' || metadata[0].type === 'VIEW') {
+		// 	try {
+		// 		const queryResponse = await bqClient.runQuery(
+		// 			`SELECT * FROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``);
 
-	// 		const request = {
-	// 			jobReferences: jobReferences,
-	// 			startIndex: 0,
-	// 			maxResults: 50,
-	// 			jobIndex: 0,
-	// 			openInTabVisible: false
-	// 		} as ResultsGridRenderRequest;
+		// 		const jobReferences = [
+		// 			{
+		// 				jobId: queryResponse.id,
+		// 				location: queryResponse.location,
+		// 				projectId: queryResponse.projectId
+		// 			} as JobReference];
 
-	// 		newresultsGridRender.render(request);
-	// 	} catch (error) {
-	// 		newresultsGridRender.renderException(error);
-	// 	}
+		// 		const request = {
+		// 			jobReferences: jobReferences,
+		// 			startIndex: 0,
+		// 			maxResults: 50,
+		// 			jobIndex: 0,
+		// 			openInTabVisible: false
+		// 		} as ResultsGridRenderRequest;
 
-	// } else {
+		// 		newresultsGridRender.render(request);
+		// 	} catch (error) {
+		// 		newresultsGridRender.renderException(error);
+		// 	}
 
-	// 	const request = {
-	// 		tableReference: { projectId: item.projectId, datasetId: item.datasetId, tableId: item.tableId } as TableReference,
-	// 		startIndex: 0,
-	// 		maxResults: 50,
-	// 		jobIndex: 0,
-	// 		openInTabVisible: false
-	// 	} as ResultsGridRenderRequest;
+	} else {
 
-	// 	newresultsGridRender.render(request);
-	// }
+		// 	const request = {
+		// 		tableReference: { projectId: item.projectId, datasetId: item.datasetId, tableId: item.tableId } as TableReference,
+		// 		startIndex: 0,
+		// 		maxResults: 50,
+		// 		jobIndex: 0,
+		// 		openInTabVisible: false
+		// 	} as ResultsGridRenderRequest;
+
+		// 	newresultsGridRender.render(request);
+
+		try {
+			let _postMessageResult1 = await resultsGridRender.postMessage({
+				requestType: ResultsGridRenderRequestV2Type.clear.toString(),
+				projectId: null,
+				token: null,
+				job: null,
+				error: null
+			} as ResultsGridRenderRequestV2);
+
+			const bqClient = await getBigQueryClient();
+			const projectId = await bqClient.getProjectId();
+			// console.log('projectId:', projectId);
+			const token = await bqClient.getToken();
+			// console.log('token:', token);
+			// const job = await bqClient.runQuery(queryText);
+			const datasetId = item.datasetId;
+			const tableId = item.tableId;
+
+			// const jobReferences = job.map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
+
+			let _postMessageResult2 = await resultsGridRender.postMessage({
+				requestType: ResultsGridRenderRequestV2Type.previewTable.toString(),
+				projectId: projectId,
+				datasetId: datasetId,
+				tableId: tableId,
+				token: token,
+				job: null,
+				error: null
+			} as ResultsGridRenderRequestV2);
+
+		} catch (errorx) {
+			// resultsGridRender.renderException(error);
+			const error =
+			{
+				message: (errorx as any).message || 'undefined message',
+				reason: ''
+			};
+
+			let _postMessageResult3 = await resultsGridRender.postMessage({
+				requestType: ResultsGridRenderRequestV2Type.error.toString(),
+				projectId: null,
+				token: null,
+				job: null,
+				error: error
+			} as ResultsGridRenderRequestV2);
+		}
+
+	}
 
 	getTelemetryReporter()?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
 };

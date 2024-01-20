@@ -12,7 +12,9 @@ pub struct ExternalRequest {
     #[serde(alias = "projectId")]
     pub project_id: Option<String>,
     pub token: Option<String>,
+    #[serde(alias = "datasetId")]
     pub dataset_id: Option<String>,
+    #[serde(alias = "tableId")]
     pub table_id: Option<String>,
     pub job: Option<crate::bigquery::jobs::Job>,
     pub error: Option<ExternalRequestError>,
@@ -20,7 +22,6 @@ pub struct ExternalRequest {
 
 impl ExternalRequest {
     pub fn to_bq_table(&self, element_id: &str) -> BigqueryTableCustomElement {
-        let job = self.job.as_ref().unwrap().job_reference.as_ref().unwrap();
         let project_id = self.project_id.as_ref().unwrap().to_string();
         let dataset_id = self.dataset_id.as_ref().unwrap().to_string();
         let table_id = self.table_id.as_ref().unwrap().to_string();

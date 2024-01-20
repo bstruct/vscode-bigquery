@@ -3,6 +3,7 @@ import { Job } from "@google-cloud/bigquery";
 export enum ResultsGridRenderRequestV2Type {
   clear = "clear",
   executeQuery = "execute_query",
+  previewTable = "preview_table",
   error = "error"
 }
 

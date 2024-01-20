@@ -4,8 +4,7 @@ use wasm_bindgen::JsValue;
 use crate::{
     createElement,
     external_request::{ExternalRequest, ExternalRequestError},
-    getElementById,
-    observe,
+    getElementById, observe,
 };
 
 pub async fn handle(event: &web_sys::MessageEvent) {
@@ -34,6 +33,9 @@ pub async fn handle(event: &web_sys::MessageEvent) {
                 "execute_query" => {
                     execute_query(q1, external_request).await;
                 }
+                "preview_table" => {
+                    preview_table(q1, external_request).await;
+                }
                 "error" => {
                     show_error(q1, external_request).await;
                 }
@@ -57,14 +59,32 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
             let job_reference = job.job_reference.as_ref().unwrap();
             q1.set_inner_html(&format!("multiple results {}", job_reference.job_id));
         } else {
-
-            let element_id = "bq_table_1";
+            let element_id = "bq_query_1";
             let bq_table = external_request.to_bq_query(element_id);
-            bq_table.render(q1);            
+            bq_table.render(q1);
 
             //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
             observe(element_id);
         }
+    } else {
+        q1.set_inner_html(&"Unexpected error occured.");
+    }
+}
+
+async fn preview_table(q1: &web_sys::Element, external_request: &ExternalRequest) {
+    //clear the div
+    q1.set_inner_html(&"");
+
+    if external_request.project_id.is_some()
+        && external_request.dataset_id.is_some()
+        && external_request.table_id.is_some()
+    {
+        let element_id = "bq_table_1";
+        let bq_table = external_request.to_bq_table(element_id);
+        bq_table.render(q1);
+
+        //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
+        observe(element_id);
     } else {
         q1.set_inner_html(&"Unexpected error occured.");
     }
