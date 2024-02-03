@@ -363,11 +363,12 @@ export const commandViewTable = async function (...args: any[]) {
 			} as ResultsGridRenderRequestV2);
 
 			const bqClient = await getBigQueryClient();
-			const projectId = await bqClient.getProjectId();
+			// const projectId = await bqClient.getProjectId();
 			// console.log('projectId:', projectId);
 			const token = await bqClient.getToken();
 			// console.log('token:', token);
 			// const job = await bqClient.runQuery(queryText);
+			const projectId = item.projectId;
 			const datasetId = item.datasetId;
 			const tableId = item.tableId;
 

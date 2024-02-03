@@ -1,13 +1,13 @@
 use super::{
     base_element_trait::BaseElementTrait,
     custom_element_definition::CustomElementDefinition,
-    data_table_controls_element::DataTableControls,
+    data_table_controls_element::{DataTableControls, EVENT_GO_TO_FIRST_PAGE},
     data_table_element::{DataTable, DataTableItem},
 };
 use crate::{custom_elements::base_element::BaseElement, parse_to_usize};
 use wasm_bindgen::{prelude::Closure, JsCast};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{Element, Event};
+use web_sys::Element;
 
 const TAG_NAME: &'static str = "bq-table";
 const PAGE_START_INDEX_ATT: &str = "page_start_index";
@@ -122,11 +122,16 @@ impl BigqueryTableCustomElement {
             project_id: Some(self.project_id.clone()),
             dataset_id: Some(self.dataset_id.clone()),
             table_id: Some(self.table_id.clone()),
-    //         start_index: Some(self.page_start_index.clone().to_string()),
-    //         page_token: None,
-    //         max_results: Some(self.page_size),
-    //         timeout_ms: None,
-    //         location: Some(self.location.clone()),
+        }
+    }
+
+    fn as_table_data_list_request(&self) -> crate::bigquery::table_data::TableDataListRequest {
+        crate::bigquery::table_data::TableDataListRequest {
+            project_id: self.project_id.clone(),
+            dataset_id: self.dataset_id.clone(),
+            table_id: self.table_id.clone(),
+            start_index: Some(self.page_start_index.to_string()),
+            max_results: Some(self.page_size),
         }
     }
 
@@ -138,8 +143,9 @@ impl BigqueryTableCustomElement {
             .unwrap();
 
         let bq_table_element = BigqueryTableCustomElement::from_element(&element);
-        let tables = crate::bigquery::tables::Tables::new(&bq_table_element.token);
+
         let request = bq_table_element.as_table_request();
+        let table_data_list_request = bq_table_element.as_table_data_list_request();
 
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
             "on_render_table event on element: {:?}, request: {:?}",
@@ -150,123 +156,194 @@ impl BigqueryTableCustomElement {
         let parent_node = element.parent_node().unwrap();
 
         spawn_local(async move {
+            let tables = crate::bigquery::tables::Tables::new(&bq_table_element.token);
+            let table_data = crate::bigquery::table_data::TableData::new(&bq_table_element.token);
+
             let response = tables.get(request).await;
-            if let Some(response) = response {
-                // response.to_bq_table(&bq_table_element).render(&parent_node);
+            let response_rows = table_data.list(table_data_list_request).await;
+
+            if let Some(table) = response {
+                table
+                    .to_bq_table(&bq_table_element, &response_rows)
+                    .render(&parent_node);
             } else {
                 element.set_inner_html(&format!("unexpected response: {:?}", response));
             }
         });
     }
 
+    pub fn next_page(event: &web_sys::Event) {
+
+        let original_target = event.target()
+            .unwrap()
+            .dyn_into::<web_sys::Element>()
+            .unwrap();
+
+        // event.
+        let this = event.current_target().unwrap();
+        let this = this.dyn_into::<web_sys::Element>().unwrap();
+
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "next_page, original_target: {}, current_target: {}",
+            original_target.tag_name(),
+            this.tag_name(),
+        )));
+
+        // event.set_cancel_bubble(true);
+
+        // assert!(self.element.is_some());
+        // let element = self.element.as_ref().unwrap();
+        // assert!(element.get_attribute(ROWS_TOTAL_ATT).is_some());
+    
+        // let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
+        // let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
+        // let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap();
+    
+        // // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        // //     "next_page, start_index: {}, page_size: {}, rows_total: {}",
+        // //     start_index,
+        // //     page_size,
+        // //     rows_total
+        // // )));
+    
+        // let new_value = if start_index + page_size > rows_total {
+        //     start_index
+        // } else {
+        //     start_index + page_size
+        // };
+    
+        // let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
+        // element
+        //     .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
+        //     .unwrap();
+        // let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+    
+        // //trigger the on_render event
+        // if previous_value != current_value {
+        //     dispatch_on_render_event(&element);
+        // }
+
+    }
+
     pub(crate) fn get_page_start_index(&self) -> usize {
         self.page_start_index
     }
 
-    pub(crate) fn first_page(&self) {
-        assert!(self.element.is_some());
-        let element = self.element.as_ref().unwrap();
-        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-        element.set_attribute(PAGE_START_INDEX_ATT, "0").unwrap();
-        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+    pub(crate) fn first_page(event: &web_sys::Event) {
 
-        //trigger the on_render event
-        if previous_value != current_value {
-            dispatch_on_render_event(&element);
-        }
+        let this = event.current_target().unwrap();
+        let this = this.dyn_into::<web_sys::Element>().unwrap();
+
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "next_page on: {}",
+            this.tag_name(),
+        )));
+
+        // assert!(self.element.is_some());
+        // let element = self.element.as_ref().unwrap();
+        // let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
+        // element.set_attribute(PAGE_START_INDEX_ATT, "0").unwrap();
+        // let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+
+        // //trigger the on_render event
+        // if previous_value != current_value {
+        //     dispatch_on_render_event(&element);
+        // }
     }
 
-    pub(crate) fn previous_page(&self) {
-        assert!(self.element.is_some());
-        let element = self.element.as_ref().unwrap();
-        let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
-        let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
+    // pub(crate) fn previous_page(&self) {
+    //     assert!(self.element.is_some());
+    //     let element = self.element.as_ref().unwrap();
+    //     let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
+    //     let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
 
-        let new_value = if start_index > page_size {
-            start_index - page_size
-        } else {
-            0
-        };
+    //     let new_value = if start_index > page_size {
+    //         start_index - page_size
+    //     } else {
+    //         0
+    //     };
 
-        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-        element
-            .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
-            .unwrap();
-        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+    //     let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
+    //     element
+    //         .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
+    //         .unwrap();
+    //     let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
-        //trigger the on_render event
-        if previous_value != current_value {
-            dispatch_on_render_event(&element);
-        }
-    }
+    //     //trigger the on_render event
+    //     if previous_value != current_value {
+    //         dispatch_on_render_event(&element);
+    //     }
+    // }
 
-    pub(crate) fn next_page(&self) {
-        assert!(self.element.is_some());
-        let element = self.element.as_ref().unwrap();
-        assert!(element.get_attribute(ROWS_TOTAL_ATT).is_some());
+    // pub(crate) fn next_page(&self) {
+    //     assert!(self.element.is_some());
+    //     let element = self.element.as_ref().unwrap();
+    //     assert!(element.get_attribute(ROWS_TOTAL_ATT).is_some());
 
-        let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
-        let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
-        let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap();
+    //     let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
+    //     let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
+    //     let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap();
 
-        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        //     "next_page, start_index: {}, page_size: {}, rows_total: {}",
-        //     start_index,
-        //     page_size,
-        //     rows_total
-        // )));
+    //     // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+    //     //     "next_page, start_index: {}, page_size: {}, rows_total: {}",
+    //     //     start_index,
+    //     //     page_size,
+    //     //     rows_total
+    //     // )));
 
-        let new_value = if start_index + page_size > rows_total {
-            start_index
-        } else {
-            start_index + page_size
-        };
+    //     let new_value = if start_index + page_size > rows_total {
+    //         start_index
+    //     } else {
+    //         start_index + page_size
+    //     };
 
-        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-        element
-            .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
-            .unwrap();
-        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+    //     let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
+    //     element
+    //         .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
+    //         .unwrap();
+    //     let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
-        //trigger the on_render event
-        if previous_value != current_value {
-            dispatch_on_render_event(&element);
-        }
-    }
+    //     //trigger the on_render event
+    //     if previous_value != current_value {
+    //         dispatch_on_render_event(&element);
+    //     }
+    // }
 
-    pub(crate) fn last_page(&self) {
-        assert!(self.element.is_some());
-        let element = self.element.as_ref().unwrap();
-        let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
-        let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap_or(50);
+    // pub(crate) fn last_page(&self) {
+    //     assert!(self.element.is_some());
+    //     let element = self.element.as_ref().unwrap();
+    //     let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
+    //     let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap_or(50);
 
-        let new_value = if page_size > rows_total {
-            0
-        } else {
-            (f64::floor(rows_total as f64 / page_size as f64) * page_size as f64) as usize
-        };
+    //     let new_value = if page_size > rows_total {
+    //         0
+    //     } else {
+    //         (f64::floor(rows_total as f64 / page_size as f64) * page_size as f64) as usize
+    //     };
 
-        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-        element
-            .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
-            .unwrap();
-        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+    //     let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
+    //     element
+    //         .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
+    //         .unwrap();
+    //     let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
-        //trigger the on_render event
-        if previous_value != current_value {
-            dispatch_on_render_event(&element);
-        }
-    }
+    //     //trigger the on_render event
+    //     if previous_value != current_value {
+    //         dispatch_on_render_event(&element);
+    //     }
+    // }
 }
 
-fn dispatch_on_render_event(element: &Element) {
-    element
-        .dispatch_event(&Event::new(RENDER_TABLE_EVENT_NAME).unwrap())
-        .unwrap();
-}
+// fn dispatch_on_render_event(element: &Element) {
+//     element
+//         .dispatch_event(&Event::new(RENDER_TABLE_EVENT_NAME).unwrap())
+//         .unwrap();
+// }
 
 impl CustomElementDefinition for BigqueryTableCustomElement {
     fn define(_document: &web_sys::Document, element: &web_sys::Element) {
+
+        //RENDER_TABLE_EVENT_NAME
         let on_event_type_closure =
             Closure::wrap(Box::new(BigqueryTableCustomElement::on_render_table)
                 as Box<dyn Fn(&web_sys::Event)>);
@@ -277,8 +354,23 @@ impl CustomElementDefinition for BigqueryTableCustomElement {
                 on_event_type_closure.as_ref().unchecked_ref(),
             )
             .unwrap();
-
         on_event_type_closure.forget();
+
+        //EVENT_GO_TO_FIRST_PAGE
+        let on_event_type_closure = Closure::wrap(
+            Box::new(BigqueryTableCustomElement::next_page) as Box<dyn Fn(&web_sys::Event)>
+        );
+        element
+            .add_event_listener_with_callback_and_bool(
+                EVENT_GO_TO_FIRST_PAGE,
+                on_event_type_closure.as_ref().unchecked_ref(),
+                false
+            )
+            .unwrap();
+        on_event_type_closure.forget();
+
+
+
     }
 }
 
@@ -485,80 +577,80 @@ mod tests {
         assert_eq!(parent_node.outer_html(), first_html_output);
     }
 
-    #[wasm_bindgen_test]
-    pub fn last_page_test_1() {
-        let parent_node = &crate::createElement("div");
-        let bq_table = &BigqueryTableCustomElement::base_new(
-            "element_id".to_string(),
-            "jobId".to_string(),
-            "projectId".to_string(),
-            "location".to_string(),
-            "token".to_string(),
-        );
+    // #[wasm_bindgen_test]
+    // pub fn last_page_test_1() {
+    //     let parent_node = &crate::createElement("div");
+    //     let bq_table = &BigqueryTableCustomElement::base_new(
+    //         "element_id".to_string(),
+    //         "jobId".to_string(),
+    //         "projectId".to_string(),
+    //         "location".to_string(),
+    //         "token".to_string(),
+    //     );
 
-        let complex_object_array_test = include_str!("test_resources/all_types_test.json");
-        let complex_object_array_test = &serde_json::from_str::<
-            crate::bigquery::jobs::GetQueryResultsResponse,
-        >(complex_object_array_test)
-        .unwrap();
+    //     let complex_object_array_test = include_str!("test_resources/all_types_test.json");
+    //     let complex_object_array_test = &serde_json::from_str::<
+    //         crate::bigquery::jobs::GetQueryResultsResponse,
+    //     >(complex_object_array_test)
+    //     .unwrap();
 
-        let bq_table_information = complex_object_array_test.to_bq_table(bq_table);
+    //     let bq_table_information = complex_object_array_test.to_bq_table(bq_table);
 
-        let rows_in_page = bq_table_information.rows_in_page;
-        let rows_total = bq_table_information.rows_total;
-        let header = bq_table_information.header;
-        let rows = bq_table_information.rows;
+    //     let rows_in_page = bq_table_information.rows_in_page;
+    //     let rows_total = bq_table_information.rows_total;
+    //     let header = bq_table_information.header;
+    //     let rows = bq_table_information.rows;
 
-        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
-        //1
-        bq_table.render(parent_node);
+    //     let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+    //     //1
+    //     bq_table.render(parent_node);
 
-        let element = &parent_node.first_element_child().unwrap();
-        let bq_table = BigqueryTableCustomElement::from_element(element);
+    //     let element = &parent_node.first_element_child().unwrap();
+    //     let bq_table = BigqueryTableCustomElement::from_element(element);
 
-        bq_table.last_page();
+    //     bq_table.last_page();
 
-        let page_start_index = element.get_attribute(PAGE_START_INDEX_ATT).unwrap();
+    //     let page_start_index = element.get_attribute(PAGE_START_INDEX_ATT).unwrap();
 
-        assert_eq!(page_start_index, "0");
-    }
+    //     assert_eq!(page_start_index, "0");
+    // }
 
-    #[wasm_bindgen_test]
-    pub fn last_page_test_2() {
-        let parent_node = &crate::createElement("div");
-        let bq_table = &BigqueryTableCustomElement::base_new(
-            "element_id".to_string(),
-            "jobId".to_string(),
-            "projectId".to_string(),
-            "location".to_string(),
-            "token".to_string(),
-        );
+    // #[wasm_bindgen_test]
+    // pub fn last_page_test_2() {
+    //     let parent_node = &crate::createElement("div");
+    //     let bq_table = &BigqueryTableCustomElement::base_new(
+    //         "element_id".to_string(),
+    //         "jobId".to_string(),
+    //         "projectId".to_string(),
+    //         "location".to_string(),
+    //         "token".to_string(),
+    //     );
 
-        let complex_object_array_test =
-            include_str!("test_resources/complex_object_array_test.json");
-        let complex_object_array_test = &serde_json::from_str::<
-            crate::bigquery::jobs::GetQueryResultsResponse,
-        >(complex_object_array_test)
-        .unwrap();
+    //     let complex_object_array_test =
+    //         include_str!("test_resources/complex_object_array_test.json");
+    //     let complex_object_array_test = &serde_json::from_str::<
+    //         crate::bigquery::jobs::GetQueryResultsResponse,
+    //     >(complex_object_array_test)
+    //     .unwrap();
 
-        let bq_table_information = complex_object_array_test.to_bq_table(bq_table);
+    //     let bq_table_information = complex_object_array_test.to_bq_table(bq_table);
 
-        let rows_in_page = bq_table_information.rows_in_page;
-        let rows_total = bq_table_information.rows_total;
-        let header = bq_table_information.header;
-        let rows = bq_table_information.rows;
+    //     let rows_in_page = bq_table_information.rows_in_page;
+    //     let rows_total = bq_table_information.rows_total;
+    //     let header = bq_table_information.header;
+    //     let rows = bq_table_information.rows;
 
-        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
-        //1
-        bq_table.render(parent_node);
+    //     let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+    //     //1
+    //     bq_table.render(parent_node);
 
-        let element = &parent_node.first_element_child().unwrap();
-        let bq_table = BigqueryTableCustomElement::from_element(element);
+    //     let element = &parent_node.first_element_child().unwrap();
+    //     let bq_table = BigqueryTableCustomElement::from_element(element);
 
-        bq_table.last_page();
+    //     bq_table.last_page();
 
-        let page_start_index = element.get_attribute(PAGE_START_INDEX_ATT).unwrap();
+    //     let page_start_index = element.get_attribute(PAGE_START_INDEX_ATT).unwrap();
 
-        assert_eq!(page_start_index, "989250");
-    }
+    //     assert_eq!(page_start_index, "989250");
+    // }
 }

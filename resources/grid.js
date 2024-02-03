@@ -32,42 +32,43 @@ window.addEventListener('message', async event => {
 
 });
 
-const bqQueryTagName = 'BQ-TABLE';
+// const bqTableTagName = 'BQ-TABLE';
+// const bqQueryTagName = 'BQ-QUERY';
 
-let bqQueryOnRender = function (event) {
+// let bqQueryOnRender = function (event) {
 
-    const bqTable = event.target;
-    const jobId = bqTable.getAttribute('job_id');
-    const projectId = bqTable.getAttribute('project_id');
-    const location = bqTable.getAttribute('location');
+//     const bqTable = event.target;
+//     const jobId = bqTable.getAttribute('job_id');
+//     const projectId = bqTable.getAttribute('project_id');
+//     const location = bqTable.getAttribute('location');
 
-    console.log('bqQueryOnRender');
+//     console.log('bqQueryOnRender');
 
-    if (!vscode) { vscode = acquireVsCodeApi(); }
-    vscode.setState({ jobId, projectId, location });
+//     if (!vscode) { vscode = acquireVsCodeApi(); }
+//     vscode.setState({ jobId, projectId, location });
 
-};
+// };
 
-let mutationObserver = new MutationObserver(function (mutations) {
+// let mutationObserver = new MutationObserver(function (mutations) {
 
-    for (let index = 0; index < mutations.length; index++) {
-        const mutation = mutations[index];
+//     for (let index = 0; index < mutations.length; index++) {
+//         const mutation = mutations[index];
 
-        for (let index = 0; index < mutation.addedNodes.length; index++) {
-            const node = mutation.addedNodes[index];
+//         for (let index = 0; index < mutation.addedNodes.length; index++) {
+//             const node = mutation.addedNodes[index];
 
-            const tagName = node.tagName;
+//             const tagName = node.tagName;
 
 
-            if (tagName === bqQueryTagName) {
-                node.addEventListener('render_table', bqQueryOnRender);
-                console.log('node added', tagName, ' and event listener added');
-            }
-        }
-    }
-});
+//             if (tagName === bqTableTagName || tagName === bqQueryTagName) {
+//                 // node.addEventListener('render_query_table', bqQueryOnRender);
+//                 // console.log('node added', tagName, ' and event listener added');
+//             }
+//         }
+//     }
+// });
 
-mutationObserver.observe(document, { attributes: false, childList: true, characterData: false, subtree: true });
+// mutationObserver.observe(document, { attributes: false, childList: true, characterData: false, subtree: true });
 
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API

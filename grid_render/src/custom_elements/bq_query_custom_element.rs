@@ -17,7 +17,7 @@ const PAGE_START_INDEX_ATT: &str = "page_start_index";
 const PAGE_SIZE_ATT: &str = "page_size";
 const ROWS_IN_PAGE_ATT: &str = "rows_in_page";
 const ROWS_TOTAL_ATT: &str = "rows_total";
-const RENDER_TABLE_EVENT_NAME: &str = "render_table";
+const RENDER_QUERY_EVENT_NAME: &str = "render_table";
 
 pub(crate) struct BigqueryQueryCustomElement {
     element: Option<Element>,
@@ -132,23 +132,28 @@ impl BigqueryQueryCustomElement {
         }
     }
 
-    fn on_render_table(event: &web_sys::Event) {
+    fn on_render_query(event: &web_sys::Event) {
         let element = event
             .target()
             .unwrap()
             .dyn_into::<web_sys::Element>()
             .unwrap();
 
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "1) on_render_table event on element: {:?}",
+            element.id()
+        )));
+    
         let bq_query_element = BigqueryQueryCustomElement::from_element(&element);
-        let jobs = crate::bigquery::jobs::Jobs::new(&bq_query_element.token);
         let request = bq_query_element.as_query_results_request();
-
+        
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
             "on_render_table event on element: {:?}, request: {:?}",
             element.id(),
             request
         )));
-
+    
+        let jobs = crate::bigquery::jobs::Jobs::new(&bq_query_element.token);
         let parent_node = element.parent_node().unwrap();
 
         spawn_local(async move {
@@ -263,19 +268,19 @@ impl BigqueryQueryCustomElement {
 
 fn dispatch_on_render_event(element: &Element) {
     element
-        .dispatch_event(&Event::new(RENDER_TABLE_EVENT_NAME).unwrap())
+        .dispatch_event(&Event::new(RENDER_QUERY_EVENT_NAME).unwrap())
         .unwrap();
 }
 
 impl CustomElementDefinition for BigqueryQueryCustomElement {
     fn define(_document: &web_sys::Document, element: &web_sys::Element) {
         let on_event_type_closure =
-            Closure::wrap(Box::new(BigqueryQueryCustomElement::on_render_table)
+            Closure::wrap(Box::new(BigqueryQueryCustomElement::on_render_query)
                 as Box<dyn Fn(&web_sys::Event)>);
 
         element
             .add_event_listener_with_callback(
-                RENDER_TABLE_EVENT_NAME,
+                RENDER_QUERY_EVENT_NAME,
                 on_event_type_closure.as_ref().unchecked_ref(),
             )
             .unwrap();

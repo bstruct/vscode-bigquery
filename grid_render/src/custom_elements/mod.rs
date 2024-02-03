@@ -40,10 +40,10 @@ impl CustomElement {
         let window = &web_sys::window().expect("no window exists");
         let document = &window.document().expect("window should have a document");
 
-        // element.on
-
         match self {
-            // CustomElement::QueryResultsWithControls => query_results_with_controls::QueryResultsWithControls::define(document, element),
+            CustomElement::BqQuery => {
+                bq_query_custom_element::BigqueryQueryCustomElement::define(document, element)
+            }
             CustomElement::BqTable => {
                 bq_table_custom_element::BigqueryTableCustomElement::define(document, element)
             }

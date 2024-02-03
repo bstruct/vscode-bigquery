@@ -1,9 +1,6 @@
 use crate::getElementById;
 
-use super::{
-    base_element::BaseElement, base_element_trait::BaseElementTrait,
-    bq_table_custom_element::BigqueryTableCustomElement,
-};
+use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::Element;
 
@@ -13,6 +10,11 @@ const BTN_PREVIOUS_PAGE: &str = "btn_prev_page";
 const BTN_NEXT_PAGE: &str = "btn_next_page";
 const BTN_LAST_PAGE: &str = "btn_last_page";
 const PARENT_BQ_TABLE_ATT: &str = "parent_bq_table";
+
+pub(crate) const EVENT_GO_TO_FIRST_PAGE: &str = "go_to_first_page";
+pub(crate) const EVENT_GO_TO_PREVIOUS_PAGE: &str = "go_to_previous_page";
+pub(crate) const EVENT_GO_TO_NEXT_PAGE: &str = "go_to_next_page";
+pub(crate) const EVENT_GO_TO_LAST_PAGE: &str = "go_to_last_page";
 
 #[derive(Debug)]
 pub(crate) struct DataTableControls {
@@ -87,7 +89,7 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
         }
         BTN_FIRST_PAGE => {
             let element = &base_element.element();
-            add_event_listener(element);
+            add_event_listener(element, EVENT_GO_TO_FIRST_PAGE);
             element.set_inner_html("<< First page");
             // if settings.is_none() {
             //     element.set_attribute("disabled", "disabled").unwrap();
@@ -97,24 +99,24 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
         }
         BTN_PREVIOUS_PAGE => {
             let element = &base_element.element();
-            add_event_listener(element);
+            add_event_listener(element, EVENT_GO_TO_FIRST_PAGE);
             element.set_inner_html("< Previous page");
         }
         BTN_NEXT_PAGE => {
             let element = &base_element.element();
-            add_event_listener(element);
+            add_event_listener(element, EVENT_GO_TO_FIRST_PAGE);
             element.set_inner_html("> Next page");
         }
         BTN_LAST_PAGE => {
             let element = &base_element.element();
-            add_event_listener(element);
+            add_event_listener(element, EVENT_GO_TO_FIRST_PAGE);
             element.set_inner_html(">> Last page");
         }
         _ => {}
     }
 }
 
-fn add_event_listener(element: &Element) {
+fn add_event_listener(element: &Element, _event_type: &str) {
     if element.get_attribute("bee").is_none() {
         let on_event_type_closure =
             Closure::wrap(Box::new(on_click) as Box<dyn Fn(&web_sys::Event)>);
@@ -144,36 +146,63 @@ fn on_click(event: &web_sys::Event) {
         .dyn_into::<web_sys::Element>()
         .unwrap();
 
+    let mut custom_event_init = web_sys::CustomEventInit::new();
+    custom_event_init.bubbles(true);
+    custom_event_init.cancelable(true);
+    custom_event_init.composed(true);
+    
     let base_element = BaseElement::from_element(&element);
+    let type_ = match base_element.id().as_ref().unwrap().as_str() {
+        BTN_FIRST_PAGE => EVENT_GO_TO_FIRST_PAGE,
+        BTN_PREVIOUS_PAGE => EVENT_GO_TO_PREVIOUS_PAGE,
+        BTN_NEXT_PAGE => EVENT_GO_TO_NEXT_PAGE,
+        BTN_LAST_PAGE => EVENT_GO_TO_LAST_PAGE,
+        _ => panic!("unknown button"),
+    };
 
-    assert!(base_element.id().is_some());
-    assert!(base_element
-        .element()
-        .get_attribute(PARENT_BQ_TABLE_ATT)
-        .is_some());
+    let action_event =
+        web_sys::CustomEvent::new_with_event_init_dict(type_, &custom_event_init).unwrap();
 
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        "on_click event on element: {:?}",
-        element.get_attribute("be_id").unwrap_or(element.id())
-    )));
+    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+    //     "action_event, type: {}, bubbles: {}, cancelable: {}, cancel_bubble: {}, composed: {}",
+    //     action_event.type_(),
+    //     action_event.bubbles(),
+    //     action_event.cancelable(),
+    //     action_event.cancel_bubble(),
+    //     action_event.composed(),
+    // )));
 
-    let parent_bq_table_id = &base_element
-        .element()
-        .get_attribute(PARENT_BQ_TABLE_ATT)
-        .unwrap();
-    let bq_table = getElementById(parent_bq_table_id);
+    element.dispatch_event(&action_event).unwrap();
 
-    if let Some(bq_table) = bq_table {
-        let bq_table = BigqueryTableCustomElement::from_element(&bq_table);
+    // assert!(base_element.id().is_some());
+    // assert!(base_element
+    //     .element()
+    //     .get_attribute(PARENT_BQ_TABLE_ATT)
+    //     .is_some());
 
-        match base_element.id().as_ref().unwrap().as_str() {
-            BTN_FIRST_PAGE => bq_table.first_page(),
-            BTN_PREVIOUS_PAGE => bq_table.previous_page(),
-            BTN_NEXT_PAGE => bq_table.next_page(),
-            BTN_LAST_PAGE => bq_table.last_page(),
-            _ => {}
-        };
-    }
+    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+    //     "on_click event on element: {:?}",
+    //     element.get_attribute("be_id").unwrap_or(element.id())
+    // )));
+    // // event.stop_propagation();
+
+    // let parent_bq_table_id = &base_element
+    //     .element()
+    //     .get_attribute(PARENT_BQ_TABLE_ATT)
+    //     .unwrap();
+
+    // let action_event = match base_element.id().as_ref().unwrap().as_str() {
+    //         BTN_FIRST_PAGE => web_sys::Event::new(EVENT_GO_TO_FIRST_PAGE).unwrap(),
+    //         BTN_PREVIOUS_PAGE => web_sys::Event::new(EVENT_GO_TO_PREVIOUS_PAGE).unwrap(),
+    //         BTN_NEXT_PAGE => web_sys::Event::new(EVENT_GO_TO_NEXT_PAGE).unwrap(),
+    //         BTN_LAST_PAGE => web_sys::Event::new(EVENT_GO_TO_LAST_PAGE).unwrap(),
+    //         _ => panic!("unknown button")
+    //     };
+
+    // getElementById(parent_bq_table_id)
+    //     .expect("parent not found")
+    //     .dispatch_event(&action_event)
+    //     .expect("error dispatching event");
 }
 
 #[cfg(test)]

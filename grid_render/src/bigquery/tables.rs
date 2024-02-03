@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
+use web_sys::console;
 
 use super::base::{TableSchema, TableReference};
 
@@ -68,22 +70,21 @@ impl Tables {
 
             web_sys::console::log_1(json.as_ref());
 
-            // // Use serde to parse the JSON into a struct.
-            // let bq_response = serde_wasm_bindgen::from_value::<GetQueryResultsResponse>(json);
+            // Use serde to parse the JSON into a struct.
+            let bq_response = serde_wasm_bindgen::from_value::<Table>(json);
 
-            // if bq_response.is_err() {
-            //     console::log_1(&JsValue::from_str(&format!(
-            //         "error: {:?}",
-            //         bq_response.err().unwrap().to_string()
-            //     )));
-            // } else {
-            //     return Some(bq_response.unwrap());
-            // }
+            if bq_response.is_err() {
+                console::log_1(&JsValue::from_str(&format!(
+                    "error: {:?}",
+                    bq_response.err().unwrap().to_string()
+                )));
+            } else {
+                return Some(bq_response.unwrap());
+            }
         }
         None
     }
 }
-
 
 // https://cloud.google.com/bigquery/docs/reference/rest/v2/tables#resource:-table
 #[derive(Debug, Serialize, Deserialize)]

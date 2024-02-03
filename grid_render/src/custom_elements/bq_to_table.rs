@@ -1,8 +1,14 @@
 use super::{
-    bq_table_custom_element::BigqueryTableCustomElement, data_table_element::DataTableItem, bq_query_custom_element::BigqueryQueryCustomElement,
+    bq_query_custom_element::BigqueryQueryCustomElement,
+    bq_table_custom_element::BigqueryTableCustomElement, data_table_element::DataTableItem,
 };
 use crate::{
-    bigquery::{jobs::GetQueryResultsResponse, base::{TableSchema, TableFieldSchema}},
+    bigquery::{
+        base::{TableFieldSchema, TableSchema},
+        jobs::GetQueryResultsResponse,
+        table_data::TableDataListResponse,
+        tables::Table,
+    },
     parse_to_usize,
 };
 
@@ -14,7 +20,7 @@ impl GetQueryResultsResponse {
         let header = self.get_header();
         let number_columns = header.len();
         let page_start_index = bq_table_requested.get_page_start_index();
-        
+
         let (rows_in_page, rows) = self.get_rows(number_columns, page_start_index);
         let rows_total = self.get_rows_total();
 
@@ -40,7 +46,7 @@ impl GetQueryResultsResponse {
         let header = self.get_header();
         let number_columns = header.len();
         let page_start_index = bq_query_requested.get_page_start_index();
-        
+
         let (rows_in_page, rows) = self.get_rows(number_columns, page_start_index);
         let rows_total = self.get_rows_total();
 
@@ -95,6 +101,76 @@ impl GetQueryResultsResponse {
 
     fn get_rows_total(&self) -> usize {
         parse_to_usize(Some(self.total_rows.to_string())).unwrap_or(0)
+    }
+}
+
+impl Table {
+    pub(crate) fn to_bq_table(
+        &self,
+        bq_table_element: &crate::custom_elements::bq_table_custom_element::BigqueryTableCustomElement,
+        response_rows: &Option<TableDataListResponse>,
+    ) -> BigqueryTableCustomElement {
+        let header = self.get_header();
+        let number_columns = header.len();
+        let page_start_index = bq_table_element.get_page_start_index();
+
+        let (rows_in_page, rows) = self.get_rows(number_columns, page_start_index, response_rows);
+        let rows_total = self.get_rows_total();
+
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "rows_total: {}, rows_in_page: {}, rows len: {}",
+            rows_total,
+            rows_in_page,
+            rows.len()
+        )));
+
+        bq_table_element.with_table_info(
+            Some(rows_in_page),
+            Some(rows_total),
+            Some(header),
+            Some(rows),
+        )
+    }
+
+    fn get_rows(
+        &self,
+        number_columns: usize,
+        page_start_index: usize,
+        response_rows: &Option<TableDataListResponse>,
+    ) -> (usize, Vec<Vec<Option<DataTableItem>>>) {
+        assert!(self.schema.is_some(), "unexpected empty schema");
+        let schema = self.schema.as_ref().unwrap();
+
+        let origin_rows = &response_rows.as_ref().expect("rows not found").rows;
+
+        let rows_in_page = origin_rows.len();
+
+        let number_rows = calculate_number_rows(&origin_rows);
+        let mut rows: Vec<Vec<Option<DataTableItem>>> =
+            vec![vec![None; number_columns]; number_rows];
+
+        place_bq_table_rows(
+            &mut rows,
+            &schema.fields,
+            &origin_rows,
+            0,
+            0,
+            true,
+            page_start_index,
+        );
+
+        (rows_in_page, rows.to_owned())
+    }
+
+    fn get_header(&self) -> Vec<String> {
+        assert!(self.schema.is_some(), "unexpected empty schema");
+
+        let schema = self.schema.as_ref().unwrap();
+        get_bq_table_header(&schema)
+    }
+
+    fn get_rows_total(&self) -> usize {
+        parse_to_usize(Some(self.num_rows.clone().unwrap_or(String::from("0")))).unwrap_or(0)
     }
 }
 
