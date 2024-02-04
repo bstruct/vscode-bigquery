@@ -1,7 +1,10 @@
 use super::{
     base_element_trait::BaseElementTrait,
     custom_element_definition::CustomElementDefinition,
-    data_table_controls_element::{DataTableControls, EVENT_GO_TO_FIRST_PAGE},
+    data_table_controls_element::{
+        DataTableControls, EVENT_GO_TO_FIRST_PAGE, EVENT_GO_TO_LAST_PAGE, EVENT_GO_TO_NEXT_PAGE,
+        EVENT_GO_TO_PREVIOUS_PAGE,
+    },
     data_table_element::{DataTable, DataTableItem},
 };
 use crate::{custom_elements::base_element::BaseElement, parse_to_usize};
@@ -60,7 +63,6 @@ impl BigqueryTableCustomElement {
     }
     pub(crate) fn to_data_table_controls(&self) -> DataTableControls {
         DataTableControls::new(
-            &self.element_id,
             Some(self.page_start_index),
             self.rows_in_page,
             self.rows_total,
@@ -172,177 +174,102 @@ impl BigqueryTableCustomElement {
         });
     }
 
-    pub fn next_page(event: &web_sys::Event) {
-
-        let original_target = event.target()
-            .unwrap()
-            .dyn_into::<web_sys::Element>()
-            .unwrap();
-
-        // event.
-        let this = event.current_target().unwrap();
-        let this = this.dyn_into::<web_sys::Element>().unwrap();
-
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "next_page, original_target: {}, current_target: {}",
-            original_target.tag_name(),
-            this.tag_name(),
-        )));
-
-        // event.set_cancel_bubble(true);
-
-        // assert!(self.element.is_some());
-        // let element = self.element.as_ref().unwrap();
-        // assert!(element.get_attribute(ROWS_TOTAL_ATT).is_some());
-    
-        // let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
-        // let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
-        // let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap();
-    
-        // // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        // //     "next_page, start_index: {}, page_size: {}, rows_total: {}",
-        // //     start_index,
-        // //     page_size,
-        // //     rows_total
-        // // )));
-    
-        // let new_value = if start_index + page_size > rows_total {
-        //     start_index
-        // } else {
-        //     start_index + page_size
-        // };
-    
-        // let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-        // element
-        //     .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
-        //     .unwrap();
-        // let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
-    
-        // //trigger the on_render event
-        // if previous_value != current_value {
-        //     dispatch_on_render_event(&element);
-        // }
-
-    }
-
     pub(crate) fn get_page_start_index(&self) -> usize {
         self.page_start_index
     }
 
-    pub(crate) fn first_page(event: &web_sys::Event) {
+    pub(crate) fn first_page(&self) -> bool {
+        assert!(self.element.is_some());
+        let element = self.element.as_ref().unwrap();
+        // let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
 
-        let this = event.current_target().unwrap();
-        let this = this.dyn_into::<web_sys::Element>().unwrap();
+        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
+        element.set_attribute(PAGE_START_INDEX_ATT, "0").unwrap();
+        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "next_page on: {}",
-            this.tag_name(),
-        )));
-
-        // assert!(self.element.is_some());
-        // let element = self.element.as_ref().unwrap();
-        // let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-        // element.set_attribute(PAGE_START_INDEX_ATT, "0").unwrap();
-        // let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
-
-        // //trigger the on_render event
-        // if previous_value != current_value {
-        //     dispatch_on_render_event(&element);
-        // }
+        //return bool true if value was changed
+        previous_value != current_value
     }
 
-    // pub(crate) fn previous_page(&self) {
-    //     assert!(self.element.is_some());
-    //     let element = self.element.as_ref().unwrap();
-    //     let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
-    //     let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
+    pub(crate) fn previous_page(&self) -> bool {
+        assert!(self.element.is_some());
+        let element = self.element.as_ref().unwrap();
+        let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
+        let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
 
-    //     let new_value = if start_index > page_size {
-    //         start_index - page_size
-    //     } else {
-    //         0
-    //     };
+        let new_value = if start_index > page_size {
+            start_index - page_size
+        } else {
+            0
+        };
 
-    //     let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-    //     element
-    //         .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
-    //         .unwrap();
-    //     let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
+        element
+            .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
+            .unwrap();
+        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
-    //     //trigger the on_render event
-    //     if previous_value != current_value {
-    //         dispatch_on_render_event(&element);
-    //     }
-    // }
+        //return bool true if value was changed
+        previous_value != current_value
+    }
 
-    // pub(crate) fn next_page(&self) {
-    //     assert!(self.element.is_some());
-    //     let element = self.element.as_ref().unwrap();
-    //     assert!(element.get_attribute(ROWS_TOTAL_ATT).is_some());
+    pub(crate) fn next_page(&self) -> bool {
+        assert!(self.element.is_some());
+        let element = self.element.as_ref().unwrap();
+        assert!(element.get_attribute(ROWS_TOTAL_ATT).is_some());
 
-    //     let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
-    //     let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
-    //     let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap();
+        let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
+        let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
+        let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap();
 
-    //     // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-    //     //     "next_page, start_index: {}, page_size: {}, rows_total: {}",
-    //     //     start_index,
-    //     //     page_size,
-    //     //     rows_total
-    //     // )));
+        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        //     "next_page, start_index: {}, page_size: {}, rows_total: {}",
+        //     start_index,
+        //     page_size,
+        //     rows_total
+        // )));
 
-    //     let new_value = if start_index + page_size > rows_total {
-    //         start_index
-    //     } else {
-    //         start_index + page_size
-    //     };
+        let new_value = if start_index + page_size > rows_total {
+            start_index
+        } else {
+            start_index + page_size
+        };
 
-    //     let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-    //     element
-    //         .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
-    //         .unwrap();
-    //     let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
+        element
+            .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
+            .unwrap();
+        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
-    //     //trigger the on_render event
-    //     if previous_value != current_value {
-    //         dispatch_on_render_event(&element);
-    //     }
-    // }
+        //return bool true if value was changed
+        previous_value != current_value
+    }
 
-    // pub(crate) fn last_page(&self) {
-    //     assert!(self.element.is_some());
-    //     let element = self.element.as_ref().unwrap();
-    //     let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
-    //     let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap_or(50);
+    pub(crate) fn last_page(&self) -> bool {
+        assert!(self.element.is_some());
+        let element = self.element.as_ref().unwrap();
+        let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
+        let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap_or(50);
 
-    //     let new_value = if page_size > rows_total {
-    //         0
-    //     } else {
-    //         (f64::floor(rows_total as f64 / page_size as f64) * page_size as f64) as usize
-    //     };
+        let new_value = if page_size > rows_total {
+            0
+        } else {
+            (f64::floor(rows_total as f64 / page_size as f64) * page_size as f64) as usize
+        };
 
-    //     let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-    //     element
-    //         .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
-    //         .unwrap();
-    //     let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+        let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
+        element
+            .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
+            .unwrap();
+        let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
-    //     //trigger the on_render event
-    //     if previous_value != current_value {
-    //         dispatch_on_render_event(&element);
-    //     }
-    // }
+        //return bool true if value was changed
+        previous_value != current_value
+    }
 }
-
-// fn dispatch_on_render_event(element: &Element) {
-//     element
-//         .dispatch_event(&Event::new(RENDER_TABLE_EVENT_NAME).unwrap())
-//         .unwrap();
-// }
 
 impl CustomElementDefinition for BigqueryTableCustomElement {
     fn define(_document: &web_sys::Document, element: &web_sys::Element) {
-
         //RENDER_TABLE_EVENT_NAME
         let on_event_type_closure =
             Closure::wrap(Box::new(BigqueryTableCustomElement::on_render_table)
@@ -357,21 +284,127 @@ impl CustomElementDefinition for BigqueryTableCustomElement {
         on_event_type_closure.forget();
 
         //EVENT_GO_TO_FIRST_PAGE
-        let on_event_type_closure = Closure::wrap(
-            Box::new(BigqueryTableCustomElement::next_page) as Box<dyn Fn(&web_sys::Event)>
-        );
+        let on_event_type_closure =
+            Closure::wrap(Box::new(first_page) as Box<dyn Fn(&web_sys::Event)>);
         element
             .add_event_listener_with_callback_and_bool(
                 EVENT_GO_TO_FIRST_PAGE,
                 on_event_type_closure.as_ref().unchecked_ref(),
-                false
+                false,
             )
             .unwrap();
         on_event_type_closure.forget();
 
+        //EVENT_GO_TO_PREVIOUS_PAGE
+        let on_event_type_closure =
+            Closure::wrap(Box::new(previous_page) as Box<dyn Fn(&web_sys::Event)>);
+        element
+            .add_event_listener_with_callback_and_bool(
+                EVENT_GO_TO_PREVIOUS_PAGE,
+                on_event_type_closure.as_ref().unchecked_ref(),
+                false,
+            )
+            .unwrap();
+        on_event_type_closure.forget();
 
+        //EVENT_GO_TO_NEXT_PAGE
+        let on_event_type_closure =
+            Closure::wrap(Box::new(next_page) as Box<dyn Fn(&web_sys::Event)>);
+        element
+            .add_event_listener_with_callback_and_bool(
+                EVENT_GO_TO_NEXT_PAGE,
+                on_event_type_closure.as_ref().unchecked_ref(),
+                false,
+            )
+            .unwrap();
+        on_event_type_closure.forget();
 
+        //EVENT_GO_TO_LAST_PAGE
+        let on_event_type_closure =
+            Closure::wrap(Box::new(last_page) as Box<dyn Fn(&web_sys::Event)>);
+        element
+            .add_event_listener_with_callback_and_bool(
+                EVENT_GO_TO_LAST_PAGE,
+                on_event_type_closure.as_ref().unchecked_ref(),
+                false,
+            )
+            .unwrap();
+        on_event_type_closure.forget();
     }
+}
+
+fn first_page(event: &web_sys::Event) {
+    let element = event.current_target().unwrap();
+    let element = element.dyn_into::<web_sys::Element>().unwrap();
+
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        "next_page on: {}",
+        element.tag_name(),
+    )));
+
+    assert_eq!(element.tag_name(), TAG_NAME.to_uppercase());
+
+    let bq_table = BigqueryTableCustomElement::from_element(&element);
+    if bq_table.first_page() {
+        dispatch_on_render_event(&element);
+    }
+}
+
+fn previous_page(event: &web_sys::Event) {
+    let element = event.current_target().unwrap();
+    let element = element.dyn_into::<web_sys::Element>().unwrap();
+
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        "next_page on: {}",
+        element.tag_name(),
+    )));
+
+    assert_eq!(element.tag_name(), TAG_NAME.to_uppercase());
+
+    let bq_table = BigqueryTableCustomElement::from_element(&element);
+    if bq_table.previous_page() {
+        dispatch_on_render_event(&element);
+    }
+}
+
+fn next_page(event: &web_sys::Event) {
+    let element = event.current_target().unwrap();
+    let element = element.dyn_into::<web_sys::Element>().unwrap();
+
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        "next_page on: {}",
+        element.tag_name(),
+    )));
+
+    assert_eq!(element.tag_name(), TAG_NAME.to_uppercase());
+
+    let bq_table = BigqueryTableCustomElement::from_element(&element);
+    if bq_table.next_page() {
+        dispatch_on_render_event(&element);
+    }
+}
+
+fn last_page(event: &web_sys::Event) {
+    let element = event.current_target().unwrap();
+    let element = element.dyn_into::<web_sys::Element>().unwrap();
+
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        "next_page on: {}",
+        element.tag_name(),
+    )));
+
+    assert_eq!(element.tag_name(), TAG_NAME.to_uppercase());
+
+    let bq_table = BigqueryTableCustomElement::from_element(&element);
+    if bq_table.last_page() {
+        dispatch_on_render_event(&element);
+    }
+}
+
+fn dispatch_on_render_event(element: &Element) {
+    element
+        .dispatch_event(&web_sys::Event::new(RENDER_TABLE_EVENT_NAME).unwrap())
+        .unwrap();
 }
 
 impl BaseElementTrait for BigqueryTableCustomElement {

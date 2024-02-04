@@ -63,7 +63,6 @@ impl BigqueryQueryCustomElement {
     }
     pub(crate) fn to_data_table_controls(&self) -> DataTableControls {
         DataTableControls::new(
-            &self.element_id,
             Some(self.page_start_index),
             self.rows_in_page,
             self.rows_total,
