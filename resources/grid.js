@@ -33,42 +33,79 @@ window.addEventListener('message', async event => {
 });
 
 // const bqTableTagName = 'BQ-TABLE';
-// const bqQueryTagName = 'BQ-QUERY';
+const bqQueryTagName = 'BQ-QUERY';
 
-// let bqQueryOnRender = function (event) {
+let bqQueryOnRender = function (event) {
 
-//     const bqTable = event.target;
-//     const jobId = bqTable.getAttribute('job_id');
-//     const projectId = bqTable.getAttribute('project_id');
-//     const location = bqTable.getAttribute('location');
+    const bqTable = event.target;
+    const jobId = bqTable.getAttribute('job_id');
+    const projectId = bqTable.getAttribute('project_id');
+    const location = bqTable.getAttribute('location');
 
-//     console.log('bqQueryOnRender');
+    console.log('bqQueryOnRender');
 
-//     if (!vscode) { vscode = acquireVsCodeApi(); }
-//     vscode.setState({ jobId, projectId, location });
+    if (!vscode) { vscode = acquireVsCodeApi(); }
+    vscode.setState({ jobId, projectId, location });
 
-// };
+    console.log('state set: ', JSON.stringify({ jobId, projectId, location }));
 
-// let mutationObserver = new MutationObserver(function (mutations) {
+
+};
+
+// let attributesMutationObserver = new MutationObserver(function (mutations) {
 
 //     for (let index = 0; index < mutations.length; index++) {
+
 //         const mutation = mutations[index];
+//         // console.log(mutation);
 
-//         for (let index = 0; index < mutation.addedNodes.length; index++) {
-//             const node = mutation.addedNodes[index];
+//         mutation.target.dispatchEvent(new CustomEvent('attributeMutation', 
+//         { detail: { 
+//             "attributeName": "xx",
+//             "oldValue": "yy",
+//             "target": mutation.target,
+//             // mutation 
+//         } }));
 
-//             const tagName = node.tagName;
-
-
-//             if (tagName === bqTableTagName || tagName === bqQueryTagName) {
-//                 // node.addEventListener('render_query_table', bqQueryOnRender);
-//                 // console.log('node added', tagName, ' and event listener added');
-//             }
-//         }
+//         // let attributeName = mutation.attributeName;
+//         // if (attributeName) {
+//         //     console.log('mutation.attributeName: ', attributeName, ', oldValue: ', mutation.oldValue);
+//         // }
 //     }
+
 // });
 
-// mutationObserver.observe(document, { attributes: false, childList: true, characterData: false, subtree: true });
+// function attributesMutationObserve(node) {
+//     attributesMutationObserver.observe(node, { attributes: true, childList: false, characterData: false, subtree: false });
+// }
+
+let mutationObserver = new MutationObserver(function (mutations) {
+
+    for (let index = 0; index < mutations.length; index++) {
+        const mutation = mutations[index];
+
+        for (let index = 0; index < mutation.addedNodes.length; index++) {
+            const node = mutation.addedNodes[index];
+
+            const tagName = node.tagName;
+
+            if (tagName === bqQueryTagName) {
+                node.addEventListener('render_table', bqQueryOnRender);
+                console.log('node added', tagName, ' and event listener added');
+            }
+            // else {
+
+            //     if (tagName === 'DIV' && node.getAttribute('onAttributeMutation')) {
+            //         console.log('onAttributeMutation: ', tagName);
+            //         attributesMutationObserver.observe(node, { attributes: true, childList: false, characterData: false, subtree: false });
+            //     }
+
+            // }
+        }
+    }
+});
+
+mutationObserver.observe(document, { attributes: false, childList: true, characterData: false, subtree: true });
 
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
@@ -106,3 +143,4 @@ function observe(elementId) {
 }
 
 document.observe = observe;
+// document.attributesMutationObserve = attributesMutationObserve;

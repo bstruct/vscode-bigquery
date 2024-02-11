@@ -7,7 +7,7 @@ div[be_id='controls-background'] {
     height: 30px;
 }
 
-div[be_id='controls']{
+div[be_id='controls'] {
     top: 0;
     left: 0;
     position: fixed;
@@ -37,6 +37,7 @@ table {
     outline: none;
     border-collapse: collapse;
     text-align: left;
+    /* width: 100%; */
 }
 
 table thead {
@@ -49,9 +50,42 @@ th,
 td {
     padding: 5px 15px;
     border-bottom: 1px solid gray;
+    overflow: hidden;
+    vertical-align: top;
+    text-overflow: ellipsis;
 }
 
 .nullValue {
     font-style: italic;
     color: var(--vscode-inputValidation-warningBorder) !important;
 }
+
+table thead th,
+table tbody td {
+    max-width: 600px;
+}
+
+th div, tr div {
+    overflow: auto;
+}
+
+th div {
+    resize: horizontal;
+}
+
+td div {
+    resize: vertical;
+    overflow: auto;
+    text-wrap: wrap;
+    overflow-wrap: anywhere;
+}
+
+
+/* 
+element.style {
+    width: 505px;
+    resize: both;
+    height: 251px;
+    overflow: auto;
+    white-space: pre;
+    overflow-wrap: anywhere; */

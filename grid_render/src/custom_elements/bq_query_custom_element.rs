@@ -10,7 +10,7 @@ use crate::{
 };
 use wasm_bindgen::{prelude::Closure, JsCast};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{Element, Event};
+use web_sys::Element;
 
 const TAG_NAME: &'static str = "bq-query";
 const PAGE_START_INDEX_ATT: &str = "page_start_index";

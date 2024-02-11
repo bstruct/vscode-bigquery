@@ -31,7 +31,7 @@ features = [
     # "DocumentFragment",
     # "Node",
     "Element",
-    # "HtmlElement",
+    "HtmlElement",
     # "HtmlFormElement",
     # "HtmlInputElement",
     # "HtmlSlotElement",
@@ -43,9 +43,11 @@ features = [
     "Event",
     "CustomEventInit",
     "CustomEvent",
+    "MouseEvent",
     "MessageEvent",
     # "SubmitEvent",
-    "MutationObserver",
+    # "MutationObserver",
+    # "MutationRecord"
 ]
 
 # [features]
