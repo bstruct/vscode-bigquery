@@ -41,7 +41,7 @@ impl BaseElementTrait for DataTable {
 
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
         BaseElement::new_and_append(parent_node, "table", &self.get_element_id())
-            .apply_fn(&set_table_event_handlers, &None)
+            // .apply_fn(&set_table_event_handlers, &None)
             .append_child("style", "tablestyle")
             .append_sibling("thead", "thead1")
             .resolve_header(&self.header)
@@ -60,7 +60,8 @@ impl BaseElement {
                 BaseElement::new_and_append(&tr.element(), "th", &format!("th{}", col_index))
                     .append_child("div", &format!("d{}", col_index))
                     .apply_fn(&set_header_text, &text)
-                    .apply_fn(&set_resize_actions, &col_index);
+                    // .apply_fn(&set_resize_actions, &col_index)
+                    ;
             }
         } else {
             while let Some(child) = self.first_child() {
@@ -94,7 +95,7 @@ impl BaseElement {
                             "td",
                             &format!("td{}", col_index),
                         )
-                        // .append_child("div", &format!("d{}", col_index))
+                        .append_child("div", &format!("d{}", col_index))
                         .apply_fn(&set_table_item, &table_item);
                     }
 
@@ -184,7 +185,7 @@ fn set_resize_actions(base_element: &BaseElement, _col_index: &usize) {
 
         element
             .add_event_listener_with_callback(
-                "mouseup",
+                "mousemove",
                 on_event_type_closure.as_ref().unchecked_ref(),
             )
             .unwrap();
@@ -193,36 +194,62 @@ fn set_resize_actions(base_element: &BaseElement, _col_index: &usize) {
 }
 
 fn on_mouse_event(mouse_event: &web_sys::MouseEvent) {
+    if mouse_event.button() != 0 {
+        return;
+    }
+
+    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+    //     "button: {:?}",
+    //     mouse_event.button(),
+    // )));
+
     let element = mouse_event
         .target()
         .expect("target node not found")
         .dyn_into::<web_sys::Element>()
         .expect("node is not an element");
 
-    let parent_element = element.parent_element().expect("element with no parent");
+    let child_element = 
+        //th
+        element.parent_element().expect("element with no parent")
+        //tr
+        .parent_element().expect("element with no parent")
+        //thead
+        .parent_element().expect("element with no parent")
+        //table
+        .parent_element().expect("element with no parent")
+        //style
+        .first_child().expect("element with no parent")
+        ;
 
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        "client_width: {:?}, parent_width: {:?}",
-        element.client_width(),
-        parent_element.client_width(),
+
+    child_element.set_text_content(Some(&format!(
+            "tr td:nth-child({}) {{ max-width: {}px; }}",
+            3,
+            element.client_width()
     )));
 
-    let mut custom_event_init = web_sys::CustomEventInit::new();
-    custom_event_init.bubbles(true);
-    custom_event_init.cancelable(true);
-    custom_event_init.composed(true);
-    let detail = serde_wasm_bindgen::to_value(&ColumnResizeInformation {
-        column_index: 2,
-        column_width: element.client_width() as usize,
-    })
-    .unwrap();
-    custom_event_init.detail(&detail);
+    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+    //     "client_width: {:?}, parent_width: {:?}",
+    //     element.client_width(),
+    //     parent_element.client_width(),
+    // )));
 
-    let event = web_sys::CustomEvent::new_with_event_init_dict("column_resize", &custom_event_init)
-        .unwrap();
+    // let mut custom_event_init = web_sys::CustomEventInit::new();
+    // custom_event_init.bubbles(true);
+    // custom_event_init.cancelable(true);
+    // custom_event_init.composed(true);
+    // let detail = serde_wasm_bindgen::to_value(&ColumnResizeInformation {
+    //     column_index: 2,
+    //     column_width: element.client_width() as usize,
+    // })
+    // .unwrap();
+    // custom_event_init.detail(&detail);
 
-    parent_element.dispatch_event(&event).unwrap();
+    // let event = web_sys::CustomEvent::new_with_event_init_dict("column_resize", &custom_event_init)
+    //     .unwrap();
 
+    // parent_element.dispatch_event(&event).unwrap();
 }
 
 fn set_table_item(base_element: &BaseElement, table_item: &Option<DataTableItem>) {

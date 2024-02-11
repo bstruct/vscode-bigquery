@@ -60,32 +60,44 @@ td {
     color: var(--vscode-inputValidation-warningBorder) !important;
 }
 
-table thead th,
+/* table thead th div {
+    max-width: 600px;
+} */
+
+table thead th, 
 table tbody td {
     max-width: 600px;
 }
 
-th div, tr div {
+/* th div, tr div {
     overflow: auto;
 }
+ */
 
-th div {
-    resize: horizontal;
+ table tbody td div {
+    display: inline;
 }
 
-td div {
+/* td div {
     resize: vertical;
     overflow: auto;
     text-wrap: wrap;
     overflow-wrap: anywhere;
+} */
+.container:has(> div) {
+    border: 2px solid red;
 }
 
+/* table tbody td:has(> div) {
+    border: 2px solid red;
+} */
 
 /* 
-element.style {
-    width: 505px;
-    resize: both;
-    height: 251px;
-    overflow: auto;
-    white-space: pre;
-    overflow-wrap: anywhere; */
+resize: vertical;
+    overflow: scroll;
+    text-wrap: wrap;
+    /* overflow-wrap: anywhere; */
+    /* padding-right: 10px;
+    text-overflow: ellipsis;
+}
+    */
