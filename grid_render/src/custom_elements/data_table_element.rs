@@ -96,7 +96,8 @@ impl BaseElement {
                             &format!("td{}", col_index),
                         )
                         .append_child("div", &format!("d{}", col_index))
-                        .apply_fn(&set_table_item, &table_item);
+                        .apply_fn(&set_table_item, &table_item)
+                        .apply_fn(&check_row_div_width, &None);
                     }
 
                     last_pointer_tr = Some(tr.element());
@@ -116,147 +117,36 @@ impl BaseElement {
     }
 }
 
-fn set_table_event_handlers(base_element: &BaseElement, _x: &Option<usize>) {
+fn check_row_div_width(base_element: &BaseElement, _x: &Option<usize>) {
     let element = &base_element.element();
-
-    if element.get_attribute("bee").is_none() {
-        element.set_attribute("bee", "1").unwrap();
-
-        let on_event_type_closure =
-            Closure::wrap(Box::new(on_column_resize_event) as Box<dyn Fn(&web_sys::CustomEvent)>);
-
-        element
-            .add_event_listener_with_callback(
-                "column_resize",
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
-        on_event_type_closure.forget();
-    }
-}
-
-fn on_column_resize_event(event: &web_sys::CustomEvent) {
-    let element = event
-        .current_target()
-        .expect("target node not found")
-        .dyn_into::<web_sys::Element>()
-        .expect("node is not an element");
-
-    let resize_information: ColumnResizeInformation =
-        serde_wasm_bindgen::from_value(event.detail()).unwrap();
+    // let parent_element = element.parent_element().unwrap();
 
     // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-    //     "target tag_name: {:?}",
-    //     element.tag_name(),
+    //     "width: {:?}, parent_width: {:?}",
+    //     element.client_width(),
+    //     parent_element.client_width(),
     // )));
 
-    //style element
-    let child_element = element
-        .first_child()
-        .expect("element with no child element");
-
-    assert_eq!(child_element.node_name(), "STYLE");
-
-    child_element.set_text_content(Some(&format!(
-        "tr td:nth-child({}) {{ max-width: {}px; }}",
-        resize_information.column_index + 1,
-        resize_information.column_width
-    )));
+    if element.client_width() >= 600 {
+        element.set_class_name("resize");
+    }
 }
 
 fn set_header_text(base_element: &BaseElement, text: &String) {
     base_element.element().set_text_content(Some(text));
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ColumnResizeInformation {
-    column_index: usize,
-    column_width: usize,
-}
-
-fn set_resize_actions(base_element: &BaseElement, _col_index: &usize) {
-    let element = &base_element.element();
-
-    if element.get_attribute("bee").is_none() {
-        element.set_attribute("bee", "1").unwrap();
-
-        let on_event_type_closure =
-            Closure::wrap(Box::new(on_mouse_event) as Box<dyn Fn(&web_sys::MouseEvent)>);
-
-        element
-            .add_event_listener_with_callback(
-                "mousemove",
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
-        on_event_type_closure.forget();
-    }
-}
-
-fn on_mouse_event(mouse_event: &web_sys::MouseEvent) {
-    if mouse_event.button() != 0 {
-        return;
-    }
-
-    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-    //     "button: {:?}",
-    //     mouse_event.button(),
-    // )));
-
-    let element = mouse_event
-        .target()
-        .expect("target node not found")
-        .dyn_into::<web_sys::Element>()
-        .expect("node is not an element");
-
-    let child_element = 
-        //th
-        element.parent_element().expect("element with no parent")
-        //tr
-        .parent_element().expect("element with no parent")
-        //thead
-        .parent_element().expect("element with no parent")
-        //table
-        .parent_element().expect("element with no parent")
-        //style
-        .first_child().expect("element with no parent")
-        ;
-
-
-    child_element.set_text_content(Some(&format!(
-            "tr td:nth-child({}) {{ max-width: {}px; }}",
-            3,
-            element.client_width()
-    )));
-
-    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-    //     "client_width: {:?}, parent_width: {:?}",
-    //     element.client_width(),
-    //     parent_element.client_width(),
-    // )));
-
-    // let mut custom_event_init = web_sys::CustomEventInit::new();
-    // custom_event_init.bubbles(true);
-    // custom_event_init.cancelable(true);
-    // custom_event_init.composed(true);
-    // let detail = serde_wasm_bindgen::to_value(&ColumnResizeInformation {
-    //     column_index: 2,
-    //     column_width: element.client_width() as usize,
-    // })
-    // .unwrap();
-    // custom_event_init.detail(&detail);
-
-    // let event = web_sys::CustomEvent::new_with_event_init_dict("column_resize", &custom_event_init)
-    //     .unwrap();
-
-    // parent_element.dispatch_event(&event).unwrap();
-}
-
 fn set_table_item(base_element: &BaseElement, table_item: &Option<DataTableItem>) {
     if let Some(table_item) = &table_item {
-        base_element
-            .element()
-            .set_inner_html(&table_item.value.as_ref().unwrap_or(&"".to_string()));
+        if table_item.is_null {
+            let element = &base_element.element();
+            element.set_text_content(Some(&"null".to_string()));
+            element.set_class_name("nullValue");
+        } else {
+            base_element
+                .element()
+                .set_text_content(Some(&table_item.value.as_ref().unwrap_or(&"".to_string())));
+        }
     } else {
         base_element.element().set_inner_html("");
     }

@@ -1,10 +1,10 @@
-use crate::custom_elements::base_element_trait::BaseElementTrait;
+use crate::{custom_elements::base_element_trait::BaseElementTrait, observe_element};
 use wasm_bindgen::JsValue;
 
 use crate::{
     createElement,
     external_request::{ExternalRequest, ExternalRequestError},
-    getElementById, observe,
+    getElementById,
 };
 
 pub async fn handle(event: &web_sys::MessageEvent) {
@@ -64,7 +64,7 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
             bq_table.render(q1);
 
             //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-            observe(element_id);
+            observe_element(&q1.last_element_child().unwrap());
         }
     } else {
         q1.set_inner_html(&"Unexpected error occured.");
@@ -84,7 +84,7 @@ async fn preview_table(q1: &web_sys::Element, external_request: &ExternalRequest
         bq_table.render(q1);
 
         //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-        observe(element_id);
+        observe_element(&q1.last_element_child().unwrap());
     } else {
         q1.set_inner_html(&"Unexpected error occured.");
     }

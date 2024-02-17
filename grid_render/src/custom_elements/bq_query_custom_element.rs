@@ -18,6 +18,7 @@ const PAGE_SIZE_ATT: &str = "page_size";
 const ROWS_IN_PAGE_ATT: &str = "rows_in_page";
 const ROWS_TOTAL_ATT: &str = "rows_total";
 const RENDER_QUERY_EVENT_NAME: &str = "render_table";
+const ELEMENT_INTERSECTED_EVENT_NAME: &str = "element_intersected";
 
 pub(crate) struct BigqueryQueryCustomElement {
     element: Option<Element>,
@@ -274,6 +275,18 @@ impl CustomElementDefinition for BigqueryQueryCustomElement {
 
         on_event_type_closure.forget();
 
+        //ELEMENT_INTERSECTED_EVENT_NAME
+        let on_event_type_closure =
+            Closure::wrap(Box::new(BigqueryQueryCustomElement::on_render_query)
+                as Box<dyn Fn(&web_sys::Event)>);
+
+        element
+            .add_event_listener_with_callback(
+                ELEMENT_INTERSECTED_EVENT_NAME,
+                on_event_type_closure.as_ref().unchecked_ref(),
+            )
+            .unwrap();
+        on_event_type_closure.forget();
 
         //EVENT_GO_TO_FIRST_PAGE
         let on_event_type_closure =

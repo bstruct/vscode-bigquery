@@ -25,8 +25,8 @@ extern "C" {
     fn getElementById(elementId: &str) -> Option<Element>;
 
     //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-    #[wasm_bindgen(js_namespace = document)]
-    fn observe(elementId: &str);
+    #[wasm_bindgen(js_namespace = document, js_name = "observeElement")]
+    fn observe_element(element: &Element);
     // #[wasm_bindgen(js_namespace = document)]
     // fn attributesMutationObserve(node: &web_sys::Node);
     

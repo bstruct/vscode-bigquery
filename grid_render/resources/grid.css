@@ -60,44 +60,24 @@ td {
     color: var(--vscode-inputValidation-warningBorder) !important;
 }
 
-/* table thead th div {
-    max-width: 600px;
-} */
-
 table thead th, 
 table tbody td {
     max-width: 600px;
 }
 
-/* th div, tr div {
-    overflow: auto;
+table tbody td div {
+    display: inline-block;
 }
- */
-
- table tbody td div {
-    display: inline;
-}
-
-/* td div {
-    resize: vertical;
-    overflow: auto;
-    text-wrap: wrap;
+table tbody td div.resize {
+    text-wrap: pretty;
     overflow-wrap: anywhere;
-} */
-.container:has(> div) {
-    border: 2px solid red;
-}
-
-/* table tbody td:has(> div) {
-    border: 2px solid red;
-} */
-
-/* 
-resize: vertical;
     overflow: scroll;
-    text-wrap: wrap;
-    /* overflow-wrap: anywhere; */
-    /* padding-right: 10px;
-    text-overflow: ellipsis;
+    resize: vertical;
+    height: 1em;
+    padding-right: 8px;
 }
-    */
+
+table tbody td div.nullValue {
+    font-style: italic;
+    color: var(--vscode-inputValidation-warningBorder) !important;
+}

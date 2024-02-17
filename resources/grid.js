@@ -119,28 +119,32 @@ let intersectionObserver = new IntersectionObserver((entries, observer) => {
         // console.log('intersectionRect:' + entry.intersectionRect);
         // console.log('isIntersecting:' + entry.isIntersecting);
         // console.log('rootBounds:' + entry.rootBounds);
-        // console.log('target:' + entry.target);
+        console.log('target:' + entry.target);
         // console.log('time:' + entry.time);
 
         // const tagName = entry.target.tagName;
 
         if (entry.isIntersecting) {
             console.log('element is now in visible scope: ' + entry.target.id);
-            entry.target.dispatchEvent(new Event("render_table"));
+            entry.target.dispatchEvent(new CustomEvent("element_intersected", { detail: entry }));
         }
-
     });
-}, {
-    root: document.querySelector("#q1"),
-    rootMargin: "0px",
-    threshold: 1.0,
-});
+}
+    , {
+        root: document, //.querySelector("#q1"),
+        rootMargin: "0px",
+        threshold: 1.0,
+    });
 
-function observe(elementId) {
-    let element = document.getElementById(elementId);
-    console.log("element with id '" + elementId + "' is being observed");
+// function observe(elementId) {
+//     let element = document.getElementById(elementId);
+//     console.log("element with id '" + elementId + "' is being observed");
+//     intersectionObserver.observe(element);
+// }
+
+function observeElement(element) {
     intersectionObserver.observe(element);
 }
 
-document.observe = observe;
+document.observeElement = observeElement;
 // document.attributesMutationObserve = attributesMutationObserve;
