@@ -1,7 +1,5 @@
 use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::Element;
 
 #[derive(Debug)]
@@ -168,17 +166,13 @@ impl DataTableItem {
         }
     }
 
-    pub fn from_value(value: &Option<&Value>) -> DataTableItem {
+    pub fn from_value(value: &Option<Value>) -> DataTableItem {
         let text = match value {
             Some(v) => {
                 if v.is_null() {
                     None
                 } else {
-                    if v.is_string() {
-                        Some(String::from(v.as_str().unwrap()))
-                    } else {
-                        Some(String::from(v.to_string()))
-                    }
+                    Some(String::from(v.as_str().unwrap_or_default()))
                 }
             }
             None => None,
@@ -191,11 +185,11 @@ impl DataTableItem {
         }
     }
 
-    pub(crate) fn from_string(domain: &String) -> DataTableItem {
+    pub(crate) fn from_string(v: &String) -> DataTableItem {
         DataTableItem {
             is_null: false,
             is_index: false,
-            value: Some(domain.clone()),
+            value: Some(v.clone()),
         }
     }
 }

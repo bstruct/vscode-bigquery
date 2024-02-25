@@ -1,12 +1,15 @@
 use super::{
     base_element_trait::BaseElementTrait,
     custom_element_definition::CustomElementDefinition,
-    data_table_controls_element::{DataTableControls, EVENT_GO_TO_FIRST_PAGE, EVENT_GO_TO_LAST_PAGE, EVENT_GO_TO_NEXT_PAGE, EVENT_GO_TO_PREVIOUS_PAGE},
+    data_table_controls_element::{
+        DataTableControls, EVENT_GO_TO_FIRST_PAGE, EVENT_GO_TO_LAST_PAGE, EVENT_GO_TO_NEXT_PAGE,
+        EVENT_GO_TO_PREVIOUS_PAGE,
+    },
     data_table_element::{DataTable, DataTableItem},
 };
 use crate::{
     bigquery::jobs::GetQueryResultsRequest, custom_elements::base_element::BaseElement,
-    parse_to_usize,
+    parse_to_usize, set_state,
 };
 use wasm_bindgen::{prelude::Closure, JsCast};
 use wasm_bindgen_futures::spawn_local;
@@ -81,6 +84,14 @@ impl BigqueryQueryCustomElement {
         header: Option<Vec<String>>,
         rows: Option<Vec<Vec<Option<DataTableItem>>>>,
     ) -> BigqueryQueryCustomElement {
+        //information about the job as potentially changed, set new state with that information
+        let state = serde_json::json!({
+            "jobId": self.job_id.to_string(),
+            "projectId": self.project_id.to_string(),
+            "location": self.location.to_string(),
+        });
+        set_state(&state.to_string());
+
         BigqueryQueryCustomElement {
             element: self.element.to_owned(),
             element_id: self.get_element_id().to_string(),
@@ -143,16 +154,16 @@ impl BigqueryQueryCustomElement {
             "1) on_render_table event on element: {:?}",
             element.id()
         )));
-    
+
         let bq_query_element = BigqueryQueryCustomElement::from_element(&element);
         let request = bq_query_element.as_query_results_request();
-        
+
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
             "on_render_table event on element: {:?}, request: {:?}",
             element.id(),
             request
         )));
-    
+
         let jobs = crate::bigquery::jobs::Jobs::new(&bq_query_element.token);
         let parent_node = element.parent_node().unwrap();
 
@@ -221,7 +232,7 @@ impl BigqueryQueryCustomElement {
         //     rows_total
         // )));
 
-        let new_value = if start_index + page_size > rows_total {
+        let new_value = if start_index + page_size >= rows_total {
             start_index
         } else {
             start_index + page_size
@@ -246,7 +257,13 @@ impl BigqueryQueryCustomElement {
         let new_value = if page_size > rows_total {
             0
         } else {
-            (f64::floor(rows_total as f64 / page_size as f64) * page_size as f64) as usize
+            let start_index =
+                (f64::floor((rows_total as f64) / page_size as f64) * page_size as f64) as usize;
+            if start_index == rows_total {
+                start_index - page_size
+            } else {
+                start_index
+            }
         };
 
         let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
@@ -490,7 +507,14 @@ fn configure_spacer(element: &BaseElement, _: &Option<usize>) {
 
 #[cfg(test)]
 mod tests {
+    use wasm_bindgen::prelude::*;
     use wasm_bindgen_test::*;
+
+    #[wasm_bindgen]
+    extern "C" {
+        #[wasm_bindgen(js_namespace = document, js_name = "toLocaleString")]
+        fn set_state(state_json: &str);
+    }
 
     use super::{set_attributes, BigqueryQueryCustomElement};
     use crate::custom_elements::{
@@ -689,6 +713,52 @@ mod tests {
 
         let page_start_index = element.get_attribute(PAGE_START_INDEX_ATT).unwrap();
 
-        assert_eq!(page_start_index, "989250");
+        assert_eq!("989250", page_start_index);
+    }
+
+    #[wasm_bindgen_test]
+    pub fn last_page_test_3() {
+        let parent_node = &crate::createElement("div");
+        let bq_table = &BigqueryQueryCustomElement::base_new(
+            "element_id".to_string(),
+            "jobId".to_string(),
+            "projectId".to_string(),
+            "location".to_string(),
+            "token".to_string(),
+        );
+
+        let complex_object_array_test = include_str!("test_resources/100_rows.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let bq_query_information = complex_object_array_test.to_bq_query(bq_table);
+
+        let rows_in_page = bq_query_information.rows_in_page;
+        let rows_total = bq_query_information.rows_total;
+        let header = bq_query_information.header;
+        let rows = bq_query_information.rows;
+
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        //1
+        bq_table.render(parent_node);
+
+        let element = &parent_node.first_element_child().unwrap();
+        let bq_table = BigqueryQueryCustomElement::from_element(element);
+
+        bq_table.last_page();
+
+        let page_start_index = element.get_attribute(PAGE_START_INDEX_ATT).unwrap();
+
+        assert_eq!("50", page_start_index);
+    }
+
+    #[test]
+    fn test_last_page() {
+        assert_eq!(
+            51.0,
+            (f64::floor(((100 as f64) - 1.0) / 50 as f64) * 50 as f64) + 1.0
+        );
     }
 }

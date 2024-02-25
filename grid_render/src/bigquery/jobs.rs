@@ -471,6 +471,7 @@ impl Jobs {
         if request.start_index.is_some() {
             url = format!("{}&startIndex={}", url, request.start_index.unwrap());
         }
+        url = format!("{}&formatOptions.useInt64Timestamp=false", url);
 
         // console::log_1(&JsValue::from_str(&url));
 

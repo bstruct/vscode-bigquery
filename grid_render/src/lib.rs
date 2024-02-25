@@ -27,9 +27,8 @@ extern "C" {
     //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
     #[wasm_bindgen(js_namespace = document, js_name = "observeElement")]
     fn observe_element(element: &Element);
-    // #[wasm_bindgen(js_namespace = document)]
-    // fn attributesMutationObserve(node: &web_sys::Node);
-    
+    #[wasm_bindgen(js_namespace = document, js_name = "setState", catch)]
+    fn set_state(state_json: &str) -> Result<(), JsValue>;
 }
 
 #[wasm_bindgen]

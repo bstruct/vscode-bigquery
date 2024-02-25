@@ -1,3 +1,5 @@
+use wasm_bindgen::JsValue;
+
 use super::{
     bq_query_custom_element::BigqueryQueryCustomElement,
     bq_table_custom_element::BigqueryTableCustomElement, data_table_element::DataTableItem,
@@ -174,6 +176,24 @@ impl Table {
     }
 }
 
+impl DataTableItem {
+    pub fn from_schema_value(
+        field_schema: &TableFieldSchema,
+        value: &Option<serde_json::Value>,
+    ) -> DataTableItem {
+
+        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        //     "value: {:?}",
+        //     value
+        // )));
+
+        match field_schema.r#type.as_str() {
+            "TIMESTAMP" => DataTableItem::from_value(&timestamp_to_value(value)),
+            _ => DataTableItem::from_value(value),
+        }
+    }
+}
+
 fn get_bq_table_header(schema: &TableSchema) -> Vec<String> {
     let mut header_columns = Vec::new();
     header_columns.push(String::from("#"));
@@ -258,16 +278,22 @@ fn place_bq_table_rows(
 
         // go through the schema of the data
         for col_index in 0..schema_fields.len() {
-            let field = &schema_fields[col_index];
+            let field_schema = &schema_fields[col_index];
             let value = data_row.pointer(&format!("/f/{}/v", col_index));
 
-            if field.is_array()
-                && field.is_complex_object()
-                && value.is_some()
-                && value.unwrap().is_array()
+            let value = match value {
+                Some(v) => Some(v.clone()),
+                None => None,
+            };
+
+            if field_schema.is_array()
+                && field_schema.is_complex_object()
+                && value.as_ref().is_some()
+                && value.as_ref().unwrap().is_array()
             {
-                let inner_schema_fields = &field.fields.clone().unwrap();
-                let inner_data_rows = &value
+                let inner_schema_fields = &field_schema.fields.clone().unwrap();
+                let inner_data_rows = value
+                    .as_ref()
                     .unwrap()
                     .as_array()
                     .unwrap()
@@ -278,7 +304,7 @@ fn place_bq_table_rows(
                 let positions = place_bq_table_rows(
                     rows,
                     inner_schema_fields,
-                    inner_data_rows,
+                    inner_data_rows.as_ref(),
                     array_row_index + array_row_increment,
                     array_col_index + array_col_increment,
                     true,
@@ -292,8 +318,8 @@ fn place_bq_table_rows(
                 //move the col index further
                 array_col_increment += positions.1;
             } else {
-                if field.is_complex_object() && value.is_some() {
-                    let inner_schema_fields = &field.fields.clone().unwrap();
+                if field_schema.is_complex_object() && value.as_ref().is_some() {
+                    let inner_schema_fields = &field_schema.fields.clone().unwrap();
                     let inner_data_rows = &vec![value.unwrap().clone()];
 
                     let positions = place_bq_table_rows(
@@ -310,7 +336,7 @@ fn place_bq_table_rows(
                 } else {
                     rows[array_row_index + array_row_increment]
                         [array_col_index + array_col_increment] =
-                        Some(DataTableItem::from_value(&value));
+                        Some(DataTableItem::from_schema_value(field_schema, &value));
                     array_col_increment += 1;
                 }
             }
@@ -361,6 +387,28 @@ fn calculate_number_rows(data_rows: &Vec<serde_json::Value>) -> usize {
     count
 }
 
+fn timestamp_to_value(bq_timestamp: &Option<serde_json::Value>) -> Option<serde_json::Value> {
+    if let Some(bq_timestamp) = bq_timestamp {
+        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        //     "bq_timestamp: {:?}",
+        //     bq_timestamp
+        // )));
+
+        let timestamp: f64 = bq_timestamp
+            .as_str()
+            .unwrap_or_default()
+            .parse()
+            .expect("timestamp not valid");
+
+        let js_date = js_sys::Date::new(&JsValue::from(timestamp * 1000.0));
+        let str = js_date.to_iso_string().as_string().unwrap();
+
+        return Some(serde_json::to_value(str).unwrap());
+    }
+
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use crate::custom_elements::{
@@ -368,6 +416,8 @@ mod tests {
         data_table_element::DataTableItem,
     };
     use wasm_bindgen_test::*;
+
+    use super::timestamp_to_value;
 
     wasm_bindgen_test_configure!(run_in_browser);
 
@@ -812,6 +862,147 @@ mod tests {
         assert!(v.value.as_ref().unwrap().len() > 100);
     }
 
+    #[test]
+    fn place_bq_table_rows_test_4() {
+        let complex_object_array_test = include_str!("test_resources/all_types_test.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let header =
+            &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
+        let number_columns = header.len();
+        let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
+        let mut rows: Vec<Vec<Option<DataTableItem>>> =
+            vec![vec![None; number_columns]; number_rows];
+
+        super::place_bq_table_rows(
+            &mut rows,
+            &complex_object_array_test.schema.as_ref().unwrap().fields,
+            &complex_object_array_test.rows,
+            0,
+            0,
+            true,
+            0,
+        );
+
+        assert_eq!(rows.len(), 3);
+        assert_eq!(rows[0].len(), 21);
+
+        let v = rows[0][0].clone().unwrap();
+        assert!(v.is_index);
+        assert_eq!(v.value.unwrap(), "1");
+
+        let v = rows[0][1].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "1");
+
+        let v = rows[0][2].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "1");
+
+        let v = rows[0][3].clone();
+        assert!(v.is_some());
+        assert_eq!(v.unwrap().value.unwrap(), "1-6 15 0:0:0");
+
+        let v = rows[0][4].clone();
+        assert!(v.is_some());
+        assert!(v.unwrap().is_null);
+
+        let v = rows[0][5].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "");
+
+        let v = rows[0][6].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "12345");
+
+        let v = rows[0][7].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "123.45");
+
+        let v = rows[0][8].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "1");
+
+        let v = rows[0][9].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "{\"coordinates\":[10,20],\"id\":1}");
+
+        let v = rows[0][10].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "false");
+
+        let v = rows[0][11].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "POINT(-50 90)");
+
+        let v = rows[0][12].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "fzury");
+
+        let v = rows[0][13].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(v.value.unwrap(), "LINESTRING(1 2, 3 4)");
+
+        let v = rows[0][14].clone();
+        assert!(v.is_some());
+        let v = v.unwrap();
+        assert!(!v.is_index);
+        assert!(!v.is_null);
+        assert_eq!(
+            v.value.unwrap(),
+            "POLYGON((-125 48, -124 46, -117 46, -117 49, -125 48))"
+        );
+
+        let v = rows[0][15].clone();
+        assert!(v.is_some());
+        assert_eq!(v.unwrap().value.unwrap(), "1.703357814940265E9");
+
+        // let v = rows[1][0].clone();
+        // assert!(v.is_none());
+
+        // let v = rows[27][0].clone().unwrap();
+        // assert!(v.is_index);
+        // assert_eq!(v.value.unwrap(), "2");
+
+        // let v = rows[1762][0].clone().unwrap();
+        // assert!(v.is_index);
+        // assert_eq!(v.value.unwrap(), "50");
+    }
+
     #[wasm_bindgen_test]
     fn to_bq_table_test_1() {
         let complex_object_array_test =
@@ -852,5 +1043,17 @@ mod tests {
         let rows = complex_object_array_test.get_rows(number_columns, 0);
 
         assert_eq!(rows.1.len(), 1796);
+    }
+
+    #[wasm_bindgen_test]
+    fn timestamp_to_value_test_1() {
+        let value : serde_json::Value = serde_json::Value::String(String::from("1.703357814940265E9"));
+        let result = timestamp_to_value(&Some(value));
+        
+        assert!(result.is_some());
+        assert_eq!(
+            result.unwrap().as_str().unwrap_or_default(),
+            "2023-12-23T18:56:54.940Z"
+        );
     }
 }

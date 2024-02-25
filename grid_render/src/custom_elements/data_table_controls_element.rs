@@ -119,10 +119,10 @@ fn add_event_listener(element: &Element, _event_type: &str) {
         let on_event_type_closure =
             Closure::wrap(Box::new(on_click) as Box<dyn Fn(&web_sys::Event)>);
 
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "add_event_listener - {:?}",
-            element.get_attribute("be_id")
-        )));
+        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        //     "add_event_listener - {:?}",
+        //     element.get_attribute("be_id")
+        // )));
 
         element
             .add_event_listener_with_callback(
