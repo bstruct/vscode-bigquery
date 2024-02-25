@@ -24,7 +24,7 @@ window.addEventListener('external_message', on_window_message_received);
 // pass along the messsage but guarantees that the custom elements are loaded
 window.addEventListener('message', async event => {
 
-    console.log('on message');
+    console.log('on message: \n ' + JSON.stringify(event.data));
 
     await p;
     let e = new MessageEvent("external_message", { data: event.data });

@@ -56,8 +56,24 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
         let job = job.as_ref().unwrap();
 
         if job.is_query_script() {
-            let job_reference = job.job_reference.as_ref().unwrap();
-            q1.set_inner_html(&format!("multiple results {}", job_reference.job_id));
+            //The job is marked as SCRIPT, one of 2 scenarios are possible:
+            // - Just one line script, for example "DECLARE x STRING...."
+            // - Multiple queries are placed
+            //With the information passed, there's no way to determine which case it is, so another call to BQ must be made
+
+            let element_id = "bq_script_1";
+            let bq_table = external_request.to_bq_script(element_id);
+            bq_table.render(q1);
+
+            // if job.is_multi_query_job() {
+            //     let job_reference = job.job_reference.as_ref().unwrap();
+            //     q1.set_inner_html(&format!("multiple results {}", job_reference.job_id));
+            // } else{
+            //     let job_reference = job.job_reference.as_ref().unwrap();
+            //     q1.set_inner_html(&format!("script {}", job_reference.job_id));
+
+            // }
+
         } else {
             let element_id = "bq_query_1";
             let bq_table = external_request.to_bq_query(element_id);

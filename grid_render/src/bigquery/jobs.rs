@@ -3,6 +3,8 @@ use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::console;
 
+use crate::parse_to_usize;
+
 use super::base::TableSchema;
 
 pub struct Jobs {
@@ -115,7 +117,8 @@ pub struct JobStatistics {
     pub start_time: Option<String>,
     #[serde(alias = "endTime")]
     pub end_time: Option<String>,
-    // "totalBytesProcessed": string,
+    #[serde(alias = "totalBytesProcessed")]
+    pub total_bytes_processed: Option<String>,
     // "completionRatio": number,
     // "quotaDeferments": [
     //   string
@@ -135,7 +138,8 @@ pub struct JobStatistics {
     //   }
     // ],
     // "reservation_id": string,
-    // "numChildJobs": string,
+    #[serde(alias = "numChildJobs")]
+    pub num_child_jobs: Option<String>,
     // "parentJobId": string,
     // "scriptStatistics": {
     //   object (ScriptStatistics)
@@ -192,6 +196,15 @@ impl Job {
         if let Some(stats) = self.statistics.as_ref() {
             if let Some(query) = stats.query.as_ref() {
                 return query.statement_type == "SCRIPT";
+            }
+        }
+
+        false
+    }
+    pub(crate) fn is_multi_query_job(&self) -> bool {
+        if let Some(stats) = self.statistics.as_ref() {
+            if let Some(num_child_jobs) = parse_to_usize(stats.num_child_jobs.clone()) {
+                return num_child_jobs > 1;
             }
         }
 
