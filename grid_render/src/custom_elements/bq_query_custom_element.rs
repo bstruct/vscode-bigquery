@@ -1,11 +1,8 @@
 use super::{
-    base_element_trait::BaseElementTrait,
-    custom_element_definition::CustomElementDefinition,
-    data_table_controls_element::{
+    base_element_trait::BaseElementTrait, bq_common_custom_element::{get_attribute, set_attribute}, custom_element_definition::CustomElementDefinition, data_table_controls_element::{
         DataTableControls, EVENT_GO_TO_FIRST_PAGE, EVENT_GO_TO_LAST_PAGE, EVENT_GO_TO_NEXT_PAGE,
         EVENT_GO_TO_PREVIOUS_PAGE,
-    },
-    data_table_element::{DataTable, DataTableItem},
+    }, data_table_element::{DataTable, DataTableItem}
 };
 use crate::{
     bigquery::jobs::GetQueryResultsRequest, custom_elements::base_element::BaseElement,
@@ -90,7 +87,8 @@ impl BigqueryQueryCustomElement {
             "projectId": self.project_id.to_string(),
             "location": self.location.to_string(),
         });
-        set_state(&state.to_string());
+        //because in unit tests, this browser function is not available, here, no panic is set
+        set_state(&state.to_string()).unwrap_or(());
 
         BigqueryQueryCustomElement {
             element: self.element.to_owned(),
@@ -466,10 +464,6 @@ fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryQueryCustomElem
     set_optional_attribute(&element, ROWS_TOTAL_ATT, &bq_table.rows_total);
 }
 
-fn set_attribute(element: &web_sys::Element, attribute_name: &str, value: &str) {
-    element.set_attribute(attribute_name, value).unwrap();
-}
-
 fn set_optional_attribute(element: &web_sys::Element, attribute_name: &str, value: &Option<usize>) {
     if value.is_some() {
         element
@@ -478,12 +472,6 @@ fn set_optional_attribute(element: &web_sys::Element, attribute_name: &str, valu
     } else {
         element.remove_attribute(attribute_name).unwrap();
     }
-}
-
-fn get_attribute(element: &Element, attribute_name: &str) -> String {
-    let att = element.get_attribute(attribute_name);
-    assert!(att.is_some(), "attribute not found: {}", attribute_name);
-    att.unwrap()
 }
 
 fn get_opt_num_attribute(element: &Element, attribute_name: &str) -> Option<usize> {

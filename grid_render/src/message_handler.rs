@@ -65,6 +65,8 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
             let bq_table = external_request.to_bq_script(element_id);
             bq_table.render(q1);
 
+            observe_element(&q1.last_element_child().unwrap());
+
             // if job.is_multi_query_job() {
             //     let job_reference = job.job_reference.as_ref().unwrap();
             //     q1.set_inner_html(&format!("multiple results {}", job_reference.job_id));

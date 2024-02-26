@@ -11,7 +11,7 @@ pub struct Jobs {
     token: String,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct JobConfiguration {
     #[serde(alias = "jobType")]
     pub job_type: String,
@@ -29,7 +29,7 @@ pub struct JobConfiguration {
     // }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct JobConfigurationQuery {
     pub query: String,
     //   "destinationTable": {
@@ -94,22 +94,22 @@ pub struct JobConfigurationQuery {
     //   }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct JobConfigurationLoad {}
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct JobConfigurationTableCopy {}
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct JobConfigurationExtract {}
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct JobStatistics2 {
     #[serde(alias = "statementType")]
     pub statement_type: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct JobStatistics {
     #[serde(alias = "creationTime")]
     pub creation_time: Option<String>,
@@ -159,7 +159,7 @@ pub struct JobStatistics {
     // "finalExecutionDurationMs": string
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct JobStatus {
     #[serde(alias = "errorResult")]
     pub error_result: Option<ErrorProto>,
@@ -167,12 +167,12 @@ pub struct JobStatus {
     pub state: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct JobCreationReason {
     pub code: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Job {
     pub kind: Option<String>,
     pub etag: Option<String>,
@@ -275,7 +275,7 @@ pub struct GetQueryResultsRequest {
     // formatOptions: DataFormatOptions;
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorProto {
     pub reason: String,
     pub location: String,
@@ -284,7 +284,7 @@ pub struct ErrorProto {
     pub message: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JobReference {
     #[serde(alias = "projectId")]
     pub project_id: String,
@@ -293,7 +293,7 @@ pub struct JobReference {
     pub location: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetQueryResultsResponse {
     pub kind: String,
     pub etag: String,
@@ -314,6 +314,32 @@ pub struct GetQueryResultsResponse {
     pub cache_hit: Option<bool>,
     #[serde(alias = "numDmlAffectedRows")]
     pub num_dml_affected_rows: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) enum Projection {
+    MINIMAL,
+    FULL,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetListRequest {
+    #[serde(alias = "projectId")]
+    pub project_id: String,
+    pub max_results: Option<usize>,
+    pub projection: Option<Projection>,
+    #[serde(alias = "parentJobId")]
+    pub parent_job_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetListResponse {
+    pub kind: String,
+    pub etag: String,
+    #[serde(alias = "nextPageToken")]
+    pub next_page_token: Option<String>,
+    pub jobs: Vec<Job>,
+    pub unreachable: Option<Vec<String>>,
 }
 
 impl Jobs {
@@ -511,6 +537,81 @@ impl Jobs {
 
             // Use serde to parse the JSON into a struct.
             let bq_response = serde_wasm_bindgen::from_value::<GetQueryResultsResponse>(json);
+
+            if bq_response.is_err() {
+                console::log_1(&JsValue::from_str(&format!(
+                    "error: {:?}",
+                    bq_response.err().unwrap().to_string()
+                )));
+            } else {
+                return Some(bq_response.unwrap());
+            }
+        }
+        None
+    }
+
+    /*
+    https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/list
+    */
+    pub async fn get_list(self: &Self, request: GetListRequest) -> Option<GetListResponse> {
+        let mut opts = web_sys::RequestInit::new();
+        opts.method("GET");
+        opts.mode(web_sys::RequestMode::Cors);
+        let headers = web_sys::Headers::new().unwrap();
+        // headers.set("Accept", "application/json").unwrap();
+        headers.set("Content-Type", "application/json").unwrap();
+        headers
+            .set("Authorization", &format!("Bearer {}", &self.token))
+            .unwrap();
+        opts.headers(&headers);
+
+        let mut url = format!(
+            "https://bigquery.googleapis.com/bigquery/v2/projects/{}/jobs",
+            request.project_id
+        );
+
+        // if (request.location) { url.searchParams.append("location", request.location); }
+        if request.max_results.is_some() {
+            url = format!("{}?maxResults={}", url, request.max_results.unwrap());
+        } else {
+            url = format!("{}?maxResults=500", url);
+        }
+        if request.parent_job_id.is_some() {
+            url = format!("{}&parentJobId={}", url, request.parent_job_id.unwrap());
+        }
+        if request.projection.is_some() {
+            url = format!(
+                "{}&projection={}",
+                url,
+                match request.projection.unwrap() {
+                    Projection::MINIMAL => "minimal",
+                    Projection::FULL => "full",
+                }
+            );
+        }
+
+        console::log_1(&JsValue::from_str(&url));
+
+        let request = web_sys::Request::new_with_str_and_init(&url, &opts).unwrap();
+
+        let window = web_sys::window().unwrap();
+        let resp_value = JsFuture::from(window.fetch_with_request(&request))
+            .await
+            .unwrap();
+
+        assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
+            &resp_value
+        ));
+
+        let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
+
+        if resp.status() == 200 {
+            let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
+
+            console::log_1(json.as_ref());
+
+            // Use serde to parse the JSON into a struct.
+            let bq_response = serde_wasm_bindgen::from_value::<GetListResponse>(json);
 
             if bq_response.is_err() {
                 console::log_1(&JsValue::from_str(&format!(
