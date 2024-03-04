@@ -117,18 +117,32 @@ fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryScriptCustomEle
 
 fn resolve_jobs(element: &BaseElement, jobs: &Option<Vec<Job>>) {
     if let Some(jobs) = jobs {
-        for (index, job) in jobs.iter().enumerate() {
-            element
-                .append_child("DIV", &format!("job_{}", index))
-                .apply_fn(&resolve_job, &job);
+        let mut index = 0;
+        for job in jobs {
+            // element
+            //     .append_child("DIV", "xxx")// &format!("job_{}", index))
+            //     // .apply_fn(&resolve_job, &job)
+            //     ;
+
+            BaseElement::new_and_append(&element.element(), "DIV", &format!("job_{}", index))
+                // .append_child("div", &format!("d{}", col_index))
+                .apply_fn(&resolve_job, &job)
+                // .apply_fn(&set_resize_actions, &col_index)
+            ;
+
+            index += 1;
         }
     }
 }
 
 fn resolve_job(element: &BaseElement, job: &Job) {
-    element.element().set_text_content(Some(
-        &job.configuration.as_ref().unwrap().query.query.to_string(),
-    ));
+    let content: &str = if let Some(query) = &job.configuration.as_ref().unwrap().query {
+        &query.query
+    } else {
+        "xxx?"
+    };
+
+    element.element().set_text_content(Some(content));
 }
 
 impl CustomElementDefinition for BigqueryScriptCustomElement {

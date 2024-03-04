@@ -58,7 +58,6 @@ impl BaseElement {
                 BaseElement::new_and_append(&tr.element(), "th", &format!("th{}", col_index))
                     .append_child("div", &format!("d{}", col_index))
                     .apply_fn(&set_header_text, &text)
-                    // .apply_fn(&set_resize_actions, &col_index)
                     ;
             }
         } else {

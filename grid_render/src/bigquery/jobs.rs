@@ -15,7 +15,7 @@ pub struct Jobs {
 pub struct JobConfiguration {
     #[serde(alias = "jobType")]
     pub job_type: String,
-    pub query: JobConfigurationQuery,
+    pub query: Option<JobConfigurationQuery>,
     pub load: Option<JobConfigurationLoad>,
     pub copy: Option<JobConfigurationTableCopy>,
     pub extract: Option<JobConfigurationExtract>,
@@ -589,6 +589,9 @@ impl Jobs {
                 }
             );
         }
+
+        //AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM
+        // url = format!("{}&key=AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM", url);
 
         console::log_1(&JsValue::from_str(&url));
 
