@@ -275,6 +275,13 @@ pub struct GetQueryResultsRequest {
     // formatOptions: DataFormatOptions;
 }
 
+#[derive(Debug)]
+pub struct GetJobRequest {
+    pub project_id: String,
+    pub job_id: String,
+    pub location: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorProto {
     pub reason: String,
@@ -553,6 +560,65 @@ impl Jobs {
     /*
     https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/list
     */
+    pub async fn get(self: &Self, request: GetJobRequest) -> Option<Job> {
+        let mut opts = web_sys::RequestInit::new();
+        opts.method("GET");
+        opts.mode(web_sys::RequestMode::Cors);
+        let headers = web_sys::Headers::new().unwrap();
+        // headers.set("Accept", "application/json").unwrap();
+        headers.set("Content-Type", "application/json").unwrap();
+        headers
+            .set("Authorization", &format!("Bearer {}", &self.token))
+            .unwrap();
+        opts.headers(&headers);
+
+        let mut url = format!(
+            "https://bigquery.googleapis.com/bigquery/v2/projects/{}/jobs/{}",
+            request.project_id, request.job_id
+        );
+
+        if request.location.is_some() {
+            url = format!("{}?location={}", url, request.location.as_ref().unwrap());
+        }
+
+        console::log_1(&JsValue::from_str(&url));
+
+        let request = web_sys::Request::new_with_str_and_init(&url, &opts).unwrap();
+
+        let window = web_sys::window().unwrap();
+        let resp_value = JsFuture::from(window.fetch_with_request(&request))
+            .await
+            .unwrap();
+
+        // assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
+        //     &resp_value
+        // ));
+
+        let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
+
+        if resp.status() == 200 {
+            let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
+
+            console::log_1(json.as_ref());
+
+            // Use serde to parse the JSON into a struct.
+            let bq_response = serde_wasm_bindgen::from_value::<Job>(json);
+
+            if bq_response.is_err() {
+                console::log_1(&JsValue::from_str(&format!(
+                    "error: {:?}",
+                    bq_response.err().unwrap().to_string()
+                )));
+            } else {
+                return Some(bq_response.unwrap());
+            }
+        }
+        None
+    }
+
+    /*
+    https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/list
+    */
     pub async fn get_list(self: &Self, request: GetListRequest) -> Option<GetListResponse> {
         let mut opts = web_sys::RequestInit::new();
         opts.method("GET");
@@ -602,9 +668,9 @@ impl Jobs {
             .await
             .unwrap();
 
-        assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
-            &resp_value
-        ));
+        // assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
+        //     &resp_value
+        // ));
 
         let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
 
@@ -705,7 +771,7 @@ mod tests {
             parse_event.job_reference.as_ref().unwrap().job_id,
             "0db7c357-9d1b-xxxx-a641-ca0f009342df".to_owned()
         );
-        assert_eq!(parse_event.configuration.as_ref().unwrap().query.query, "WITH tBase AS (\nSELECT \n    pimExportDate, \n    Combi_number,\n    Width_accessoires,\n    Lining,    \n    Width_accessoires,\n    Additional_info,\n    Sleeve_Length,\n    Pim_Value,\n    Colour_PDP,\n    Not_searchable,\n    ROW_NUMBER() OVER(ORDER BY Combi_number ASC) AS row_number\nFROM `damiao-project-1.PvhTest.PimExport` pim\nWHERE \n    pimExportDate <= \"2022-03-23\"\n)\n\n-- projects/damiao-project-1/topics/test_topic_no_schema\n\nSELECT \n    (\n        SELECT AS STRUCT\n            CAST(row_number AS STRING) AS row_number,\n            \"dsdfdsd\" AS data_type\n    ) AS attributes,\n    TO_JSON(tBase) AS data,\n\nFROM tBase\nLIMIT 10;".to_owned());
+        assert_eq!(parse_event.configuration.as_ref().unwrap().query.as_ref().unwrap().query, "WITH tBase AS (\nSELECT \n    pimExportDate, \n    Combi_number,\n    Width_accessoires,\n    Lining,    \n    Width_accessoires,\n    Additional_info,\n    Sleeve_Length,\n    Pim_Value,\n    Colour_PDP,\n    Not_searchable,\n    ROW_NUMBER() OVER(ORDER BY Combi_number ASC) AS row_number\nFROM `damiao-project-1.PvhTest.PimExport` pim\nWHERE \n    pimExportDate <= \"2022-03-23\"\n)\n\n-- projects/damiao-project-1/topics/test_topic_no_schema\n\nSELECT \n    (\n        SELECT AS STRUCT\n            CAST(row_number AS STRING) AS row_number,\n            \"dsdfdsd\" AS data_type\n    ) AS attributes,\n    TO_JSON(tBase) AS data,\n\nFROM tBase\nLIMIT 10;".to_owned());
         assert_eq!(parse_event.configuration.as_ref().unwrap().dry_run, None);
         assert_eq!(parse_event.status.as_ref().unwrap().state, "DONE");
         assert!(parse_event.statistics.is_some());

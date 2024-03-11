@@ -31,13 +31,13 @@ pub async fn handle(event: &web_sys::MessageEvent) {
                     q1.set_inner_html(&"Loading...");
                 }
                 "execute_query" => {
-                    execute_query(q1, external_request).await;
+                    execute_query(q1, external_request);
                 }
                 "preview_table" => {
-                    preview_table(q1, external_request).await;
+                    preview_table(q1, external_request);
                 }
                 "error" => {
-                    show_error(q1, external_request).await;
+                    show_error(q1, external_request);
                 }
                 _ => {}
             }
@@ -47,7 +47,7 @@ pub async fn handle(event: &web_sys::MessageEvent) {
     }
 }
 
-async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest) {
+fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest) {
     //clear the div
     q1.set_inner_html(&"");
 
@@ -89,7 +89,7 @@ async fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest
     }
 }
 
-async fn preview_table(q1: &web_sys::Element, external_request: &ExternalRequest) {
+fn preview_table(q1: &web_sys::Element, external_request: &ExternalRequest) {
     //clear the div
     q1.set_inner_html(&"");
 
@@ -108,7 +108,7 @@ async fn preview_table(q1: &web_sys::Element, external_request: &ExternalRequest
     }
 }
 
-async fn show_error(q1: &web_sys::Element, external_request: &ExternalRequest) {
+fn show_error(q1: &web_sys::Element, external_request: &ExternalRequest) {
     q1.set_inner_html(&"Loading...");
 
     let error: &Option<ExternalRequestError> = &external_request.error;

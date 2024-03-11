@@ -9,3 +9,7 @@ pub(crate) fn get_attribute(element: &Element, attribute_name: &str) -> String {
 pub(crate) fn set_attribute(element: &web_sys::Element, attribute_name: &str, value: &str) {
     element.set_attribute(attribute_name, value).unwrap();
 }
+
+pub(crate) fn remove_attribute(element: &web_sys::Element, attribute_name: &str) {
+    element.remove_attribute(attribute_name).unwrap();
+}

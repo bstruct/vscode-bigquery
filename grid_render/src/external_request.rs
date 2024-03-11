@@ -1,7 +1,13 @@
 use serde::Deserialize;
 
-use crate::custom_elements::{
-    bq_query_custom_element::BigqueryQueryCustomElement, bq_script_custom_element::BigqueryScriptCustomElement, bq_table_custom_element::BigqueryTableCustomElement, data_table_element::{DataTable, DataTableItem}
+use crate::{
+    custom_elements::{
+        bq_query_custom_element::BigqueryQueryCustomElement,
+        bq_script_custom_element::BigqueryScriptCustomElement,
+        bq_table_custom_element::BigqueryTableCustomElement,
+        data_table_element::{DataTable, DataTableItem},
+    },
+    parse_to_usize,
 };
 
 #[derive(Debug, Deserialize)]
@@ -52,9 +58,10 @@ impl ExternalRequest {
     }
 
     pub fn to_bq_script(&self, element_id: &str) -> BigqueryScriptCustomElement {
-        let job = self.job.as_ref().unwrap().job_reference.as_ref().unwrap();
-        let job_id = job.job_id.to_string();
-        let location = job.location.to_string();
+        let job = self.job.as_ref().unwrap();
+        let job_reference = job.job_reference.as_ref().unwrap();
+        let job_id = job_reference.job_id.to_string();
+        let location = job_reference.location.to_string();
         let project_id = self.project_id.as_ref().unwrap().to_string();
         let token = (&self.token.as_ref().unwrap()).to_string();
 
@@ -64,6 +71,7 @@ impl ExternalRequest {
             project_id,
             location,
             token,
+            None
         )
     }
 }
