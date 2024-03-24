@@ -1,17 +1,33 @@
-div[be_id='controls-background'] {
-    position: fixed;
+/* div[be_id='controls-background'] {
+    position: sticky;
     top: 0;
     left: 0;
     background-color: var(--vscode-activityBar-border);
     width: 100%;
     height: 30px;
+} */
+div[be_id='controls-background'] {
+    position: sticky;
+    top: 0;
+    left: 0;
+    background-color: black;
+    width: 100%;
+    height: 30px;
 }
 
-div[be_id='controls'] {
+/* div[be_id='controls'] {
     top: 0;
     left: 0;
     position: fixed;
     background: var(--vscode-activityBar-border);
+} */
+
+div[be_id='controls'] {
+    top: 0;
+    left: 0;
+    position: sticky;
+    background: var(--vscode-activityBar-border);
+    display: inline-block;
 }
 
 div[be_id='controls'] span {
@@ -72,9 +88,10 @@ table tbody td div.resize {
     text-wrap: pretty;
     overflow-wrap: anywhere;
     overflow: scroll;
-    resize: vertical;
+    resize: both;
     height: 1em;
     padding-right: 8px;
+    max-width: 550px;
 }
 
 table tbody td div.nullValue {

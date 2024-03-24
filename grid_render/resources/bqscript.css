@@ -35,6 +35,10 @@ div[be_id="jobs"] div div.job_body_closed {
 }
 
 div[be_id="jobs"] div div.job_body_open {
-    display: inline-block;
-    height: 500px;
+    display: block;
+    min-height: 300px;
+}
+
+div[be_id="jobs"] div div.job_body_open bq-query {
+    display: block;
 }

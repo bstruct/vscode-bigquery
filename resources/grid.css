@@ -1,4 +1,9 @@
-.disableFocus {
+
+bq-query, bq-script {
+    display: inline-block;
+}
+
+/* .disableFocus {
     background: inherit;
     border: inherit;
     color: inherit;
@@ -63,4 +68,4 @@ table-with-controls th,
 table-with-controls td {
     padding: 5px 15px;
     border-bottom: 1px solid gray;
-}
+} */

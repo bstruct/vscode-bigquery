@@ -430,8 +430,8 @@ impl BaseElementTrait for BigqueryTableCustomElement {
             .apply_fn(&set_attributes, self)
             .append_shadow()
             .append_child_style(css_content, "style1")
-            .append_sibling("div", "spacer")
-            .apply_fn(&configure_spacer, &None)
+            // .append_sibling("div", "spacer")
+            // .apply_fn(&configure_spacer, &None)
             .append_sibling_base_element(&self.to_data_table_controls())
             .append_sibling_base_element(&self.to_data_table("t1"))
     }

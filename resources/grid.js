@@ -107,13 +107,14 @@ let intersectionObserver = new IntersectionObserver((entries, observer) => {
         // console.log('time:' + entry.time);
 
         // const tagName = entry.target.tagName;
+        // console.log('tagName: ' + tagName);
 
         if (entry.isIntersecting) {
             console.log('element is now in visible scope: ' + entry.target.id);
             entry.target.dispatchEvent(new CustomEvent("element_intersected", { detail: entry }));
         }
-    });
-}
+        });
+    }
     , {
         root: document, //.querySelector("#q1"),
         rootMargin: "0px",

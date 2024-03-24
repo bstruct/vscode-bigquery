@@ -1,14 +1,11 @@
 use serde::Deserialize;
 
-use crate::{
-    custom_elements::{
+use crate::custom_elements::{
         bq_query_custom_element::BigqueryQueryCustomElement,
         bq_script_custom_element::BigqueryScriptCustomElement,
         bq_table_custom_element::BigqueryTableCustomElement,
         data_table_element::{DataTable, DataTableItem},
-    },
-    parse_to_usize,
-};
+    };
 
 #[derive(Debug, Deserialize)]
 pub struct ExternalRequest {

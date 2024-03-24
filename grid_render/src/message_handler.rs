@@ -73,7 +73,6 @@ fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest) {
             // } else{
             //     let job_reference = job.job_reference.as_ref().unwrap();
             //     q1.set_inner_html(&format!("script {}", job_reference.job_id));
-
             // }
 
         } else {

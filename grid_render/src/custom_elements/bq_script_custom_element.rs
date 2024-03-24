@@ -4,7 +4,7 @@ use web_sys::{Element, Event, Node};
 
 use crate::{
     bigquery::jobs::{GetJobRequest, GetListRequest, Job, JobStatus},
-    parse_to_usize,
+    observe_element, parse_to_usize,
 };
 
 use super::{
@@ -242,6 +242,13 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
             );
 
             job_body.append_base_child(&bq_query);
+
+            //observe
+            let bq_query_element = &job_body.first_child().unwrap().element();
+            if !bq_query_element.has_attribute("beo") {
+                observe_element(&job_body.first_child().unwrap().element());
+                bq_query_element.set_attribute("beo", "1").unwrap();
+            }
         }
     }
 }
@@ -329,40 +336,43 @@ fn on_render(event: &web_sys::Event) {
         .dyn_into::<web_sys::Element>()
         .unwrap();
 
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        "1) on_render_table event on element: {:?}",
-        element.id()
-    )));
+    if !element.has_attribute("loaded") {
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "1) on_render event on element: {:?}",
+            element.id()
+        )));
 
-    let bq_script_element = BigqueryScriptCustomElement::from_element(&element);
-    let get_request = bq_script_element.as_job_request();
-    let get_list_request = bq_script_element.as_job_list_request();
+        let bq_script_element = BigqueryScriptCustomElement::from_element(&element);
+        let get_request = bq_script_element.as_job_request();
+        let get_list_request = bq_script_element.as_job_list_request();
 
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        "on_render event on element: {:?}, request: {:?}",
-        element.id(),
-        get_list_request
-    )));
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "on_render event on element: {:?}, request: {:?}",
+            element.id(),
+            get_list_request
+        )));
 
-    let jobs = crate::bigquery::jobs::Jobs::new(&bq_script_element.token);
-    let parent_node = element.parent_node().unwrap();
+        let jobs = crate::bigquery::jobs::Jobs::new(&bq_script_element.token);
+        let parent_node = element.parent_node().unwrap();
 
-    spawn_local(async move {
-        let get_job_response = jobs.get(get_request).await;
-        let get_list_response = jobs.get_list(get_list_request).await;
+        spawn_local(async move {
+            let get_job_response = jobs.get(get_request).await;
+            let get_list_response = jobs.get_list(get_list_request).await;
 
-        if let Some(job) = get_job_response {
-            if let Some(list) = get_list_response {
-                // response
-                //     .to_bq_script(&bq_script_element)
-                //     .render(&parent_node);
-
-                bq_script_element
-                    .with_job_info(&job, &list.jobs)
-                    .render(&parent_node);
+            if let Some(job) = get_job_response {
+                if let Some(statistics) = &job.statistics {
+                    if statistics.num_child_jobs.is_some() {
+                        element.set_attribute("loaded", "1").unwrap();
+                    }
+                }
+                if let Some(list) = get_list_response {
+                    bq_script_element
+                        .with_job_info(&job, &list.jobs)
+                        .render(&parent_node);
+                }
+            } else {
+                element.set_inner_html(&format!("unexpected response: {:?}", get_job_response));
             }
-        } else {
-            element.set_inner_html(&format!("unexpected response: {:?}", get_job_response));
-        }
-    });
+        });
+    }
 }

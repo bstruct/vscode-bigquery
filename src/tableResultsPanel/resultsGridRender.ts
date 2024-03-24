@@ -38,6 +38,11 @@ export class ResultsGridRender {
             'grid.js']
         );
 
+        const gridCss = this.getUri(this.webViewPanel.webview, extensionUri, [
+            'resources',
+            'grid.css']
+        );
+
         return new Promise((resolve, reject) => {
 
             const timer = setTimeout(() => {
@@ -55,6 +60,7 @@ export class ResultsGridRender {
             <html lang="en">
                 <head>
                     <meta charset="UTF-8">
+                    <link rel="stylesheet" href="${gridCss}">
                     <script>
                         const vscode = acquireVsCodeApi();                        
                     </script>
@@ -80,10 +86,16 @@ export class ResultsGridRender {
             'grid.js']
         );
 
+        const gridCss = this.getUri(this.webViewPanel.webview, extensionUri, [
+            'resources',
+            'grid.css']
+        );
+
         this.webViewPanel.webview.html = `<!DOCTYPE html>
         <html lang="en">
             <head>
                 <meta charset="UTF-8">
+                <link rel="stylesheet" href="${gridCss}">
                 <script>
                     const vscode = acquireVsCodeApi();                        
                 </script>

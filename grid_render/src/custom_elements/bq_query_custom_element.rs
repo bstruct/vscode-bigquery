@@ -1,8 +1,12 @@
 use super::{
-    base_element_trait::BaseElementTrait, bq_common_custom_element::{get_attribute, set_attribute}, custom_element_definition::CustomElementDefinition, data_table_controls_element::{
+    base_element_trait::BaseElementTrait,
+    bq_common_custom_element::{get_attribute, set_attribute},
+    custom_element_definition::CustomElementDefinition,
+    data_table_controls_element::{
         DataTableControls, EVENT_GO_TO_FIRST_PAGE, EVENT_GO_TO_LAST_PAGE, EVENT_GO_TO_NEXT_PAGE,
         EVENT_GO_TO_PREVIOUS_PAGE,
-    }, data_table_element::{DataTable, DataTableItem}
+    },
+    data_table_element::{DataTable, DataTableItem},
 };
 use crate::{
     bigquery::jobs::GetQueryResultsRequest, custom_elements::base_element::BaseElement,
@@ -148,31 +152,35 @@ impl BigqueryQueryCustomElement {
             .dyn_into::<web_sys::Element>()
             .unwrap();
 
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "1) on_render_table event on element: {:?}",
-            element.id()
-        )));
+        if !element.has_attribute("loaded") {
+            element.set_attribute("loaded", "1").unwrap();
 
-        let bq_query_element = BigqueryQueryCustomElement::from_element(&element);
-        let request = bq_query_element.as_query_results_request();
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "1) on_render_table event on element: {:?}",
+                element.id()
+            )));
 
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "on_render_table event on element: {:?}, request: {:?}",
-            element.id(),
-            request
-        )));
+            let bq_query_element = BigqueryQueryCustomElement::from_element(&element);
+            let request = bq_query_element.as_query_results_request();
 
-        let jobs = crate::bigquery::jobs::Jobs::new(&bq_query_element.token);
-        let parent_node = element.parent_node().unwrap();
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "on_render_table event on element: {:?}, request: {:?}",
+                element.id(),
+                request
+            )));
 
-        spawn_local(async move {
-            let response = jobs.get_query_results(request).await;
-            if let Some(response) = response {
-                response.to_bq_query(&bq_query_element).render(&parent_node);
-            } else {
-                element.set_inner_html(&format!("unexpected response: {:?}", response));
-            }
-        });
+            let jobs = crate::bigquery::jobs::Jobs::new(&bq_query_element.token);
+            let parent_node = element.parent_node().unwrap();
+
+            spawn_local(async move {
+                let response = jobs.get_query_results(request).await;
+                if let Some(response) = response {
+                    response.to_bq_query(&bq_query_element).render(&parent_node);
+                } else {
+                    element.set_inner_html(&format!("unexpected response: {:?}", response));
+                }
+            });
+        }
     }
 
     pub(crate) fn get_page_start_index(&self) -> usize {
@@ -187,6 +195,10 @@ impl BigqueryQueryCustomElement {
         let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
         element.set_attribute(PAGE_START_INDEX_ATT, "0").unwrap();
         let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+
+        if previous_value != current_value {
+            element.remove_attribute("loaded").unwrap();
+        }
 
         //return bool true if value was changed
         previous_value != current_value
@@ -209,6 +221,10 @@ impl BigqueryQueryCustomElement {
             .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
             .unwrap();
         let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+
+        if previous_value != current_value {
+            element.remove_attribute("loaded").unwrap();
+        }
 
         //return bool true if value was changed
         previous_value != current_value
@@ -242,6 +258,10 @@ impl BigqueryQueryCustomElement {
             .unwrap();
         let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
+        if previous_value != current_value {
+            element.remove_attribute("loaded").unwrap();
+        }
+
         //return bool true if value was changed
         previous_value != current_value
     }
@@ -269,6 +289,10 @@ impl BigqueryQueryCustomElement {
             .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
             .unwrap();
         let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
+
+        if previous_value != current_value {
+            element.remove_attribute("loaded").unwrap();
+        }
 
         //return bool true if value was changed
         previous_value != current_value
@@ -439,8 +463,8 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
             .apply_fn(&set_attributes, self)
             .append_shadow()
             .append_child_style(css_content, "style1")
-            .append_sibling("div", "spacer")
-            .apply_fn(&configure_spacer, &None)
+            // .append_sibling("div", "spacer")
+            // .apply_fn(&configure_spacer, &None)
             .append_sibling_base_element(&self.to_data_table_controls())
             .append_sibling_base_element(&self.to_data_table("t1"))
     }
