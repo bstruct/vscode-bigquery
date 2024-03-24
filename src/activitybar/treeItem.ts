@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 // import { BigqueryIcons } from '../bigquery-icons';
-import { bigqueryIcons } from '../extension';
+// import { bigqueryIcons } from '../extension';
 import * as commands from '../extensionCommands';
+import { BigqueryIcons } from '../bigqueryIcons';
 
 export enum TreeItemType {
     none,
@@ -31,6 +32,8 @@ export class BigqueryTreeItem extends vscode.TreeItem {
         public readonly command?: vscode.Command
     ) {
         super(label, collapsibleState);
+
+        const bigqueryIcons = new BigqueryIcons();
 
         switch (treeItemType) {
             case TreeItemType.project:

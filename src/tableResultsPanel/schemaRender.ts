@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { extensionUri } from '../extension';
+import { getExtensionUri } from '../extension';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
 import { TableMetadata } from '../services/tableMetadata';
-import { SchemaGrid } from './schemaGrid';
+// import { SchemaGrid } from './schemaGrid.ts';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
@@ -40,7 +40,7 @@ export class SchemaRender {
 
     private getWaitingHtml(): string {
 
-        const toolkitUri = this.getUri(this.webView, extensionUri, [
+        const toolkitUri = this.getUri(this.webView, getExtensionUri(), [
             "resources",
             "toolkit.min.js",
         ]);
@@ -60,6 +60,8 @@ export class SchemaRender {
     }
 
     private getExceptionHtml(exception: any): string {
+
+        const extensionUri = getExtensionUri();
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
             "resources",
@@ -119,6 +121,7 @@ export class SchemaRender {
     private async getResultsHtml(tableMetadata: TableMetadata): Promise<string> {
 
         // const schema = JSON.stringify(tableMetadata.schema.fields);
+        const extensionUri = getExtensionUri();
 
         const toolkitUri = this.getUri(this.webView, extensionUri, [
             "resources",
@@ -139,11 +142,27 @@ export class SchemaRender {
         <html lang="en" style="display:flex;">
         	<head>
         		<meta charset="UTF-8">
-        		<script type="module" src="${toolkitUri}"></script>
+                <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective/dist/cdn/perspective.js"></script>
+                <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/cdn/perspective-viewer.js"></script>
+                <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid/dist/cdn/perspective-viewer-datagrid.js"></script>
+                <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-d3fc/dist/cdn/perspective-viewer-d3fc.js"></script>
+
+                <link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/css/pro.css"/>
+
+                <script type="module" src="${toolkitUri}"></script>
                 <link href="${codiconsUri}" rel="stylesheet" />
                 <link href="${gridCss}" rel="stylesheet" />
         	</head>
         	<body>
+
+                <perspective-viewer></perspective-viewer>
+                <script type="module">
+                    import perspective from "https://cdn.jsdelivr.net/npm/@finos/perspective/dist/cdn/perspective.js";
+                
+                    const worker = perspective.worker();
+                    const table = agent.table({ x: [1, 2, 3, 4, 5] });
+                    document.querySelector("perspective-viewer").load(table);
+                </script>
 
                 <div class="labelValue"><span class="label">Project Id</span><span class="value">${tableMetadata.tableReference.projectId}</span></div>
                 <div class="labelValue"><span class="label">Dataset Id</span><span class="value">${tableMetadata.tableReference.datasetId}</span></div>
@@ -155,8 +174,7 @@ export class SchemaRender {
                 <div class="labelValue"><span class="label">Creation time</span><span class="value">${new Date(Number(tableMetadata.creationTime))}</span></div>
                 <div class="labelValue"><span class="label">Last modified time</span><span class="value">${new Date(Number(tableMetadata.lastModifiedTime))}</span></div>
 
-                <div class="spacer"></div>
-                ${new SchemaGrid(tableMetadata)}     
+                <div class="spacer"></div> 
         	</body>
         </html>`;
 

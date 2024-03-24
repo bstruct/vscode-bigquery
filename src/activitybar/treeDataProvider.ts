@@ -120,7 +120,8 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
     private async getProjects(): Promise<BigqueryTreeItem[]> {
 
         const defaultProjectIdPromise = Authentication.getDefaultProjectId();
-        const bqProjects = await getBigQueryClient().getProjects();
+        const bqClient = await getBigQueryClient();
+        const bqProjects = await bqClient.getProjects();
 
         let listProjects = this.getProjectsFromSettings();
         for (const project of bqProjects.projects || []) {

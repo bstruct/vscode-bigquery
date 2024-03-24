@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { extensionUri } from '../extension';
+import { getExtensionUri } from '../extension';
 import * as commands from '../extensionCommands';
 import { Authentication } from '../services/authentication';
 import { AuthenticationGrid } from './authenticationGrid';
@@ -22,7 +22,7 @@ export class BigqueryAuthenticationWebviewViewProvider implements vscode.Webview
         //dispose event regardless of successful query or not
         if (this.disposableEvent) { this.disposableEvent.dispose(); }
 
-        const toolkitUri = this.getUri(webviewView.webview, extensionUri, [
+        const toolkitUri = this.getUri(webviewView.webview, getExtensionUri(), [
             'resources',
             'toolkit.min.js',
         ]);

@@ -39,20 +39,62 @@ const extensionConfig = {
             loader: 'ts-loader'
           }
         ]
+      },
+      {
+        exclude: [
+          path.resolve(__dirname, '.github'),
+          path.resolve(__dirname, 'grid_render'),
+          path.resolve(__dirname, 'bqsql_parser'),
+        ]
       }
     ]
   },
+  // module: {
+  //   rules: [
+  //     {
+  //       exclude: [
+  //         path.resolve(__dirname, '.github'),
+  //         path.resolve(__dirname, 'grid_render'),
+  //         // path.resolve(__dirname, 'node_modules'),
+  //       ]
+  //     }
+  //   ]
+  // },
   devtool: 'nosources-source-map',
   experiments: {
     syncWebAssembly: true
   },
   plugins: [
+    // (a, b) => {
+    //   copyFileSync(
+    //     require('path').join(__dirname, 'node_modules', '@bstruct', 'bqsql-parser', 'bqsql_parser_bg.wasm'),
+    //     require('path').join(__dirname, 'dist', 'bqsql_parser_bg.wasm')
+    //   );
+    // },
     (a, b) => {
       copyFileSync(
-        require('path').join(__dirname, 'node_modules', '@bstruct', 'bqsql-parser', 'bqsql_parser_bg.wasm'), 
+        require('path').join(__dirname, 'node_modules', 'grid_render', 'grid_render_bg.wasm'),
+        require('path').join(__dirname, 'dist', 'grid_render_bg.wasm')
+      );
+    },
+    (a, b) => {
+      copyFileSync(
+        require('path').join(__dirname, 'node_modules', 'grid_render', 'grid_render.js'),
+        require('path').join(__dirname, 'dist', 'grid_render.js')
+      );
+    },
+    (a, b) => {
+      copyFileSync(
+        require('path').join(__dirname, 'bqsql_parser', 'pkg', 'bqsql_parser_bg.wasm'),
         require('path').join(__dirname, 'dist', 'bqsql_parser_bg.wasm')
-        );
-    }
+      );
+    },
+    (a, b) => {
+      copyFileSync(
+        require('path').join(__dirname, 'bqsql_parser', 'pkg', 'bqsql_parser.js'),
+        require('path').join(__dirname, 'dist', 'bqsql_parser.js')
+      );
+    },
     // copyFileSync('', '')
   ],
   infrastructureLogging: {

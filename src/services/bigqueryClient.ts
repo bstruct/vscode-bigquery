@@ -6,9 +6,29 @@ import { SchemaField, TableMetadata } from './tableMetadata';
 
 export class BigQueryClient {
 
-	private bqclient = new BigQuery();
+	private bqclient: BigQuery;
 
-	public async runQuery(queryText: string): Promise<Job[]> {
+	/**
+	 *
+	 */
+	constructor(projId: string | undefined) {
+		this.bqclient = new BigQuery({ 'projectId': projId });
+	}
+
+	getToken(): Promise<string | null> {
+		return this.bqclient.authClient.getAccessToken()
+			.then(value => {
+				return value || null;
+			});
+	}
+	getProjectId(): Promise<string | null> {
+		return this.bqclient.getProjectId()
+			.then(value => {
+				return value || null;
+			});
+	}
+
+	public async runQuery(queryText: string): Promise<Job> {
 
 		const query: Query = {
 			dryRun: false,
@@ -21,53 +41,55 @@ export class BigQueryClient {
 
 		const job = jobResponse[0];
 
-		return new Promise((resolve, reject) => {
+		return job;
 
-			job.on('complete', (metadata) => {
+		// return new Promise((resolve, reject) => {
 
-				const jobMeta = jobResponse[1];
-				const statementType: string = jobMeta.statistics?.query?.statementType || '';
+		// 	job.on('complete', (metadata) => {
 
-				//If the query is a 'SCRIPT', means that there's multiple jobs involved.
-				// Can be multiple select statements, but also declaring variables is another `job`
-				if (statementType === 'SCRIPT') {
+		// 		const jobMeta = jobResponse[1];
+		// 		const statementType: string = jobMeta.statistics?.query?.statementType || '';
 
-					const jobId = jobMeta.jobReference?.jobId || '';
+		// 		//If the query is a 'SCRIPT', means that there's multiple jobs involved.
+		// 		// Can be multiple select statements, but also declaring variables is another `job`
+		// 		if (statementType === 'SCRIPT') {
 
-					// in this case, only after the parent jobs is 'DONE', it constains the list 
-					// of all the jobs involved.
-					// jobs will have id's postfixed
-					this.bqclient
-						.getJobs({ parentJobId: jobId })
-						.then((getJobsResponse) => {
+		// 			const jobId = jobMeta.jobReference?.jobId || '';
 
-							const jobs: Job[] = getJobsResponse[0];
+		// 			// in this case, only after the parent jobs is 'DONE', it constains the list 
+		// 			// of all the jobs involved.
+		// 			// jobs will have id's postfixed
+		// 			this.bqclient
+		// 				.getJobs({ parentJobId: jobId })
+		// 				.then((getJobsResponse) => {
 
-							const sortedJobs = jobs.sort((a: Job, b: Job) => {
+		// 					const jobs: Job[] = getJobsResponse[0];
 
-								const id1 = a.id || '';
-								const id2 = b.id || '';
+		// 					const sortedJobs = jobs.sort((a: Job, b: Job) => {
 
-								const n1 = Number(id1.substring(id1.lastIndexOf('_') + 1));
-								const n2 = Number(id2.substring(id2.lastIndexOf('_') + 1));
+		// 						const id1 = a.id || '';
+		// 						const id2 = b.id || '';
 
-								return n1 > n2 ? 1 : -1;
-							});
+		// 						const n1 = Number(id1.substring(id1.lastIndexOf('_') + 1));
+		// 						const n2 = Number(id2.substring(id2.lastIndexOf('_') + 1));
 
-							resolve(sortedJobs);
-						})
-						.catch((err) => { reject(err); });
+		// 						return n1 > n2 ? 1 : -1;
+		// 					});
 
-				} else {
-					resolve([job]);
-				}
-			});
+		// 					resolve(sortedJobs);
+		// 				})
+		// 				.catch((err) => { reject(err); });
 
-			job.on('error', (error) => {
-				reject(error);
-			});
+		// 		} else {
+		// 			resolve([job]);
+		// 		}
+		// 	});
 
-		});
+		// 	job.on('error', (error) => {
+		// 		reject(error);
+		// 	});
+
+		// });
 
 	}
 
@@ -117,8 +139,8 @@ export class BigQueryClient {
 			description 
 		FROM \`${projectId}.${datasetId}\`.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS 
 		WHERE table_name = '${tableId}';
-		`).then(jobs => {
-			return jobs[0].getQueryResults();
+		`).then(job => {
+			return job.getQueryResults();
 		});
 
 		return Promise.all([metadataPromise, fullSchema])
@@ -145,7 +167,7 @@ WHERE table_name = '${tableName}' AND is_hidden = 'NO';
 
 		const q = await this.runQuery(query);
 
-		const results = await q[0].getQueryResults();
+		const results = await q.getQueryResults();
 
 		return results[0].map(c => c as BigqueryTableSchema);
 
