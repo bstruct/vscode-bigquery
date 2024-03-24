@@ -1,7 +1,40 @@
-
-
-div[be_id="jobs"] div {
+div[be_id="jobs"] div div.title, div[be_id="jobs"] div[be_id="job_loading"] {
     margin: 5px;
-    border: 1px solid white;
+    border: 1px solid var(--vscode-dropdown-border);
     padding: 5px;
+    background-color: var(--vscode-dropdown-background);
+}
+
+/* loading */
+div[be_id="jobs"] div[be_id="job_loading"].loaded {
+    display: none;
+}
+
+@-webkit-keyframes dots {
+    0% { background-position: 0px; }
+    100% { background-position: 50px; }
+}
+
+div[be_id="jobs"] div[be_id="job_loading"] span {
+    background: linear-gradient(to right, white 50%, var(--vscode-dropdown-background) 50%);
+    color: transparent;
+    -webkit-background-clip: text;
+    -webkit-animation: dots 1s infinite steps(4);
+    padding-right: 40px;
+    margin-right: -40px;
+}
+
+/* title */
+div[be_id="jobs"] div div.ready {
+    cursor: pointer;
+}
+
+/* job body */
+div[be_id="jobs"] div div.job_body_closed {
+    display: none;
+}
+
+div[be_id="jobs"] div div.job_body_open {
+    display: inline-block;
+    height: 500px;
 }

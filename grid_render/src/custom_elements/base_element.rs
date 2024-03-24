@@ -38,6 +38,15 @@ impl BaseElement {
         self.clone()
     }
 
+    #[doc = "Set the class of the html element if empty. So that there's action when creating the element, not on re-render."]
+    pub(crate) fn apply_default_class_name(&self, class_name: &str) -> BaseElement {
+        if self.element().class_name().len() == 0 {
+            self.element().set_class_name(class_name);
+        }
+
+        self.clone()
+    }
+
     pub(crate) fn append_shadow(&self) -> BaseElement {
         let element = self.element();
 
@@ -177,6 +186,11 @@ impl BaseElement {
             None,
             None,
         )
+    }
+
+    pub fn append_base_child(&self, base_element: &dyn BaseElementTrait) -> BaseElement {
+        let parent_node = &self.element();
+        base_element.render(parent_node)
     }
 
     pub fn append_child_fn<T>(

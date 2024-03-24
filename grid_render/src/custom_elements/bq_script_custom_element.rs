@@ -3,7 +3,7 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{Element, Event, Node};
 
 use crate::{
-    bigquery::jobs::{GetJobRequest, GetListRequest, Job},
+    bigquery::jobs::{GetJobRequest, GetListRequest, Job, JobStatus},
     parse_to_usize,
 };
 
@@ -11,6 +11,7 @@ use super::{
     base_element::BaseElement,
     base_element_trait::BaseElementTrait,
     bq_common_custom_element::{get_attribute, remove_attribute, set_attribute},
+    bq_query_custom_element::BigqueryQueryCustomElement,
     custom_element_definition::CustomElementDefinition,
 };
 
@@ -154,8 +155,6 @@ impl BaseElementTrait for BigqueryScriptCustomElement {
             .append_child_style(css_content, "style1")
             .append_sibling("div", "jobs")
             .apply_fn(&resolve_jobs, &self)
-        //.append_sibling_base_element(&self.to_data_table_controls())
-        // .append_sibling_base_element(&self.to_data_table("t1"))
     }
 }
 
@@ -175,100 +174,123 @@ fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryScriptCustomEle
 }
 
 fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElement) {
-    if let Some(num_child_jobs) = script_element.num_child_jobs {
-        for index in 0..num_child_jobs {
-            let element_id = &format!("job_{}", index);
+    //loading
+    let loading_class_name = if script_element.num_child_jobs.is_some() {
+        "loaded"
+    } else {
+        ""
+    };
+    BaseElement::new_and_append(&element.element(), "DIV", "job_loading")
+        .apply_fn(&resolve_loading, &Some(loading_class_name));
 
-            let mut job_name: &str = "?";
-
-            if let Some(jobs) = &script_element.jobs {
-                let job = jobs.into_iter().find(|job| {
-                    job.id.is_some() && job.id.clone().unwrap().ends_with(&format!("_{}", index))
-                });
-
-                if job.is_some() && job.unwrap().id.is_some() {
-                    job_name = &job.as_ref().unwrap().id.as_ref().unwrap();
-                }
-            }
-
-            BaseElement::new_and_append(&element.element(), "DIV", element_id)
-                .apply_fn(&resolve_job, &String::from(job_name));
-        }
+    //
+    let num_child_jobs = if script_element.num_child_jobs.is_some() {
+        script_element.num_child_jobs.unwrap()
     } else {
         if let Some(jobs) = &script_element.jobs {
-            // for job in jobs
-            for index in 0..jobs.len() {
-                let element_id = &format!("job_{}", index);
+            jobs.len()
+        } else {
+            0
+        }
+    };
 
-                let job = jobs.into_iter().find(|job| {
+    for index in 0..num_child_jobs {
+        let chid_job: Option<&Job> = match &script_element.jobs {
+            Some(jobs) => {
+                let job_search = jobs.into_iter().find(|job| {
                     job.id.is_some() && job.id.clone().unwrap().ends_with(&format!("_{}", index))
                 });
 
-                let job_name: &str = if job.is_some() && job.unwrap().id.is_some() {
-                    &job.as_ref().unwrap().id.as_ref().unwrap()
+                if job_search.is_some() && job_search.unwrap().id.is_some() {
+                    Some(job_search.unwrap())
                 } else {
-                    "?"
-                };
-
-                // let job_name = job.id.clone().unwrap_or(String::from("?"));
-                // let job_reference = job.job_reference.expect("job_reference not found");
-                // let job_full_id = format!("{}:{}.{}", job_reference.project_id, job_reference.location, job_reference.job_id);
-
-                BaseElement::new_and_append(&element.element(), "DIV", element_id)
-                // .append_child("div", &format!("d{}", col_index))
-                .apply_fn(&resolve_job, &String::from(job_name))
-                // .apply_fn(&set_resize_actions, &col_index)
-                ;
+                    None
+                }
             }
+            None => None,
+        };
+
+        let (job_name, job_status) = if chid_job.is_some() && chid_job.unwrap().id.is_some() {
+            let job = chid_job.as_ref().unwrap();
+
+            (
+                job.id.as_ref().unwrap().to_string(),
+                job.status.as_ref().clone(),
+            )
+        } else {
+            ("?".to_string(), None)
+        };
+
+        let job_body =
+            BaseElement::new_and_append(&element.element(), "DIV", &format!("job_{}", index))
+                .append_child("DIV", &format!("job_title_{}", index))
+                .apply_fn(&resolve_job_title, &(job_name, job_status))
+                .append_sibling("DIV", &format!("job_body_{}", index))
+                .apply_default_class_name("job_body_closed");
+
+        //insert bq-query custom element if there's a job already
+        if chid_job.is_some() {
+            let job_reference = chid_job.as_ref().unwrap().job_reference.as_ref().unwrap();
+            let token = script_element.token.clone();
+
+            let bq_query = BigqueryQueryCustomElement::base_new(
+                format!("job_query_{}", index),
+                job_reference.job_id.clone(),
+                job_reference.project_id.clone(),
+                job_reference.location.clone(),
+                token,
+            );
+
+            job_body.append_base_child(&bq_query);
         }
     }
-
-    // let num_child_jobs = p.0;
-    // let project_id = p.1;
-    // let location = p.2;
-    // let job_id = p.3;
-
-    // if let Some(jobs) = jobs {
-    //     assert!(num_child_jobs >= jobs.len());
-
-    // let mut index = 0;
-    //     for index in 0..num_child_jobs {
-    //         // element
-    //         //     .append_child("DIV", "xxx")// &format!("job_{}", index))
-    //         //     // .apply_fn(&resolve_job, &job)
-    //         //     ;
-    //         // let job = if jobs.len() > index {
-    //         //     Some(&jobs[index])
-    //         // } else {
-    //         //     None
-    //         // };
-
-    //         // let job_name = if job.is_none() {
-    //         //     String::from("?")
-    //         // } else {
-    //         //     job.as_ref().unwrap().id.clone().unwrap_or(String::from("?"))
-    //         // }.to_string();
-    //         let job_name = format!("{}:{}.{}_{}", project_id, location, job_id, index);
-
-    //         BaseElement::new_and_append(&element.element(), "DIV", &format!("job_{}", index))
-    //             // .append_child("div", &format!("d{}", col_index))
-    //             .apply_fn(&resolve_job, &job_name)
-    //             // .apply_fn(&set_resize_actions, &col_index)
-    //         ;
-
-    //         // index += 1;
-    //     // }
-    // }
 }
 
-fn resolve_job(element: &BaseElement, job_name: &String) {
-    // let content: &str = if let Some(query) = &job.configuration.as_ref().unwrap().query {
-    //     &query.query
-    // } else {
-    //     "xxx?"
-    // };
+fn resolve_loading(element: &BaseElement, class_name: &Option<&str>) {
+    let html_element = element.element();
+    html_element.set_inner_html("Loading<span>...</span>");
+    html_element.set_class_name(class_name.unwrap_or_default());
+}
 
-    element.element().set_text_content(Some(job_name));
+fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Option<&JobStatus>)) {
+    let content = if job_status.is_some() {
+        format!("{} - {}", job_status.unwrap().state, job_name)
+    } else {
+        format!("? - {}", job_name)
+    };
+
+    let html_element = element.element();
+    html_element.set_text_content(Some(&content));
+
+    //https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobStatus
+    // Valid states include 'PENDING', 'RUNNING', and 'DONE'.
+    if job_status.is_some() && job_status.unwrap().state == "DONE" {
+        html_element.set_class_name("title ready");
+    } else {
+        html_element.set_class_name("title");
+    }
+
+    //toggle job_body on click
+    if html_element.get_attribute("bee").unwrap_or_default() != "1" {
+        let on_click_event = Closure::wrap(Box::new(|event: Event| {
+            let element = event.current_target().unwrap();
+            let element = element.dyn_into::<web_sys::Element>().unwrap();
+            if let Some(next_element) = element.next_element_sibling() {
+                match next_element.class_name().as_str() {
+                    "job_body_closed" => next_element.set_class_name("job_body_open"),
+                    _ => next_element.set_class_name("job_body_closed"),
+                }
+            }
+        }) as Box<dyn FnMut(_)>);
+
+        html_element
+            .add_event_listener_with_callback("click", on_click_event.as_ref().unchecked_ref())
+            .unwrap();
+
+        on_click_event.forget();
+
+        html_element.set_attribute("bee", "1").unwrap();
+    }
 }
 
 impl CustomElementDefinition for BigqueryScriptCustomElement {
