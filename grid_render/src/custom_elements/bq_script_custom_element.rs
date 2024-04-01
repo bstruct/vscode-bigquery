@@ -276,7 +276,12 @@ fn resolve_loading(element: &BaseElement, class_name: &Option<&str>) {
 
 fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Option<&JobStatus>)) {
     let content = if job_status.is_some() {
-        format!("{} - {}", job_status.unwrap().state, job_name)
+        let job_status = job_status.as_ref().unwrap();
+        if job_status.error_result.is_some() {
+            format!("ERROR - {}", job_name)
+        } else {
+            format!("{} - {}", job_status.state, job_name)
+        }
     } else {
         format!("? - {}", job_name)
     };
