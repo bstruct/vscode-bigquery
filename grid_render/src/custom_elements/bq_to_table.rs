@@ -2,12 +2,13 @@ use wasm_bindgen::JsValue;
 
 use super::{
     bq_query_custom_element::BigqueryQueryCustomElement,
-    bq_table_custom_element::BigqueryTableCustomElement, data_table_element::DataTableItem,
+    bq_table_custom_element::BigqueryTableCustomElement,
+    data_table_element::{DataTable, DataTableItem},
 };
 use crate::{
     bigquery::{
         base::{TableFieldSchema, TableSchema},
-        jobs::GetQueryResultsResponse,
+        jobs::{GetQueryResultsResponse, Job},
         table_data::TableDataListResponse,
         tables::Table,
     },
@@ -181,7 +182,6 @@ impl DataTableItem {
         field_schema: &TableFieldSchema,
         value: &Option<serde_json::Value>,
     ) -> DataTableItem {
-
         // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
         //     "value: {:?}",
         //     value
@@ -407,6 +407,47 @@ fn timestamp_to_value(bq_timestamp: &Option<serde_json::Value>) -> Option<serde_
     }
 
     None
+}
+
+impl Job {
+    pub(crate) fn to_error_table(&self) -> DataTable {
+        let header = ["message".to_string(), "reason".to_string()].to_vec();
+
+        // let rows_default = [[
+        //     Some(DataTableItem::from_string(&"--".to_string())),
+        //     Some(DataTableItem::from_string(&"--".to_string())),
+        // ]
+        // .to_vec()]
+        // .to_vec();
+
+        let rows: Vec<Vec<Option<DataTableItem>>> = match self.status.as_ref() {
+            Some(status) => match &status.error_result {
+                Some(error_result) => [[
+                    Some(DataTableItem::from_string(
+                        error_result.message.as_ref().unwrap_or(&"".to_string()),
+                    )),
+                    Some(DataTableItem::from_string(
+                        error_result.reason.as_ref().unwrap_or(&"".to_string()),
+                    )),
+                ]
+                .to_vec()]
+                .to_vec(),
+                None => Self::get_errors_rows_default(),
+            },
+            None => Self::get_errors_rows_default(),
+        };
+
+        DataTable::new("e1", &Some(header), &Some(rows))
+    }
+
+    fn get_errors_rows_default() -> Vec<Vec<Option<DataTableItem>>> {
+        [[
+            Some(DataTableItem::from_string(&"--".to_string())),
+            Some(DataTableItem::from_string(&"--".to_string())),
+        ]
+        .to_vec()]
+        .to_vec()
+    }
 }
 
 #[cfg(test)]
@@ -1047,9 +1088,10 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn timestamp_to_value_test_1() {
-        let value : serde_json::Value = serde_json::Value::String(String::from("1.703357814940265E9"));
+        let value: serde_json::Value =
+            serde_json::Value::String(String::from("1.703357814940265E9"));
         let result = timestamp_to_value(&Some(value));
-        
+
         assert!(result.is_some());
         assert_eq!(
             result.unwrap().as_str().unwrap_or_default(),

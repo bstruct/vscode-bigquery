@@ -1,0 +1,248 @@
+{
+    "etag": "MeJgVp2KZipReWdhuj7vQA==",
+    "kind": "bigquery#jobList",
+    "jobs": [
+        {
+            "id": "rca-stream-loader-dev:US.script_job_12919cfffd01b36353465872f783d82c_1",
+            "kind": "bigquery#job",
+            "jobReference": {
+                "projectId": "rca-stream-loader-dev",
+                "jobId": "script_job_12919cfffd01b36353465872f783d82c_1",
+                "location": "US"
+            },
+            "state": "DONE",
+            "errorResult": {
+                "reason": "invalidQuery",
+                "location": "query",
+                "message": "force error"
+            },
+            "statistics": {
+                "creationTime": "1711568769486",
+                "startTime": "1711568769512",
+                "endTime": "1711568769632",
+                "query": {
+                    "totalSlotMs": "27",
+                    "cacheHit": false,
+                    "statementType": "SELECT"
+                },
+                "totalSlotMs": "27",
+                "parentJobId": "e59862ca-ea53-4ba5-9d56-45abfb3b4c88",
+                "scriptStatistics": {
+                    "evaluationKind": "STATEMENT",
+                    "stackFrames": [
+                        {
+                            "startLine": 19,
+                            "startColumn": 1,
+                            "endLine": 20,
+                            "endColumn": 25,
+                            "text": "SELECT \n    ERROR(\"force error\")"
+                        }
+                    ]
+                },
+                "finalExecutionDurationMs": "58"
+            },
+            "configuration": {
+                "query": {
+                    "query": "SELECT \n    ERROR(\"force error\")",
+                    "priority": "INTERACTIVE",
+                    "useQueryCache": true,
+                    "useLegacySql": false
+                },
+                "dryRun": false,
+                "jobTimeoutMs": "86399346",
+                "jobType": "QUERY"
+            },
+            "status": {
+                "errorResult": {
+                    "reason": "invalidQuery",
+                    "location": "query",
+                    "message": "force error"
+                },
+                "errors": [
+                    {
+                        "reason": "invalidQuery",
+                        "location": "query",
+                        "message": "force error"
+                    }
+                ],
+                "state": "DONE"
+            },
+            "user_email": "damiaocastro@pvh.com",
+            "principal_subject": "user:damiaocastro@pvh.com"
+        },
+        {
+            "id": "rca-stream-loader-dev:US.script_job_b8aab5896d9a99ad48205d9cda941159_0",
+            "kind": "bigquery#job",
+            "jobReference": {
+                "projectId": "rca-stream-loader-dev",
+                "jobId": "script_job_b8aab5896d9a99ad48205d9cda941159_0",
+                "location": "US"
+            },
+            "state": "DONE",
+            "statistics": {
+                "creationTime": "1711568768845",
+                "startTime": "1711568768888",
+                "endTime": "1711568769137",
+                "totalBytesProcessed": "0",
+                "query": {
+                    "queryPlan": [
+                        {
+                            "name": "S00: Input",
+                            "id": "0",
+                            "startMs": "1711568768926",
+                            "endMs": "1711568769015",
+                            "waitRatioAvg": 0.631578947368421,
+                            "waitMsAvg": "12",
+                            "waitRatioMax": 0.631578947368421,
+                            "waitMsMax": "12",
+                            "readRatioAvg": 0,
+                            "readMsAvg": "0",
+                            "readRatioMax": 0,
+                            "readMsMax": "0",
+                            "computeRatioAvg": 0.42105263157894735,
+                            "computeMsAvg": "8",
+                            "computeRatioMax": 0.42105263157894735,
+                            "computeMsMax": "8",
+                            "writeRatioAvg": 1,
+                            "writeMsAvg": "19",
+                            "writeRatioMax": 1,
+                            "writeMsMax": "19",
+                            "shuffleOutputBytes": "45",
+                            "shuffleOutputBytesSpilled": "0",
+                            "recordsRead": "0",
+                            "recordsWritten": "1",
+                            "parallelInputs": "1",
+                            "completedParallelInputs": "1",
+                            "status": "COMPLETE",
+                            "steps": [
+                                {
+                                    "kind": "COMPUTE",
+                                    "substeps": [
+                                        "$10 := ARRAY<...>"
+                                    ]
+                                },
+                                {
+                                    "kind": "WRITE",
+                                    "substeps": [
+                                        "$10",
+                                        "TO __stage00_output"
+                                    ]
+                                }
+                            ],
+                            "slotMs": "83",
+                            "computeMode": "BIGQUERY"
+                        },
+                        {
+                            "name": "S01: Output",
+                            "id": "1",
+                            "startMs": "1711568769038",
+                            "endMs": "1711568769050",
+                            "inputStages": [
+                                "0"
+                            ],
+                            "waitRatioAvg": 0.7368421052631579,
+                            "waitMsAvg": "14",
+                            "waitRatioMax": 0.7368421052631579,
+                            "waitMsMax": "14",
+                            "readRatioAvg": 0,
+                            "readMsAvg": "0",
+                            "readRatioMax": 0,
+                            "readMsMax": "0",
+                            "computeRatioAvg": 0.42105263157894735,
+                            "computeMsAvg": "8",
+                            "computeRatioMax": 0.42105263157894735,
+                            "computeMsMax": "8",
+                            "writeRatioAvg": 0.21052631578947367,
+                            "writeMsAvg": "4",
+                            "writeRatioMax": 0.21052631578947367,
+                            "writeMsMax": "4",
+                            "shuffleOutputBytes": "36",
+                            "shuffleOutputBytesSpilled": "0",
+                            "recordsRead": "1",
+                            "recordsWritten": "4",
+                            "parallelInputs": "1",
+                            "completedParallelInputs": "1",
+                            "status": "COMPLETE",
+                            "steps": [
+                                {
+                                    "kind": "READ",
+                                    "substeps": [
+                                        "$10",
+                                        "FROM __stage00_output"
+                                    ]
+                                },
+                                {
+                                    "kind": "WRITE",
+                                    "substeps": [
+                                        "$1",
+                                        "TO __stage01_output"
+                                    ]
+                                }
+                            ],
+                            "slotMs": "18",
+                            "computeMode": "BIGQUERY"
+                        }
+                    ],
+                    "estimatedBytesProcessed": "0",
+                    "timeline": [
+                        {
+                            "elapsedMs": "167",
+                            "totalSlotMs": "101",
+                            "pendingUnits": "0",
+                            "completedUnits": "2",
+                            "estimatedRunnableUnits": "0"
+                        }
+                    ],
+                    "totalPartitionsProcessed": "0",
+                    "totalBytesProcessed": "0",
+                    "totalBytesBilled": "0",
+                    "billingTier": 0,
+                    "totalSlotMs": "101",
+                    "cacheHit": false,
+                    "statementType": "SELECT",
+                    "performanceInsights": {
+                        "avgPreviousExecutionMs": "158"
+                    },
+                    "transferredBytes": "0"
+                },
+                "totalSlotMs": "101",
+                "parentJobId": "e59862ca-ea53-4ba5-9d56-45abfb3b4c88",
+                "scriptStatistics": {
+                    "evaluationKind": "STATEMENT",
+                    "stackFrames": [
+                        {
+                            "startLine": 4,
+                            "startColumn": 1,
+                            "endLine": 6,
+                            "endColumn": 26,
+                            "text": "SELECT \n    t1\nFROM UNNEST([1,2,3,4]) t1"
+                        }
+                    ]
+                },
+                "finalExecutionDurationMs": "144"
+            },
+            "configuration": {
+                "query": {
+                    "query": "SELECT \n    t1\nFROM UNNEST([1,2,3,4]) t1",
+                    "destinationTable": {
+                        "projectId": "rca-stream-loader-dev",
+                        "datasetId": "_190aed7d041ecb8acb416b7991969f30ee2b5b67",
+                        "tableId": "anon9561acc762c64abaef5849e53ddbd2e18224a878ec512635500f810b4e9ab2c6"
+                    },
+                    "writeDisposition": "WRITE_TRUNCATE",
+                    "priority": "INTERACTIVE",
+                    "useQueryCache": true,
+                    "useLegacySql": false
+                },
+                "dryRun": false,
+                "jobTimeoutMs": "86399978",
+                "jobType": "QUERY"
+            },
+            "status": {
+                "state": "DONE"
+            },
+            "user_email": "damiaocastro@pvh.com",
+            "principal_subject": "user:damiaocastro@pvh.com"
+        }
+    ]
+}

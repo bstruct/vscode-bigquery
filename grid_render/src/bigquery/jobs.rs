@@ -210,6 +210,15 @@ impl Job {
 
         false
     }
+    pub(crate) fn has_error(&self) -> bool {
+        if let Some(status) = self.status.as_ref() {
+            if let Some(error_result) = status.error_result.as_ref() {
+                return error_result.message.is_some();
+            }
+        }
+
+        false
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -284,11 +293,11 @@ pub struct GetJobRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorProto {
-    pub reason: String,
-    pub location: String,
+    pub reason: Option<String>,
+    pub location: Option<String>,
     #[serde(alias = "debugInfo")]
-    pub debug_info: String,
-    pub message: String,
+    pub debug_info: Option<String>,
+    pub message: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

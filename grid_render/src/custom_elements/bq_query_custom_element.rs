@@ -509,13 +509,13 @@ fn get_num_attribute(element: &Element, attribute_name: &str) -> usize {
     }
 }
 
-fn configure_spacer(element: &BaseElement, _: &Option<usize>) {
-    element.element().set_inner_html("&nbsp");
-    element
-        .element()
-        .set_attribute("style", "height: 30px")
-        .unwrap();
-}
+// fn configure_spacer(element: &BaseElement, _: &Option<usize>) {
+//     element.element().set_inner_html("&nbsp");
+//     element
+//         .element()
+//         .set_attribute("style", "height: 30px")
+//         .unwrap();
+// }
 
 #[cfg(test)]
 mod tests {
