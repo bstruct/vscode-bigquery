@@ -24,6 +24,8 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
         webviewPanel.webview.onDidReceiveMessage(async c => {
             if ((c as any).command === 'load_complete') {
                 await loadComplete(resultsGridRender, state);
+            } else{
+                ResultsGridRender.executeCommand(c);
             }
         });
 

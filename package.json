@@ -184,21 +184,6 @@
 					"command": "vscode-bigquery.run-selected-query",
 					"group": "navigation@-2",
 					"when": "editorLangId == bqsql"
-				},
-				{
-					"command": "vscode-bigquery.download-csv",
-					"group": "navigation@-3",
-					"when": "activeWebviewPanelId == 'bigquery-query-results' || activeWebviewPanelId == 'bigquery-table-results'"
-				},
-				{
-					"command": "vscode-bigquery.download-jsonl",
-					"group": "navigation@-2",
-					"when": "activeWebviewPanelId == 'bigquery-query-results' || activeWebviewPanelId == 'bigquery-table-results'"
-				},
-				{
-					"command": "vscode-bigquery.send-pubsub",
-					"group": "navigation@-1",
-					"when": "activeWebviewPanelId == 'bigquery-query-results' || activeWebviewPanelId == 'bigquery-table-results'"
 				}
 			],
 			"view/title": [

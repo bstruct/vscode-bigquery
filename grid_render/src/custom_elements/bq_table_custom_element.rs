@@ -1,8 +1,12 @@
 use super::{
-    base_element_trait::BaseElementTrait, bq_common_custom_element::{get_attribute, set_attribute}, custom_element_definition::CustomElementDefinition, data_table_controls_element::{
+    base_element_trait::BaseElementTrait,
+    bq_common_custom_element::{get_attribute, set_attribute},
+    custom_element_definition::CustomElementDefinition,
+    data_table_controls_element::{
         DataTableControls, EVENT_GO_TO_FIRST_PAGE, EVENT_GO_TO_LAST_PAGE, EVENT_GO_TO_NEXT_PAGE,
         EVENT_GO_TO_PREVIOUS_PAGE,
-    }, data_table_element::{DataTable, DataTableItem}
+    },
+    data_table_element::{DataTable, DataTableItem},
 };
 use crate::{custom_elements::base_element::BaseElement, parse_to_usize};
 use wasm_bindgen::{prelude::Closure, JsCast};
@@ -64,6 +68,8 @@ impl BigqueryTableCustomElement {
             Some(self.page_start_index),
             self.rows_in_page,
             self.rows_total,
+            None,
+            Some(self.as_table_request()),
         )
     }
 
@@ -490,8 +496,7 @@ mod tests {
 
     use super::{set_attributes, BigqueryTableCustomElement};
     use crate::custom_elements::{
-        base_element_trait::BaseElementTrait,
-        bq_table_custom_element::TAG_NAME,
+        base_element_trait::BaseElementTrait, bq_table_custom_element::TAG_NAME,
     };
     wasm_bindgen_test_configure!(run_in_browser);
 

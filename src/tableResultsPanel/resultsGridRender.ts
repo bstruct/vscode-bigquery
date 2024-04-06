@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
 // import bigquery from '@google-cloud/bigquery/build/src/types';
-import { getExtensionUri, QUERY_RESULTS_VIEW_TYPE, getTelemetryReporter } from '../extension';
+import { getExtensionUri } from '../extension';
+// import { getExtensionUri, QUERY_RESULTS_VIEW_TYPE, getTelemetryReporter } from '../extension';
 // import { QueryResultsOptions, Table } from '@google-cloud/bigquery';
-import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
+// import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
 // import { ResultsGrid } from './resultsGrid';
-import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
-import { COMMAND_DOWNLOAD_CSV, getBigQueryClient } from '../extensionCommands';
-import { JobReference } from '../services/queryResultsMapping';
-import { TableReference } from '../services/tableMetadata';
+// import { ResultsGridRenderRequest } from './resultsGridRenderRequest';
+import { COMMAND_DOWNLOAD_CSV, COMMAND_DOWNLOAD_JSONL, COMMAND_SEND_PUBSUB } from '../extensionCommands';
+// import { JobReference } from '../services/queryResultsMapping';
+// import { TableReference } from '../services/tableMetadata';
 import { ResultsGridRenderRequestV2 } from './resultsGridRenderRequestV2';
 
 // import { get_web_components_list } from "grid_render/grid_render";
@@ -28,6 +29,18 @@ export class ResultsGridRender {
     // public renderLoadingIcon() {
     //     this.webViewPanel.webview.html = this.getWaitingHtml(50, false, 0, 0);
     // }
+
+    public static executeCommand(c: any) {
+        if ((c as any).command) {
+            const command = (c as any).command;
+
+            switch (command) {
+                case "download_csv": { vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV, "resultsTable"); }
+                case "download_jsonl": { vscode.commands.executeCommand(COMMAND_DOWNLOAD_JSONL, "resultsTable"); }
+                case "send_pubsub": { vscode.commands.executeCommand(COMMAND_SEND_PUBSUB, "resultsTable"); }
+            }
+        }
+    }
 
     public render1(): Promise<boolean> {
 
@@ -53,6 +66,8 @@ export class ResultsGridRender {
                 if ((c as any).command === 'load_complete') {
                     clearTimeout(timer);
                     resolve(true);
+                } else {
+                    ResultsGridRender.executeCommand(c);
                 }
             });
 

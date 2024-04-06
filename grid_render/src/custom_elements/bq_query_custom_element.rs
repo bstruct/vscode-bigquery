@@ -9,7 +9,8 @@ use super::{
     data_table_element::{DataTable, DataTableItem},
 };
 use crate::{
-    bigquery::jobs::GetQueryResultsRequest, custom_elements::base_element::BaseElement,
+    bigquery::jobs::{GetQueryResultsRequest, JobReference},
+    custom_elements::base_element::BaseElement,
     parse_to_usize, set_state,
 };
 use wasm_bindgen::{prelude::Closure, JsCast};
@@ -71,11 +72,21 @@ impl BigqueryQueryCustomElement {
             Some(self.page_start_index),
             self.rows_in_page,
             self.rows_total,
+            Some(self.as_job_reference()),
+            None,
         )
     }
 
     pub(crate) fn to_data_table(&self, element_id: &str) -> DataTable {
         DataTable::new(element_id, &self.header, &self.rows)
+    }
+
+    pub(crate) fn as_job_reference(&self) -> JobReference {
+        JobReference {
+            project_id: self.project_id.to_string(),
+            job_id: self.project_id.to_string(),
+            location: self.location.to_string(),
+        }
     }
 
     pub(super) fn with_table_info(

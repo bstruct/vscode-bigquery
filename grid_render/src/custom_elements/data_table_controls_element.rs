@@ -1,3 +1,5 @@
+use crate::bigquery::{base::TableReference, jobs::JobReference};
+
 use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::Element;
@@ -7,7 +9,9 @@ const BTN_FIRST_PAGE: &str = "btn_first_page";
 const BTN_PREVIOUS_PAGE: &str = "btn_prev_page";
 const BTN_NEXT_PAGE: &str = "btn_next_page";
 const BTN_LAST_PAGE: &str = "btn_last_page";
-// const PARENT_BQ_TABLE_ATT: &str = "parent_bq_table";
+const BTN_DOWNLOAD_CSV: &str = "btn_download_csv";
+const BTN_DOWNLOAD_JSONL: &str = "btn_download_json";
+const BTN_SEND_PUBSUB: &str = "btn_send_pubsub";
 
 pub(crate) const EVENT_GO_TO_FIRST_PAGE: &str = "go_to_first_page";
 pub(crate) const EVENT_GO_TO_PREVIOUS_PAGE: &str = "go_to_previous_page";
@@ -20,20 +24,26 @@ pub(crate) struct DataTableControls {
     page_start_index: Option<usize>,
     rows_in_page: Option<usize>,
     rows_total: Option<usize>,
+
+    job_reference: Option<JobReference>,
+    table_reference: Option<TableReference>,
 }
 
 impl DataTableControls {
     pub(crate) fn new(
-        // parent_bq_table_id: &str,
         page_start_index: Option<usize>,
         rows_in_page: Option<usize>,
         rows_total: Option<usize>,
+        job_reference: Option<JobReference>,
+        table_reference: Option<TableReference>,
+
     ) -> DataTableControls {
         DataTableControls {
-            // parent_bq_table_id: parent_bq_table_id.to_string(),
             page_start_index: page_start_index,
             rows_in_page: rows_in_page,
             rows_total: rows_total,
+            job_reference: job_reference,
+            table_reference: table_reference
         }
     }
 }
@@ -51,6 +61,9 @@ impl BaseElementTrait for DataTableControls {
             .append_sibling_fn("button", BTN_PREVIOUS_PAGE, &modify_controls, self)
             .append_sibling_fn("button", BTN_NEXT_PAGE, &modify_controls, self)
             .append_sibling_fn("button", BTN_LAST_PAGE, &modify_controls, self)
+            .append_sibling_fn("button", BTN_DOWNLOAD_CSV, &modify_controls, self)
+            .append_sibling_fn("button", BTN_DOWNLOAD_JSONL, &modify_controls, self)
+            .append_sibling_fn("button", BTN_SEND_PUBSUB, &modify_controls, self)
     }
 }
 
@@ -110,6 +123,21 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
             add_event_listener(element, EVENT_GO_TO_LAST_PAGE);
             element.set_inner_html(">> Last page");
         }
+        BTN_DOWNLOAD_CSV => {
+            let element = &base_element.element();
+            add_event_listener_command(element, BTN_DOWNLOAD_CSV);
+            element.set_inner_html("Download CSV");
+        }
+        BTN_DOWNLOAD_JSONL => {
+            let element = &base_element.element();
+            add_event_listener_command(element, BTN_DOWNLOAD_JSONL);
+            element.set_inner_html("Download JSONL");
+        }
+        BTN_SEND_PUBSUB => {
+            let element = &base_element.element();
+            add_event_listener_command(element, BTN_SEND_PUBSUB);
+            element.set_inner_html("Send to Pub/Sub");
+        }
         _ => {}
     }
 }
@@ -137,6 +165,25 @@ fn add_event_listener(element: &Element, _event_type: &str) {
     }
 }
 
+fn add_event_listener_command(element: &Element, button_name: &str) {
+    if element.get_attribute("bee").is_none() {
+        let function_body = match button_name {
+            BTN_DOWNLOAD_CSV => format!("vscode.postMessage({{command:'download_csv'}});"),
+            BTN_DOWNLOAD_JSONL => format!("vscode.postMessage({{command:'download_jsonl'}});"),
+            BTN_SEND_PUBSUB => format!("vscode.postMessage({{command:'send_pubsub'}});"),
+            _ => panic!("unexpected command"),
+        };
+
+        let call_command = js_sys::Function::new_no_args(&function_body);
+
+        element
+            .add_event_listener_with_callback("click", call_command.as_ref())
+            .unwrap();
+
+        element.set_attribute("bee", "1").unwrap();
+    }
+}
+
 fn on_click(event: &web_sys::Event) {
     let element = event
         .target()
@@ -148,7 +195,7 @@ fn on_click(event: &web_sys::Event) {
     custom_event_init.bubbles(true);
     custom_event_init.cancelable(true);
     custom_event_init.composed(true);
-    
+
     let base_element = BaseElement::from_element(&element);
     let type_ = match base_element.id().as_ref().unwrap().as_str() {
         BTN_FIRST_PAGE => EVENT_GO_TO_FIRST_PAGE,
@@ -162,7 +209,6 @@ fn on_click(event: &web_sys::Event) {
         web_sys::CustomEvent::new_with_event_init_dict(type_, &custom_event_init).unwrap();
 
     element.dispatch_event(&action_event).unwrap();
-
 }
 
 #[cfg(test)]
@@ -180,23 +226,19 @@ mod tests {
         let parent_element = &element.attach_shadow(&shadow_init).unwrap();
         // let parent_bq_table_id = "parent_bq_table_id";
 
-        DataTableControls::new(Some(0), Some(10), Some(100))
-            .render(parent_element);
+        DataTableControls::new(Some(0), Some(10), Some(100), None, None).render(parent_element);
 
         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">1 - 10 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
 
-        DataTableControls::new(Some(10), Some(10), Some(100))
-            .render(parent_element);
+        DataTableControls::new(Some(10), Some(10), Some(100), None, None).render(parent_element);
 
         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">11 - 20 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
 
-        DataTableControls::new(Some(20), Some(10), Some(100))
-            .render(parent_element);
+        DataTableControls::new(Some(20), Some(10), Some(100), None, None).render(parent_element);
 
         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">21 - 30 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
 
-        DataTableControls::new(Some(30), Some(10), Some(100))
-            .render(parent_element);
+        DataTableControls::new(Some(30), Some(10), Some(100), None, None).render(parent_element);
 
         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">31 - 40 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
     }
