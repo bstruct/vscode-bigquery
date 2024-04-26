@@ -125,9 +125,9 @@ impl BigqueryTableCustomElement {
 
     fn as_table_request(&self) -> crate::bigquery::base::TableReference {
         crate::bigquery::base::TableReference {
-            project_id: Some(self.project_id.clone()),
-            dataset_id: Some(self.dataset_id.clone()),
-            table_id: Some(self.table_id.clone()),
+            project_id: self.project_id.clone(),
+            dataset_id: self.dataset_id.clone(),
+            table_id: self.table_id.clone(),
         }
     }
 

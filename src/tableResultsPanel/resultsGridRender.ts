@@ -33,11 +33,12 @@ export class ResultsGridRender {
     public static executeCommand(c: any) {
         if ((c as any).command) {
             const command = (c as any).command;
+            const data: String = (c as any).data;
 
             switch (command) {
-                case "download_csv": { vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV, "resultsTable"); }
-                case "download_jsonl": { vscode.commands.executeCommand(COMMAND_DOWNLOAD_JSONL, "resultsTable"); }
-                case "send_pubsub": { vscode.commands.executeCommand(COMMAND_SEND_PUBSUB, "resultsTable"); }
+                case "download_csv": { vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV, data); }
+                case "download_jsonl": { vscode.commands.executeCommand(COMMAND_DOWNLOAD_JSONL, data); }
+                case "send_pubsub": { vscode.commands.executeCommand(COMMAND_SEND_PUBSUB, data); }
             }
         }
     }

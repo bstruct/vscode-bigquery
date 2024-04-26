@@ -32,9 +32,9 @@ impl Tables {
 
         let url = format!(
             "https://bigquery.googleapis.com/bigquery/v2/projects/{}/datasets/{}/tables/{}",
-            request.project_id.unwrap(), 
-            request.dataset_id.unwrap(),
-            request.table_id.unwrap(),
+            request.project_id, 
+            request.dataset_id,
+            request.table_id,
         );
 
         // if (request.location) { url.searchParams.append("location", request.location); }

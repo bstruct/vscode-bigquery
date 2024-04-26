@@ -37,9 +37,9 @@ impl TableFieldSchema {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TableReference {
     #[serde(alias = "projectId")]
-    pub project_id: Option<String>,
+    pub project_id: String,
     #[serde(alias = "datasetId")]
-    pub dataset_id: Option<String>,
+    pub dataset_id: String,
     #[serde(alias = "tableId")]
-    pub table_id: Option<String>,
+    pub table_id: String,
 }

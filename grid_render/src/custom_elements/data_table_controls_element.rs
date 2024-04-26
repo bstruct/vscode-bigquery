@@ -36,14 +36,13 @@ impl DataTableControls {
         rows_total: Option<usize>,
         job_reference: Option<JobReference>,
         table_reference: Option<TableReference>,
-
     ) -> DataTableControls {
         DataTableControls {
             page_start_index: page_start_index,
             rows_in_page: rows_in_page,
             rows_total: rows_total,
             job_reference: job_reference,
-            table_reference: table_reference
+            table_reference: table_reference,
         }
     }
 }
@@ -125,17 +124,17 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
         }
         BTN_DOWNLOAD_CSV => {
             let element = &base_element.element();
-            add_event_listener_command(element, BTN_DOWNLOAD_CSV);
+            add_event_listener_command(element, BTN_DOWNLOAD_CSV, settings);
             element.set_inner_html("Download CSV");
         }
         BTN_DOWNLOAD_JSONL => {
             let element = &base_element.element();
-            add_event_listener_command(element, BTN_DOWNLOAD_JSONL);
+            add_event_listener_command(element, BTN_DOWNLOAD_JSONL, settings);
             element.set_inner_html("Download JSONL");
         }
         BTN_SEND_PUBSUB => {
             let element = &base_element.element();
-            add_event_listener_command(element, BTN_SEND_PUBSUB);
+            add_event_listener_command(element, BTN_SEND_PUBSUB, settings);
             element.set_inner_html("Send to Pub/Sub");
         }
         _ => {}
@@ -165,15 +164,46 @@ fn add_event_listener(element: &Element, _event_type: &str) {
     }
 }
 
-fn add_event_listener_command(element: &Element, button_name: &str) {
+fn add_event_listener_command(
+    element: &Element,
+    button_name: &str,
+    datatable_controls: &DataTableControls,
+) {
     if element.get_attribute("bee").is_none() {
-        let function_body = match button_name {
-            BTN_DOWNLOAD_CSV => format!("vscode.postMessage({{command:'download_csv'}});"),
-            BTN_DOWNLOAD_JSONL => format!("vscode.postMessage({{command:'download_jsonl'}});"),
-            BTN_SEND_PUBSUB => format!("vscode.postMessage({{command:'send_pubsub'}});"),
-            _ => panic!("unexpected command"),
-        };
+        // let command_name = match button_name {
+        //     BTN_DOWNLOAD_CSV => "download_csv",
+        //     BTN_DOWNLOAD_JSONL => "download_jsonl",
+        //     BTN_SEND_PUBSUB => "send_pubsub",
+        //     _ => panic!("unexpected button"),
+        // };
 
+        // let function_body = if let Some(job_reference) = &datatable_controls.job_reference {
+        //     stringify!({
+        //         "command" : command_name,
+        //         "type": "job_reference",
+        //         "job_reference": {
+        //             "location": job_reference.location,
+        //             "project_id": job_reference.project_id,
+        //             "job_id": job_reference.job_id
+        //         }
+        //     })
+        // } else {
+        //     if let Some(table_reference) = &datatable_controls.table_reference {
+        //         stringify!({
+        //             "command" : command_name,
+        //             "type": "table_reference",
+        //             "table_reference": {
+        //                 "project_id": table_reference.project_id,
+        //                 "dataset_id": table_reference.dataset_id,
+        //                 "table_id": table_reference.table_id
+        //             }
+        //         })
+        //     } else {
+        //         panic!("Unexpected. No job_reference nor table_reference found");
+        //     }
+        // };
+
+        let function_body = "123";
         let call_command = js_sys::Function::new_no_args(&function_body);
 
         element
