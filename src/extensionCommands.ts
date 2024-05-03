@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigqueryClient';
-import { authenticationWebviewProvider, bigQueryTreeDataProvider, CHART_VIEW_TYPE, QUERY_RESULTS_VIEW_TYPE, getTelemetryReporter, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE } from './extension';
-import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
+import { bigQueryTreeDataProvider, QUERY_RESULTS_VIEW_TYPE, getTelemetryReporter, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE, gcpAuthenticationTreeDataProvider } from './extension';
+// import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
-import { BigqueryTreeItem } from './activitybar/treeItem';
+import { BigqueryTreeItem } from './activitybar/bigqueryTreeItem';
 import { SchemaRender } from './tableResultsPanel/schemaRender';
 import { QueryGeneratorService } from './services/queryGeneratorService';
 import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
@@ -11,23 +11,27 @@ import { v4 as uuidv4 } from 'uuid';
 import { DownloadCsv } from './tableResultsPanel/downloadCsv';
 import { QueryResultsMappingService } from './services/queryResultsMappingService';
 import { QueryResultsMapping } from './services/queryResultsMapping';
-import { JobReference } from "./services/queryResultsMapping";
-import { TableReference } from './services/tableMetadata';
-import { ResultsChartRender } from './charts/resultsChartRender';
+// import { JobReference } from "./services/queryResultsMapping";
+// import { TableReference } from './services/tableMetadata';
+// import { ResultsChartRender } from './charts/resultsChartRender';
 import { ResultsRender } from './services/resultsRender';
-import { ResultsChartRenderRequest } from './charts/ResultsChartRenderRequest';
+// import { ResultsChartRenderRequest } from './charts/ResultsChartRenderRequest';
 import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
 import { TelemetryEventProperties } from '@vscode/extension-telemetry';
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 import { DownloadJsonl } from './tableResultsPanel/downloadJsonl';
 import { SendToPubsub } from './tableResultsPanel/sendToPubsub';
-import { Job } from '@google-cloud/bigquery';
+// import { Job } from '@google-cloud/bigquery';
 import { ResultsGridRenderRequestV2, ResultsGridRenderRequestV2Type } from './tableResultsPanel/resultsGridRenderRequestV2';
+import { AuthenticationTreeItem, AuthenticationTreeItemType } from './activitybar/authenticationTreeItem';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
 export const COMMAND_USER_LOGIN = "vscode-bigquery.user-login";
 export const COMMAND_USER_LOGIN_WITH_DRIVE = "vscode-bigquery.user-login-drive";
+export const COMMAND_USER_LOGIN_NO_LAUNCH_BROWSER = "vscode-bigquery.user-login-no-launch-browser";
+export const COMMAND_USER_ACTIVATE = "vscode-bigquery.gcp-user-activate";
+export const COMMAND_USER_REMOVE = "vscode-bigquery.gcp-user-remove";
 export const COMMAND_GCLOUD_INIT = "vscode-bigquery.gcloud-init";
 export const COMMAND_SERVICE_ACCOUNT_LOGIN = "vscode-bigquery.service-account-login";
 export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-refresh";
@@ -228,6 +232,19 @@ export const commandUserLoginWithDrive = function (...args: any[]) {
 	getTelemetryReporter()?.sendTelemetryEvent('commandUserLoginWithDrive', {});
 };
 
+export const commandUserLoginNoLaunchBrowser= function (...args: any[]) {
+
+	getTelemetryReporter()?.sendTelemetryEvent('commandUserLoginNoLaunchBrowser', {});
+
+	resetBigQueryClient();
+
+	const terminal = vscode.window.createTerminal("gcloud");
+
+	terminal.show();
+
+	terminal.sendText('gcloud auth login --update-adc --add-quota-project-to-adc --quiet --verbosity warning --no-launch-browser');
+};
+
 export const commandServiceAccountLogin = async function (...args: any[]) {
 
 	resetBigQueryClient();
@@ -254,6 +271,34 @@ export const commandServiceAccountLogin = async function (...args: any[]) {
 
 };
 
+export const commandGcpUserActivate = async function (...args: any[]) {
+
+	resetBigQueryClient();
+
+	const item = args[0] as AuthenticationTreeItem;
+
+	Authentication.activate(item.label)
+		.then(result => {
+			vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
+		});
+
+	getTelemetryReporter()?.sendTelemetryEvent('commandGcpUserActivate', {});
+};
+
+export const commandGcpUserRemove = async function (...args: any[]) {
+
+	resetBigQueryClient();
+
+	const item = args[0] as AuthenticationTreeItem;
+
+	Authentication.revoke(item.label)
+		.then(result => {
+			vscode.commands.executeCommand(COMMAND_AUTHENTICATION_REFRESH);
+		});
+
+	getTelemetryReporter()?.sendTelemetryEvent('commandGcpUserRemove', {});
+};
+
 export const commandGCloudInit = function (...args: any[]) {
 
 	getTelemetryReporter()?.sendTelemetryEvent('commandGCloudInit', {});
@@ -274,7 +319,7 @@ export const commandAuthenticationRefresh = function (...args: any[]) {
 
 	resetBigQueryClient();
 
-	authenticationWebviewProvider.refresh();
+	gcpAuthenticationTreeDataProvider.refresh();
 
 	getTelemetryReporter()?.sendTelemetryEvent('commandAuthenticationRefresh', {}, { elapsedMs: Date.now() - t1 });
 };

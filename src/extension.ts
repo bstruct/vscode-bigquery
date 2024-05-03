@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Uri, StatusBarItem, ExtensionContext } from 'vscode';
-import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authenticationWebviewViewProvider';
+// import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authenticationWebviewViewProvider';
 import { BigQueryTreeDataProvider } from './activitybar/treeDataProvider';
 import * as commands from './extensionCommands';
 import { WebviewViewProvider } from './tableResultsPanel/webviewViewProvider';
@@ -17,9 +17,11 @@ import { ResultsRender } from './services/resultsRender';
 // import { ChartResultsSerializer } from './charts/chartResultsSerializer';
 import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
+import { GcpAuthenticationTreeDataProvider } from './activitybar/gcpAuthenticationTreeDataProvider';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
-export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
+// export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
+export const gcpAuthenticationTreeDataProvider = new GcpAuthenticationTreeDataProvider();
 export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
 export const bigqueryTableSchemaService = new BigqueryTableSchemaService();
 
@@ -98,8 +100,29 @@ export function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_USER_LOGIN_NO_LAUNCH_BROWSER,
+			commands.commandUserLoginNoLaunchBrowser
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_SERVICE_ACCOUNT_LOGIN,
 			commands.commandServiceAccountLogin
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_USER_ACTIVATE,
+			commands.commandGcpUserActivate
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_USER_REMOVE,
+			commands.commandGcpUserRemove
 		)
 	);
 
@@ -231,11 +254,17 @@ export function activate(context: ExtensionContext) {
 	// );
 
 	// bigquery-authentication
+	// context.subscriptions.push(
+	// 	vscode.window.registerWebviewViewProvider(
+	// 		"bigquery-authentication",
+	// 		authenticationWebviewProvider,
+	// 		{ webviewOptions: { retainContextWhenHidden: true } }
+	// 	)
+	// );
 	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider(
-			"bigquery-authentication",
-			authenticationWebviewProvider,
-			{ webviewOptions: { retainContextWhenHidden: true } }
+		vscode.window.registerTreeDataProvider(
+			'bigquery-authentication',
+			gcpAuthenticationTreeDataProvider
 		)
 	);
 

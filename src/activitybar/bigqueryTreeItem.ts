@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import * as commands from '../extensionCommands';
 import { BigqueryIcons } from '../bigqueryIcons';
 
-export enum TreeItemType {
+export enum BigqueryTreeItemType {
     none,
     project,
     dataset,
@@ -19,7 +19,7 @@ export enum TreeItemType {
 export class BigqueryTreeItem extends vscode.TreeItem {
 
     constructor(
-        public readonly treeItemType: TreeItemType,
+        public readonly treeItemType: BigqueryTreeItemType,
 
         public readonly projectId: string | null,
         public readonly datasetId: string | null,
@@ -36,38 +36,38 @@ export class BigqueryTreeItem extends vscode.TreeItem {
         const bigqueryIcons = new BigqueryIcons();
 
         switch (treeItemType) {
-            case TreeItemType.project:
+            case BigqueryTreeItemType.project:
                 if (pinned) {
                     this.iconPath = bigqueryIcons.pinned;
                 }
                 this.contextValue = 'bq-gcp-project';
                 break;
-            case TreeItemType.table:
+            case BigqueryTreeItemType.table:
                 this.iconPath = bigqueryIcons.table;
                 this.contextValue = 'bq-table';
                 this.command = { command: commands.COMMAND_VIEW_TABLE, arguments: [this] } as vscode.Command;
                 break;
-            case TreeItemType.partitionedTable:
+            case BigqueryTreeItemType.partitionedTable:
                 this.iconPath = bigqueryIcons.tablePartitioned;
                 this.contextValue = 'bq-table';
                 this.command = { command: commands.COMMAND_VIEW_TABLE, arguments: [this] } as vscode.Command;
                 break;
-            case TreeItemType.tableView:
+            case BigqueryTreeItemType.tableView:
                 this.iconPath = bigqueryIcons.tableView;
                 this.contextValue = 'bq-table';
                 this.command = { command: commands.COMMAND_VIEW_TABLE, arguments: [this] } as vscode.Command;
                 break;
-            case TreeItemType.dataset:
+            case BigqueryTreeItemType.dataset:
                 this.iconPath = bigqueryIcons.dataset;
                 break;
-            case TreeItemType.datasetLink:
+            case BigqueryTreeItemType.datasetLink:
                 this.iconPath = bigqueryIcons.datasetLink;
                 break;
-            case TreeItemType.routine:
+            case BigqueryTreeItemType.routine:
                 this.iconPath = bigqueryIcons.routine;
                 this.contextValue = 'bq-routine';
                 break;
-            case TreeItemType.model:
+            case BigqueryTreeItemType.model:
                 this.iconPath = bigqueryIcons.model;
                 break;
         }

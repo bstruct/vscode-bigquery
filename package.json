@@ -93,84 +93,97 @@
 		"commands": [
 			{
 				"command": "vscode-bigquery.run-query",
-				"title": "Biguery: Run Query",
+				"title": "BigueryView: Run Query",
 				"icon": "$(debug-start)"
 			},
 			{
 				"command": "vscode-bigquery.run-selected-query",
-				"title": "Biguery: Run Selected Query",
+				"title": "BigueryView: Run Selected Query",
 				"icon": "$(debug-line-by-line)"
 			},
 			{
 				"command": "vscode-bigquery.user-login",
-				"title": "Biguery: User login"
+				"title": "BigueryView: User login"
 			},
 			{
 				"command": "vscode-bigquery.service-account-login",
-				"title": "Biguery: Service account login"
+				"title": "BigueryView: Service account login"
+			}, {
+				"command": "vscode-bigquery.user-login-no-launch-browser",
+				"title": "BigueryView: User login via console"
 			},
 			{
 				"command": "vscode-bigquery.authentication-refresh",
-				"title": "Bigquery: Authentication refresh",
+				"title": "BigueryView: Authentication refresh",
 				"icon": "$(refresh)"
 			},
 			{
+				"command": "vscode-bigquery.gcp-user-activate",
+				"title": "BigueryView: Activate User",
+				"icon": "$(check)"
+			},
+			{
+				"command": "vscode-bigquery.gcp-user-remove",
+				"title": "BigueryView: Remove User",
+				"icon": "$(close)"
+			},
+			{
 				"command": "vscode-bigquery.explorer-refresh",
-				"title": "Bigquery: Explorer refresh",
+				"title": "BigueryView: Explorer refresh",
 				"icon": "$(refresh)"
 			},
 			{
 				"command": "vscode-bigquery.view-table",
-				"title": "Bigquery: Preview",
+				"title": "BigueryView: Preview",
 				"icon": "$(link-external)"
 			},
 			{
 				"command": "vscode-bigquery.view-table-schema",
-				"title": "Bigquery: View schema",
+				"title": "BigueryView: View schema",
 				"icon": "$(link-external)"
 			},
 			{
 				"command": "vscode-bigquery.create-table-default-query",
-				"title": "Bigquery: Create query",
+				"title": "BigueryView: Create query",
 				"icon": "$(file-text)"
 			},
 			{
 				"command": "vscode-bigquery.open-ddl",
-				"title": "Bigquery: Open DDL",
+				"title": "BigueryView: Open DDL",
 				"icon": "$(link-external)"
 			},
 			{
 				"command": "vscode-bigquery.set-default-project",
-				"title": "Set as default project",
+				"title": "BigueryView: Set as default project",
 				"icon": "$(issue-closed)"
 			},
 			{
 				"command": "vscode-bigquery.project-pin",
-				"title": "Pin or unpin project",
+				"title": "BigueryView: Pin or unpin project",
 				"icon": "$(pin)"
 			},
 			{
 				"command": "vscode-bigquery.download-csv",
-				"title": "Download CSV",
+				"title": "BigueryView: Download CSV",
 				"icon": "$(cloud-download)"
 			},
 			{
 				"command": "vscode-bigquery.send-pubsub",
-				"title": "Send to Pub/Sub",
+				"title": "BigueryView: Send to Pub/Sub",
 				"icon": "$(outline-view-icon)"
 			},
 			{
 				"command": "vscode-bigquery.download-jsonl",
-				"title": "Download JSONL",
+				"title": "BigueryView: Download JSONL",
 				"icon": "$(json)"
 			},
 			{
 				"command": "vscode-bigquery.troubleshoot",
-				"title": "troubleshoot"
+				"title": "BigueryView: troubleshoot"
 			},
 			{
 				"command": "vscode-bigquery.open-settings-projects",
-				"title": "open settings - projects"
+				"title": "BigueryView: open settings - projects"
 			}
 		],
 		"menus": {
@@ -216,6 +229,16 @@
 					"when": "viewItem == 'bq-table' || viewItem == 'bq-routine'"
 				},
 				{
+					"command": "vscode-bigquery.gcp-user-activate",
+					"when": "viewItem == 'gcp-user'",
+					"group": "inline"
+				},
+				{
+					"command": "vscode-bigquery.gcp-user-remove",
+					"when": "viewItem == 'gcp-user'",
+					"group": "inline"
+				},
+				{
 					"command": "vscode-bigquery.set-default-project",
 					"when": "viewItem == 'bq-gcp-project'",
 					"group": "inline"
@@ -233,7 +256,7 @@
 					"id": "bigquery-authentication",
 					"name": "Authentication",
 					"contextualTitle": "BigQuery",
-					"type": "webview"
+					"type": "tree"
 				},
 				{
 					"id": "bigquery-tree-data-provider",
