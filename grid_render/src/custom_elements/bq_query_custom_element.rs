@@ -784,4 +784,43 @@ mod tests {
             (f64::floor(((100 as f64) - 1.0) / 50 as f64) * 50 as f64) + 1.0
         );
     }
+
+    #[wasm_bindgen_test]
+    pub fn no_rows_1() {
+        let parent_node = &crate::createElement("div");
+        let bq_table = &BigqueryQueryCustomElement::base_new(
+            "element_id".to_string(),
+            "jobId".to_string(),
+            "projectId".to_string(),
+            "location".to_string(),
+            "token".to_string(),
+        );
+
+        let complex_object_array_test = include_str!("test_resources/no_rows.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let bq_query_information = complex_object_array_test.to_bq_query(bq_table);
+
+        let rows_in_page = bq_query_information.rows_in_page;
+        let rows_total = bq_query_information.rows_total;
+        let header = bq_query_information.header;
+        let rows = bq_query_information.rows;
+
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        //1
+        bq_table.render(parent_node);
+
+        let element = &parent_node.first_element_child().unwrap();
+        let bq_table = BigqueryQueryCustomElement::from_element(element);
+
+        bq_table.last_page();
+
+        let page_start_index = element.get_attribute(PAGE_START_INDEX_ATT).unwrap();
+
+        assert_eq!(page_start_index, "0");
+    }
+
 }

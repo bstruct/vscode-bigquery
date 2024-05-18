@@ -24,7 +24,7 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
         webviewPanel.webview.onDidReceiveMessage(async c => {
             if ((c as any).command === 'load_complete') {
                 await loadComplete(resultsGridRender, state);
-            } else{
+            } else {
                 ResultsGridRender.executeCommand(c);
             }
         });
@@ -70,22 +70,21 @@ let loadComplete = async function (resultsGridRender: ResultsGridRender, state: 
         //     && jobIndex !== undefined
     ) {
 
-        const bqClient = await getBigQueryClient();
-        console.log('QueryResultsSerializer bqClient');
-
-        const token = await bqClient.getToken();
-        console.log('QueryResultsSerializer token');
-
-        const b = bqClient.getJob({
-            jobId: jobId,
-            location: location,
-            projectId: projectId
-        });
-        const job = await b.get();
-        const metadata = job[0].metadata;
-        console.log('QueryResultsSerializer job');
-
         try {
+            const bqClient = await getBigQueryClient();
+            console.log('QueryResultsSerializer bqClient');
+
+            const token = await bqClient.getToken();
+            console.log('QueryResultsSerializer token');
+
+            const b = bqClient.getJob({
+                jobId: jobId,
+                location: location,
+                projectId: projectId
+            });
+            const job = await b.get();
+            const metadata = job[0].metadata;
+            console.log('QueryResultsSerializer job');
 
             let _postMessageResult2 = await resultsGridRender.postMessage({
                 requestType: ResultsGridRenderRequestV2Type.executeQuery.toString(),

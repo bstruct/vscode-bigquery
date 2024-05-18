@@ -173,7 +173,10 @@ impl BigqueryTableCustomElement {
                     .to_bq_table(&bq_table_element, &response_rows)
                     .render(&parent_node);
             } else {
-                element.set_inner_html(&format!("unexpected response: {:?}", response));
+                let bq_element = bq_table_element.element.unwrap().parent_node().unwrap();
+                bq_element.remove_child(bq_element.first_child().unwrap().as_ref()).unwrap();
+                // bq_element.remove_child(bq_element.first_child().unwrap().as_ref()).unwrap();
+                // bq_element.set_inner_html(&format!("unexpected response: {:?}", response));
             }
         });
     }

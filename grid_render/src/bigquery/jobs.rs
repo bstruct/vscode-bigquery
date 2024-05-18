@@ -320,7 +320,7 @@ pub struct GetQueryResultsResponse {
     pub total_rows: String,
     #[serde(alias = "pageToken")]
     pub page_token: Option<String>,
-    pub rows: Vec<serde_json::Value>,
+    pub rows: Option<Vec<serde_json::Value>>,
     #[serde(alias = "totalBytesProcessed")]
     pub total_bytes_processed: String,
     #[serde(alias = "jobComplete")]
@@ -562,7 +562,13 @@ impl Jobs {
             } else {
                 return Some(bq_response.unwrap());
             }
-        }
+        } 
+        // else {
+        //     let m = wasm_bindgen::JsValue::from_str(
+        //         format!("resp.status(): {}", resp.status()).as_ref(),
+        //     );
+        //     console::log_1(&m);
+        // }
         None
     }
 

@@ -1,0 +1,27 @@
+{
+    "kind": "bigquery#getQueryResultsResponse",
+    "etag": "qUOEktC7CySpt6sOt47h8g==",
+    "schema": {
+        "fields": [
+            {
+                "name": "publish_time",
+                "type": "TIMESTAMP",
+                "mode": "NULLABLE"
+            },
+            {
+                "name": "data",
+                "type": "STRING",
+                "mode": "NULLABLE"
+            }
+        ]
+    },
+    "jobReference": {
+        "projectId": "rca-stream-loader-dev",
+        "jobId": "73650aed-8bbf-4127-90f1-e49846c227ce",
+        "location": "EU"
+    },
+    "totalRows": "0",
+    "totalBytesProcessed": "0",
+    "jobComplete": true,
+    "cacheHit": false
+}

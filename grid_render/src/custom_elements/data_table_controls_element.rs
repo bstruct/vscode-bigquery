@@ -87,9 +87,15 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
                 let rows_total = settings.rows_total.unwrap_or(0);
                 let page_start_index = settings.page_start_index.unwrap_or(0);
 
+                let page_start = if rows_in_page == 0 {
+                    0
+                } else {
+                    page_start_index + 1
+                };
+
                 base_element.element().set_inner_html(&format!(
                     "{} - {} of {}",
-                    page_start_index + 1,
+                    page_start,
                     page_start_index + rows_in_page,
                     rows_total
                 ));
@@ -170,12 +176,12 @@ fn add_event_listener_command(
     datatable_controls: &DataTableControls,
 ) {
     if element.get_attribute("bee").is_none() {
-        // let command_name = match button_name {
-        //     BTN_DOWNLOAD_CSV => "download_csv",
-        //     BTN_DOWNLOAD_JSONL => "download_jsonl",
-        //     BTN_SEND_PUBSUB => "send_pubsub",
-        //     _ => panic!("unexpected button"),
-        // };
+        let command_name = match button_name {
+            BTN_DOWNLOAD_CSV => "download_csv",
+            BTN_DOWNLOAD_JSONL => "download_jsonl",
+            BTN_SEND_PUBSUB => "send_pubsub",
+            _ => panic!("unexpected button"),
+        };
 
         // let function_body = if let Some(job_reference) = &datatable_controls.job_reference {
         //     stringify!({
@@ -258,18 +264,18 @@ mod tests {
 
         DataTableControls::new(Some(0), Some(10), Some(100), None, None).render(parent_element);
 
-        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">1 - 10 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
+        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">1 - 10 of 100</span><button be_id=\"btn_first_page\" bee=\"1\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" bee=\"1\">&lt; Previous page</button><button be_id=\"btn_next_page\" bee=\"1\">&gt; Next page</button><button be_id=\"btn_last_page\" bee=\"1\">&gt;&gt; Last page</button><button be_id=\"btn_download_csv\" bee=\"1\">Download CSV</button><button be_id=\"btn_download_json\" bee=\"1\">Download JSONL</button><button be_id=\"btn_send_pubsub\" bee=\"1\">Send to Pub/Sub</button></div></div>");
 
         DataTableControls::new(Some(10), Some(10), Some(100), None, None).render(parent_element);
 
-        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">11 - 20 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
+        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">11 - 20 of 100</span><button be_id=\"btn_first_page\" bee=\"1\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" bee=\"1\">&lt; Previous page</button><button be_id=\"btn_next_page\" bee=\"1\">&gt; Next page</button><button be_id=\"btn_last_page\" bee=\"1\">&gt;&gt; Last page</button><button be_id=\"btn_download_csv\" bee=\"1\">Download CSV</button><button be_id=\"btn_download_json\" bee=\"1\">Download JSONL</button><button be_id=\"btn_send_pubsub\" bee=\"1\">Send to Pub/Sub</button></div></div>");
 
         DataTableControls::new(Some(20), Some(10), Some(100), None, None).render(parent_element);
 
-        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">21 - 30 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
+        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">21 - 30 of 100</span><button be_id=\"btn_first_page\" bee=\"1\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" bee=\"1\">&lt; Previous page</button><button be_id=\"btn_next_page\" bee=\"1\">&gt; Next page</button><button be_id=\"btn_last_page\" bee=\"1\">&gt;&gt; Last page</button><button be_id=\"btn_download_csv\" bee=\"1\">Download CSV</button><button be_id=\"btn_download_json\" bee=\"1\">Download JSONL</button><button be_id=\"btn_send_pubsub\" bee=\"1\">Send to Pub/Sub</button></div></div>");
 
         DataTableControls::new(Some(30), Some(10), Some(100), None, None).render(parent_element);
 
-        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\" parent_bq_table=\"parent_bq_table_id\">31 - 40 of 100</span><button be_id=\"btn_first_page\" parent_bq_table=\"parent_bq_table_id\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" parent_bq_table=\"parent_bq_table_id\">&lt; Previous page</button><button be_id=\"btn_next_page\" parent_bq_table=\"parent_bq_table_id\">&gt; Next page</button><button be_id=\"btn_last_page\" parent_bq_table=\"parent_bq_table_id\">&gt;&gt; Last page</button></div></div>");
+        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">31 - 40 of 100</span><button be_id=\"btn_first_page\" bee=\"1\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" bee=\"1\">&lt; Previous page</button><button be_id=\"btn_next_page\" bee=\"1\">&gt; Next page</button><button be_id=\"btn_last_page\" bee=\"1\">&gt;&gt; Last page</button><button be_id=\"btn_download_csv\" bee=\"1\">Download CSV</button><button be_id=\"btn_download_json\" bee=\"1\">Download JSONL</button><button be_id=\"btn_send_pubsub\" bee=\"1\">Send to Pub/Sub</button></div></div>");
     }
 }
