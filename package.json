@@ -306,14 +306,15 @@
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
 		"lint": "eslint src --ext ts",
 		"test": "node ./out/test/runTest.js",
-		"deploy": "vsce publish"
+		"deploy": "vsce publish",
+		"package-dev": "vsce package --pre-release"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.2.0",
 		"@types/mocha": "^9.1.1",
 		"@types/node": "16.x",
 		"@types/uuid": "^9.0.0",
-		"@types/vscode": "^1.81.0",
+		"@types/vscode": "^1.63.0",
 		"@typescript-eslint/eslint-plugin": "^5.30.0",
 		"@typescript-eslint/parser": "^5.30.0",
 		"@vscode/test-electron": "^2.1.5",
@@ -332,10 +333,8 @@
 		"@google-cloud/pubsub": "^4.0.6",
 		"@types/gapi.client.bigquery-v2": "^0.0.2",
 		"@vscode/codicons": "^0.0.32",
-		"@vscode/extension-telemetry": "^0.8.2",
 		"@vscode/webview-ui-toolkit": "^1.2.2",
 		"csv-writer": "^1.6.0",
-		"grid_render": "file://.//grid_render/pkg",
-		"preact-render-to-string": "^5.2.2"
+		"grid_render": "file://.//grid_render/pkg"
 	}
 }
