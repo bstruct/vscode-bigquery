@@ -33,7 +33,6 @@ window.addEventListener('message', async event => {
 });
 
 // set state
-
 if (!vscode) { vscode = acquireVsCodeApi(); }
 function setState(str){
     console.log('state to set: ' + str);

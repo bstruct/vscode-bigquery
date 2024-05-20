@@ -84,7 +84,7 @@ impl BigqueryQueryCustomElement {
     pub(crate) fn as_job_reference(&self) -> JobReference {
         JobReference {
             project_id: self.project_id.to_string(),
-            job_id: self.project_id.to_string(),
+            job_id: self.job_id.to_string(),
             location: self.location.to_string(),
         }
     }

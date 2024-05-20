@@ -24,6 +24,7 @@ import { SendToPubsub } from './tableResultsPanel/sendToPubsub';
 // import { Job } from '@google-cloud/bigquery';
 import { ResultsGridRenderRequestV2, ResultsGridRenderRequestV2Type } from './tableResultsPanel/resultsGridRenderRequestV2';
 import { AuthenticationTreeItem, AuthenticationTreeItemType } from './activitybar/authenticationTreeItem';
+import { Dataset, Table } from '@google-cloud/bigquery';
 
 export const COMMAND_RUN_QUERY = "vscode-bigquery.run-query";
 export const COMMAND_RUN_SELECTED_QUERY = "vscode-bigquery.run-selected-query";
@@ -232,7 +233,7 @@ export const commandUserLoginWithDrive = function (...args: any[]) {
 	getTelemetryReporter()?.sendTelemetryEvent('commandUserLoginWithDrive', {});
 };
 
-export const commandUserLoginNoLaunchBrowser= function (...args: any[]) {
+export const commandUserLoginNoLaunchBrowser = function (...args: any[]) {
 
 	getTelemetryReporter()?.sendTelemetryEvent('commandUserLoginNoLaunchBrowser', {});
 
@@ -554,37 +555,63 @@ export const commandSetDefaultProject = function (...args: any[]) {
 
 export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 
-	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+	if (args.length > 0) {
 
-	if (activeTab === undefined || activeTab.input === undefined) {
-		return;
-	}
-	const bqClient = await getBigQueryClient();
+		let data = args[0];
+		if (data.command === "download_csv") {
 
-	const viewType = ((activeTab.input as any).viewType as string);
-	if (viewType?.endsWith('-bigquery-query-results')) {
+			if (data.jobReference || data.tableReference) {
 
-		const uuid = activeTab.label.substring(activeTab.label.length - 8);
+				const bqClient = await getBigQueryClient();
 
-		const globalState: vscode.Memento = this.globalState;
-		let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
-		if (queryResultsMapping) {
+				if (data.jobReference) {
+					let jobReference = data.jobReference;
+					await DownloadCsv.download(bqClient, jobReference);
+				} else {
+					let tableReference = data.tableReference;
 
-			const item = queryResultsMapping.find(c => c.uuid === uuid);
-			if (item && item.jobReferences && item.jobIndex !== undefined) {
-				await DownloadCsv.download(bqClient, item.jobReferences[item.jobIndex]);
+					const table = bqClient.getTable(tableReference.projectId, tableReference.datasetId, tableReference.tableId);
+
+
+					await DownloadCsv.downloadTable(bqClient, table);
+				}
 			}
-		}
-	} else {
-		if (viewType?.endsWith('-bigquery-table-results')) {
-
-			const tableId = activeTab.label.split('.');
-			const table = bqClient.getTable(tableId[0], tableId[1], tableId[2]);
-
-			await DownloadCsv.downloadTable(bqClient, table);
 
 		}
+
 	}
+
+	// const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+
+	// if (activeTab === undefined || activeTab.input === undefined) {
+	// 	return;
+	// }
+	// const bqClient = await getBigQueryClient();
+
+	// const viewType = ((activeTab.input as any).viewType as string);
+	// if (viewType?.endsWith('-bigquery-query-results')) {
+
+	// 	const uuid = activeTab.label.substring(activeTab.label.length - 8);
+
+	// 	const globalState: vscode.Memento = this.globalState;
+	// 	let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+	// 	if (queryResultsMapping) {
+
+	// 		const item = queryResultsMapping.find(c => c.uuid === uuid);
+	// 		if (item && item.jobReferences && item.jobIndex !== undefined) {
+	// 			await DownloadCsv.download(bqClient, item.jobReferences[item.jobIndex]);
+	// 		}
+	// 	}
+	// } else {
+	// 	if (viewType?.endsWith('-bigquery-table-results')) {
+
+	// 		const tableId = activeTab.label.split('.');
+	// 		const table = bqClient.getTable(tableId[0], tableId[1], tableId[2]);
+
+	// 		await DownloadCsv.downloadTable(bqClient, table);
+
+	// 	}
+	// }
 
 	const telemetryProperties: TelemetryEventProperties = {
 		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
@@ -595,86 +622,97 @@ export const commandDownloadCsv = async function (this: any, ...args: any[]) {
 
 export const commandDownloadJsonl = async function (this: any, ...args: any[]) {
 
-	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+	if (args.length > 0) {
 
-	if (activeTab === undefined || activeTab.input === undefined) {
-		return;
-	}
+		let data = args[0];
+		if (data.command === "download_jsonl") {
+			const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
-	const viewType = ((activeTab.input as any).viewType as string);
-	const bqClient = await getBigQueryClient();
-
-	if (viewType?.endsWith('-bigquery-query-results')) {
-
-		const uuid = activeTab.label.substring(activeTab.label.length - 8);
-
-		const globalState: vscode.Memento = this.globalState;
-		let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
-		if (queryResultsMapping) {
-
-			const item = queryResultsMapping.find(c => c.uuid === uuid);
-			if (item && item.jobReferences && item.jobIndex !== undefined) {
-				await DownloadJsonl.download(bqClient, item.jobReferences[item.jobIndex]);
+			if (activeTab === undefined || activeTab.input === undefined) {
+				return;
 			}
-		}
-	} else {
-		if (viewType?.endsWith('-bigquery-table-results')) {
 
-			const tableId = activeTab.label.split('.');
-			const table = bqClient.getTable(tableId[0], tableId[1], tableId[2]);
+			const viewType = ((activeTab.input as any).viewType as string);
+			const bqClient = await getBigQueryClient();
 
-			await DownloadJsonl.downloadTable(bqClient, table);
+			if (viewType?.endsWith('-bigquery-query-results')) {
 
+				const uuid = activeTab.label.substring(activeTab.label.length - 8);
+
+				const globalState: vscode.Memento = this.globalState;
+				let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+				if (queryResultsMapping) {
+
+					const item = queryResultsMapping.find(c => c.uuid === uuid);
+					if (item && item.jobReferences && item.jobIndex !== undefined) {
+						await DownloadJsonl.download(bqClient, item.jobReferences[item.jobIndex]);
+					}
+				}
+			} else {
+				if (viewType?.endsWith('-bigquery-table-results')) {
+
+					const tableId = activeTab.label.split('.');
+					const table = bqClient.getTable(tableId[0], tableId[1], tableId[2]);
+
+					await DownloadJsonl.downloadTable(bqClient, table);
+
+				}
+			}
+
+			const telemetryProperties: TelemetryEventProperties = {
+				"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
+			};
+			getTelemetryReporter()?.sendTelemetryEvent('commandDownloadJsonl', telemetryProperties);
 		}
 	}
-
-	const telemetryProperties: TelemetryEventProperties = {
-		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
-	};
-
-	getTelemetryReporter()?.sendTelemetryEvent('commandDownloadJsonl', telemetryProperties);
 };
 
 export const commandSendPubsub = async function (this: any, ...args: any[]) {
 
-	const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+	if (args.length > 0) {
 
-	if (activeTab === undefined || activeTab.input === undefined) {
-		return;
-	}
+		let data = args[0];
+		if (data.command === "send_pubsub") {
+			const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
-	const viewType = ((activeTab.input as any).viewType as string);
-	if (viewType?.endsWith('-bigquery-query-results')) {
-
-		const uuid = activeTab.label.substring(activeTab.label.length - 8);
-
-		const globalState: vscode.Memento = this.globalState;
-		let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
-		if (queryResultsMapping) {
-
-			const item = queryResultsMapping.find(c => c.uuid === uuid);
-			if (item && item.jobReferences && item.jobIndex !== undefined) {
-				const bqClient = await getBigQueryClient();
-				await SendToPubsub.sendJobResult(bqClient, item.jobReferences[item.jobIndex]);
+			if (activeTab === undefined || activeTab.input === undefined) {
+				return;
 			}
+
+			const viewType = ((activeTab.input as any).viewType as string);
+			if (viewType?.endsWith('-bigquery-query-results')) {
+
+				const uuid = activeTab.label.substring(activeTab.label.length - 8);
+
+				const globalState: vscode.Memento = this.globalState;
+				let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+				if (queryResultsMapping) {
+
+					const item = queryResultsMapping.find(c => c.uuid === uuid);
+					if (item && item.jobReferences && item.jobIndex !== undefined) {
+						const bqClient = await getBigQueryClient();
+						await SendToPubsub.sendJobResult(bqClient, item.jobReferences[item.jobIndex]);
+					}
+				}
+			}
+			//  else {
+			// 	if (viewType?.endsWith('-bigquery-table-results')) {
+
+			// 		const tableId = activeTab.label.split('.');
+			// 		const table = getBigQueryClient().getTable(tableId[0], tableId[1], tableId[2]);
+
+			// 		await DownloadJsonl.downloadTable(getBigQueryClient(), table);
+
+			// 	}
+			// }
+
+			const telemetryProperties: TelemetryEventProperties = {
+				"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
+			};
+
+			getTelemetryReporter()?.sendTelemetryEvent('commandSendPubsub', telemetryProperties);
 		}
 	}
-	//  else {
-	// 	if (viewType?.endsWith('-bigquery-table-results')) {
-
-	// 		const tableId = activeTab.label.split('.');
-	// 		const table = getBigQueryClient().getTable(tableId[0], tableId[1], tableId[2]);
-
-	// 		await DownloadJsonl.downloadTable(getBigQueryClient(), table);
-
-	// 	}
-	// }
-
-	const telemetryProperties: TelemetryEventProperties = {
-		"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')
-	};
-
-	getTelemetryReporter()?.sendTelemetryEvent('commandSendPubsub', telemetryProperties);
 };
 
 export const commandPinOrUnpinProject = function (...args: any[]) {

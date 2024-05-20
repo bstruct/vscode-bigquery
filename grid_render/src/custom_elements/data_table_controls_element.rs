@@ -1,6 +1,7 @@
 use crate::bigquery::{base::TableReference, jobs::JobReference};
 
 use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
+use serde_json::json;
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::Element;
 
@@ -183,33 +184,37 @@ fn add_event_listener_command(
             _ => panic!("unexpected button"),
         };
 
-        // let function_body = if let Some(job_reference) = &datatable_controls.job_reference {
-        //     stringify!({
-        //         "command" : command_name,
-        //         "type": "job_reference",
-        //         "job_reference": {
-        //             "location": job_reference.location,
-        //             "project_id": job_reference.project_id,
-        //             "job_id": job_reference.job_id
-        //         }
-        //     })
-        // } else {
-        //     if let Some(table_reference) = &datatable_controls.table_reference {
-        //         stringify!({
-        //             "command" : command_name,
-        //             "type": "table_reference",
-        //             "table_reference": {
-        //                 "project_id": table_reference.project_id,
-        //                 "dataset_id": table_reference.dataset_id,
-        //                 "table_id": table_reference.table_id
-        //             }
-        //         })
-        //     } else {
-        //         panic!("Unexpected. No job_reference nor table_reference found");
-        //     }
-        // };
+        let job_reference = datatable_controls.job_reference.as_ref();
 
-        let function_body = "123";
+        let function_body = if let Some(job_reference) = &datatable_controls.job_reference {
+            json!({
+                "command" : command_name,
+                "type": "job_reference",
+                "job_reference": {
+                    "location": job_reference.location,
+                    "projectId": job_reference.project_id,
+                    "jobId": job_reference.job_id
+                }
+            })
+        } else {
+            let table_reference = datatable_controls.table_reference.as_ref();
+
+            if let Some(table_reference) = &datatable_controls.table_reference {
+                json!({
+                    "command" : command_name,
+                    "type": "table_reference",
+                    "table_reference": {
+                        "projectId": table_reference.project_id,
+                        "datasetId": table_reference.dataset_id,
+                        "tableId": table_reference.table_id
+                    }
+                })
+            } else {
+                panic!("Unexpected. No job_reference nor table_reference found");
+            }
+        };
+
+        let function_body = format!("vscode.postMessage({0});", function_body);
         let call_command = js_sys::Function::new_no_args(&function_body);
 
         element

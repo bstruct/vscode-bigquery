@@ -13,7 +13,7 @@ export class DownloadCsv {
         try {
 
             const date = new Date();
-            const filename = `${table.projectId}_${table.dataset.id}_${table.id}_${date.toLocaleTimeString().replace(/:/g, '')}.csv`;
+            const filename = `${table.dataset.projectId}_${table.dataset.id}_${table.id}_${date.toLocaleTimeString().replace(/:/g, '')}.csv`;
 
             //download start
             let defaultUri: vscode.Uri | undefined;
