@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import { JobReference } from '../services/queryResultsMapping';
 import { BigQueryClient } from '../services/bigqueryClient';
 import { QueryRowsResponse, Table, TableSchema } from '@google-cloud/bigquery';
-import { BatchPublishOptions, PubSub } from '@google-cloud/pubsub';
+import { PubSub } from '@google-cloud/pubsub';
 
 export class SendToPubsub {
 
@@ -52,7 +51,7 @@ export class SendToPubsub {
                     await vscode.window.withProgress({
                         location: vscode.ProgressLocation.Notification,
                         cancellable: true,
-                        title: `Sending results into Pub/Sub`,    
+                        title: `Sending results into Pub/Sub`,
                     }, async (progress, token) => {
 
                         let cancelled = false;
@@ -79,7 +78,7 @@ export class SendToPubsub {
                             for (let index = 0; index < records.length; index++) {
                                 const element = records[index];
 
-                                let customAttributes = undefined;
+                                let customAttributes = null;
                                 if (containsAttributes) {
                                     customAttributes = element['attributes'];
                                 }
@@ -98,7 +97,6 @@ export class SendToPubsub {
                             if (totalDownloadedRows >= totalRows || (!pageToken)) {
                                 break;
                             }
-
                         }
 
                         progress.report({ message: 'Done' });
@@ -114,18 +112,5 @@ export class SendToPubsub {
             vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
         }
     }
-
-    // private static objectsToString(records: any[]): string[] {
-
-    //     let adjustedRecords = [];
-
-    //     for (let i = 0; i < records.length; i++) {
-    //         const iItem = records[i];
-    //         let newItem: string = JSON.stringify(iItem);
-    //         adjustedRecords.push(newItem);
-    //     }
-
-    //     return adjustedRecords;
-    // }
 
 }

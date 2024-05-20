@@ -141,8 +141,12 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
         }
         BTN_SEND_PUBSUB => {
             let element = &base_element.element();
-            add_event_listener_command(element, BTN_SEND_PUBSUB, settings);
-            element.set_inner_html("Send to Pub/Sub");
+            if settings.job_reference.is_some() {
+                add_event_listener_command(element, BTN_SEND_PUBSUB, settings);
+                element.set_inner_html("Send to Pub/Sub");
+            } else {
+                element.set_attribute("style", "display: none;").unwrap();
+            }
         }
         _ => {}
     }

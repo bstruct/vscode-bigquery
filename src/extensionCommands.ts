@@ -692,38 +692,45 @@ export const commandSendPubsub = async function (this: any, ...args: any[]) {
 
 		let data = args[0];
 		if (data.command === "send_pubsub") {
-			const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+			if (data.jobReference) {
+				const bqClient = await getBigQueryClient();
 
-			if (activeTab === undefined || activeTab.input === undefined) {
-				return;
+				let jobReference = data.jobReference;
+				await SendToPubsub.sendJobResult(bqClient, jobReference);
 			}
 
-			const viewType = ((activeTab.input as any).viewType as string);
-			if (viewType?.endsWith('-bigquery-query-results')) {
+			// const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
-				const uuid = activeTab.label.substring(activeTab.label.length - 8);
+			// if (activeTab === undefined || activeTab.input === undefined) {
+			// 	return;
+			// }
 
-				const globalState: vscode.Memento = this.globalState;
-				let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
-				if (queryResultsMapping) {
+			// const viewType = ((activeTab.input as any).viewType as string);
+			// if (viewType?.endsWith('-bigquery-query-results')) {
 
-					const item = queryResultsMapping.find(c => c.uuid === uuid);
-					if (item && item.jobReferences && item.jobIndex !== undefined) {
-						const bqClient = await getBigQueryClient();
-						await SendToPubsub.sendJobResult(bqClient, item.jobReferences[item.jobIndex]);
-					}
-				}
-			}
-			//  else {
-			// 	if (viewType?.endsWith('-bigquery-table-results')) {
+			// 	const uuid = activeTab.label.substring(activeTab.label.length - 8);
 
-			// 		const tableId = activeTab.label.split('.');
-			// 		const table = getBigQueryClient().getTable(tableId[0], tableId[1], tableId[2]);
+			// 	const globalState: vscode.Memento = this.globalState;
+			// 	let queryResultsMapping: QueryResultsMapping[] | undefined = globalState.get('queryResultsMapping');
+			// 	if (queryResultsMapping) {
 
-			// 		await DownloadJsonl.downloadTable(getBigQueryClient(), table);
-
+			// 		const item = queryResultsMapping.find(c => c.uuid === uuid);
+			// 		if (item && item.jobReferences && item.jobIndex !== undefined) {
+			// 			const bqClient = await getBigQueryClient();
+			// 			await SendToPubsub.sendJobResult(bqClient, item.jobReferences[item.jobIndex]);
+			// 		}
 			// 	}
 			// }
+			// //  else {
+			// // 	if (viewType?.endsWith('-bigquery-table-results')) {
+
+			// // 		const tableId = activeTab.label.split('.');
+			// // 		const table = getBigQueryClient().getTable(tableId[0], tableId[1], tableId[2]);
+
+			// // 		await DownloadJsonl.downloadTable(getBigQueryClient(), table);
+
+			// // 	}
+			// // }
 
 			const telemetryProperties: TelemetryEventProperties = {
 				"button": (args.length > 0 && typeof (args[0]) === "string" ? args[0] : 'webViewPanel')

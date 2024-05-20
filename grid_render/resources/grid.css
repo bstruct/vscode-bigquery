@@ -74,7 +74,7 @@ table tbody td div.resize {
     overflow-wrap: anywhere;
     overflow: scroll;
     resize: both;
-    height: 1em;
+    height: 1.2em;
     padding-right: 8px;
     max-width: 550px;
 }
