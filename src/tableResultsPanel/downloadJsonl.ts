@@ -6,13 +6,12 @@ import { Table } from '@google-cloud/bigquery';
 
 export class DownloadJsonl {
 
-
     static async downloadTable(bigqueryClient: BigQueryClient, table: Table) {
 
         try {
 
             const date = new Date();
-            const filename = `${table.projectId}_${table.dataset.id}_${table.id}_${date.toLocaleTimeString().replace(/:/g, '')}.jsonl`;
+            const filename = `${table.dataset.projectId}_${table.dataset.id}_${table.id}_${date.toLocaleTimeString().replace(/:/g, '')}.jsonl`;
 
             //download start
             let defaultUri: vscode.Uri | undefined;
