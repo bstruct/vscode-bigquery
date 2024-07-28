@@ -32,6 +32,26 @@ impl TableFieldSchema {
     pub fn is_complex_object(&self) -> bool {
         self.r#type == "RECORD"
     }
+
+    pub(crate) fn calc_number_cols(&self) -> usize {
+        if self.is_array() && self.is_complex_object() {
+
+            // start with 1 for the index column (#)
+            let mut count = 1;
+
+            for c in self.fields.as_ref().unwrap() {
+                count += c.calc_number_cols();
+            }
+
+            count
+        } else {
+            if self.is_complex_object() {
+                2
+            } else {
+                1
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

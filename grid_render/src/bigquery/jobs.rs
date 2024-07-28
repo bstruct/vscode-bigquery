@@ -544,15 +544,26 @@ impl Jobs {
             &resp_value
         ));
 
+        // console::log_1(resp_value.as_ref());
+
         let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
 
         if resp.status() == 200 {
             let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
 
             // console::log_1(json.as_ref());
+            // console::log_1(&JsValue::from_str(&format!(
+            //     "json: {:?}",
+            //     json
+            // )));
 
             // Use serde to parse the JSON into a struct.
             let bq_response = serde_wasm_bindgen::from_value::<GetQueryResultsResponse>(json);
+
+            // console::log_1(&JsValue::from_str(&format!(
+            //     "bq_response: {:?}",
+            //     bq_response
+            // )));
 
             if bq_response.is_err() {
                 console::log_1(&JsValue::from_str(&format!(
@@ -563,12 +574,7 @@ impl Jobs {
                 return Some(bq_response.unwrap());
             }
         } 
-        // else {
-        //     let m = wasm_bindgen::JsValue::from_str(
-        //         format!("resp.status(): {}", resp.status()).as_ref(),
-        //     );
-        //     console::log_1(&m);
-        // }
+
         None
     }
 
@@ -605,16 +611,18 @@ impl Jobs {
             .await
             .unwrap();
 
-        // assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
-        //     &resp_value
-        // ));
+        console::log_1(resp_value.as_ref());
+
+        assert!(wasm_bindgen::JsCast::is_instance_of::<web_sys::Response>(
+            &resp_value
+        ));
 
         let resp: web_sys::Response = wasm_bindgen::JsCast::dyn_into(resp_value).unwrap();
 
         if resp.status() == 200 {
             let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
 
-            console::log_1(json.as_ref());
+            // console::log_1(json.as_ref());
 
             // Use serde to parse the JSON into a struct.
             let bq_response = serde_wasm_bindgen::from_value::<Job>(json);

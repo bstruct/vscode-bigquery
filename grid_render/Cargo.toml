@@ -15,6 +15,7 @@ wasm-bindgen-futures = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "=0.6.1" # attempted update failed!
 serde_json = "1.0"
+instant = { version = "0.1", features = [ "wasm-bindgen", "inaccurate" ] }
 
 [dependencies.web-sys]
 version = "0.3"
@@ -55,8 +56,16 @@ features = [
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
+instant = { version = "0.1", features = [ "wasm-bindgen", "inaccurate" ] }
+
+[profile.dev]
+# opt-level = "s"
+# # opt-level = "z"
+opt-level = 3
+lto = true
 
 [profile.release]
-opt-level = "s"
-# opt-level = "z"
+# opt-level = "s"
+# # opt-level = "z"
+opt-level = 3
 lto = true

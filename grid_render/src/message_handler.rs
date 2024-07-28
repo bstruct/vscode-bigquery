@@ -31,9 +31,11 @@ pub async fn handle(event: &web_sys::MessageEvent) {
                     q1.set_inner_html(&"Loading...");
                 }
                 "execute_query" => {
+                    q1.set_inner_html(&"Loading...");
                     execute_query(q1, external_request);
                 }
                 "preview_table" => {
+                    q1.set_inner_html(&"Loading...");
                     preview_table(q1, external_request);
                 }
                 "error" => {

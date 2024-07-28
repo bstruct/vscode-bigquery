@@ -85,9 +85,9 @@ impl BaseElement {
                     .expect("unexpected error on casting Node to Element");
 
                 // web_sys::console::log_1(&JsValue::from(format!("ELEMENT_NODE, {}, {}, {}, {:?}", tag_name, base_element_id, parent_node.node_name(), element.get_attribute("be_id"))));
-
                 BaseElement::new_and_append_internal(
-                    &|| element.query_selector(&format!(":scope > [be_id='{0}']", base_element_id)),
+                    &||
+                            element.query_selector(&format!("[be_id='{0}']", base_element_id)),
                     &|node: &Node| element.append_child(node),
                     tag_name,
                     base_element_id,
@@ -95,6 +95,11 @@ impl BaseElement {
             },
             _ => panic!("base elements can only be appended to element nodes like `div` or `p` or shadow elements")
         }
+        // BaseElement::new_and_append_internal(
+        //     &|node: &Node| parent_node.append_child(node),
+        //     tag_name,
+        //     base_element_id,
+        // )
     }
 
     fn new_and_append_internal(
@@ -109,11 +114,9 @@ impl BaseElement {
 
         if let Some(existing_element) = existing_element.unwrap() {
             // web_sys::console::log_1(&JsValue::from("existing_element exists"));
-
             BaseElement::from_element(&existing_element)
         } else {
             // web_sys::console::log_1(&JsValue::from("existing_element does NOT exists"));
-
             let new_element = BaseElement::create_element(tag_name, base_element_id);
             append_child(&new_element.element()).unwrap();
             new_element

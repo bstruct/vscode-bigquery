@@ -57,8 +57,7 @@ impl BaseElement {
                 let text = &header[col_index];
                 BaseElement::new_and_append(&tr.element(), "th", &format!("th{}", col_index))
                     .append_child("div", &format!("d{}", col_index))
-                    .apply_fn(&set_header_text, &text)
-                    ;
+                    .apply_fn(&set_header_text, &text);
             }
         } else {
             while let Some(child) = self.first_child() {
@@ -78,12 +77,11 @@ impl BaseElement {
             } else {
                 let mut last_pointer_tr: Option<Element> = None;
 
+                let element = &self.element();
+
                 for row_index in 0..rows.len() {
-                    let tr = BaseElement::new_and_append(
-                        &self.element(),
-                        "tr",
-                        &format!("tr{}", row_index),
-                    );
+                    let tr =
+                        BaseElement::new_and_append(element, "tr", &format!("tr{}", row_index));
 
                     for col_index in 0..rows[row_index].len() {
                         let table_item = &rows[row_index][col_index];
@@ -134,8 +132,10 @@ fn set_header_text(base_element: &BaseElement, text: &String) {
 }
 
 fn set_table_item(base_element: &BaseElement, table_item: &Option<DataTableItem>) {
+    let element = &base_element.element();
+    let td = element.parent_element().unwrap();
     if let Some(table_item) = &table_item {
-        let element = &base_element.element();
+        td.set_class_name("v");
         if table_item.is_null {
             element.set_text_content(Some(&"null".to_string()));
             element.set_class_name("nullValue");
@@ -146,7 +146,9 @@ fn set_table_item(base_element: &BaseElement, table_item: &Option<DataTableItem>
                 .set_text_content(Some(&table_item.value.as_ref().unwrap_or(&"".to_string())));
         }
     } else {
-        base_element.element().set_inner_html("");
+        // let e = base_element.element();
+        td.set_class_name("");
+        element.set_inner_html("");
     }
 }
 

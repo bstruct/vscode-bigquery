@@ -5,6 +5,7 @@ div[be_id='controls-background'] {
     background-color: var(--vscode-activityBar-border);
     width: 100%;
     height: 30px;
+    box-shadow: inset 0 0 0 2000px rgba(0, 0, 0, 255);
 }
 
 div[be_id='controls'] {
@@ -50,10 +51,13 @@ table thead {
 th,
 td {
     padding: 5px 15px;
-    border-bottom: 1px solid gray;
     overflow: hidden;
     vertical-align: top;
     text-overflow: ellipsis;
+}
+
+tbody.tr, td.v {
+    border: 1px solid gray;
 }
 
 .nullValue {

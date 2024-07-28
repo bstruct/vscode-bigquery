@@ -30,7 +30,15 @@
 # npm install -g chromedriver
 
 # wasm-pack test --headless --chrome
+# cargo test
 
 wasm-pack test --chrome
 
-# cargo test
+
+# let start = instant::Instant::now();
+
+# let elapsed = start.elapsed().as_millis();
+# web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+#     "elapsed: {:?}",
+#     elapsed
+# )));

@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use wasm_bindgen::JsValue;
 
 use super::{
@@ -297,38 +295,42 @@ fn place_bq_table_rows(
                     None => None,
                 };
 
-                if field_schema.is_array()
-                    && field_schema.is_complex_object()
-                    && value.as_ref().is_some()
-                    && value.as_ref().unwrap().is_array()
-                {
-                    let inner_schema_fields = &field_schema.fields.clone().unwrap();
-                    let inner_data_rows = value
-                        .as_ref()
-                        .unwrap()
-                        .as_array()
-                        .unwrap()
-                        .iter()
-                        .map(|i| i.pointer("/v").unwrap().clone())
-                        .collect::<Vec<serde_json::Value>>();
+                if field_schema.is_array() && field_schema.is_complex_object() {
+                    if value.as_ref().is_some()
+                        && value.as_ref().unwrap().is_array()
+                        && value.as_ref().unwrap().as_array().unwrap().len() > 0
+                    {
+                        let inner_schema_fields = &field_schema.fields.clone().unwrap();
+                        let inner_data_rows = value
+                            .as_ref()
+                            .unwrap()
+                            .as_array()
+                            .unwrap()
+                            .iter()
+                            .map(|i| i.pointer("/v").unwrap().clone())
+                            .collect::<Vec<serde_json::Value>>();
 
-                    let positions = place_bq_table_rows(
-                        rows,
-                        inner_schema_fields,
-                        &Some(inner_data_rows.to_owned()),
-                        array_row_index + array_row_increment,
-                        array_col_index + array_col_increment,
-                        true,
-                        0,
-                    );
-                    //establish the max rows to progress
-                    array_max_inner_row_increment =
-                        match array_max_inner_row_increment > positions.0 {
-                            true => array_max_inner_row_increment,
-                            false => positions.0,
-                        };
-                    //move the col index further
-                    array_col_increment += positions.1;
+                        let positions = place_bq_table_rows(
+                            rows,
+                            inner_schema_fields,
+                            &Some(inner_data_rows.to_owned()),
+                            array_row_index + array_row_increment,
+                            array_col_index + array_col_increment,
+                            true,
+                            0,
+                        );
+                        //establish the max rows to progress
+                        array_max_inner_row_increment =
+                            match array_max_inner_row_increment > positions.0 {
+                                true => array_max_inner_row_increment,
+                                false => positions.0,
+                            };
+                        //move the col index further
+                        array_col_increment += positions.1;
+                    } else {
+                        let count_inner_columns = field_schema.calc_number_cols();
+                        array_col_increment += count_inner_columns;
+                    }
                 } else {
                     if field_schema.is_complex_object() && value.as_ref().is_some() {
                         let inner_schema_fields = &field_schema.fields.clone().unwrap();
@@ -346,10 +348,17 @@ fn place_bq_table_rows(
 
                         array_col_increment += positions.1;
                     } else {
-                        rows[array_row_index + array_row_increment]
-                            [array_col_index + array_col_increment] =
-                            Some(DataTableItem::from_schema_value(field_schema, &value));
-                        array_col_increment += 1;
+                        if value.as_ref().is_some()
+                            && value.as_ref().unwrap().is_array()
+                            && value.as_ref().unwrap().as_array().unwrap().len() == 0 {
+                            array_col_increment += 2;
+
+                        } else {
+                            rows[array_row_index + array_row_increment]
+                                [array_col_index + array_col_increment] =
+                                Some(DataTableItem::from_schema_value(field_schema, &value));
+                            array_col_increment += 1;
+                        }
                     }
                 }
             }
@@ -837,8 +846,105 @@ mod tests {
         assert_eq!(v.unwrap().value.unwrap(), "BlackMono");
     }
 
+    // #[wasm_bindgen_test]
     #[test]
     fn place_bq_table_rows_test_3() {
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test3.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let header =
+            &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
+        assert_eq!(header.len(), 67);
+
+        let number_columns = header.len();
+        let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
+        let mut rows: Vec<Vec<Option<DataTableItem>>> =
+            vec![vec![None; number_columns]; number_rows];
+
+        let schema_fields = &complex_object_array_test.schema.as_ref().unwrap().fields;
+        let data_rows = &complex_object_array_test.rows;
+
+        super::place_bq_table_rows(&mut rows, schema_fields, data_rows, 0, 0, true, 0);
+
+        assert_eq!(rows.len(), 184);
+        assert_eq!(rows[0].len(), 67);
+
+        // check if for every column that contains "#", the row has the number "1" for that same index.
+        let mut index = 0;
+        for h in header {
+            if h.contains("#") {
+                // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                //     "header: {:?}",
+                //     h
+                // )));
+                // log::info!("header: {:?}", h);
+                let value = rows[0][index].as_ref();
+
+                if let Some(value) = value {
+                    // assert!(rows[0][index].is_some());
+                    assert!(value.is_index);
+                    assert_eq!(
+                        "1",
+                        rows[0][index].as_ref().unwrap().value.as_ref().unwrap()
+                    );
+                }
+            }
+            index += 1;
+        }
+    }
+
+    #[wasm_bindgen_test]
+    // #[test]
+    fn place_bq_table_rows_test_4() {
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test4.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let header =
+            &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
+        assert_eq!(header.len(), 67);
+
+        let number_columns = header.len();
+        let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
+        let mut rows: Vec<Vec<Option<DataTableItem>>> =
+            vec![vec![None; number_columns]; number_rows];
+
+        let schema_fields = &complex_object_array_test.schema.as_ref().unwrap().fields;
+        let data_rows = &complex_object_array_test.rows;
+
+        super::place_bq_table_rows(&mut rows, schema_fields, data_rows, 0, 0, true, 0);
+
+        assert_eq!(rows.len(), 3502);
+        assert_eq!(rows[0].len(), 67);
+
+        // check if for every column that contains "#", the row has the number "1" for that same index.
+        let mut index = 0;
+        for h in header {
+            if h.contains("#") {
+                let value = rows[0][index].as_ref();
+
+                if let Some(value) = value {
+                    // assert!(rows[0][index].is_some());
+                    assert!(value.is_index);
+                    assert_eq!(
+                        "1",
+                        rows[0][index].as_ref().unwrap().value.as_ref().unwrap()
+                    );
+                }
+            }
+            index += 1;
+        }
+    }
+
+    #[test]
+    fn place_bq_table_rows_test() {
         let complex_object_array_test = include_str!("test_resources/struct_json_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
@@ -921,7 +1027,7 @@ mod tests {
     }
 
     #[test]
-    fn place_bq_table_rows_test_4() {
+    fn place_bq_all_types_test_1() {
         let complex_object_array_test = include_str!("test_resources/all_types_test.json");
         let complex_object_array_test = &serde_json::from_str::<
             crate::bigquery::jobs::GetQueryResultsResponse,
@@ -1101,6 +1207,70 @@ mod tests {
         let rows = complex_object_array_test.get_rows(number_columns, 0);
 
         assert_eq!(rows.1.len(), 1796);
+    }
+
+    #[test]
+    fn get_simple_array_test_1() {
+        let complex_object_array_test = include_str!("test_resources/simple_array.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+        let number_columns = 4;
+
+        let rows = complex_object_array_test.get_rows(number_columns, 0);
+
+        assert_eq!(rows.1.len(), 150);
+
+        let rows1 = &rows.1;
+        let row1: &Vec<Option<DataTableItem>> = rows1.first().expect("must have row 1");
+        assert_eq!(row1.len(), 4);
+
+        let rc = row1[0].as_ref();
+        assert!(rc.as_ref().is_some());
+        assert!(rc.as_ref().unwrap().is_index);
+        assert!(rc.as_ref().unwrap().value.is_some());
+        assert_eq!(rc.as_ref().unwrap().value.as_ref().unwrap(), "1");
+
+        let rc = row1[1].as_ref();
+        assert!(rc.as_ref().is_some());
+        assert!(!rc.as_ref().unwrap().is_index);
+        assert!(rc.as_ref().unwrap().value.is_some());
+        assert_eq!(rc.as_ref().unwrap().value.as_ref().unwrap(), "a");
+
+        let rc = row1[2].as_ref();
+        assert!(rc.as_ref().is_some());
+        // assert!(rc.as_ref().unwrap().is_index);
+        assert!(rc.as_ref().unwrap().value.is_some());
+        assert_eq!(rc.as_ref().unwrap().value.as_ref().unwrap(), "1");
+    }
+
+    #[test]
+    fn get_simple_array_test_4() {
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test4.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let header = complex_object_array_test.get_header();
+        // println!("{:?}", header);
+        let number_columns = header.len();
+
+        let rows = complex_object_array_test.get_rows(number_columns, 0);
+
+        assert_eq!(rows.1.len(), 3502);
+
+        let rows1 = &rows.1;
+        let row1: &Vec<Option<DataTableItem>> = rows1.first().expect("must have row 1");
+        //assert_eq!(row1.len(), 4);
+
+        //"selling_channels.#"
+        let rc = row1[63].as_ref();
+        println!("header: {:?}", header[63]);
+        println!("rc: {:?}", rc);
+        assert!(rc.as_ref().is_none());
     }
 
     #[wasm_bindgen_test]
