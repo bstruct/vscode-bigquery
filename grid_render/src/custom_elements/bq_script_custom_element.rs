@@ -88,12 +88,15 @@ impl BigqueryScriptCustomElement {
     }
 
     fn with_job_info(&self, job: &Job, jobs: &Vec<Job>) -> BigqueryScriptCustomElement {
-        let num_child_jobs = match job.statistics.as_ref() {
-            Some(statistics) => statistics.num_child_jobs.clone(),
-            None => None,
+        let num_child_jobs = if job.is_dml_statement() {
+            Some(1)
+        } else {
+            match job.statistics.as_ref() {
+                Some(statistics) => parse_to_usize(statistics.num_child_jobs.clone()),
+                None => None,
+            }
         };
 
-        let num_child_jobs = parse_to_usize(num_child_jobs);
         let job_reference = job.job_reference.as_ref().expect("job_reference not found");
 
         BigqueryScriptCustomElement {
@@ -194,6 +197,16 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
         }
     };
 
+    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+    //     "num_child_jobs: {}",
+    //     num_child_jobs
+    // )));
+
+    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+    //     "&script_element.jobs: {:?}",
+    //     &script_element.jobs
+    // )));
+
     for index in 0..num_child_jobs {
         let chid_job: Option<&Job> = match &script_element.jobs {
             Some(jobs) => {
@@ -204,7 +217,11 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                 if job_search.is_some() && job_search.unwrap().id.is_some() {
                     Some(job_search.unwrap())
                 } else {
-                    None
+                    if num_child_jobs == 1 {
+                        Some(&script_element.jobs.as_ref().unwrap()[0])
+                    } else {
+                        None
+                    }
                 }
             }
             None => None,
@@ -377,7 +394,16 @@ fn on_render(event: &web_sys::Event) {
 
         spawn_local(async move {
             let get_job_response = jobs.get(get_request).await;
+            // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            //     "get_job_response: {:?}",
+            //     get_job_response
+            // )));
+
             let get_list_response = jobs.get_list(get_list_request).await;
+            // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            //     "get_list_response: {:?}",
+            //     get_list_response
+            // )));
 
             if let Some(job) = get_job_response {
                 //mark as done.
@@ -387,12 +413,27 @@ fn on_render(event: &web_sys::Event) {
                         element.set_attribute("loaded", "1").unwrap();
                     }
                 }
-                if let Some(list) = get_list_response {
+                if job.is_dml_statement() {
+                    // element.set_attribute("loaded", "1").unwrap();
+
                     bq_script_element
-                        .with_job_info(&job, &list.jobs)
+                        .with_job_info(&job, &[job.clone()].to_vec())
                         .render(&parent_node);
                 }
+                else {
+                    if let Some(list) = get_list_response {
+                        if list.jobs.is_some() {
+                            bq_script_element
+                                .with_job_info(&job, &list.jobs.unwrap())
+                                .render(&parent_node);
+                        } else {
+                            element.set_attribute("loaded", "1").unwrap();
+                            element.set_inner_html(&"unexpected error: No job list found");
+                        }
+                    }
+                }
             } else {
+                element.set_attribute("loaded", "1").unwrap();
                 element.set_inner_html(&format!("unexpected response: {:?}", get_job_response));
             }
         });
@@ -443,7 +484,7 @@ mod tests {
         let get_jobs =
             &serde_json::from_str::<crate::bigquery::jobs::GetListResponse>(get_jobs).unwrap();
 
-        bq_script.with_job_info(job, &get_jobs.jobs);
+        bq_script.with_job_info(job, &get_jobs.jobs.as_ref().unwrap().clone());
         bq_script.render(parent_node);
         // let bq_table_information = complex_object_array_test.to(bq_table);
 

@@ -24,6 +24,10 @@ div[be_id='controls'] span {
 
 div[be_id='controls'] button {
     margin-right: 5px;
+
+    background-color: var(--vscode-button-secondaryBackground);
+    border: 1px solid var(--vscode-button-separator);
+    color: var(--vscode-button-secondaryForeground);
 }
 
 div[be_id='controls'] span.button {
@@ -60,6 +64,11 @@ tbody.tr, td.v {
     border: 1px solid gray;
 }
 
+td.index {
+    background-color: var(--vscode-banner-background);
+    border: 1px solid gray;
+}
+
 .nullValue {
     font-style: italic;
     color: var(--vscode-inputValidation-warningBorder) !important;
@@ -69,6 +78,7 @@ table thead th,
 table tbody td {
     max-width: 600px;
 }
+
 
 table tbody td div {
     display: inline-block;

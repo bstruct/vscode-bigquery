@@ -57,7 +57,12 @@ fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest) {
     if job.is_some() {
         let job = job.as_ref().unwrap();
 
-        if job.is_query_script() {
+        // web_sys::console::log_1(&JsValue::from(format!(
+        //     "job statistics: {:?}",
+        //     job.statistics
+        // )));
+
+        if job.is_query_script() || job.is_dml_statement() {
             //The job is marked as SCRIPT, one of 2 scenarios are possible:
             // - Just one line script, for example "DECLARE x STRING...."
             // - Multiple queries are placed
@@ -76,7 +81,6 @@ fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest) {
             //     let job_reference = job.job_reference.as_ref().unwrap();
             //     q1.set_inner_html(&format!("script {}", job_reference.job_id));
             // }
-
         } else {
             let element_id = "bq_query_1";
             let bq_table = external_request.to_bq_query(element_id);

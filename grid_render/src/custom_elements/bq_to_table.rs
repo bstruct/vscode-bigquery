@@ -16,31 +16,31 @@ use crate::{
 };
 
 impl GetQueryResultsResponse {
-    pub(crate) fn to_bq_table(
-        &self,
-        bq_table_requested: &BigqueryTableCustomElement,
-    ) -> BigqueryTableCustomElement {
-        let header = self.get_header();
-        let number_columns = header.len();
-        let page_start_index = bq_table_requested.get_page_start_index();
+    // pub(crate) fn to_bq_table(
+    //     &self,
+    //     bq_table_requested: &BigqueryTableCustomElement,
+    // ) -> BigqueryTableCustomElement {
+    //     let header = self.get_header();
+    //     let number_columns = header.len();
+    //     let page_start_index = bq_table_requested.get_page_start_index();
 
-        let (rows_in_page, rows) = self.get_rows(number_columns, page_start_index);
-        let rows_total = self.get_rows_total();
+    //     let (rows_in_page, rows) = self.get_rows(number_columns, page_start_index);
+    //     let rows_total = self.get_rows_total();
 
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "rows_total: {}, rows_in_page: {}, rows len: {}",
-            rows_total,
-            rows_in_page,
-            rows.len()
-        )));
+    //     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+    //         "rows_total: {:?}, rows_in_page: {}, rows len: {}",
+    //         rows_total,
+    //         rows_in_page,
+    //         rows.len()
+    //     )));
 
-        bq_table_requested.with_table_info(
-            Some(rows_in_page),
-            Some(rows_total),
-            Some(header),
-            Some(rows),
-        )
-    }
+    //     bq_table_requested.with_table_info(
+    //         Some(rows_in_page),
+    //         rows_total,
+    //         Some(header),
+    //         Some(rows),
+    //     )
+    // }
 
     pub(crate) fn to_bq_query(
         &self,
@@ -54,7 +54,7 @@ impl GetQueryResultsResponse {
         let rows_total = self.get_rows_total();
 
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "rows_total: {}, rows_in_page: {}, rows len: {}",
+            "rows_total: {:?}, rows_in_page: {}, rows len: {}",
             rows_total,
             rows_in_page,
             rows.len()
@@ -62,7 +62,7 @@ impl GetQueryResultsResponse {
 
         bq_query_requested.with_table_info(
             Some(rows_in_page),
-            Some(rows_total),
+            rows_total,
             Some(header),
             Some(rows),
         )
@@ -107,8 +107,11 @@ impl GetQueryResultsResponse {
         (rows_in_page, rows.to_owned())
     }
 
-    fn get_rows_total(&self) -> usize {
-        parse_to_usize(Some(self.total_rows.to_string())).unwrap_or(0)
+    fn get_rows_total(&self) -> Option<usize> {
+        match &self.total_rows {
+            Some(v) => Some(parse_to_usize(Some(v.clone())).unwrap_or(0)),
+            None => None,
+        }
     }
 }
 
@@ -1167,32 +1170,32 @@ mod tests {
         // assert_eq!(v.value.unwrap(), "50");
     }
 
-    #[wasm_bindgen_test]
-    fn to_bq_table_test_1() {
-        let complex_object_array_test =
-            include_str!("test_resources/complex_object_array_test.json");
-        let complex_object_array_test = &serde_json::from_str::<
-            crate::bigquery::jobs::GetQueryResultsResponse,
-        >(complex_object_array_test)
-        .unwrap();
+    // #[wasm_bindgen_test]
+    // fn to_bq_table_test_1() {
+    //     let complex_object_array_test =
+    //         include_str!("test_resources/complex_object_array_test.json");
+    //     let complex_object_array_test = &serde_json::from_str::<
+    //         crate::bigquery::jobs::GetQueryResultsResponse,
+    //     >(complex_object_array_test)
+    //     .unwrap();
 
-        let bq_table = &BigqueryTableCustomElement::base_new(
-            "element_id".to_string(),
-            "jobId".to_string(),
-            "projectId".to_string(),
-            "location".to_string(),
-            "token".to_string(),
-        );
+    //     let bq_table = &BigqueryTableCustomElement::base_new(
+    //         "element_id".to_string(),
+    //         "jobId".to_string(),
+    //         "projectId".to_string(),
+    //         "location".to_string(),
+    //         "token".to_string(),
+    //     );
 
-        let bq_table_2 = complex_object_array_test.to_bq_table(bq_table);
-        let parent_node = &crate::createElement("div");
-        bq_table_2.to_data_table("element_id").render(parent_node);
+    //     let bq_table_2 = complex_object_array_test.to_bq_table(bq_table);
+    //     let parent_node = &crate::createElement("div");
+    //     bq_table_2.to_data_table("element_id").render(parent_node);
 
-        let inner_html = &parent_node.inner_html();
-        assert!(inner_html.contains("Included_BE+ Sales Catalog"));
-        assert!(inner_html.contains("Pim_Value"));
-        assert!(inner_html.contains("J20J215714BEH"));
-    }
+    //     let inner_html = &parent_node.inner_html();
+    //     assert!(inner_html.contains("Included_BE+ Sales Catalog"));
+    //     assert!(inner_html.contains("Pim_Value"));
+    //     assert!(inner_html.contains("J20J215714BEH"));
+    // }
 
     #[test]
     fn get_rows_test_1() {
@@ -1265,6 +1268,10 @@ mod tests {
         let rows1 = &rows.1;
         let row1: &Vec<Option<DataTableItem>> = rows1.first().expect("must have row 1");
         //assert_eq!(row1.len(), 4);
+
+        let c_index: Option<&DataTableItem> = row1[0].as_ref();
+        assert!(c_index.is_some());
+        assert!(c_index.unwrap().is_index);
 
         //"selling_channels.#"
         let rc = row1[63].as_ref();

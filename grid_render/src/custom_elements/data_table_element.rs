@@ -135,12 +135,15 @@ fn set_table_item(base_element: &BaseElement, table_item: &Option<DataTableItem>
     let element = &base_element.element();
     let td = element.parent_element().unwrap();
     if let Some(table_item) = &table_item {
-        td.set_class_name("v");
+        if table_item.is_index {
+            td.set_class_name("index");
+        } else {
+            td.set_class_name("v");
+        }
         if table_item.is_null {
             element.set_text_content(Some(&"null".to_string()));
             element.set_class_name("nullValue");
         } else {
-            element.set_class_name("");
             base_element
                 .element()
                 .set_text_content(Some(&table_item.value.as_ref().unwrap_or(&"".to_string())));

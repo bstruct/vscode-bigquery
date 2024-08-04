@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
@@ -201,6 +203,19 @@ impl Job {
 
         false
     }
+
+    pub(crate) fn is_dml_statement(&self) -> bool {
+        if let Some(stats) = self.statistics.as_ref() {
+            if let Some(query) = stats.query.as_ref() {
+                return ["INSERT", "UPDATE", "DELETE", "MERGE"]
+                    .iter()
+                    .any(|c| c == &query.statement_type);
+            }
+        }
+
+        false
+    }
+
     pub(crate) fn is_multi_query_job(&self) -> bool {
         if let Some(stats) = self.statistics.as_ref() {
             if let Some(num_child_jobs) = parse_to_usize(stats.num_child_jobs.clone()) {
@@ -317,7 +332,7 @@ pub struct GetQueryResultsResponse {
     #[serde(alias = "jobReference")]
     pub job_reference: JobReference,
     #[serde(alias = "totalRows")]
-    pub total_rows: String,
+    pub total_rows: Option<String>,
     #[serde(alias = "pageToken")]
     pub page_token: Option<String>,
     pub rows: Option<Vec<serde_json::Value>>,
@@ -354,7 +369,7 @@ pub struct GetListResponse {
     pub etag: String,
     #[serde(alias = "nextPageToken")]
     pub next_page_token: Option<String>,
-    pub jobs: Vec<Job>,
+    pub jobs: Option<Vec<Job>>,
     pub unreachable: Option<Vec<String>>,
 }
 
@@ -573,7 +588,7 @@ impl Jobs {
             } else {
                 return Some(bq_response.unwrap());
             }
-        } 
+        }
 
         None
     }
