@@ -1,6 +1,6 @@
 use super::{
     base_element_trait::BaseElementTrait,
-    bq_common_custom_element::{get_attribute, set_attribute},
+    bq_common_custom_element::{get_attribute, get_opt_attribute, set_attribute},
     custom_element_definition::CustomElementDefinition,
     data_table_controls_element::{
         DataTableControls, EVENT_GO_TO_FIRST_PAGE, EVENT_GO_TO_LAST_PAGE, EVENT_GO_TO_NEXT_PAGE,
@@ -9,7 +9,7 @@ use super::{
     data_table_element::{DataTable, DataTableItem},
 };
 use crate::{
-    bigquery::jobs::{GetQueryResultsRequest, JobReference},
+    bigquery::jobs::{GetJobRequest, GetQueryResultsRequest, JobReference},
     custom_elements::base_element::BaseElement,
     parse_to_usize, set_state,
 };
@@ -32,6 +32,7 @@ pub(crate) struct BigqueryQueryCustomElement {
     project_id: String,
     location: String,
     token: String,
+    statement_type: Option<String>,
 
     page_start_index: usize,
     page_size: usize,
@@ -49,6 +50,7 @@ impl BigqueryQueryCustomElement {
         project_id: String,
         location: String,
         token: String,
+        statement_type: Option<String>,
     ) -> BigqueryQueryCustomElement {
         BigqueryQueryCustomElement {
             element: None,
@@ -57,6 +59,7 @@ impl BigqueryQueryCustomElement {
             project_id,
             location,
             token,
+            statement_type,
 
             page_start_index: 0,
             page_size: 50,
@@ -112,6 +115,7 @@ impl BigqueryQueryCustomElement {
             project_id: self.project_id.to_string(),
             location: self.location.to_string(),
             token: self.token.to_string(),
+            statement_type: self.statement_type.clone(),
             page_start_index: self.page_start_index.clone(),
             page_size: self.page_size.clone(),
             rows_in_page,
@@ -135,6 +139,7 @@ impl BigqueryQueryCustomElement {
             project_id: get_attribute(element, "project_id"),
             location: get_attribute(element, "location"),
             token: get_attribute(element, "token"),
+            statement_type: get_opt_attribute(element, "statement_type"),
             page_start_index: get_opt_num_attribute(element, PAGE_START_INDEX_ATT).unwrap_or(0),
             page_size: get_num_attribute(element, PAGE_SIZE_ATT),
             rows_in_page: get_opt_num_attribute(element, ROWS_IN_PAGE_ATT),
@@ -156,6 +161,14 @@ impl BigqueryQueryCustomElement {
         }
     }
 
+    fn as_job_request(&self) -> GetJobRequest {
+        GetJobRequest {
+            project_id: self.project_id.clone(),
+            job_id: self.job_id.clone(),
+            location: Some(self.location.clone()),
+        }
+    }
+
     fn on_render_query(event: &web_sys::Event) {
         let element = event
             .target()
@@ -166,31 +179,47 @@ impl BigqueryQueryCustomElement {
         if !element.has_attribute("loaded") {
             element.set_attribute("loaded", "1").unwrap();
 
-            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-                "1) on_render_table event on element: {:?}",
-                element.id()
-            )));
-
             let bq_query_element = BigqueryQueryCustomElement::from_element(&element);
-            let request = bq_query_element.as_query_results_request();
+
+            let is_dml_statement = bq_query_element.is_dml_statement();
 
             web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-                "on_render_table event on element: {:?}, request: {:?}",
+                "1) on_render_table event on element: {:?}, is_dml_statement: {}",
                 element.id(),
-                request
+                is_dml_statement
             )));
 
             let jobs = crate::bigquery::jobs::Jobs::new(&bq_query_element.token);
             let parent_node = element.parent_node().unwrap();
 
-            spawn_local(async move {
-                let response = jobs.get_query_results(request).await;
-                if let Some(response) = response {
-                    response.to_bq_query(&bq_query_element).render(&parent_node);
-                } else {
-                    element.set_inner_html(&format!("unexpected response: {:?}", response));
-                }
-            });
+            if is_dml_statement {
+                let request = bq_query_element.as_job_request();
+
+                spawn_local(async move {
+                    let response = jobs.get(request).await;
+                    if let Some(response) = response {
+                        if response.has_error() {
+                            response.to_error_table().render_standalone(&parent_node);
+                        } else{
+                            response.to_dml_table().render_standalone(&parent_node);
+                        }
+                    } else {
+                        element.set_inner_html(&format!("unexpected response: {:?}", response));
+                    }
+                });
+
+            } else {
+                let request = bq_query_element.as_query_results_request();
+
+                spawn_local(async move {
+                    let response = jobs.get_query_results(request).await;
+                    if let Some(response) = response {
+                        response.to_bq_query(&bq_query_element).render(&parent_node);
+                    } else {
+                        element.set_inner_html(&format!("unexpected response: {:?}", response));
+                    }
+                });
+            }
         }
     }
 
@@ -308,6 +337,19 @@ impl BigqueryQueryCustomElement {
         //return bool true if value was changed
         previous_value != current_value
     }
+
+    fn is_dml_statement(&self) -> bool {
+        if let Some(statement_type) = &self.statement_type {
+            let statement_type = statement_type.as_str();
+
+            if ["INSERT", "UPDATE", "DELETE", "MERGE"].contains(&statement_type) {
+                return true;
+            }
+        }
+
+        false
+    }
+    
 }
 
 impl CustomElementDefinition for BigqueryQueryCustomElement {
@@ -470,14 +512,22 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
         let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
 
-        BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
-            .apply_fn(&set_attributes, self)
-            .append_shadow()
-            .append_child_style(css_content, "style1")
-            // .append_sibling("div", "spacer")
-            // .apply_fn(&configure_spacer, &None)
-            .append_sibling_base_element(&self.to_data_table_controls())
-            .append_sibling_base_element(&self.to_data_table("t1"))
+        if self.is_dml_statement() {
+            BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
+                .apply_fn(&set_attributes, self)
+                .append_shadow()
+                .append_child_style(css_content, "style1")
+                .append_sibling_base_element(&self.to_data_table("t1"))
+        } else {
+            BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
+                .apply_fn(&set_attributes, self)
+                .append_shadow()
+                .append_child_style(css_content, "style1")
+                // .append_sibling("div", "spacer")
+                // .apply_fn(&configure_spacer, &None)
+                .append_sibling_base_element(&self.to_data_table_controls())
+                .append_sibling_base_element(&self.to_data_table("t1"))
+        }
     }
 }
 
@@ -489,6 +539,11 @@ fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryQueryCustomElem
     set_attribute(&element, "project_id", bq_table.project_id.as_str());
     set_attribute(&element, "location", bq_table.location.as_str());
     set_attribute(&element, "token", bq_table.token.as_str());
+    set_attribute(
+        &element,
+        "statement_type",
+        bq_table.statement_type.clone().unwrap_or_default().as_str(),
+    );
     set_optional_attribute(
         &element,
         PAGE_START_INDEX_ATT,
@@ -555,6 +610,7 @@ mod tests {
             "projectId".to_string(),
             "location".to_string(),
             "token".to_string(),
+            Some("statement_type".to_string()),
         );
         let base_element = &bq_table.render(parent_node);
 
@@ -581,6 +637,7 @@ mod tests {
             "projectId".to_string(),
             "location".to_string(),
             "token".to_string(),
+            Some("statement_type".to_string()),
         );
 
         let complex_object_array_test = include_str!("test_resources/struct_json_test.json");
@@ -630,6 +687,7 @@ mod tests {
             "projectId".to_string(),
             "location".to_string(),
             "token".to_string(),
+            Some("statement_type".to_string()),
         );
 
         let complex_object_array_test = include_str!("test_resources/all_types_test.json");
@@ -671,6 +729,7 @@ mod tests {
             "projectId".to_string(),
             "location".to_string(),
             "token".to_string(),
+            Some("statement_type".to_string()),
         );
 
         let complex_object_array_test = include_str!("test_resources/all_types_test.json");
@@ -709,6 +768,7 @@ mod tests {
             "projectId".to_string(),
             "location".to_string(),
             "token".to_string(),
+            Some("statement_type".to_string()),
         );
 
         let complex_object_array_test =
@@ -748,6 +808,7 @@ mod tests {
             "projectId".to_string(),
             "location".to_string(),
             "token".to_string(),
+            Some("statement_type".to_string()),
         );
 
         let complex_object_array_test = include_str!("test_resources/100_rows.json");
@@ -794,6 +855,7 @@ mod tests {
             "projectId".to_string(),
             "location".to_string(),
             "token".to_string(),
+            Some("statement_type".to_string()),
         );
 
         let complex_object_array_test = include_str!("test_resources/no_rows.json");
@@ -840,6 +902,7 @@ mod tests {
             "projectId".to_string(),
             "location".to_string(),
             "token".to_string(),
+            Some("statement_type".to_string()),
         );
 
         // let start = instant::Instant::now();

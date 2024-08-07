@@ -11,7 +11,7 @@ use crate::{
 use super::{
     base_element::BaseElement,
     base_element_trait::BaseElementTrait,
-    bq_common_custom_element::{get_attribute, remove_attribute, set_attribute},
+    bq_common_custom_element::{get_attribute, get_opt_attribute, remove_attribute, set_attribute},
     bq_query_custom_element::BigqueryQueryCustomElement,
     custom_element_definition::CustomElementDefinition,
 };
@@ -66,7 +66,7 @@ impl BigqueryScriptCustomElement {
             location: get_attribute(element, "location"),
             token: get_attribute(element, "token"),
             jobs: None,
-            num_child_jobs: None,
+            num_child_jobs: parse_to_usize(get_opt_attribute(element, "num_child_jobs")),
         }
     }
 
@@ -112,14 +112,20 @@ impl BigqueryScriptCustomElement {
     }
 
     fn set_refresh_timeout(&self, parent_node: &Node) {
-        if self.num_child_jobs.is_none() {
+
+        let all_jobs_completed = self.all_jobs_completed() && self.num_child_jobs.is_some();
+
+        let num_jobs = self.num_child_jobs;
+
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "set_refresh_timeout, self.all_jobs_completed: {:?}, num_jobs: {:?}",
+            all_jobs_completed,
+            num_jobs
+        )));
+
+        if !all_jobs_completed {
             if let Some(window) = web_sys::window() {
                 let dispatch_event = Closure::wrap(Box::new(|node: Node| {
-                    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-                    //     "1) dispatch_event: {:?}",
-                    //     node.type_id()
-                    // )));
-
                     let event = &Event::new(ELEMENT_INTERSECTED_EVENT_NAME).unwrap();
                     node.first_child().unwrap().dispatch_event(event).unwrap();
                 }) as Box<dyn FnMut(_)>);
@@ -135,6 +141,14 @@ impl BigqueryScriptCustomElement {
                 dispatch_event.forget();
             }
         }
+    }
+
+    fn all_jobs_completed(&self) -> bool {
+        if let Some(jobs) = &self.jobs {
+            return jobs.iter().all(|j| j.is_complete());
+        }
+
+        true
     }
 }
 
@@ -258,6 +272,7 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
 
                 let job_reference = chid_job.as_ref().unwrap().job_reference.as_ref().unwrap();
                 let token = script_element.token.clone();
+                let job_statement_type = child_job.get_statement_type();
 
                 let bq_query = BigqueryQueryCustomElement::base_new(
                     format!("job_query_{}", index),
@@ -265,6 +280,7 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                     job_reference.project_id.clone(),
                     job_reference.location.clone(),
                     token,
+                    job_statement_type,
                 );
 
                 job_body.append_base_child(&bq_query);
@@ -305,6 +321,11 @@ fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Op
 
     let html_element = element.element();
     html_element.set_text_content(Some(&content));
+
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        "job_status: {:?}",
+        job_status
+    )));
 
     //https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobStatus
     // Valid states include 'PENDING', 'RUNNING', and 'DONE'.
@@ -419,17 +440,17 @@ fn on_render(event: &web_sys::Event) {
                     bq_script_element
                         .with_job_info(&job, &[job.clone()].to_vec())
                         .render(&parent_node);
-                }
-                else {
+                } else {
                     if let Some(list) = get_list_response {
                         if list.jobs.is_some() {
                             bq_script_element
                                 .with_job_info(&job, &list.jobs.unwrap())
                                 .render(&parent_node);
-                        } else {
-                            element.set_attribute("loaded", "1").unwrap();
-                            element.set_inner_html(&"unexpected error: No job list found");
-                        }
+                        } 
+                        // else {
+                        //     element.set_attribute("loaded", "1").unwrap();
+                        //     element.set_inner_html(&"unexpected error: No job list found");
+                        // }
                     }
                 }
             } else {

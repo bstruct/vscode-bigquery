@@ -6,6 +6,10 @@ pub(crate) fn get_attribute(element: &Element, attribute_name: &str) -> String {
     att.unwrap()
 }
 
+pub(crate) fn get_opt_attribute(element: &Element, attribute_name: &str) -> Option<String> {
+    element.get_attribute(attribute_name)
+}
+
 pub(crate) fn set_attribute(element: &web_sys::Element, attribute_name: &str, value: &str) {
     element.set_attribute(attribute_name, value).unwrap();
 }

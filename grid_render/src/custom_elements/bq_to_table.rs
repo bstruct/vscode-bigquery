@@ -60,12 +60,7 @@ impl GetQueryResultsResponse {
             rows.len()
         )));
 
-        bq_query_requested.with_table_info(
-            Some(rows_in_page),
-            rows_total,
-            Some(header),
-            Some(rows),
-        )
+        bq_query_requested.with_table_info(Some(rows_in_page), rows_total, Some(header), Some(rows))
     }
 
     fn get_header(&self) -> Vec<String> {
@@ -353,9 +348,9 @@ fn place_bq_table_rows(
                     } else {
                         if value.as_ref().is_some()
                             && value.as_ref().unwrap().is_array()
-                            && value.as_ref().unwrap().as_array().unwrap().len() == 0 {
+                            && value.as_ref().unwrap().as_array().unwrap().len() == 0
+                        {
                             array_col_increment += 2;
-
                         } else {
                             rows[array_row_index + array_row_increment]
                                 [array_col_index + array_col_increment] =
@@ -476,6 +471,40 @@ impl Job {
         ]
         .to_vec()]
         .to_vec()
+    }
+
+    pub(crate) fn to_dml_table(&self) -> DataTable {
+        let header = [
+            "inserted_row_count".to_string(),
+            "updated_row_count".to_string(),
+            "deleted_row_count".to_string(),
+        ]
+        .to_vec();
+
+        let dml_stats = self.get_dml_stats();
+
+        let rows = match dml_stats {
+            Some(dml_stats) => {
+                let inserted_row_count =
+                    DataTableItem::from_string(&dml_stats.inserted_row_count.unwrap_or_default());
+                let updated_row_count =
+                    DataTableItem::from_string(&dml_stats.updated_row_count.unwrap_or_default());
+                let deleted_row_count =
+                    DataTableItem::from_string(&dml_stats.deleted_row_count.unwrap_or_default());
+
+                let row1 = [
+                    Some(inserted_row_count),
+                    Some(updated_row_count),
+                    Some(deleted_row_count),
+                ]
+                .to_vec();
+
+                [row1].to_vec() as Vec<Vec<Option<DataTableItem>>>
+            }
+            None => [].to_vec() as Vec<Vec<Option<DataTableItem>>>,
+        };
+
+        DataTable::new("dml1", &Some(header), &Some(rows))
     }
 }
 

@@ -107,8 +107,132 @@ pub struct JobConfigurationExtract {}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct JobStatistics2 {
+    //     "queryPlan": [
+    //     {
+    //       object (ExplainQueryStage)
+    //     }
+    //   ],
+    //   "estimatedBytesProcessed": string,
+    //   "timeline": [
+    //     {
+    //       object (QueryTimelineSample)
+    //     }
+    //   ],
+    //   "totalPartitionsProcessed": string,
+    //   "totalBytesProcessed": string,
+    //   "totalBytesProcessedAccuracy": string,
+    //   "totalBytesBilled": string,
+    //   "billingTier": integer,
+    //   "totalSlotMs": string,
+    //   "reservationUsage": [
+    //     {
+    //       "name": string,
+    //       "slotMs": string
+    //     }
+    //   ],
+    //   "cacheHit": boolean,
+    //   "referencedTables": [
+    //     {
+    //       object (TableReference)
+    //     }
+    //   ],
+    //   "referencedRoutines": [
+    //     {
+    //       object (RoutineReference)
+    //     }
+    //   ],
+    //   "schema": {
+    //     object (TableSchema)
+    //   },
+    //   "numDmlAffectedRows": string,
+    #[serde(alias = "numDmlAffectedRows")]
+    pub num_dml_affected_rows: Option<String>,
+
+    #[serde(alias = "dmlStats")]
+    pub dml_stats: Option<DmlStats>,
+
+    //   "undeclaredQueryParameters": [
+    //     {
+    //       object (QueryParameter)
+    //     }
+    //   ],
     #[serde(alias = "statementType")]
     pub statement_type: String,
+    //   "ddlOperationPerformed": string,
+    //   "ddlTargetTable": {
+    //     object (TableReference)
+    //   },
+    //   "ddlDestinationTable": {
+    //     object (TableReference)
+    //   },
+    //   "ddlTargetRowAccessPolicy": {
+    //     object (RowAccessPolicyReference)
+    //   },
+    //   "ddlAffectedRowAccessPolicyCount": string,
+    //   "ddlTargetRoutine": {
+    //     object (RoutineReference)
+    //   },
+    //   "ddlTargetDataset": {
+    //     object (DatasetReference)
+    //   },
+    //   "mlStatistics": {
+    //     object (MlStatistics)
+    //   },
+    //   "exportDataStatistics": {
+    //     object (ExportDataStatistics)
+    //   },
+    //   "externalServiceCosts": [
+    //     {
+    //       object (ExternalServiceCost)
+    //     }
+    //   ],
+    //   "biEngineStatistics": {
+    //     object (BiEngineStatistics)
+    //   },
+    //   "loadQueryStatistics": {
+    //     object (LoadQueryStatistics)
+    //   },
+    //   "dclTargetTable": {
+    //     object (TableReference)
+    //   },
+    //   "dclTargetView": {
+    //     object (TableReference)
+    //   },
+    //   "dclTargetDataset": {
+    //     object (DatasetReference)
+    //   },
+    //   "searchStatistics": {
+    //     object (SearchStatistics)
+    //   },
+    //   "vectorSearchStatistics": {
+    //     object (VectorSearchStatistics)
+    //   },
+    //   "performanceInsights": {
+    //     object (PerformanceInsights)
+    //   },
+    //   "queryInfo": {
+    //     object (QueryInfo)
+    //   },
+    //   "sparkStatistics": {
+    //     object (SparkStatistics)
+    //   },
+    //   "transferredBytes": string,
+    //   "materializedViewStatistics": {
+    //     object (MaterializedViewStatistics)
+    //   },
+    //   "metadataCacheStatistics": {
+    //     object (MetadataCacheStatistics)
+    //   }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct DmlStats {
+    #[serde(alias = "insertedRowCount")]
+    pub inserted_row_count: Option<String>,
+    #[serde(alias = "deletedRowCount")]
+    pub deleted_row_count: Option<String>,
+    #[serde(alias = "updatedRowCount")]
+    pub updated_row_count: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -233,6 +357,32 @@ impl Job {
         }
 
         false
+    }
+    pub(crate) fn get_statement_type(&self) -> Option<String> {
+        if let Some(statistics) = &self.statistics {
+            if let Some(query) = &statistics.query {
+                return Some(query.statement_type.clone());
+            }
+        }
+        None
+    }
+
+    pub(crate) fn get_dml_stats(&self) -> Option<DmlStats> {
+        if let Some(statistics) = &self.statistics {
+            if let Some(query) = &statistics.query {
+                return query.dml_stats.clone();
+            }
+        }
+        None
+    }
+
+    pub(crate) fn is_complete(&self) -> bool {
+        if let Some(status) = &self.status {
+            // Valid states include 'PENDING', 'RUNNING', and 'DONE'.
+            return status.state == "DONE";
+        }
+
+        true
     }
 }
 
@@ -715,7 +865,7 @@ impl Jobs {
         if resp.status() == 200 {
             let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
 
-            console::log_1(json.as_ref());
+            // console::log_1(json.as_ref());
 
             // Use serde to parse the JSON into a struct.
             let bq_response = serde_wasm_bindgen::from_value::<GetListResponse>(json);
