@@ -1,11 +1,11 @@
 use serde::Deserialize;
 
 use crate::custom_elements::{
-        bq_query_custom_element::BigqueryQueryCustomElement,
-        bq_script_custom_element::BigqueryScriptCustomElement,
-        bq_table_custom_element::BigqueryTableCustomElement,
-        data_table_element::{DataTable, DataTableItem},
-    };
+    bq_query_custom_element::BigqueryQueryCustomElement,
+    bq_script_custom_element::BigqueryScriptCustomElement,
+    bq_table_custom_element::BigqueryTableCustomElement,
+    data_table_element::{DataTable, DataTableItem},
+};
 
 #[derive(Debug, Deserialize)]
 pub struct ExternalRequest {
@@ -51,7 +51,7 @@ impl ExternalRequest {
             project_id,
             location,
             token,
-            None
+            None,
         )
     }
 
@@ -63,13 +63,20 @@ impl ExternalRequest {
         let project_id = self.project_id.as_ref().unwrap().to_string();
         let token = (&self.token.as_ref().unwrap()).to_string();
 
+        let num_child_jobs: Option<usize> =
+            if self.job.is_some() && self.job.as_ref().unwrap().is_query_select_and_complete() {
+                Some(1)
+            } else {
+                None
+            };
+
         BigqueryScriptCustomElement::base_new(
             element_id.to_string(),
             job_id,
             project_id,
             location,
             token,
-            None
+            num_child_jobs,
         )
     }
 }

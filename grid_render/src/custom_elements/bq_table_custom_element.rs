@@ -485,22 +485,20 @@ fn get_num_attribute(element: &Element, attribute_name: &str) -> usize {
     }
 }
 
-fn configure_spacer(element: &BaseElement, _: &Option<usize>) {
-    element.element().set_inner_html("&nbsp");
-    element
-        .element()
-        .set_attribute("style", "height: 30px")
-        .unwrap();
-}
+// fn configure_spacer(element: &BaseElement, _: &Option<usize>) {
+//     element.element().set_inner_html("&nbsp");
+//     element
+//         .element()
+//         .set_attribute("style", "height: 30px")
+//         .unwrap();
+// }
 
 #[cfg(test)]
 mod tests {
     use wasm_bindgen_test::*;
 
     use super::{set_attributes, BigqueryTableCustomElement};
-    use crate::custom_elements::{
-        base_element_trait::BaseElementTrait, bq_table_custom_element::TAG_NAME,
-    };
+    use crate::custom_elements::base_element_trait::BaseElementTrait;
     wasm_bindgen_test_configure!(run_in_browser);
 
     #[wasm_bindgen_test]

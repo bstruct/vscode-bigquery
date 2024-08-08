@@ -38,6 +38,17 @@ impl BaseElementTrait for DataTable {
     }
 
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
+        if self.rows.is_some() {
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "====== render table ========, row_count: {}",
+                &self.rows.as_ref().unwrap().len()
+            )));
+        } else {
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "====== render table ========, rows: None"
+            )));
+        }
+
         BaseElement::new_and_append(parent_node, "table", &self.get_element_id())
             // .apply_fn(&set_table_event_handlers, &None)
             .append_child("style", "tablestyle")

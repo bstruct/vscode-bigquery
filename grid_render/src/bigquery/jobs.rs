@@ -327,6 +327,15 @@ impl Job {
 
         false
     }
+    pub(crate) fn is_query_select(&self) -> bool {
+        if let Some(stats) = self.statistics.as_ref() {
+            if let Some(query) = stats.query.as_ref() {
+                return query.statement_type == "SELECT";
+            }
+        }
+
+        false
+    }
 
     pub(crate) fn is_dml_statement(&self) -> bool {
         if let Some(stats) = self.statistics.as_ref() {
@@ -383,6 +392,10 @@ impl Job {
         }
 
         true
+    }
+
+    pub(crate) fn is_query_select_and_complete(&self) -> bool {
+        self.is_query_select() && self.is_complete()
     }
 }
 

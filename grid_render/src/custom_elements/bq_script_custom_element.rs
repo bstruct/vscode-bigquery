@@ -88,7 +88,7 @@ impl BigqueryScriptCustomElement {
     }
 
     fn with_job_info(&self, job: &Job, jobs: &Vec<Job>) -> BigqueryScriptCustomElement {
-        let num_child_jobs = if job.is_dml_statement() {
+        let num_child_jobs = if job.is_dml_statement() || job.is_query_select() {
             Some(1)
         } else {
             match job.statistics.as_ref() {
@@ -112,18 +112,13 @@ impl BigqueryScriptCustomElement {
     }
 
     fn set_refresh_timeout(&self, parent_node: &Node) {
-
         let all_jobs_completed = self.all_jobs_completed() && self.num_child_jobs.is_some();
 
-        let num_jobs = self.num_child_jobs;
-
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "set_refresh_timeout, self.all_jobs_completed: {:?}, num_jobs: {:?}",
-            all_jobs_completed,
-            num_jobs
-        )));
-
         if !all_jobs_completed {
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "============= set_refresh_timeout ============= ",
+            )));
+
             if let Some(window) = web_sys::window() {
                 let dispatch_event = Closure::wrap(Box::new(|node: Node| {
                     let event = &Event::new(ELEMENT_INTERSECTED_EVENT_NAME).unwrap();
@@ -401,29 +396,16 @@ fn on_render(event: &web_sys::Event) {
         )));
 
         let bq_script_element = BigqueryScriptCustomElement::from_element(&element);
-        let get_request = bq_script_element.as_job_request();
-        let get_list_request = bq_script_element.as_job_list_request();
-
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "on_render event on element: {:?}, request: {:?}",
-            element.id(),
-            get_list_request
-        )));
 
         let jobs = crate::bigquery::jobs::Jobs::new(&bq_script_element.token);
         let parent_node = element.parent_node().unwrap();
 
         spawn_local(async move {
+            let get_request = bq_script_element.as_job_request();
             let get_job_response = jobs.get(get_request).await;
             // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
             //     "get_job_response: {:?}",
             //     get_job_response
-            // )));
-
-            let get_list_response = jobs.get_list(get_list_request).await;
-            // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            //     "get_list_response: {:?}",
-            //     get_list_response
             // )));
 
             if let Some(job) = get_job_response {
@@ -434,23 +416,22 @@ fn on_render(event: &web_sys::Event) {
                         element.set_attribute("loaded", "1").unwrap();
                     }
                 }
-                if job.is_dml_statement() {
+                if job.is_dml_statement() || job.is_query_select() {
                     // element.set_attribute("loaded", "1").unwrap();
 
                     bq_script_element
                         .with_job_info(&job, &[job.clone()].to_vec())
                         .render(&parent_node);
                 } else {
+                    let get_list_request = bq_script_element.as_job_list_request();
+                    let get_list_response = jobs.get_list(get_list_request).await;
+
                     if let Some(list) = get_list_response {
                         if list.jobs.is_some() {
                             bq_script_element
                                 .with_job_info(&job, &list.jobs.unwrap())
                                 .render(&parent_node);
-                        } 
-                        // else {
-                        //     element.set_attribute("loaded", "1").unwrap();
-                        //     element.set_inner_html(&"unexpected error: No job list found");
-                        // }
+                        }
                     }
                 }
             } else {
