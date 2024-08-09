@@ -188,7 +188,7 @@ fn add_event_listener_command(
             _ => panic!("unexpected button"),
         };
 
-        let job_reference = datatable_controls.job_reference.as_ref();
+        // let job_reference = datatable_controls.job_reference.as_ref();
 
         let function_body = if let Some(job_reference) = &datatable_controls.job_reference {
             json!({
@@ -201,7 +201,7 @@ fn add_event_listener_command(
                 }
             })
         } else {
-            let table_reference = datatable_controls.table_reference.as_ref();
+            // let table_reference = datatable_controls.table_reference.as_ref();
 
             if let Some(table_reference) = &datatable_controls.table_reference {
                 json!({

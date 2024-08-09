@@ -95,11 +95,6 @@ impl BaseElement {
             },
             _ => panic!("base elements can only be appended to element nodes like `div` or `p` or shadow elements")
         }
-        // BaseElement::new_and_append_internal(
-        //     &|node: &Node| parent_node.append_child(node),
-        //     tag_name,
-        //     base_element_id,
-        // )
     }
 
     fn new_and_append_internal(
@@ -123,7 +118,7 @@ impl BaseElement {
         }
     }
 
-    fn create_element(tag_name: &str, base_element_id: &str) -> BaseElement {
+    pub fn create_element(tag_name: &str, base_element_id: &str) -> BaseElement {
         let element = &crate::createElement(tag_name);
         element.set_attribute("be_id", base_element_id).unwrap();
         BaseElement {
@@ -258,7 +253,7 @@ impl BaseElement {
                 return existing_element;
             }
         }
-
+        
         let new_element = BaseElement::create_element(tag_name, base_element_id);
         get_parent().append_child(&new_element.element()).unwrap();
         if let Some(element_fn) = element_fn {
@@ -301,15 +296,21 @@ impl BaseElement {
         }
     }
 
-    pub(crate) fn next_sibling(&self) -> Option<BaseElement> {
-        match self.node.next_sibling() {
-            Some(node) => Some(BaseElement::from_node(&node)),
-            None => None,
-        }
-    }
+    // pub(crate) fn next_sibling(&self) -> Option<BaseElement> {
+    //     match self.node.next_sibling() {
+    //         Some(node) => Some(BaseElement::from_node(&node)),
+    //         None => None,
+    //     }
+    // }
 
     pub(crate) fn remove_child(&self, child_base_element: &BaseElement) {
         self.node.remove_child(&child_base_element.node).unwrap();
+    }
+    
+    pub(crate) fn clear_content(&self) -> BaseElement {
+        self.node.set_text_content(None);
+
+        self.clone()
     }
 }
 

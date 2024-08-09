@@ -16,32 +16,6 @@ use crate::{
 };
 
 impl GetQueryResultsResponse {
-    // pub(crate) fn to_bq_table(
-    //     &self,
-    //     bq_table_requested: &BigqueryTableCustomElement,
-    // ) -> BigqueryTableCustomElement {
-    //     let header = self.get_header();
-    //     let number_columns = header.len();
-    //     let page_start_index = bq_table_requested.get_page_start_index();
-
-    //     let (rows_in_page, rows) = self.get_rows(number_columns, page_start_index);
-    //     let rows_total = self.get_rows_total();
-
-    //     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-    //         "rows_total: {:?}, rows_in_page: {}, rows len: {}",
-    //         rows_total,
-    //         rows_in_page,
-    //         rows.len()
-    //     )));
-
-    //     bq_table_requested.with_table_info(
-    //         Some(rows_in_page),
-    //         rows_total,
-    //         Some(header),
-    //         Some(rows),
-    //     )
-    // }
-
     pub(crate) fn to_bq_query(
         &self,
         bq_query_requested: &BigqueryQueryCustomElement,
@@ -436,13 +410,6 @@ fn timestamp_to_value(bq_timestamp: &Option<serde_json::Value>) -> Option<serde_
 impl Job {
     pub(crate) fn to_error_table(&self) -> DataTable {
         let header = ["message".to_string(), "reason".to_string()].to_vec();
-
-        // let rows_default = [[
-        //     Some(DataTableItem::from_string(&"--".to_string())),
-        //     Some(DataTableItem::from_string(&"--".to_string())),
-        // ]
-        // .to_vec()]
-        // .to_vec();
 
         let rows: Vec<Vec<Option<DataTableItem>>> = match self.status.as_ref() {
             Some(status) => match &status.error_result {

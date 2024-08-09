@@ -49,13 +49,23 @@ impl BaseElementTrait for DataTable {
             )));
         }
 
-        BaseElement::new_and_append(parent_node, "table", &self.get_element_id())
+        let start = instant::Instant::now();
+
+        let b = BaseElement::new_and_append(parent_node, "table", &self.get_element_id())
             // .apply_fn(&set_table_event_handlers, &None)
             .append_child("style", "tablestyle")
             .append_sibling("thead", "thead1")
             .resolve_header(&self.header)
             .append_sibling("tbody", "tbody1")
-            .resolve_rows(&self.rows)
+            .clear_content()
+            .resolve_rows(&self.rows);
+
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "table rendered in {0} ms",
+                start.elapsed().as_millis()
+            )));
+
+        b
     }
 }
 
@@ -81,50 +91,68 @@ impl BaseElement {
 
     fn resolve_rows(&self, rows: &Option<Vec<Vec<Option<DataTableItem>>>>) -> BaseElement {
         if let Some(rows) = rows {
-            if rows.len() == 0 {
-                while let Some(child) = self.first_child() {
-                    self.remove_child(&child);
+            //Assume no content at this point
+
+            // if rows.len() == 0 {
+            //     while let Some(child) = self.first_child() {
+            //         self.remove_child(&child);
+            //     }
+            // } else {
+            // let mut last_pointer_tr: Option<Element> = None;
+
+            let element = &self.element();
+
+            for row_index in 0..rows.len() {
+                // let tr = BaseElement::new_and_append(element, "tr", &format!("tr{}", row_index));
+
+                let cols: &::js_sys::Array = &::js_sys::Array::new();
+
+                for col_index in 0..rows[row_index].len() {
+                    let table_item = &rows[row_index][col_index];
+
+                    let td = &crate::createElement("td");
+                    let div = &crate::createElement("div");
+                    set_table_cell(td, div, &table_item);
+                    check_row_div_width(div);
+                    // let div =
+                    //     BaseElement::new_and_append(element, "div", &format!("div{}", row_index))
+                    //         .apply_fn(&set_table_item, &table_item)
+                    //         .apply_fn(&check_row_div_width, &None);
+
+                    td.append_child(&div)
+                        .expect("failed to add div to table cell");
+
+                    // td.append_child("div", &format!("d{}", col_index))
+                    //     .apply_fn(&set_table_item, &table_item)
+                    //     .apply_fn(&check_row_div_width, &None);
+
+                    cols.push(td);
                 }
-            } else {
-                let mut last_pointer_tr: Option<Element> = None;
 
-                let element = &self.element();
+                // tr.append_child(tag_name, base_element_id)
+                let tr = &crate::createElement("tr");
+                tr.append_with_node(cols)
+                    .expect("failed to insert columns in row");
+                element.append_child(tr).expect("failed to append row");
 
-                for row_index in 0..rows.len() {
-                    let tr =
-                        BaseElement::new_and_append(element, "tr", &format!("tr{}", row_index));
-
-                    for col_index in 0..rows[row_index].len() {
-                        let table_item = &rows[row_index][col_index];
-                        BaseElement::new_and_append(
-                            &tr.element(),
-                            "td",
-                            &format!("td{}", col_index),
-                        )
-                        .append_child("div", &format!("d{}", col_index))
-                        .apply_fn(&set_table_item, &table_item)
-                        .apply_fn(&check_row_div_width, &None);
-                    }
-
-                    last_pointer_tr = Some(tr.element());
-                }
-
-                if last_pointer_tr.is_some() {
-                    let last_pointer_tr =
-                        BaseElement::from_element(&last_pointer_tr.as_ref().unwrap());
-                    while let Some(next_sibling) = last_pointer_tr.next_sibling() {
-                        self.remove_child(&next_sibling);
-                    }
-                }
+                // last_pointer_tr = Some(tr.element());
             }
+
+            // if last_pointer_tr.is_some() {
+            //     let last_pointer_tr = BaseElement::from_element(&last_pointer_tr.as_ref().unwrap());
+            //     while let Some(next_sibling) = last_pointer_tr.next_sibling() {
+            //         self.remove_child(&next_sibling);
+            //     }
+            // }
+            // }
         }
 
         self.clone()
     }
 }
 
-fn check_row_div_width(base_element: &BaseElement, _x: &Option<usize>) {
-    let element = &base_element.element();
+fn check_row_div_width(element: &Element) {
+    // let element = &base_element.element();
     // let parent_element = element.parent_element().unwrap();
 
     // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
@@ -140,6 +168,26 @@ fn check_row_div_width(base_element: &BaseElement, _x: &Option<usize>) {
 
 fn set_header_text(base_element: &BaseElement, text: &String) {
     base_element.element().set_text_content(Some(text));
+}
+
+fn set_table_cell(td: &Element, element: &Element, table_item: &Option<DataTableItem>) {
+    if let Some(table_item) = &table_item {
+        if table_item.is_index {
+            td.set_class_name("index");
+        } else {
+            td.set_class_name("v");
+        }
+        if table_item.is_null {
+            element.set_text_content(Some(&"null".to_string()));
+            element.set_class_name("nullValue");
+        } else {
+            element.set_text_content(Some(&table_item.value.as_ref().unwrap_or(&"".to_string())));
+        }
+    } else {
+        // let e = base_element.element();
+        td.set_class_name("");
+        element.set_inner_html("");
+    }
 }
 
 fn set_table_item(base_element: &BaseElement, table_item: &Option<DataTableItem>) {
