@@ -187,11 +187,12 @@ fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryScriptCustomEle
 
 fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElement) {
     //loading
-    let loading_class_name = if script_element.num_child_jobs.is_some() {
-        "loaded"
-    } else {
-        ""
-    };
+    let loading_class_name =
+        if script_element.num_child_jobs.is_some() && script_element.all_jobs_completed() {
+            "loaded"
+        } else {
+            ""
+        };
     BaseElement::new_and_append(&element.element(), "DIV", "job_loading")
         .apply_fn(&resolve_loading, &Some(loading_class_name));
 
@@ -279,6 +280,7 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                 );
 
                 job_body.append_base_child(&bq_query);
+                // element.append_base_child(&bq_query);
 
                 //observe
                 let bq_query_element = &job_body.first_child().unwrap().element();
@@ -410,14 +412,17 @@ fn on_render(event: &web_sys::Event) {
 
             if let Some(job) = get_job_response {
                 //mark as done.
+                // if job.has_error() {
+                //     element.set_attribute("loaded", "1").unwrap();
+                // }
+
                 //TODO: confirm what is the information when one of the jobs is in error
-                if let Some(statistics) = &job.statistics {
-                    if statistics.num_child_jobs.is_some() {
+                if job.is_dml_statement() || job.is_query_select() || job.is_unsupported_type() {
+                    // element.set_attribute("loaded", "1").unwrap();
+
+                    if job.is_complete() {
                         element.set_attribute("loaded", "1").unwrap();
                     }
-                }
-                if job.is_dml_statement() || job.is_query_select() {
-                    // element.set_attribute("loaded", "1").unwrap();
 
                     bq_script_element
                         .with_job_info(&job, &[job.clone()].to_vec())
@@ -427,9 +432,17 @@ fn on_render(event: &web_sys::Event) {
                     let get_list_response = jobs.get_list(get_list_request).await;
 
                     if let Some(list) = get_list_response {
-                        if list.jobs.is_some() {
+                        if let Some(jobs) = list.jobs {
+                            let all_jobs_done = jobs.iter().all(|j| j.is_complete());
+
+                            if let Some(statistics) = &job.statistics {
+                                if statistics.num_child_jobs.is_some() && all_jobs_done {
+                                    element.set_attribute("loaded", "1").unwrap();
+                                }
+                            }
+
                             bq_script_element
-                                .with_job_info(&job, &list.jobs.unwrap())
+                                .with_job_info(&job, &jobs)
                                 .render(&parent_node);
                         }
                     }

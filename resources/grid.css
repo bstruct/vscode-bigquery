@@ -1,7 +1,7 @@
-
+/* 
 bq-query, bq-script {
     display: inline-block;
-}
+} */
 
 /* .disableFocus {
     background: inherit;
@@ -45,7 +45,7 @@ div.labelValue span.value {
 
 /* vscode-data-grid-cell {
     border-bottom: var(--list-hover-background) 1px solid;
-} */
+} 
 
 div#controls-background {
     position: fixed;

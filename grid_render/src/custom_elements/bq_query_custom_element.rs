@@ -512,6 +512,10 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
         let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
 
+        //reset the content
+        // parent_node.set_text_content(Some("Loading..."));
+        parent_node.set_text_content(None);
+
         if self.is_dml_statement() {
             BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
                 .apply_fn(&set_attributes, self)

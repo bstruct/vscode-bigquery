@@ -28,6 +28,20 @@ impl BaseElement {
         element
     }
 
+    pub(crate) fn node(&self) -> Node {
+        assert_eq!(
+            self.node_type,
+            Node::DOCUMENT_FRAGMENT_NODE,
+            "node is not of the type element"
+        );
+
+        // &self.element
+        let element: Node = wasm_bindgen::JsCast::dyn_into(self.node.value_of())
+            .expect("unexpected error on casting Node");
+
+        element
+    }
+
     pub(crate) fn apply_fn<T>(
         &self,
         element_fn: &dyn Fn(&BaseElement, &T),

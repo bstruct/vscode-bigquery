@@ -1,5 +1,5 @@
 div[be_id="jobs"] div div.title, div[be_id="jobs"] div[be_id="job_loading"] {
-    margin: 5px;
+    margin-bottom: 5px;
     border: 1px solid var(--vscode-dropdown-border);
     padding: 5px;
     background-color: var(--vscode-dropdown-background);

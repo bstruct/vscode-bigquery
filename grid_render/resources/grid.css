@@ -37,13 +37,72 @@ div[be_id='controls'] span.button {
     user-select: none;
 }
 
+/* table */
+div.t {
+    display: table;
+    table-layout: auto;
+    border-collapse: collapse;
+}
+
+/* table header */
+div.th {
+    display: table-header-group;
+}
+
+/* table body */
+div.tb {
+    display: table-row-group;
+}
+
+/* table footer */
+/* div.table_footer {
+    display: table-footer-group;
+} */
+
+/* table row */
+div.tr {
+    display: table-row;
+}
+
+div.th div.tr {
+    background-color: var(--vscode-banner-background);
+}
+
+/* table cell */
+div.tc {
+    display: table-cell;
+
+    /* max-width: 550px; */
+    /* min-width: 100px; */
+    padding: 5px 15px;
+}
+
+div.tc.v {
+    border: 1px solid var(--vscode-settings-checkboxBorder);
+}
+
+div.tc.v div {
+    height: 1.2em;
+    overflow-wrap: break-word;
+    overflow: scroll;
+    resize: both;
+    text-wrap: pretty;
+}
+
+div.tc.nullValue {
+    border: 1px solid var(--vscode-settings-checkboxBorder);
+    font-style: italic;
+    color: var(--vscode-inputValidation-warningBorder) !important;
+}
+
+
+/* 
 table {
     white-space: nowrap;
     display: table;
     outline: none;
     border-collapse: collapse;
     text-align: left;
-    /* width: 100%; */
 }
 
 table thead {
@@ -60,29 +119,28 @@ td {
     text-overflow: ellipsis;
 }
 
-tbody.tr, td.v {
+tbody.tr,
+td.v {
     border: 1px solid gray;
 }
 
 td.index {
     background-color: var(--vscode-banner-background);
     border: 1px solid gray;
-}
+} */
 
-.nullValue {
-    font-style: italic;
-    color: var(--vscode-inputValidation-warningBorder) !important;
-}
 
-table thead th, 
+
+/* 
+table thead th,
 table tbody td {
     max-width: 600px;
 }
 
-
 table tbody td div {
     display: inline-block;
 }
+
 table tbody td div.resize {
     text-wrap: pretty;
     overflow-wrap: anywhere;
@@ -96,4 +154,4 @@ table tbody td div.resize {
 table tbody td div.nullValue {
     font-style: italic;
     color: var(--vscode-inputValidation-warningBorder) !important;
-}
+} */

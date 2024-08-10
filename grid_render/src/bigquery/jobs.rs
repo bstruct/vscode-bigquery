@@ -327,6 +327,17 @@ impl Job {
 
         false
     }
+
+    pub(crate) fn is_unsupported_type(&self) -> bool {
+        if let Some(stats) = self.statistics.as_ref() {
+            if let Some(query) = stats.query.as_ref() {
+                return query.statement_type == "EXPORT_DATA";
+            }
+        }
+
+        false
+    }
+
     pub(crate) fn is_query_select(&self) -> bool {
         if let Some(stats) = self.statistics.as_ref() {
             if let Some(query) = stats.query.as_ref() {
