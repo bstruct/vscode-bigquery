@@ -329,8 +329,8 @@
 	},
 	"dependencies": {
 		"@bstruct/bqsql-parser": "file://.//bqsql_parser/pkg",
-		"@google-cloud/bigquery": "^7.3.0",
-		"@google-cloud/pubsub": "^4.0.6",
+		"@google-cloud/bigquery": "^7.9.0",
+		"@google-cloud/pubsub": "^4.5.0",
 		"@types/gapi.client.bigquery-v2": "^0.0.2",
 		"@vscode/codicons": "^0.0.32",
 		"@vscode/webview-ui-toolkit": "^1.2.2",

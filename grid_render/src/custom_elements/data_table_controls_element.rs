@@ -1,6 +1,9 @@
 use crate::bigquery::{base::TableReference, jobs::JobReference};
 
-use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
+use super::{
+    base_element::BaseElement, base_element_trait::BaseElementTrait,
+    bq_query_custom_element::BigqueryQueryCustomElement,
+};
 use serde_json::json;
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::Element;
@@ -157,11 +160,6 @@ fn add_event_listener(element: &Element, _event_type: &str) {
         let on_event_type_closure =
             Closure::wrap(Box::new(on_click) as Box<dyn Fn(&web_sys::Event)>);
 
-        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        //     "add_event_listener - {:?}",
-        //     element.get_attribute("be_id")
-        // )));
-
         element
             .add_event_listener_with_callback(
                 "click",
@@ -249,6 +247,26 @@ fn on_click(event: &web_sys::Event) {
         BTN_LAST_PAGE => EVENT_GO_TO_LAST_PAGE,
         _ => panic!("unknown button"),
     };
+
+    let controls = element.closest(":host > [be_id=\"controls-background\"]");
+    if controls.is_ok() {
+        if let Some(controls) = controls.unwrap() {
+            if let Some(shadow) = controls.parent_node() {
+                if let Some(st1) = shadow.last_child() {
+
+                    st1.remove_child(&st1.last_child().unwrap()).unwrap();
+
+                    let loading_div = &crate::createElement("div");
+                    loading_div.set_text_content(Some("Loading..."));
+                    st1.append_child(&loading_div).unwrap();
+
+                    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                        "clear parent_element",
+                    )));
+                }
+            }
+        }
+    }
 
     let action_event =
         web_sys::CustomEvent::new_with_event_init_dict(type_, &custom_event_init).unwrap();

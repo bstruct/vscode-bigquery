@@ -74,20 +74,29 @@ export class SendToPubsub {
                             const queryResults: QueryRowsResponse = await job.getQueryResults({ autoPaginate: true, maxResults: 10000, pageToken: pageToken });
                             const records = queryResults[0];
 
-                            const promisses = [];
+                            let promisses = [];
                             for (let index = 0; index < records.length; index++) {
                                 const element = records[index];
 
-                                let customAttributes = null;
-                                if (containsAttributes) {
-                                    customAttributes = element['attributes'];
-                                }
-
                                 const data = Buffer.from(element['data']);
 
-                                promisses.push(topic.publishMessage({ data: data, attributes: customAttributes }));
+                                let attributes = null;
+                                if (containsAttributes) {
+                                    attributes = element['attributes'];
+                                    promisses.push(await topic.publishMessage({ data, attributes }));
+                                } else {
+                                    promisses.push(await topic.publishMessage({ data }));
+                                }
+
+                                if (promisses.length > 1000) {
+                                    await Promise.all(promisses);
+                                    promisses = [];
+                                }
                             }
-                            await Promise.all(promisses);
+
+                            if (promisses.length > 0) {
+                                await Promise.all(promisses);
+                            }
 
                             progress.report({ increment: increment });
 

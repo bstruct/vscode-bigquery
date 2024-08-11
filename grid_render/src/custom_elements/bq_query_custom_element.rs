@@ -1,3 +1,5 @@
+use std::fmt::LowerExp;
+
 use super::{
     base_element_trait::BaseElementTrait,
     bq_common_custom_element::{get_attribute, get_opt_attribute, set_attribute},
@@ -200,14 +202,13 @@ impl BigqueryQueryCustomElement {
                     if let Some(response) = response {
                         if response.has_error() {
                             response.to_error_table().render_standalone(&parent_node);
-                        } else{
+                        } else {
                             response.to_dml_table().render_standalone(&parent_node);
                         }
                     } else {
                         element.set_inner_html(&format!("unexpected response: {:?}", response));
                     }
                 });
-
             } else {
                 let request = bq_query_element.as_query_results_request();
 
@@ -349,7 +350,6 @@ impl BigqueryQueryCustomElement {
 
         false
     }
-    
 }
 
 impl CustomElementDefinition for BigqueryQueryCustomElement {
@@ -510,26 +510,37 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
     }
 
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
-        let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "render - BigqueryQueryCustomElement, page_start_index: {}, rows_total: {:?}",
+            self.page_start_index,
+            self.rows_total,
+        )));
 
-        //reset the content
-        // parent_node.set_text_content(Some("Loading..."));
-        parent_node.set_text_content(None);
+        // //reset the content
+        // let loading = &crate::createElement("div");
+        // loading.set_text_content(Some("Loading.."));
+        // parent_node.append_child(&loading).unwrap();
+        // // if let Some(fc) = element.first_child(){
+        // //     element..remove_child(&fc).unwrap();
+        // // }
+
+        let bq_query = BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
+            .apply_fn(&set_attributes, self)
+            .append_shadow();
+
+        let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
+        let tree = bq_query.append_child_style(css_content, "style1");
 
         if self.is_dml_statement() {
-            BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
-                .apply_fn(&set_attributes, self)
-                .append_shadow()
-                .append_child_style(css_content, "style1")
-                .append_sibling_base_element(&self.to_data_table("t1"))
+            tree.append_sibling_base_element(&self.to_data_table("t1"));
         } else {
-            BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
-                .apply_fn(&set_attributes, self)
-                .append_shadow()
-                .append_child_style(css_content, "style1")
-                .append_sibling_base_element(&self.to_data_table_controls())
-                .append_sibling_base_element(&self.to_data_table("t1"))
+            tree.append_sibling_base_element(&self.to_data_table_controls())
+                .append_sibling_base_element(&self.to_data_table("t1"));
         }
+
+        // parent_node.remove_child(&loading).unwrap();
+
+        bq_query
     }
 }
 

@@ -126,10 +126,13 @@ impl BaseElementTrait for DataTable {
     }
 
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
-        // let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
-
         let parent = BaseElement::new_and_append(parent_node, "div", "st1");
         let parent_element = &parent.element();
+
+        //clear current table, if any
+        parent_element.set_inner_html(&"");
+
+        //put table
         parent_element
             .append_child(&self.create_table())
             .expect("table not added");
@@ -241,14 +244,18 @@ impl BaseElement {
 
 fn set_table_cell(element: &Element, table_item: &Option<DataTableItem>) {
     if let Some(table_item) = &table_item {
-        // if table_item.is_index {
-        //     td.set_class_name("index");
-        // } else {
-        //     td.set_class_name("v");
-        // }
         if table_item.is_null {
             element.set_text_content(Some(&"null".to_string()));
             element.set_class_name("tc nullValue");
+        } else if table_item.is_index {
+            let string_value = table_item
+                .value
+                .as_ref()
+                .unwrap_or(&String::from(""))
+                .clone();
+
+            element.set_text_content(Some(&string_value));
+            element.set_class_name("tc index");
         } else {
             let string_value = table_item
                 .value
@@ -266,11 +273,6 @@ fn set_table_cell(element: &Element, table_item: &Option<DataTableItem>) {
             element.set_class_name("tc v");
         }
     }
-    // else {
-    //     // let e = base_element.element();
-    //     // td.set_class_name("");
-    //     element.set_inner_html("");
-    // }
 }
 
 // fn set_table_item(base_element: &BaseElement, table_item: &Option<DataTableItem>) {

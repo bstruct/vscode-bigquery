@@ -81,6 +81,11 @@ div.tc.v {
     border: 1px solid var(--vscode-settings-checkboxBorder);
 }
 
+div.tc.index {
+    background-color: var(--vscode-banner-background);
+    border: 1px solid var(--vscode-settings-checkboxBorder);
+}
+
 div.tc.v div {
     height: 1.2em;
     overflow-wrap: break-word;

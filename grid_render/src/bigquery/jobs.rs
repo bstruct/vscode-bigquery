@@ -318,43 +318,34 @@ pub struct Job {
 }
 
 impl Job {
+    // https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#jobstatistics2
     pub(crate) fn is_query_script(&self) -> bool {
-        if let Some(stats) = self.statistics.as_ref() {
-            if let Some(query) = stats.query.as_ref() {
-                return query.statement_type == "SCRIPT";
-            }
+        if let Some(statement_type) = self.get_statement_type() {
+            return statement_type == "SCRIPT";
         }
 
         false
     }
 
     pub(crate) fn is_unsupported_type(&self) -> bool {
-        if let Some(stats) = self.statistics.as_ref() {
-            if let Some(query) = stats.query.as_ref() {
-                return query.statement_type == "EXPORT_DATA";
-            }
-        }
-
-        false
+        !(self.is_query_script() || self.is_query_select() || self.is_dml_statement())
     }
 
+    // https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#jobstatistics2
     pub(crate) fn is_query_select(&self) -> bool {
-        if let Some(stats) = self.statistics.as_ref() {
-            if let Some(query) = stats.query.as_ref() {
-                return query.statement_type == "SELECT";
-            }
+        if let Some(statement_type) = self.get_statement_type() {
+            return statement_type == "SELECT";
         }
 
         false
     }
 
+    // https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#jobstatistics2
     pub(crate) fn is_dml_statement(&self) -> bool {
-        if let Some(stats) = self.statistics.as_ref() {
-            if let Some(query) = stats.query.as_ref() {
-                return ["INSERT", "UPDATE", "DELETE", "MERGE"]
-                    .iter()
-                    .any(|c| c == &query.statement_type);
-            }
+        if let Some(statement_type) = self.get_statement_type() {
+            return ["INSERT", "UPDATE", "DELETE", "MERGE"]
+                .iter()
+                .any(|c| c == &statement_type);
         }
 
         false
