@@ -174,7 +174,9 @@ impl BigqueryTableCustomElement {
                     .render(&parent_node);
             } else {
                 let bq_element = bq_table_element.element.unwrap().parent_node().unwrap();
-                bq_element.remove_child(bq_element.first_child().unwrap().as_ref()).unwrap();
+                bq_element
+                    .remove_child(bq_element.first_child().unwrap().as_ref())
+                    .unwrap();
                 // bq_element.remove_child(bq_element.first_child().unwrap().as_ref()).unwrap();
                 // bq_element.set_inner_html(&format!("unexpected response: {:?}", response));
             }
@@ -498,7 +500,9 @@ mod tests {
     use wasm_bindgen_test::*;
 
     use super::{set_attributes, BigqueryTableCustomElement};
-    use crate::custom_elements::base_element_trait::BaseElementTrait;
+    use crate::{
+        bigquery::table_data::TableData, custom_elements::base_element_trait::BaseElementTrait,
+    };
     wasm_bindgen_test_configure!(run_in_browser);
 
     #[wasm_bindgen_test]
@@ -527,54 +531,59 @@ mod tests {
         assert_eq!(bq_table.rows_total, bq_table_from.rows_total);
     }
 
-    // #[wasm_bindgen_test]
-    // pub fn render_test_1() {
-    //     let parent_node = &crate::createElement("div");
-    //     let bq_table = &BigqueryTableCustomElement::base_new(
-    //         "element_id".to_string(),
-    //         "jobId".to_string(),
-    //         "projectId".to_string(),
-    //         "location".to_string(),
-    //         "token".to_string(),
-    //     );
+    #[wasm_bindgen_test]
+    pub fn render_bq_table_test_1() {
+        let parent_node = &crate::createElement("div");
+        let bq_table = &BigqueryTableCustomElement::base_new(
+            "element_id".to_string(),
+            "jobId".to_string(),
+            "projectId".to_string(),
+            "location".to_string(),
+            "token".to_string(),
+        );
 
-    //     let complex_object_array_test = include_str!("test_resources/struct_json_test.json");
-    //     let complex_object_array_test = &serde_json::from_str::<
-    //         crate::bigquery::jobs::GetQueryResultsResponse,
-    //     >(complex_object_array_test)
-    //     .unwrap();
+        let simple_table = include_str!("test_resources/simple_table.json");
+        let simple_table =
+            &serde_json::from_str::<crate::bigquery::tables::Table>(simple_table).unwrap();
 
-    //     let bq_table_information = complex_object_array_test.to_bq_table(bq_table);
+        let simple_table_data_list = include_str!("test_resources/simple_table_data_list.json");
+        let simple_table_data_list = &serde_json::from_str::<
+            crate::bigquery::table_data::TableDataListResponse,
+        >(simple_table_data_list)
+        .unwrap();
+        let response_rows = &Some(simple_table_data_list.clone());
 
-    //     let rows_in_page = bq_table_information.rows_in_page;
-    //     let rows_total = bq_table_information.rows_total;
-    //     let header = bq_table_information.header;
-    //     let rows = bq_table_information.rows;
+        let bq_table_information = simple_table.to_bq_table(bq_table, response_rows);
 
-    //     let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
-    //     bq_table.render(parent_node);
+        let rows_in_page = bq_table_information.rows_in_page;
+        let rows_total = bq_table_information.rows_total;
+        let header = bq_table_information.header;
+        let rows = bq_table_information.rows;
 
-    //     let c = parent_node.first_child().unwrap();
-    //     assert_eq!(c.node_type(), web_sys::Node::ELEMENT_NODE);
-    //     let element: web_sys::Element = wasm_bindgen::JsCast::dyn_into(c.value_of())
-    //         .expect("unexpected error on casting Node to Element");
-    //     assert_eq!(element.tag_name().to_lowercase(), TAG_NAME);
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        bq_table.render(parent_node);
 
-    //     assert!(element.shadow_root().is_some());
-    //     let shadow = element.shadow_root().unwrap();
+        // let c = parent_node.first_child().unwrap();
+        // assert_eq!(c.node_type(), web_sys::Node::ELEMENT_NODE);
+        // let element: web_sys::Element = wasm_bindgen::JsCast::dyn_into(c.value_of())
+        //     .expect("unexpected error on casting Node to Element");
+        // assert_eq!(element.tag_name().to_lowercase(), TAG_NAME);
 
-    //     let c = shadow.first_element_child().unwrap();
-    //     assert_eq!(c.tag_name().to_lowercase(), "style");
+        // assert!(element.shadow_root().is_some());
+        // let shadow = element.shadow_root().unwrap();
 
-    //     let c = c.next_element_sibling().unwrap();
-    //     assert_eq!(c.tag_name().to_lowercase(), "div");
-    //     assert_eq!(c.get_attribute("be_id").unwrap(), "controls-background");
+        // let c = shadow.first_element_child().unwrap();
+        // assert_eq!(c.tag_name().to_lowercase(), "style");
 
-    //     let c = c.next_element_sibling().unwrap();
-    //     assert_eq!(c.tag_name().to_lowercase(), "table");
+        // let c = c.next_element_sibling().unwrap();
+        // assert_eq!(c.tag_name().to_lowercase(), "div");
+        // assert_eq!(c.get_attribute("be_id").unwrap(), "controls-background");
 
-    //     // assert_eq!(c.outer_html(), "...");
-    // }
+        // let c = c.next_element_sibling().unwrap();
+        // assert_eq!(c.tag_name().to_lowercase(), "table");
+
+        // assert_eq!(c.outer_html(), "...");
+    }
 
     // #[wasm_bindgen_test]
     // pub fn render_thrice_test_1() {

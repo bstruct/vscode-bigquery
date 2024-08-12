@@ -392,16 +392,18 @@ fn timestamp_to_value(bq_timestamp: &Option<serde_json::Value>) -> Option<serde_
         //     bq_timestamp
         // )));
 
-        let timestamp: f64 = bq_timestamp
-            .as_str()
-            .unwrap_or_default()
-            .parse()
-            .expect("timestamp not valid");
+        if !bq_timestamp.is_null() {
+            let timestamp: f64 = bq_timestamp
+                .as_str()
+                .unwrap_or_default()
+                .parse()
+                .expect("timestamp not valid");
 
-        let js_date = js_sys::Date::new(&JsValue::from(timestamp * 1000.0));
-        let str = js_date.to_iso_string().as_string().unwrap();
+            let js_date = js_sys::Date::new(&JsValue::from(timestamp * 1000.0));
+            let str = js_date.to_iso_string().as_string().unwrap();
 
-        return Some(serde_json::to_value(str).unwrap());
+            return Some(serde_json::to_value(str).unwrap());
+        }
     }
 
     None
