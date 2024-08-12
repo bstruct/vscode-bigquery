@@ -3,7 +3,7 @@ import { BigQueryClient } from './services/bigqueryClient';
 import { bigQueryTreeDataProvider, QUERY_RESULTS_VIEW_TYPE, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE, gcpAuthenticationTreeDataProvider } from './extension';
 // import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
-import { BigqueryTreeItem } from './activitybar/bigqueryTreeItem';
+import { BigqueryTreeItem, BigqueryTreeItemType } from './activitybar/bigqueryTreeItem';
 import { SchemaRender } from './tableResultsPanel/schemaRender';
 import { QueryGeneratorService } from './services/queryGeneratorService';
 import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
@@ -346,111 +346,105 @@ export const commandViewTable = async function (...args: any[]) {
 		return;
 	}
 
-	const bqClient = await getBigQueryClient();
+	if (item.treeItemType === BigqueryTreeItemType.tableView) {
 
-	const table = bqClient.getTable(item.projectId, item.datasetId, item.tableId);
-	const metadata = await table.getMetadata();
-
-	let panel: vscode.WebviewPanel;
-	if (args.length > 1 && args[1] && args[1].viewType === TABLE_RESULTS_VIEW_TYPE) {
-		panel = args[1];
-	} else {
-		panel = vscode.window.createWebviewPanel(TABLE_RESULTS_VIEW_TYPE, title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
-	}
-
-	const resultsGridRender = new ResultsGridRender(panel);
-
-	await resultsGridRender.render1();
-
-	if (metadata[0].type === 'EXTERNAL' || metadata[0].type === 'VIEW') {
-		// 	try {
-		// 		const queryResponse = await bqClient.runQuery(
-		// 			`SELECT * FROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``);
-
-		// 		const jobReferences = [
-		// 			{
-		// 				jobId: queryResponse.id,
-		// 				location: queryResponse.location,
-		// 				projectId: queryResponse.projectId
-		// 			} as JobReference];
-
-		// 		const request = {
-		// 			jobReferences: jobReferences,
-		// 			startIndex: 0,
-		// 			maxResults: 50,
-		// 			jobIndex: 0,
-		// 			openInTabVisible: false
-		// 		} as ResultsGridRenderRequest;
-
-		// 		newresultsGridRender.render(request);
-		// 	} catch (error) {
-		// 		newresultsGridRender.renderException(error);
-		// 	}
+		await openQueryEditor(item);
 
 	} else {
 
-		// 	const request = {
-		// 		tableReference: { projectId: item.projectId, datasetId: item.datasetId, tableId: item.tableId } as TableReference,
-		// 		startIndex: 0,
-		// 		maxResults: 50,
-		// 		jobIndex: 0,
-		// 		openInTabVisible: false
-		// 	} as ResultsGridRenderRequest;
+		const bqClient = await getBigQueryClient();
 
-		// 	newresultsGridRender.render(request);
+		const table = bqClient.getTable(item.projectId, item.datasetId, item.tableId);
+		const metadata = await table.getMetadata();
 
-		try {
-			let _postMessageResult1 = await resultsGridRender.postMessage({
-				requestType: ResultsGridRenderRequestV2Type.clear.toString(),
-				projectId: null,
-				token: null,
-				job: null,
-				error: null
-			} as ResultsGridRenderRequestV2);
+		if (metadata[0].type === 'EXTERNAL') {
+			await openQueryEditor(item);
+		} else {
 
-			const bqClient = await getBigQueryClient();
-			// const projectId = await bqClient.getProjectId();
-			// console.log('projectId:', projectId);
-			const token = await bqClient.getToken();
-			// console.log('token:', token);
-			// const job = await bqClient.runQuery(queryText);
-			const projectId = item.projectId;
-			const datasetId = item.datasetId;
-			const tableId = item.tableId;
+			let panel: vscode.WebviewPanel;
+			if (args.length > 1 && args[1] && args[1].viewType === TABLE_RESULTS_VIEW_TYPE) {
+				panel = args[1];
+			} else {
+				panel = vscode.window.createWebviewPanel(TABLE_RESULTS_VIEW_TYPE, title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
+			}
 
-			// const jobReferences = job.map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
+			const resultsGridRender = new ResultsGridRender(panel);
 
-			let _postMessageResult2 = await resultsGridRender.postMessage({
-				requestType: ResultsGridRenderRequestV2Type.previewTable.toString(),
-				projectId: projectId,
-				datasetId: datasetId,
-				tableId: tableId,
-				token: token,
-				job: null,
-				error: null
-			} as ResultsGridRenderRequestV2);
+			await resultsGridRender.render1();
 
-		} catch (errorx) {
-			// resultsGridRender.renderException(error);
-			const error =
-			{
-				message: (errorx as any).message || 'undefined message',
-				reason: ''
-			};
+			// 	const request = {
+			// 		tableReference: { projectId: item.projectId, datasetId: item.datasetId, tableId: item.tableId } as TableReference,
+			// 		startIndex: 0,
+			// 		maxResults: 50,
+			// 		jobIndex: 0,
+			// 		openInTabVisible: false
+			// 	} as ResultsGridRenderRequest;
 
-			let _postMessageResult3 = await resultsGridRender.postMessage({
-				requestType: ResultsGridRenderRequestV2Type.error.toString(),
-				projectId: null,
-				token: null,
-				job: null,
-				error: error
-			} as ResultsGridRenderRequestV2);
+			// 	newresultsGridRender.render(request);
+
+			try {
+				let _postMessageResult1 = await resultsGridRender.postMessage({
+					requestType: ResultsGridRenderRequestV2Type.clear.toString(),
+					projectId: null,
+					token: null,
+					job: null,
+					error: null
+				} as ResultsGridRenderRequestV2);
+
+				const bqClient = await getBigQueryClient();
+				// const projectId = await bqClient.getProjectId();
+				// console.log('projectId:', projectId);
+				const token = await bqClient.getToken();
+				// console.log('token:', token);
+				// const job = await bqClient.runQuery(queryText);
+				const projectId = item.projectId;
+				const datasetId = item.datasetId;
+				const tableId = item.tableId;
+
+				// const jobReferences = job.map(c => { return { jobId: c.id, projectId: c.projectId, location: c.location } as JobReference; });
+
+				let _postMessageResult2 = await resultsGridRender.postMessage({
+					requestType: ResultsGridRenderRequestV2Type.previewTable.toString(),
+					projectId: projectId,
+					datasetId: datasetId,
+					tableId: tableId,
+					token: token,
+					job: null,
+					error: null
+				} as ResultsGridRenderRequestV2);
+
+			} catch (errorx) {
+				// resultsGridRender.renderException(error);
+				const error =
+				{
+					message: (errorx as any).message || 'undefined message',
+					reason: ''
+				};
+
+				let _postMessageResult3 = await resultsGridRender.postMessage({
+					requestType: ResultsGridRenderRequestV2Type.error.toString(),
+					projectId: null,
+					token: null,
+					job: null,
+					error: error
+				} as ResultsGridRenderRequestV2);
+			}
 		}
-
 	}
 
 	// getTelemetryReporter()?.sendTelemetryEvent('commandViewTable', {}, { elapsedMs: Date.now() - t1 });
 };
+
+async function openQueryEditor(item: BigqueryTreeItem) {
+	const query = `SELECT * \nFROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``;
+
+	const doc = await vscode.workspace.openTextDocument({
+		language: 'bqsql',
+		content: query
+	});
+
+	doc.positionAt(7);
+}
 
 export const commandViewTableSchema = async function (...args: any[]) {
 
