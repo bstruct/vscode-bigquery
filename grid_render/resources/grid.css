@@ -14,6 +14,7 @@ div[be_id='controls'] {
     position: sticky;
     background: var(--vscode-activityBar-border);
     display: inline-block;
+    text-wrap: nowrap;
 }
 
 div[be_id='controls'] span {
@@ -28,6 +29,13 @@ div[be_id='controls'] button {
     background-color: var(--vscode-button-secondaryBackground);
     border: 1px solid var(--vscode-button-separator);
     color: var(--vscode-button-secondaryForeground);
+}
+
+div[be_id='controls'] button:disabled {
+
+    background-color: var(--vscode-disabledForeground);
+    /* border: 1px solid var(--vscode-button-separator); */
+    color: var(--vscode-button-secondaryHoverBackground);
 }
 
 div[be_id='controls'] span.button {

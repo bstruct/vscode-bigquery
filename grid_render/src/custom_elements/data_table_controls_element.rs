@@ -111,26 +111,51 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_FIRST_PAGE);
             element.set_inner_html("<< First page");
-            // if settings.is_none() {
-            //     element.set_attribute("disabled", "disabled").unwrap();
-            // } else {
-            //     element.remove_attribute("disabled").unwrap();
-            // }
+            if settings.page_start_index.unwrap_or(0) == 0 {
+                element.set_attribute("disabled", "disabled").unwrap();
+            } else {
+                element.remove_attribute("disabled").unwrap();
+            }
         }
         BTN_PREVIOUS_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_PREVIOUS_PAGE);
             element.set_inner_html("< Previous page");
+            if settings.page_start_index.unwrap_or(0) == 0 {
+                element.set_attribute("disabled", "disabled").unwrap();
+            } else {
+                element.remove_attribute("disabled").unwrap();
+            }
         }
         BTN_NEXT_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_NEXT_PAGE);
             element.set_inner_html("> Next page");
+
+            let start_index = settings.page_start_index.unwrap_or(0);
+            let page_size = settings.rows_in_page.unwrap_or(0);
+            let rows_total = settings.rows_total.unwrap_or(0);
+            let has_next_page = start_index + page_size < rows_total;
+            if has_next_page {
+                element.remove_attribute("disabled").unwrap();
+            } else {
+                element.set_attribute("disabled", "disabled").unwrap();
+            }
         }
         BTN_LAST_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_LAST_PAGE);
             element.set_inner_html(">> Last page");
+
+            let start_index = settings.page_start_index.unwrap_or(0);
+            let page_size = settings.rows_in_page.unwrap_or(0);
+            let rows_total = settings.rows_total.unwrap_or(0);
+            let has_next_page = start_index + page_size < rows_total;
+            if has_next_page {
+                element.remove_attribute("disabled").unwrap();
+            } else {
+                element.set_attribute("disabled", "disabled").unwrap();
+            }
         }
         BTN_DOWNLOAD_CSV => {
             let element = &base_element.element();
@@ -253,7 +278,6 @@ fn on_click(event: &web_sys::Event) {
         if let Some(controls) = controls.unwrap() {
             if let Some(shadow) = controls.parent_node() {
                 if let Some(st1) = shadow.last_child() {
-
                     st1.remove_child(&st1.last_child().unwrap()).unwrap();
 
                     let loading_div = &crate::createElement("div");
