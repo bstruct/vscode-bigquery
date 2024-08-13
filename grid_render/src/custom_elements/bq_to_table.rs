@@ -159,11 +159,6 @@ impl DataTableItem {
         field_schema: &TableFieldSchema,
         value: &Option<serde_json::Value>,
     ) -> DataTableItem {
-        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        //     "value: {:?}",
-        //     value
-        // )));
-
         match field_schema.r#type.as_str() {
             "TIMESTAMP" => DataTableItem::from_value(&timestamp_to_value(value)),
             _ => DataTableItem::from_value(value),
@@ -282,6 +277,15 @@ fn place_bq_table_rows(
                             .map(|i| i.pointer("/v").unwrap().clone())
                             .collect::<Vec<serde_json::Value>>();
 
+                        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                        //         "field_schema: {:?}, is_array {}, is_complex_object: {}, value: {:?}, inner_data_rows: {:?}",
+                        //         field_schema,
+                        //         field_schema.is_array(),
+                        //         field_schema.is_complex_object(),
+                        //         value,
+                        //         inner_data_rows
+                        //     )));
+
                         let positions = place_bq_table_rows(
                             rows,
                             inner_schema_fields,
@@ -320,16 +324,60 @@ fn place_bq_table_rows(
 
                         array_col_increment += positions.1;
                     } else {
-                        if value.as_ref().is_some()
-                            && value.as_ref().unwrap().is_array()
-                            && value.as_ref().unwrap().as_array().unwrap().len() == 0
-                        {
+                        if field_schema.is_array() && !field_schema.is_complex_object() {
+                            if value.is_some() {
+                                let inner_data_rows =
+                                    &Some(value.unwrap().as_array().unwrap().to_owned());
+
+                                if let Some(inner_data_rows) = inner_data_rows {
+                                    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                                    //     "field_schema: {:?}, is_array {}, is_complex_object: {}, inner_data_rows: {:?}",
+                                    //     field_schema,
+                                    //     field_schema.is_array(),
+                                    //     field_schema.is_complex_object(),
+                                    //     inner_data_rows
+                                    // )));
+
+                                    let mut row_index = 0;
+                                    for row in inner_data_rows {
+                                        let value = row.pointer("/v").unwrap().clone();
+
+                                        rows[array_row_index + array_row_increment + row_index]
+                                            [array_col_index + array_col_increment] =
+                                            Some(DataTableItem::new_main_index(row_index + 1));
+
+                                        rows[array_row_index + array_row_increment + row_index]
+                                            [array_col_index + array_col_increment + 1] =
+                                            Some(DataTableItem::from_schema_value(
+                                                field_schema,
+                                                &Some(value),
+                                            ));
+
+                                        row_index += 1;
+                                    }
+
+                                    array_max_inner_row_increment =
+                                        match array_max_inner_row_increment > row_index {
+                                            true => array_max_inner_row_increment,
+                                            false => row_index,
+                                        };
+                                }
+                            }
+
+                            //move the col index further
                             array_col_increment += 2;
                         } else {
-                            rows[array_row_index + array_row_increment]
-                                [array_col_index + array_col_increment] =
-                                Some(DataTableItem::from_schema_value(field_schema, &value));
-                            array_col_increment += 1;
+                            if value.as_ref().is_some()
+                                && value.as_ref().unwrap().is_array()
+                                && value.as_ref().unwrap().as_array().unwrap().len() == 0
+                            {
+                                array_col_increment += 2;
+                            } else {
+                                rows[array_row_index + array_row_increment]
+                                    [array_col_index + array_col_increment] =
+                                    Some(DataTableItem::from_schema_value(field_schema, &value));
+                                array_col_increment += 1;
+                            }
                         }
                     }
                 }
@@ -479,10 +527,7 @@ impl Job {
 
 #[cfg(test)]
 mod tests {
-    use crate::custom_elements::{
-        base_element_trait::BaseElementTrait, bq_table_custom_element::BigqueryTableCustomElement,
-        data_table_element::DataTableItem,
-    };
+    use crate::custom_elements::data_table_element::DataTableItem;
     use wasm_bindgen_test::*;
 
     use super::timestamp_to_value;

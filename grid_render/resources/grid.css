@@ -55,6 +55,8 @@ div.t {
 /* table header */
 div.th {
     display: table-header-group;
+    position: sticky;
+    top: 30px;
 }
 
 /* table body */
@@ -87,6 +89,10 @@ div.tc {
 
 div.tc.v {
     border: 1px solid var(--vscode-settings-checkboxBorder);
+}
+
+div.tc.v div {
+    min-height: 2.5em;
 }
 
 div.tc.index {
