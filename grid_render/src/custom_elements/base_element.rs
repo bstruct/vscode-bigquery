@@ -52,6 +52,12 @@ impl BaseElement {
         self.clone()
     }
 
+    pub(crate) fn apply_class_name(&self, class_name: &str) -> BaseElement {
+        self.element().set_class_name(class_name);
+
+        self.clone()
+    }
+
     #[doc = "Set the class of the html element if empty. So that there's action when creating the element, not on re-render."]
     pub(crate) fn apply_default_class_name(&self, class_name: &str) -> BaseElement {
         if self.element().class_name().len() == 0 {
@@ -267,7 +273,7 @@ impl BaseElement {
                 return existing_element;
             }
         }
-        
+
         let new_element = BaseElement::create_element(tag_name, base_element_id);
         get_parent().append_child(&new_element.element()).unwrap();
         if let Some(element_fn) = element_fn {
@@ -320,7 +326,7 @@ impl BaseElement {
     pub(crate) fn remove_child(&self, child_base_element: &BaseElement) {
         self.node.remove_child(&child_base_element.node).unwrap();
     }
-    
+
     pub(crate) fn clear_content(&self) -> BaseElement {
         self.node.set_text_content(None);
 

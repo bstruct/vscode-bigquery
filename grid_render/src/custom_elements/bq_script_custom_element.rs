@@ -187,12 +187,14 @@ fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryScriptCustomEle
 
 fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElement) {
     //loading
-    let loading_class_name =
-        if script_element.num_child_jobs.is_some() && script_element.all_jobs_completed() {
-            "loaded"
-        } else {
-            ""
-        };
+
+    let is_loaded = (script_element.num_child_jobs.is_some()
+        && script_element.all_jobs_completed())
+        || (script_element.jobs.is_some()
+            && script_element.jobs.as_ref().unwrap().len() == 1
+            && script_element.jobs.as_ref().unwrap()[0].is_complete());
+
+    let loading_class_name = if is_loaded { "loaded" } else { "" };
     BaseElement::new_and_append(&element.element(), "DIV", "job_loading")
         .apply_fn(&resolve_loading, &Some(loading_class_name));
 
@@ -210,11 +212,6 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
     // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
     //     "num_child_jobs: {}",
     //     num_child_jobs
-    // )));
-
-    // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-    //     "&script_element.jobs: {:?}",
-    //     &script_element.jobs
     // )));
 
     for index in 0..num_child_jobs {
@@ -264,7 +261,19 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                     .apply_default_class_name("job_body_open")
                     .apply_fn(&inser_error_table, &child_job.to_error_table());
             } else {
-                let _ = &job_body.apply_default_class_name("job_body_closed");
+                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                    "index: {}, num_child_jobs: {}, is_complete: {}",
+                    index,
+                    num_child_jobs,
+                    child_job.is_complete()
+                )));
+
+                //if it's the last job on the list, open the grid
+                if index == (num_child_jobs - 1) && child_job.is_complete() {
+                    let _ = &job_body.apply_class_name("job_body_open");
+                } else {
+                    let _ = &job_body.apply_class_name("job_body_closed");
+                }
 
                 let job_reference = chid_job.as_ref().unwrap().job_reference.as_ref().unwrap();
                 let token = script_element.token.clone();
@@ -405,10 +414,6 @@ fn on_render(event: &web_sys::Event) {
         spawn_local(async move {
             let get_request = bq_script_element.as_job_request();
             let get_job_response = jobs.get(get_request).await;
-            // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            //     "get_job_response: {:?}",
-            //     get_job_response
-            // )));
 
             if let Some(job) = get_job_response {
                 //mark as done.
@@ -419,7 +424,6 @@ fn on_render(event: &web_sys::Event) {
                 //TODO: confirm what is the information when one of the jobs is in error
                 if job.is_dml_statement() || job.is_query_select() || job.is_unsupported_type() {
                     // element.set_attribute("loaded", "1").unwrap();
-
                     if job.is_complete() {
                         element.set_attribute("loaded", "1").unwrap();
                     }
