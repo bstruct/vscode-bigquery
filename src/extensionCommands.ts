@@ -4,7 +4,7 @@ import { bigQueryTreeDataProvider, QUERY_RESULTS_VIEW_TYPE, TABLE_RESULTS_VIEW_T
 // import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem, BigqueryTreeItemType } from './activitybar/bigqueryTreeItem';
-import { SchemaRender } from './tableResultsPanel/schemaRender';
+// import { SchemaRender } from './tableResultsPanel/schemaRender';
 import { QueryGeneratorService } from './services/queryGeneratorService';
 import { ResultsGridRender } from './tableResultsPanel/resultsGridRender';
 import { v4 as uuidv4 } from 'uuid';
@@ -38,7 +38,7 @@ export const COMMAND_SERVICE_ACCOUNT_LOGIN = "vscode-bigquery.service-account-lo
 export const COMMAND_AUTHENTICATION_REFRESH = "vscode-bigquery.authentication-refresh";
 export const COMMAND_EXPLORER_REFRESH = "vscode-bigquery.explorer-refresh";
 export const COMMAND_VIEW_TABLE = "vscode-bigquery.view-table";
-export const COMMAND_VIEW_TABLE_SCHEMA = "vscode-bigquery.view-table-schema";
+// export const COMMAND_VIEW_TABLE_SCHEMA = "vscode-bigquery.view-table-schema";
 export const COMMAND_CREATE_TABLE_DEFAULT_QUERY = "vscode-bigquery.create-table-default-query";
 export const COMMAND_OPEN_DDL = "vscode-bigquery.open-ddl";
 export const COMMAND_SET_DEFAULT_PROJECT = "vscode-bigquery.set-default-project";
@@ -446,28 +446,28 @@ async function openQueryEditor(item: BigqueryTreeItem) {
 	doc.positionAt(7);
 }
 
-export const commandViewTableSchema = async function (...args: any[]) {
+// export const commandViewTableSchema = async function (...args: any[]) {
 
-	const t1 = Date.now();
+// 	const t1 = Date.now();
 
-	const item = args[0] as BigqueryTreeItem;
+// 	const item = args[0] as BigqueryTreeItem;
 
-	const title = `Schema: ${item.projectId}.${item.datasetId}.${item.tableId}`;
+// 	const title = `Schema: ${item.projectId}.${item.datasetId}.${item.tableId}`;
 
-	if (item.projectId === null || item.datasetId === null || item.tableId === null) {
-		return;
-	}
-	const bqClient = await getBigQueryClient();
+// 	if (item.projectId === null || item.datasetId === null || item.tableId === null) {
+// 		return;
+// 	}
+// 	const bqClient = await getBigQueryClient();
 
-	const metadataPromise = bqClient.getMetadata(item.projectId, item.datasetId, item.tableId);
-	const panel = vscode.window.createWebviewPanel("vscode-bigquery-table-schema", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
-	const schemaRender = new SchemaRender(panel.webview);
+// 	const metadataPromise = bqClient.getMetadata(item.projectId, item.datasetId, item.tableId);
+// 	const panel = vscode.window.createWebviewPanel("vscode-bigquery-table-schema", title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
+// 	const schemaRender = new SchemaRender(panel.webview);
 
-	schemaRender.render(metadataPromise);
+// 	schemaRender.render(metadataPromise);
 
-	// getTelemetryReporter()?.sendTelemetryEvent('commandViewTableSchema', {}, { elapsedMs: Date.now() - t1 });
+// 	// getTelemetryReporter()?.sendTelemetryEvent('commandViewTableSchema', {}, { elapsedMs: Date.now() - t1 });
 
-};
+// };
 
 export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 

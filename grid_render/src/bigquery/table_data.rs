@@ -36,7 +36,7 @@ pub struct TableDataListResponse{
     pub total_rows: String,
     #[serde(alias = "pageToken")]
     pub page_token: Option<String>,
-    pub rows: Vec<serde_json::Value>,
+    pub rows: Option<Vec<serde_json::Value>>,
 }
 
 impl TableData {

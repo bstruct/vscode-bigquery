@@ -140,12 +140,12 @@ export function activate(context: ExtensionContext) {
 		)
 	);
 
-	context.subscriptions.push(
-		vscode.commands.registerCommand(
-			commands.COMMAND_VIEW_TABLE_SCHEMA,
-			commands.commandViewTableSchema
-		)
-	);
+	// context.subscriptions.push(
+	// 	vscode.commands.registerCommand(
+	// 		commands.COMMAND_VIEW_TABLE_SCHEMA,
+	// 		commands.commandViewTableSchema
+	// 	)
+	// );
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(

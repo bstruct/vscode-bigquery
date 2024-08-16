@@ -122,24 +122,27 @@ impl Table {
         let schema = self.schema.as_ref().unwrap();
 
         let origin_rows = &response_rows.as_ref().expect("rows not found").rows;
+        if let Some(origin_rows) = origin_rows {
+            let rows_in_page = origin_rows.len();
 
-        let rows_in_page = origin_rows.len();
+            let number_rows = calculate_number_rows(&Some(origin_rows.to_owned()));
+            let mut rows: Vec<Vec<Option<DataTableItem>>> =
+                vec![vec![None; number_columns]; number_rows];
 
-        let number_rows = calculate_number_rows(&Some(origin_rows.to_owned()));
-        let mut rows: Vec<Vec<Option<DataTableItem>>> =
-            vec![vec![None; number_columns]; number_rows];
+            place_bq_table_rows(
+                &mut rows,
+                &schema.fields,
+                &Some(origin_rows.to_owned()),
+                0,
+                0,
+                true,
+                page_start_index,
+            );
 
-        place_bq_table_rows(
-            &mut rows,
-            &schema.fields,
-            &Some(origin_rows.to_owned()),
-            0,
-            0,
-            true,
-            page_start_index,
-        );
-
-        (rows_in_page, rows.to_owned())
+            (rows_in_page, rows.to_owned())
+        } else {
+            (0, vec![])
+        }
     }
 
     fn get_header(&self) -> Vec<String> {
