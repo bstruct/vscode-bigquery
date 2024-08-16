@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { BigqueryTreeItem, TreeItemType } from './treeItem';
+import { BigqueryTreeItem, BigqueryTreeItemType } from './bigqueryTreeItem';
 import { BigQuery, Dataset, Model, Routine, Table } from '@google-cloud/bigquery';
 import { Authentication } from '../services/authentication';
 import { getBigQueryClient, SETTING_PINNED_PROJECTS, SETTING_PROJECTS, SETTING_TABLES } from '../extensionCommands';
@@ -38,7 +38,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
             const datasetId = element.datasetId ?? 'xxx';
 
             switch (treeItemType) {
-                case TreeItemType.project:
+                case BigqueryTreeItemType.project:
 
                     // const savedQueries = await this.getSavedQueries(projectId)
                     //     .catch(err => console.error(err));
@@ -48,8 +48,8 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                             .then(datasets => resolve(datasets))
                             .catch(e => reject(e));
 
-                case TreeItemType.dataset:
-                case TreeItemType.datasetLink:
+                case BigqueryTreeItemType.dataset:
+                case BigqueryTreeItemType.datasetLink:
 
                     if (element.datasetId === null) { resolve([]); return; }
 
@@ -57,7 +57,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
 
                     const tablesPromise = this.getTables(projectId, datasetId);
 
-                    if (treeItemType === TreeItemType.dataset) {
+                    if (treeItemType === BigqueryTreeItemType.dataset) {
                         const routinesPromise = this.getRoutines(projectId, datasetId);
                         const modelsPromise = this.getModels(projectId, datasetId);
 
@@ -70,7 +70,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                         if (routines.length > 0) {
                             this.routineTreeItems = this.deduplicate(projectId, datasetId, this.routineTreeItems, routines);
 
-                            const routinesTreeItem = new BigqueryTreeItem(TreeItemType.routine, projectId, datasetId, null, `Routines (${routines.length})`, '', false, vscode.TreeItemCollapsibleState.Collapsed);
+                            const routinesTreeItem = new BigqueryTreeItem(BigqueryTreeItemType.routine, projectId, datasetId, null, `Routines (${routines.length})`, '', false, vscode.TreeItemCollapsibleState.Collapsed);
                             treeItems.push(routinesTreeItem);
                         }
 
@@ -78,7 +78,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                         if (models.length > 0) {
                             this.modelTreeItems = this.deduplicate(projectId, datasetId, this.modelTreeItems, models);
 
-                            const modelTreeItem = new BigqueryTreeItem(TreeItemType.model, projectId, datasetId, null, `Models (${models.length})`, '', false, vscode.TreeItemCollapsibleState.Collapsed);
+                            const modelTreeItem = new BigqueryTreeItem(BigqueryTreeItemType.model, projectId, datasetId, null, `Models (${models.length})`, '', false, vscode.TreeItemCollapsibleState.Collapsed);
                             treeItems.push(modelTreeItem);
                         }
                     }
@@ -91,7 +91,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                         .catch(e => reject(e));
 
 
-                case TreeItemType.routine:
+                case BigqueryTreeItemType.routine:
 
                     const qRoutines = this.routineTreeItems
                         .filter(c => c.projectId === projectId && c.datasetId === datasetId)
@@ -100,7 +100,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                     resolve(qRoutines);
 
                     break;
-                case TreeItemType.model:
+                case BigqueryTreeItemType.model:
 
                     const qModel = this.modelTreeItems
                         .filter(c => c.projectId === projectId && c.datasetId === datasetId)
@@ -120,7 +120,8 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
     private async getProjects(): Promise<BigqueryTreeItem[]> {
 
         const defaultProjectIdPromise = Authentication.getDefaultProjectId();
-        const bqProjects = await getBigQueryClient().getProjects();
+        const bqClient = await getBigQueryClient();
+        const bqProjects = await bqClient.getProjects();
 
         let listProjects = this.getProjectsFromSettings();
         for (const project of bqProjects.projects || []) {
@@ -159,7 +160,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
         return listProjectSorted
             .map(projectId => {
                 return new BigqueryTreeItem(
-                    TreeItemType.project,
+                    BigqueryTreeItemType.project,
                     projectId,
                     null,
                     null,
@@ -214,9 +215,9 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
             return c.getMetadata()
                 .then(metadata => {
 
-                    let treeItemType = TreeItemType.dataset;
+                    let treeItemType = BigqueryTreeItemType.dataset;
                     if (metadata[0].type === 'LINKED') {
-                        treeItemType = TreeItemType.datasetLink;
+                        treeItemType = BigqueryTreeItemType.datasetLink;
                     }
 
                     const datasetId = c.id ?? 'xxx';
@@ -263,12 +264,12 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
             .map(c => {
                 const tableId = c.id ?? 'xxx';
 
-                let treeItemType = TreeItemType.table;
+                let treeItemType = BigqueryTreeItemType.table;
                 if (c.metadata.timePartitioning) {
-                    treeItemType = TreeItemType.partitionedTable;
+                    treeItemType = BigqueryTreeItemType.partitionedTable;
                 } else {
                     if (c.metadata.type === 'VIEW') {
-                        treeItemType = TreeItemType.tableView;
+                        treeItemType = BigqueryTreeItemType.tableView;
                     }
                 }
                 return new BigqueryTreeItem(treeItemType, projectId, datasetId, tableId, tableId, '', false, vscode.TreeItemCollapsibleState.None);
@@ -321,7 +322,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
         return routines
             .map(c => {
                 const routineId = c.id ?? 'xxx';
-                return new BigqueryTreeItem(TreeItemType.routine, projectId, datasetId, routineId, routineId, '', false, vscode.TreeItemCollapsibleState.None);
+                return new BigqueryTreeItem(BigqueryTreeItemType.routine, projectId, datasetId, routineId, routineId, '', false, vscode.TreeItemCollapsibleState.None);
             });
 
     }
@@ -338,7 +339,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
         return models
             .map(c => {
                 const modelId = c.id ?? 'xxx';
-                return new BigqueryTreeItem(TreeItemType.model, projectId, datasetId, modelId, modelId, '', false, vscode.TreeItemCollapsibleState.None);
+                return new BigqueryTreeItem(BigqueryTreeItemType.model, projectId, datasetId, modelId, modelId, '', false, vscode.TreeItemCollapsibleState.None);
             });
     }
 

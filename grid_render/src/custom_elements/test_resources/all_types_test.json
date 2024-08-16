@@ -1,0 +1,454 @@
+{
+    "kind": "bigquery#getQueryResultsResponse",
+    "etag": "dOL6rROd7MSkdPxtyws5qw==",
+    "schema": {
+        "fields": [
+            {
+                "name": "t",
+                "type": "INTEGER",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "int64",
+                "type": "INTEGER",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "i1",
+                "type": "INTERVAL",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "test_null",
+                "type": "INTEGER",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "test_empty",
+                "type": "STRING",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "x",
+                "type": "NUMERIC",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "y",
+                "type": "NUMERIC",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "decimal",
+                "type": "NUMERIC",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "json",
+                "type": "JSON",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "bool",
+                "type": "BOOLEAN",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "geo_point",
+                "type": "GEOGRAPHY",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "geohash",
+                "type": "STRING",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "geoline",
+                "type": "GEOGRAPHY",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "polygon",
+                "type": "GEOGRAPHY",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "timestamp",
+                "type": "TIMESTAMP",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "time",
+                "type": "TIME",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "date",
+                "type": "DATE",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "date_time",
+                "type": "DATETIME",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "bytes",
+                "type": "BYTES",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            },
+            {
+                "name": "uuid",
+                "type": "STRING",
+                "mode": "NULLABLE",
+                "fields": null,
+                "description": null,
+                "max_length": null,
+                "precision": null,
+                "scale": null,
+                "collation": null,
+                "default_value_expression": null
+            }
+        ]
+    },
+    "job_reference": {
+        "project_id": "damiao-project-1",
+        "job_id": "e4dc898d-cc8a-4e28-a18a-b6879d778039",
+        "location": "US"
+    },
+    "total_rows": "3",
+    "page_token": null,
+    "rows": [
+        {
+            "f": [
+                {
+                    "v": "1"
+                },
+                {
+                    "v": "1"
+                },
+                {
+                    "v": "1-6 15 0:0:0"
+                },
+                {
+                    "v": null
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "12345"
+                },
+                {
+                    "v": "123.45"
+                },
+                {
+                    "v": "1"
+                },
+                {
+                    "v": "{\"coordinates\":[10,20],\"id\":1}"
+                },
+                {
+                    "v": "false"
+                },
+                {
+                    "v": "POINT(-50 90)"
+                },
+                {
+                    "v": "fzury"
+                },
+                {
+                    "v": "LINESTRING(1 2, 3 4)"
+                },
+                {
+                    "v": "POLYGON((-125 48, -124 46, -117 46, -117 49, -125 48))"
+                },
+                {
+                    "v": "1.703357814940265E9"
+                },
+                {
+                    "v": "18:56:54.940265"
+                },
+                {
+                    "v": "2023-12-23"
+                },
+                {
+                    "v": "2023-12-23T18:56:54.940265"
+                },
+                {
+                    "v": "Ck1VqNd45QIvq3AZd8XYQLvEhtA="
+                },
+                {
+                    "v": "77728efd-685a-4edb-8c36-28bfdd3b9cab"
+                }
+            ]
+        },
+        {
+            "f": [
+                {
+                    "v": "2"
+                },
+                {
+                    "v": "1"
+                },
+                {
+                    "v": "1-6 15 0:0:0"
+                },
+                {
+                    "v": null
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "12345"
+                },
+                {
+                    "v": "123.45"
+                },
+                {
+                    "v": "1"
+                },
+                {
+                    "v": "{\"coordinates\":[10,20],\"id\":1}"
+                },
+                {
+                    "v": "false"
+                },
+                {
+                    "v": "POINT(-50 90)"
+                },
+                {
+                    "v": "fzury"
+                },
+                {
+                    "v": "LINESTRING(1 2, 3 4)"
+                },
+                {
+                    "v": "POLYGON((-125 48, -124 46, -117 46, -117 49, -125 48))"
+                },
+                {
+                    "v": "1.703357814940265E9"
+                },
+                {
+                    "v": "18:56:54.940265"
+                },
+                {
+                    "v": "2023-12-23"
+                },
+                {
+                    "v": "2023-12-23T18:56:54.940265"
+                },
+                {
+                    "v": "Ck1VqNd45QIvq3AZd8XYQLvEhtA="
+                },
+                {
+                    "v": "9aff29d8-c458-4737-bc1e-50a0cbe7574e"
+                }
+            ]
+        },
+        {
+            "f": [
+                {
+                    "v": "3"
+                },
+                {
+                    "v": "1"
+                },
+                {
+                    "v": "1-6 15 0:0:0"
+                },
+                {
+                    "v": null
+                },
+                {
+                    "v": ""
+                },
+                {
+                    "v": "12345"
+                },
+                {
+                    "v": "123.45"
+                },
+                {
+                    "v": "1"
+                },
+                {
+                    "v": "{\"coordinates\":[10,20],\"id\":1}"
+                },
+                {
+                    "v": "false"
+                },
+                {
+                    "v": "POINT(-50 90)"
+                },
+                {
+                    "v": "fzury"
+                },
+                {
+                    "v": "LINESTRING(1 2, 3 4)"
+                },
+                {
+                    "v": "POLYGON((-125 48, -124 46, -117 46, -117 49, -125 48))"
+                },
+                {
+                    "v": "1.703357814940265E9"
+                },
+                {
+                    "v": "18:56:54.940265"
+                },
+                {
+                    "v": "2023-12-23"
+                },
+                {
+                    "v": "2023-12-23T18:56:54.940265"
+                },
+                {
+                    "v": "Ck1VqNd45QIvq3AZd8XYQLvEhtA="
+                },
+                {
+                    "v": "f68ec0c8-27b9-4f51-9c5f-326ee319d27b"
+                }
+            ]
+        }
+    ],
+    "total_bytes_processed": "0",
+    "job_complete": true,
+    "errors": null,
+    "cache_hit": null,
+    "num_dml_affected_rows": null
+}

@@ -1,0 +1,176 @@
+div[be_id='controls-background'] {
+    position: sticky;
+    top: 0;
+    left: 0;
+    background-color: var(--vscode-activityBar-border);
+    width: 100%;
+    height: 30px;
+    box-shadow: inset 0 0 0 2000px rgba(0, 0, 0, 255);
+}
+
+div[be_id='controls'] {
+    top: 0;
+    left: 0;
+    position: sticky;
+    background: var(--vscode-activityBar-border);
+    display: inline-block;
+    text-wrap: nowrap;
+}
+
+div[be_id='controls'] span {
+    padding: 5px 10px;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+div[be_id='controls'] button {
+    margin-right: 5px;
+
+    background-color: var(--vscode-button-secondaryBackground);
+    border: 1px solid var(--vscode-button-separator);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+div[be_id='controls'] button:disabled {
+
+    background-color: var(--vscode-disabledForeground);
+    /* border: 1px solid var(--vscode-button-separator); */
+    color: var(--vscode-button-secondaryHoverBackground);
+}
+
+div[be_id='controls'] span.button {
+    cursor: pointer;
+    min-width: 80px;
+    text-align: center;
+    user-select: none;
+}
+
+/* table */
+div.t {
+    display: table;
+    table-layout: auto;
+    border-collapse: collapse;
+}
+
+/* table header */
+div.th {
+    display: table-header-group;
+    position: sticky;
+    top: 30px;
+}
+
+/* table body */
+div.tb {
+    display: table-row-group;
+}
+
+/* table footer */
+/* div.table_footer {
+    display: table-footer-group;
+} */
+
+/* table row */
+div.tr {
+    display: table-row;
+}
+
+div.th div.tr {
+    background-color: var(--vscode-banner-background);
+}
+
+/* table cell */
+div.tc {
+    display: table-cell;
+
+    /* max-width: 550px; */
+    /* min-width: 100px; */
+    padding: 5px 15px;
+}
+
+div.tc.v {
+    border: 1px solid var(--vscode-settings-checkboxBorder);
+}
+
+div.tc.v div {
+    min-height: 2.5em;
+}
+
+div.tc.index {
+    background-color: var(--vscode-banner-background);
+    border: 1px solid var(--vscode-settings-checkboxBorder);
+}
+
+div.tc.v div {
+    height: 1.2em;
+    overflow-wrap: break-word;
+    overflow: scroll;
+    resize: both;
+    text-wrap: pretty;
+}
+
+div.tc.nullValue {
+    border: 1px solid var(--vscode-settings-checkboxBorder);
+    font-style: italic;
+    color: var(--vscode-inputValidation-warningBorder) !important;
+}
+
+
+/* 
+table {
+    white-space: nowrap;
+    display: table;
+    outline: none;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+table thead {
+    top: 30px;
+    position: sticky;
+    background-color: var(--vscode-banner-background);
+}
+
+th,
+td {
+    padding: 5px 15px;
+    overflow: hidden;
+    vertical-align: top;
+    text-overflow: ellipsis;
+}
+
+tbody.tr,
+td.v {
+    border: 1px solid gray;
+}
+
+td.index {
+    background-color: var(--vscode-banner-background);
+    border: 1px solid gray;
+} */
+
+
+
+/* 
+table thead th,
+table tbody td {
+    max-width: 600px;
+}
+
+table tbody td div {
+    display: inline-block;
+}
+
+table tbody td div.resize {
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+    overflow: scroll;
+    resize: both;
+    height: 1.2em;
+    padding-right: 8px;
+    max-width: 550px;
+}
+
+table tbody td div.nullValue {
+    font-style: italic;
+    color: var(--vscode-inputValidation-warningBorder) !important;
+} */

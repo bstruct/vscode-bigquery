@@ -4,11 +4,13 @@ import * as vscode from 'vscode';
 import { BigqueryJobErrorItem } from "../services/bigqueryJobError";
 import { parse } from "@bstruct/bqsql-parser";
 import { BqsqlDocument, BqsqlDocumentItem } from "./bqsqlDocument";
-import { statusBarInfo } from "../extension";
+import { getStatusBarInfo } from "../extension";
 
 export class BqsqlDiagnostics {
 
     private static refreshDiagnostics(document: vscode.TextDocument, bqsqlDiagnostics: vscode.DiagnosticCollection): void {
+
+        const statusBarInfo = getStatusBarInfo();
 
         if (statusBarInfo) {
             statusBarInfo.text = '';
@@ -56,31 +58,36 @@ export class BqsqlDiagnostics {
         }
 
         //trigger query validation
-        let _ = getBigQueryClient().validateQuery(document.getText())
-            .then(response => {
-                const diagnostics: vscode.Diagnostic[] = [];
+        let _ = getBigQueryClient()
+            .then(bqClient => {
 
-                const totalBytesProcessed = response[0];
-                const error = response[1];
+                bqClient.validateQuery(document.getText())
+                    .then(response => {
+                        const diagnostics: vscode.Diagnostic[] = [];
 
-                if (totalBytesProcessed) {
-                    const mb = (totalBytesProcessed / 1024 / 1024).toFixed(2);
-                    if (statusBarInfo) {
-                        statusBarInfo.text = `This query will process ${mb} MB when run.`;
-                        statusBarInfo.show();
-                    }
-                }
+                        const totalBytesProcessed = response[0];
+                        const error = response[1];
 
-                if (error && error.errors && error.errors.length > 0) {
+                        if (totalBytesProcessed) {
+                            const mb = (totalBytesProcessed / 1024 / 1024).toFixed(2);
+                            if (statusBarInfo) {
+                                statusBarInfo.text = `This query will process ${mb} MB when run.`;
+                                statusBarInfo.show();
+                            }
+                        }
 
-                    for (let index = 0; index < error.errors.length; index++) {
-                        const element = error.errors[index];
-                        const diagnostic = createDiagnostic(element);
-                        if (diagnostic) { diagnostics.push(diagnostic); }
-                    }
-                }
+                        if (error && error.errors && error.errors.length > 0) {
 
-                bqsqlDiagnostics.set(document.uri, diagnostics);
+                            for (let index = 0; index < error.errors.length; index++) {
+                                const element = error.errors[index];
+                                const diagnostic = createDiagnostic(element);
+                                if (diagnostic) { diagnostics.push(diagnostic); }
+                            }
+                        }
+
+                        bqsqlDiagnostics.set(document.uri, diagnostics);
+                    });
+
             });
 
     }

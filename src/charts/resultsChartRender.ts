@@ -1,6 +1,6 @@
 import { QueryResultsOptions } from '@google-cloud/bigquery/build/src/job';
 import * as vscode from 'vscode';
-import { extensionUri } from '../extension';
+import { getExtensionUri } from '../extension';
 import { getBigQueryClient } from '../extensionCommands';
 import { SimpleQueryRowsResponseError } from '../services/simpleQueryRowsResponseError';
 import { ResultsChartRenderRequest } from './ResultsChartRenderRequest';
@@ -38,6 +38,8 @@ export class ResultsChartRender {
     }
 
     private getWaitingHtml(jobIndex: number | undefined): string {
+
+        const extensionUri = getExtensionUri();
 
         const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
             "resources",
@@ -85,7 +87,8 @@ export class ResultsChartRender {
 
         if (request.jobReferences && request.jobReferences.length > 0) {
             const jobsReference = request.jobReferences[request.jobIndex];
-            const job = getBigQueryClient().getJob(jobsReference);
+            const bqClient = await getBigQueryClient();
+            const job = bqClient.getJob(jobsReference);
             const queryResultOptions: QueryResultsOptions = {startIndex: '0', maxResults: 1_000_000};
             const queryRowsResponse = (await job.getQueryResults(queryResultOptions));
             data = JSON.stringify(queryRowsResponse[0]);
@@ -107,7 +110,7 @@ export class ResultsChartRender {
         }
         // }
 
-        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
+        const toolkitUri = this.getUri(this.webViewPanel.webview, getExtensionUri(), [
             "resources",
             "toolkit.min.js",
         ]);
@@ -445,7 +448,7 @@ export class ResultsChartRender {
 
     private getExceptionHtml(exception: any): string {
 
-        const toolkitUri = this.getUri(this.webViewPanel.webview, extensionUri, [
+        const toolkitUri = this.getUri(this.webViewPanel.webview, getExtensionUri(), [
             "resources",
             "toolkit.min.js",
         ]);

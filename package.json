@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.2.0",
+	"version": "0.2.5",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -93,84 +93,93 @@
 		"commands": [
 			{
 				"command": "vscode-bigquery.run-query",
-				"title": "Biguery: Run Query",
+				"title": "BigueryView: Run Query",
 				"icon": "$(debug-start)"
 			},
 			{
 				"command": "vscode-bigquery.run-selected-query",
-				"title": "Biguery: Run Selected Query",
+				"title": "BigueryView: Run Selected Query",
 				"icon": "$(debug-line-by-line)"
 			},
 			{
 				"command": "vscode-bigquery.user-login",
-				"title": "Biguery: User login"
+				"title": "BigueryView: User login"
 			},
 			{
 				"command": "vscode-bigquery.service-account-login",
-				"title": "Biguery: Service account login"
+				"title": "BigueryView: Service account login"
+			},
+			{
+				"command": "vscode-bigquery.user-login-no-launch-browser",
+				"title": "BigueryView: User login via console"
 			},
 			{
 				"command": "vscode-bigquery.authentication-refresh",
-				"title": "Bigquery: Authentication refresh",
+				"title": "BigueryView: Authentication refresh",
 				"icon": "$(refresh)"
 			},
 			{
+				"command": "vscode-bigquery.gcp-user-activate",
+				"title": "BigueryView: Activate User",
+				"icon": "$(check)"
+			},
+			{
+				"command": "vscode-bigquery.gcp-user-remove",
+				"title": "BigueryView: Remove User",
+				"icon": "$(close)"
+			},
+			{
 				"command": "vscode-bigquery.explorer-refresh",
-				"title": "Bigquery: Explorer refresh",
+				"title": "BigueryView: Explorer refresh",
 				"icon": "$(refresh)"
 			},
 			{
 				"command": "vscode-bigquery.view-table",
-				"title": "Bigquery: Preview",
-				"icon": "$(link-external)"
-			},
-			{
-				"command": "vscode-bigquery.view-table-schema",
-				"title": "Bigquery: View schema",
+				"title": "BigueryView: Preview",
 				"icon": "$(link-external)"
 			},
 			{
 				"command": "vscode-bigquery.create-table-default-query",
-				"title": "Bigquery: Create query",
+				"title": "BigueryView: Create query",
 				"icon": "$(file-text)"
 			},
 			{
 				"command": "vscode-bigquery.open-ddl",
-				"title": "Bigquery: Open DDL",
+				"title": "BigueryView: Open DDL",
 				"icon": "$(link-external)"
 			},
 			{
 				"command": "vscode-bigquery.set-default-project",
-				"title": "Set as default project",
+				"title": "BigueryView: Set as default project",
 				"icon": "$(issue-closed)"
 			},
 			{
 				"command": "vscode-bigquery.project-pin",
-				"title": "Pin or unpin project",
+				"title": "BigueryView: Pin or unpin project",
 				"icon": "$(pin)"
 			},
 			{
 				"command": "vscode-bigquery.download-csv",
-				"title": "Download CSV",
+				"title": "BigueryView: Download CSV",
 				"icon": "$(cloud-download)"
 			},
 			{
 				"command": "vscode-bigquery.send-pubsub",
-				"title": "Send to Pub/Sub",
+				"title": "BigueryView: Send to Pub/Sub",
 				"icon": "$(outline-view-icon)"
 			},
 			{
 				"command": "vscode-bigquery.download-jsonl",
-				"title": "Download JSONL",
+				"title": "BigueryView: Download JSONL",
 				"icon": "$(json)"
 			},
 			{
 				"command": "vscode-bigquery.troubleshoot",
-				"title": "troubleshoot"
+				"title": "BigueryView: troubleshoot"
 			},
 			{
 				"command": "vscode-bigquery.open-settings-projects",
-				"title": "open settings - projects"
+				"title": "BigueryView: open settings - projects"
 			}
 		],
 		"menus": {
@@ -184,21 +193,6 @@
 					"command": "vscode-bigquery.run-selected-query",
 					"group": "navigation@-2",
 					"when": "editorLangId == bqsql"
-				},
-				{
-					"command": "vscode-bigquery.download-csv",
-					"group": "navigation@-3",
-					"when": "activeWebviewPanelId == 'bigquery-query-results' || activeWebviewPanelId == 'bigquery-table-results'"
-				},
-				{
-					"command": "vscode-bigquery.download-jsonl",
-					"group": "navigation@-2",
-					"when": "activeWebviewPanelId == 'bigquery-query-results' || activeWebviewPanelId == 'bigquery-table-results'"
-				},
-				{
-					"command": "vscode-bigquery.send-pubsub",
-					"group": "navigation@-1",
-					"when": "activeWebviewPanelId == 'bigquery-query-results' || activeWebviewPanelId == 'bigquery-table-results'"
 				}
 			],
 			"view/title": [
@@ -219,16 +213,22 @@
 					"when": "viewItem == 'bq-table'"
 				},
 				{
-					"command": "vscode-bigquery.view-table-schema",
-					"when": "viewItem == 'bq-table'"
-				},
-				{
 					"command": "vscode-bigquery.create-table-default-query",
 					"when": "viewItem == 'bq-table'"
 				},
 				{
 					"command": "vscode-bigquery.open-ddl",
 					"when": "viewItem == 'bq-table' || viewItem == 'bq-routine'"
+				},
+				{
+					"command": "vscode-bigquery.gcp-user-activate",
+					"when": "viewItem == 'gcp-user'",
+					"group": "inline"
+				},
+				{
+					"command": "vscode-bigquery.gcp-user-remove",
+					"when": "viewItem == 'gcp-user'",
+					"group": "inline"
 				},
 				{
 					"command": "vscode-bigquery.set-default-project",
@@ -248,7 +248,7 @@
 					"id": "bigquery-authentication",
 					"name": "Authentication",
 					"contextualTitle": "BigQuery",
-					"type": "webview"
+					"type": "tree"
 				},
 				{
 					"id": "bigquery-tree-data-provider",
@@ -292,18 +292,20 @@
 		"watch": "webpack --watch",
 		"package": "webpack --mode production --devtool hidden-source-map",
 		"compile-tests": "tsc -p . --outDir out",
+		"compile-grid_render": "cd grid_render && wasm-pack build --release --target web",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
 		"lint": "eslint src --ext ts",
 		"test": "node ./out/test/runTest.js",
-		"deploy": "vsce publish"
+		"deploy": "vsce publish",
+		"package-dev": "vsce package --pre-release"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.2.0",
 		"@types/mocha": "^9.1.1",
 		"@types/node": "16.x",
 		"@types/uuid": "^9.0.0",
-		"@types/vscode": "^1.5.0",
+		"@types/vscode": "^1.63.0",
 		"@typescript-eslint/eslint-plugin": "^5.30.0",
 		"@typescript-eslint/parser": "^5.30.0",
 		"@vscode/test-electron": "^2.1.5",
@@ -313,19 +315,17 @@
 		"mocha": "^10.0.0",
 		"ts-loader": "^9.3.1",
 		"typescript": "^4.7.4",
-		"webpack": "^5.73.0",
-		"webpack-cli": "^4.10.0"
+		"webpack": "^5.88.2",
+		"webpack-cli": "^5.1.4"
 	},
 	"dependencies": {
-		"@bstruct/bqsql-parser": "0.1.5",
-		"@google-cloud/bigquery": "^6.2.0",
-		"@types/gapi.client.bigquery-v2": "^0.0.1",
+		"@bstruct/bqsql-parser": "file://.//bqsql_parser/pkg",
+		"@google-cloud/bigquery": "^7.9.0",
+		"@google-cloud/pubsub": "^4.5.0",
+		"@types/gapi.client.bigquery-v2": "^0.0.2",
 		"@vscode/codicons": "^0.0.32",
-		"@vscode/extension-telemetry": "^0.6.2",
 		"@vscode/webview-ui-toolkit": "^1.2.2",
 		"csv-writer": "^1.6.0",
-		"preact": "^10.10.6",
-		"preact-render-to-string": "^5.2.2",
-		"@google-cloud/pubsub":"^3.7.1"
+		"grid_render": "file://.//grid_render/pkg"
 	}
 }

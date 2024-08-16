@@ -1,5 +1,5 @@
 import { TableMetadata } from "@google-cloud/bigquery";
-import { BigqueryTreeItem } from "../activitybar/treeItem";
+import { BigqueryTreeItem } from "../activitybar/bigqueryTreeItem";
 
 
 export class QueryGeneratorService {

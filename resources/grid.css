@@ -1,4 +1,9 @@
-.disableFocus {
+/* 
+bq-query, bq-script {
+    display: inline-block;
+} */
+
+/* .disableFocus {
     background: inherit;
     border: inherit;
     color: inherit;
@@ -40,4 +45,27 @@ div.labelValue span.value {
 
 /* vscode-data-grid-cell {
     border-bottom: var(--list-hover-background) 1px solid;
+} 
+
+div#controls-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: var(--vscode-banner-background);
+    width: 100%;
+    height: 30px;
+}
+
+table-with-controls table {
+    white-space: nowrap;
+    display: table;
+    outline: none;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+table-with-controls th,
+table-with-controls td {
+    padding: 5px 15px;
+    border-bottom: 1px solid gray;
 } */

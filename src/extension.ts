@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authenticationWebviewViewProvider';
+import { Uri, StatusBarItem, ExtensionContext } from 'vscode';
+// import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authenticationWebviewViewProvider';
 import { BigQueryTreeDataProvider } from './activitybar/treeDataProvider';
-import { BigqueryIcons } from './bigqueryIcons';
 import * as commands from './extensionCommands';
 import { WebviewViewProvider } from './tableResultsPanel/webviewViewProvider';
-import TelemetryReporter from '@vscode/extension-telemetry';
+// import TelemetryReporter from '@vscode/extension-telemetry';
 import { BqsqlCompletionItemProvider } from './language/bqsqlCompletionItemProvider';
 import { BqsqlDocumentSemanticTokensProvider } from './language/bqsqlDocumentSemanticTokensProvider';
 import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
@@ -17,35 +17,46 @@ import { ResultsRender } from './services/resultsRender';
 // import { ChartResultsSerializer } from './charts/chartResultsSerializer';
 import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
+import { GcpAuthenticationTreeDataProvider } from './activitybar/gcpAuthenticationTreeDataProvider';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
-export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
+// export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
+export const gcpAuthenticationTreeDataProvider = new GcpAuthenticationTreeDataProvider();
 export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
 export const bigqueryTableSchemaService = new BigqueryTableSchemaService();
-export let extensionUri: vscode.Uri;
-export let bigqueryIcons: BigqueryIcons;
-export let reporter: TelemetryReporter | null;
-export let statusBarInfo: vscode.StatusBarItem | null;
 
 export const CHART_VIEW_TYPE = "bigquery-query-chart";
 export const QUERY_RESULTS_VIEW_TYPE = "bigquery-query-results";
 export const TABLE_RESULTS_VIEW_TYPE = "bigquery-table-results";
 export const TROUBLESHOOT_VIEW_TYPE = "authentication-troubleshoot";
 
-export function activate(context: vscode.ExtensionContext) {
+let statusBarInfo: StatusBarItem | null;
+export function getStatusBarInfo(): StatusBarItem | null {
+	return statusBarInfo;
+}
+
+let extensionUri: Uri;
+export function getExtensionUri(): Uri {
+	return extensionUri;
+}
+
+// let reporter: TelemetryReporter | null;
+// export function getTelemetryReporter(): TelemetryReporter | null {
+// 	return reporter;
+// }
+
+export function activate(context: ExtensionContext) {
 
 	extensionUri = context.extensionUri;
 
-	bigqueryIcons = new BigqueryIcons();
-
 	let queryResultsWebviewMapping: Map<string, ResultsRender> = new Map<string, ResultsRender>();
 
-	try {
+	// try {
+	// 	//context.extension.id, context.extension.packageJSON.version, 
+	// 	reporter = new TelemetryReporter('10f4da7d-e729-4526-8d9b-92529b10cb32');
+	// 	context.subscriptions.push(reporter);
 
-		reporter = new TelemetryReporter(context.extension.id, context.extension.packageJSON.version, '10f4da7d-e729-4526-8d9b-92529b10cb32');
-		context.subscriptions.push(reporter);
-
-	} catch (e) { console.error(e); }
+	// } catch (e) { console.error(e); }
 
 	//statusBarInfo
 	statusBarInfo = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
@@ -89,8 +100,29 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_USER_LOGIN_NO_LAUNCH_BROWSER,
+			commands.commandUserLoginNoLaunchBrowser
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_SERVICE_ACCOUNT_LOGIN,
 			commands.commandServiceAccountLogin
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_USER_ACTIVATE,
+			commands.commandGcpUserActivate
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_USER_REMOVE,
+			commands.commandGcpUserRemove
 		)
 	);
 
@@ -108,12 +140,12 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	context.subscriptions.push(
-		vscode.commands.registerCommand(
-			commands.COMMAND_VIEW_TABLE_SCHEMA,
-			commands.commandViewTableSchema
-		)
-	);
+	// context.subscriptions.push(
+	// 	vscode.commands.registerCommand(
+	// 		commands.COMMAND_VIEW_TABLE_SCHEMA,
+	// 		commands.commandViewTableSchema
+	// 	)
+	// );
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
@@ -214,12 +246,25 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
+	// context.subscriptions.push(
+	// 	vscode.window.registerCustomEditorProvider(
+	// 		commands.OPEN_SETTING_TABLES,
+	// 		commands.commandOpenSettingTables
+	// 	)
+	// );
+
 	// bigquery-authentication
+	// context.subscriptions.push(
+	// 	vscode.window.registerWebviewViewProvider(
+	// 		"bigquery-authentication",
+	// 		authenticationWebviewProvider,
+	// 		{ webviewOptions: { retainContextWhenHidden: true } }
+	// 	)
+	// );
 	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider(
-			"bigquery-authentication",
-			authenticationWebviewProvider,
-			{ webviewOptions: { retainContextWhenHidden: true } }
+		vscode.window.registerTreeDataProvider(
+			'bigquery-authentication',
+			gcpAuthenticationTreeDataProvider
 		)
 	);
 
@@ -302,7 +347,7 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.workspace.onDidChangeConfiguration(event => {
 		if (event.affectsConfiguration('workbench.colorTheme')) {
 			vscode.commands.executeCommand(commands.COMMAND_EXPLORER_REFRESH);
-			reporter?.sendTelemetryEvent('onDidChangeActiveColorTheme', { activeColorThemeKind: vscode.ColorThemeKind[vscode.window.activeColorTheme.kind] });
+			// reporter?.sendTelemetryEvent('onDidChangeActiveColorTheme', { activeColorThemeKind: vscode.ColorThemeKind[vscode.window.activeColorTheme.kind] });
 		}
 	});
 
