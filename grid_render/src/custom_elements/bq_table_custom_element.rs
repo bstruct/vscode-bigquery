@@ -500,9 +500,7 @@ mod tests {
     use wasm_bindgen_test::*;
 
     use super::{set_attributes, BigqueryTableCustomElement};
-    use crate::{
-        bigquery::table_data::TableData, custom_elements::base_element_trait::BaseElementTrait,
-    };
+    use crate::custom_elements::base_element_trait::BaseElementTrait;
     wasm_bindgen_test_configure!(run_in_browser);
 
     #[wasm_bindgen_test]

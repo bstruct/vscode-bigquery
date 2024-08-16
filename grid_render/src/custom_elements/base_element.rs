@@ -323,15 +323,15 @@ impl BaseElement {
     //     }
     // }
 
-    pub(crate) fn remove_child(&self, child_base_element: &BaseElement) {
-        self.node.remove_child(&child_base_element.node).unwrap();
-    }
+    // pub(crate) fn remove_child(&self, child_base_element: &BaseElement) {
+    //     self.node.remove_child(&child_base_element.node).unwrap();
+    // }
 
-    pub(crate) fn clear_content(&self) -> BaseElement {
-        self.node.set_text_content(None);
+    // pub(crate) fn clear_content(&self) -> BaseElement {
+    //     self.node.set_text_content(None);
 
-        self.clone()
-    }
+    //     self.clone()
+    // }
 }
 
 #[cfg(test)]

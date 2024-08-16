@@ -1,9 +1,6 @@
 use crate::bigquery::{base::TableReference, jobs::JobReference};
 
-use super::{
-    base_element::BaseElement, base_element_trait::BaseElementTrait,
-    bq_query_custom_element::BigqueryQueryCustomElement,
-};
+use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
 use serde_json::json;
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::Element;

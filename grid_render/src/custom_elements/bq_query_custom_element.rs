@@ -1,5 +1,3 @@
-use std::fmt::LowerExp;
-
 use super::{
     base_element_trait::BaseElementTrait,
     bq_common_custom_element::{get_attribute, get_opt_attribute, set_attribute},
@@ -512,8 +510,7 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
             "render - BigqueryQueryCustomElement, page_start_index: {}, rows_total: {:?}",
-            self.page_start_index,
-            self.rows_total,
+            self.page_start_index, self.rows_total,
         )));
 
         // //reset the content
