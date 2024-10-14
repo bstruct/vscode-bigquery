@@ -1,0 +1,80 @@
+/* latin-ext */
+@font-face {
+    font-family: 'Courier Prime';
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/courierprime/v7/u-450q2lgwslOqpF_6gQ8kELaw9pWt_-.woff2) format('woff2');
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+    font-family: 'Courier Prime';
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/courierprime/v7/u-450q2lgwslOqpF_6gQ8kELawFpWg.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+    /* https://coolors.co/palette/0d1b2a-1b263b-415a77-778da9-e0e1dd */
+    --color1: #0D1B2A;
+    --color2: #1B263B;
+    --color3: #415A77;
+    --color4: #778DA9;
+    --color5: #E0E1DD;
+}
+
+body {
+    /* max-width: 50rem; */
+    min-height: unset;
+    padding: 0 1rem;
+    background: var(--color1);
+    margin: 1rem auto;
+    color: var(--color5);
+    /* https://fonts.google.com/specimen/Courier+Prime?category=Monospace */
+    font-family: 'Courier Prime', monospace;
+}
+/* 
+.page {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+ */
+ 
+.page>* {
+    padding: 1rem;
+}
+/* 
+.sidebar {
+    background-color: var(--color3);
+    outline: 1px solid var(--color2);
+    flex-grow: 1;
+    flex-basis: 5rem;
+}
+
+.content {
+    background-color: var(--color3);
+    flex-basis: 0;
+    flex-grow: 3;
+} */
+
+.one_content {
+    background-color: var(--color3);
+}
+
+.menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.menu > div {
+    background-color: var(--color4);
+    padding: 1em;
+    height: 80px;
+    width: 100px;
+    display: block;
+    cursor: pointer;
+}

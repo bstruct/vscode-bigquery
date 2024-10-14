@@ -5,7 +5,7 @@ use web_sys::{Element, Event, Node};
 use crate::{
     bigquery::jobs::{GetJobRequest, GetListRequest, Job, JobStatus},
     custom_elements::data_table_element::DataTable,
-    observe_element, parse_to_usize,
+    parse_to_usize,
 };
 
 use super::{
@@ -294,7 +294,7 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                 //observe
                 let bq_query_element = &job_body.first_child().unwrap().element();
                 if !bq_query_element.has_attribute("beo") {
-                    observe_element(&job_body.first_child().unwrap().element());
+                    // observe_element(&job_body.first_child().unwrap().element());
                     bq_query_element.set_attribute("beo", "1").unwrap();
                 }
             }
@@ -400,12 +400,13 @@ fn on_render(event: &web_sys::Event) {
         .dyn_into::<web_sys::Element>()
         .unwrap();
 
-    if !element.has_attribute("loaded") {
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "1) on_render event on element: {:?}",
-            element.id()
+            "==== on_render event on element: {:?}, loaded: {:?} ====",
+            element.id(),
+            element.has_attribute("loaded")
         )));
 
+    if !element.has_attribute("loaded") {
         let bq_script_element = BigqueryScriptCustomElement::from_element(&element);
 
         let jobs = crate::bigquery::jobs::Jobs::new(&bq_script_element.token);
@@ -426,6 +427,11 @@ fn on_render(event: &web_sys::Event) {
                     // element.set_attribute("loaded", "1").unwrap();
                     if job.is_complete() {
                         element.set_attribute("loaded", "1").unwrap();
+
+                        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                            "1) element: {:?}, loaded",
+                            element.id()
+                        )));
                     }
 
                     bq_script_element
@@ -442,6 +448,10 @@ fn on_render(event: &web_sys::Event) {
                             if let Some(statistics) = &job.statistics {
                                 if statistics.num_child_jobs.is_some() && all_jobs_done {
                                     element.set_attribute("loaded", "1").unwrap();
+
+                                    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(
+                                        &format!("2) element: {:?}, loaded", element.id()),
+                                    ));
                                 }
                             }
 
@@ -453,6 +463,11 @@ fn on_render(event: &web_sys::Event) {
                 }
             } else {
                 element.set_attribute("loaded", "1").unwrap();
+
+                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                    "3) element: {:?}, loaded",
+                    element.id()
+                )));
                 element.set_inner_html(&format!("unexpected response: {:?}", get_job_response));
             }
         });

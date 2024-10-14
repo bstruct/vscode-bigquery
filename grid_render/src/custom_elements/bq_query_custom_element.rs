@@ -176,6 +176,13 @@ impl BigqueryQueryCustomElement {
             .dyn_into::<web_sys::Element>()
             .unwrap();
 
+
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "bq_query_custom_element 1) on_render_query event on element: {:?}",
+                element.id()
+            )));
+
+
         if !element.has_attribute("loaded") {
             element.set_attribute("loaded", "1").unwrap();
 
@@ -184,7 +191,7 @@ impl BigqueryQueryCustomElement {
             let is_dml_statement = bq_query_element.is_dml_statement();
 
             web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-                "1) on_render_table event on element: {:?}, is_dml_statement: {}",
+                "bq_query_custom_element 2) on_render_query event on element: {:?}, is_dml_statement: {}",
                 element.id(),
                 is_dml_statement
             )));
@@ -352,31 +359,39 @@ impl BigqueryQueryCustomElement {
 
 impl CustomElementDefinition for BigqueryQueryCustomElement {
     fn define(_document: &web_sys::Document, element: &web_sys::Element) {
-        let on_event_type_closure =
-            Closure::wrap(Box::new(BigqueryQueryCustomElement::on_render_query)
-                as Box<dyn Fn(&web_sys::Event)>);
 
-        element
-            .add_event_listener_with_callback(
-                RENDER_QUERY_EVENT_NAME,
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
 
-        on_event_type_closure.forget();
 
-        //ELEMENT_INTERSECTED_EVENT_NAME
-        let on_event_type_closure =
-            Closure::wrap(Box::new(BigqueryQueryCustomElement::on_render_query)
-                as Box<dyn Fn(&web_sys::Event)>);
 
-        element
-            .add_event_listener_with_callback(
-                ELEMENT_INTERSECTED_EVENT_NAME,
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
-        on_event_type_closure.forget();
+        // let on_event_type_closure =
+        //     Closure::wrap(Box::new(BigqueryQueryCustomElement::on_render_query)
+        //         as Box<dyn Fn(&web_sys::Event)>);
+
+        // element
+        //     .add_event_listener_with_callback(
+        //         RENDER_QUERY_EVENT_NAME,
+        //         on_event_type_closure.as_ref().unchecked_ref(),
+        //     )
+        //     .unwrap();
+
+        // on_event_type_closure.forget();
+
+        // //ELEMENT_INTERSECTED_EVENT_NAME
+        // let on_event_type_closure =
+        //     Closure::wrap(Box::new(BigqueryQueryCustomElement::on_render_query)
+        //         as Box<dyn Fn(&web_sys::Event)>);
+
+        // element
+        //     .add_event_listener_with_callback(
+        //         ELEMENT_INTERSECTED_EVENT_NAME,
+        //         on_event_type_closure.as_ref().unchecked_ref(),
+        //     )
+        //     .unwrap();
+        // on_event_type_closure.forget();
+
+
+
+
 
         //EVENT_GO_TO_FIRST_PAGE
         let on_event_type_closure =
@@ -513,14 +528,6 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
             self.page_start_index, self.rows_total,
         )));
 
-        // //reset the content
-        // let loading = &crate::createElement("div");
-        // loading.set_text_content(Some("Loading.."));
-        // parent_node.append_child(&loading).unwrap();
-        // // if let Some(fc) = element.first_child(){
-        // //     element..remove_child(&fc).unwrap();
-        // // }
-
         let bq_query = BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
             .apply_fn(&set_attributes, self)
             .append_shadow();
@@ -534,8 +541,6 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
             tree.append_sibling_base_element(&self.to_data_table_controls())
                 .append_sibling_base_element(&self.to_data_table("t1"));
         }
-
-        // parent_node.remove_child(&loading).unwrap();
 
         bq_query
     }
