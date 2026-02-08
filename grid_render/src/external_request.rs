@@ -1,9 +1,14 @@
 use serde::Deserialize;
+use website_component_table::{
+    TableBuilder, TableColumn, TableColumnDefinition, TableRow, TableStyle, TableValue,
+};
 
-use crate::custom_elements::{
-    bq_script_custom_element::BigqueryScriptCustomElement,
-    bq_table_custom_element::BigqueryTableCustomElement,
-    data_table_element::{DataTable, DataTableItem},
+use crate::{
+    custom_elements::{
+        bq_script_custom_element::BigqueryScriptCustomElement,
+        bq_table_custom_element::BigqueryTableCustomElement,
+    },
+    utils::render_standalone,
 };
 
 #[derive(Debug, Deserialize)]
@@ -36,23 +41,6 @@ impl ExternalRequest {
             token,
         )
     }
-
-    // pub fn to_bq_query(&self, element_id: &str) -> BigqueryQueryCustomElement {
-    //     let job = self.job.as_ref().unwrap().job_reference.as_ref().unwrap();
-    //     let job_id = job.job_id.to_string();
-    //     let location = job.location.to_string();
-    //     let project_id = self.project_id.as_ref().unwrap().to_string();
-    //     let token = (&self.token.as_ref().unwrap()).to_string();
-
-    //     BigqueryQueryCustomElement::base_new(
-    //         element_id.to_string(),
-    //         job_id,
-    //         project_id,
-    //         location,
-    //         token,
-    //         None,
-    //     )
-    // }
 
     pub fn to_bq_script(&self, element_id: &str) -> BigqueryScriptCustomElement {
         let job = self.job.as_ref().unwrap();
@@ -88,14 +76,32 @@ pub struct ExternalRequestError {
 
 impl ExternalRequestError {
     pub fn plot_table(&self, element: &web_sys::Element) {
-        let header = ["message".to_string(), "reason".to_string()].to_vec();
-        let rows = [[
-            Some(DataTableItem::from_string(&self.message)),
-            Some(DataTableItem::from_string(&self.reason)),
-        ]
-        .to_vec()]
-        .to_vec();
+        let columns = [
+            TableColumnDefinition::Column(TableColumn {
+                name: "message".to_string(),
+                text: "message".to_string(),
+                width_px: 200,
+            }),
+            TableColumnDefinition::Column(TableColumn {
+                name: "reason".to_string(),
+                text: "reason".to_string(),
+                width_px: 200,
+            }),
+        ].to_vec();
+        let row = TableRow {
+            cells: vec![
+                TableValue::String(self.message.clone()),
+                TableValue::String(self.reason.clone()),
+            ],
+        };
 
-        DataTable::new("e1", &Some(header), &Some(rows)).render_standalone(element);
+        let table_builder = TableBuilder {
+            style: TableStyle::default(),
+            dynamic_table_render: false,
+            columns: columns,
+            rows: vec![row],
+        };
+
+        render_standalone(&table_builder, &element);
     }
 }

@@ -2,6 +2,7 @@ mod bigquery;
 mod custom_elements;
 mod external_request;
 mod message_handler;
+pub(crate) mod utils;
 
 use custom_elements::CustomElement;
 use std::str::FromStr;

@@ -11,13 +11,7 @@ export class ResultsGridRender {
 
     constructor(webViewPanel: vscode.WebviewPanel) {
         this.webViewPanel = webViewPanel;
-        // const listener = this.webViewPanel.webview.onDidReceiveMessage(this.listenerResultsOnDidReceiveMessage, this);
-        // webViewPanel.onDidDispose(c => { listener.dispose(); });
     }
-
-    // public renderLoadingIcon() {
-    //     this.webViewPanel.webview.html = this.getWaitingHtml(50, false, 0, 0);
-    // }
 
     public static executeCommand(c: any) {
         if ((c as any).command) {

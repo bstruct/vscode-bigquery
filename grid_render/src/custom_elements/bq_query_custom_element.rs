@@ -6,16 +6,16 @@ use super::{
         DataTableControls, EVENT_GO_TO_FIRST_PAGE, EVENT_GO_TO_LAST_PAGE, EVENT_GO_TO_NEXT_PAGE,
         EVENT_GO_TO_PREVIOUS_PAGE,
     },
-    data_table_element::{DataTable, DataTableItem},
 };
 use crate::{
     bigquery::jobs::{GetJobRequest, GetQueryResultsRequest, JobReference},
     custom_elements::base_element::BaseElement,
-    parse_to_usize, set_state,
+    parse_to_usize, set_state, utils::{base_element_append_sibbling_base_element, render_standalone},
 };
 use wasm_bindgen::{prelude::Closure, JsCast};
 use wasm_bindgen_futures::spawn_local;
 use web_sys::Element;
+use website_component_table::{HtmlNodeRender, TableBuilder};
 
 const TAG_NAME: &'static str = "bq-query";
 const PAGE_START_INDEX_ATT: &str = "page_start_index";
@@ -39,8 +39,7 @@ pub(crate) struct BigqueryQueryCustomElement {
     rows_in_page: Option<usize>,
     rows_total: Option<usize>,
 
-    header: Option<Vec<String>>,
-    rows: Option<Vec<Vec<Option<DataTableItem>>>>,
+    table_builder: Option<TableBuilder>,
 }
 
 impl BigqueryQueryCustomElement {
@@ -66,8 +65,7 @@ impl BigqueryQueryCustomElement {
             rows_in_page: None,
             rows_total: None,
 
-            header: None,
-            rows: None,
+            table_builder: None,
         }
     }
     pub(crate) fn to_data_table_controls(&self) -> DataTableControls {
@@ -78,10 +76,6 @@ impl BigqueryQueryCustomElement {
             Some(self.as_job_reference()),
             None,
         )
-    }
-
-    pub(crate) fn to_data_table(&self, element_id: &str) -> DataTable {
-        DataTable::new(element_id, &self.header, &self.rows)
     }
 
     pub(crate) fn as_job_reference(&self) -> JobReference {
@@ -96,8 +90,7 @@ impl BigqueryQueryCustomElement {
         &self,
         rows_in_page: Option<usize>,
         rows_total: Option<usize>,
-        header: Option<Vec<String>>,
-        rows: Option<Vec<Vec<Option<DataTableItem>>>>,
+        table_builder: Option<TableBuilder>,
     ) -> BigqueryQueryCustomElement {
         //information about the job as potentially changed, set new state with that information
         let state = serde_json::json!({
@@ -120,8 +113,7 @@ impl BigqueryQueryCustomElement {
             page_size: self.page_size.clone(),
             rows_in_page,
             rows_total,
-            header,
-            rows,
+            table_builder,
         }
     }
 
@@ -144,8 +136,7 @@ impl BigqueryQueryCustomElement {
             page_size: get_num_attribute(element, PAGE_SIZE_ATT),
             rows_in_page: get_opt_num_attribute(element, ROWS_IN_PAGE_ATT),
             rows_total: get_opt_num_attribute(element, ROWS_TOTAL_ATT),
-            header: None,
-            rows: None,
+            table_builder: None,
         }
     }
 
@@ -180,7 +171,6 @@ impl BigqueryQueryCustomElement {
             element.set_attribute("loaded", "1").unwrap();
 
             let bq_query_element = BigqueryQueryCustomElement::from_element(&element);
-
             let is_dml_statement = bq_query_element.is_dml_statement();
 
             web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
@@ -190,7 +180,7 @@ impl BigqueryQueryCustomElement {
             )));
 
             let jobs = crate::bigquery::jobs::Jobs::new(&bq_query_element.token);
-            let parent_node = element.parent_node().unwrap();
+            let parent_node = element.parent_element().unwrap();
 
             if is_dml_statement {
                 let request = bq_query_element.as_job_request();
@@ -199,9 +189,9 @@ impl BigqueryQueryCustomElement {
                     let response = jobs.get(request).await;
                     if let Some(response) = response {
                         if response.has_error() {
-                            response.to_error_table().render_standalone(&parent_node);
+                            render_standalone(&response.to_error_table(), &parent_node);
                         } else {
-                            response.to_dml_table().render_standalone(&parent_node);
+                            render_standalone(&response.to_dml_table(), &parent_node);
                         }
                     } else {
                         element.set_inner_html(&format!("unexpected response: {:?}", response));
@@ -213,7 +203,7 @@ impl BigqueryQueryCustomElement {
                 spawn_local(async move {
                     let response = jobs.get_query_results(request).await;
                     if let Some(response) = response {
-                        response.to_bq_query(&bq_query_element).render(&parent_node);
+                        render_standalone(&response.to_bq_query(&bq_query_element).table_builder.unwrap(), &parent_node);
                     } else {
                         element.set_inner_html(&format!("unexpected response: {:?}", response));
                     }
@@ -277,13 +267,6 @@ impl BigqueryQueryCustomElement {
         let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
         let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
         let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap();
-
-        // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        //     "next_page, start_index: {}, page_size: {}, rows_total: {}",
-        //     start_index,
-        //     page_size,
-        //     rows_total
-        // )));
 
         let new_value = if start_index + page_size >= rows_total {
             start_index
@@ -513,14 +496,6 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
             self.page_start_index, self.rows_total,
         )));
 
-        // //reset the content
-        // let loading = &crate::createElement("div");
-        // loading.set_text_content(Some("Loading.."));
-        // parent_node.append_child(&loading).unwrap();
-        // // if let Some(fc) = element.first_child(){
-        // //     element..remove_child(&fc).unwrap();
-        // // }
-
         let bq_query = BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
             .apply_fn(&set_attributes, self)
             .append_shadow();
@@ -528,14 +503,16 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
         let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
         let tree = bq_query.append_child_style(css_content, "style1");
 
-        if self.is_dml_statement() {
-            tree.append_sibling_base_element(&self.to_data_table("t1"));
-        } else {
-            tree.append_sibling_base_element(&self.to_data_table_controls())
-                .append_sibling_base_element(&self.to_data_table("t1"));
+        if let Some(table_builder) = &self.table_builder {
+            if let Ok(render) = table_builder.render() {
+                if self.is_dml_statement() {
+                    base_element_append_sibbling_base_element(&bq_query, &render);
+                } else {
+                    tree.append_sibling_base_element(&self.to_data_table_controls());
+                    base_element_append_sibbling_base_element(&bq_query, &render);
+                }
+            }
         }
-
-        // parent_node.remove_child(&loading).unwrap();
 
         bq_query
     }
@@ -584,14 +561,6 @@ fn get_num_attribute(element: &Element, attribute_name: &str) -> usize {
         None => panic!("attribute not found: {attribute_name}"),
     }
 }
-
-// fn configure_spacer(element: &BaseElement, _: &Option<usize>) {
-//     element.element().set_inner_html("&nbsp");
-//     element
-//         .element()
-//         .set_attribute("style", "height: 30px")
-//         .unwrap();
-// }
 
 #[cfg(test)]
 mod tests {
@@ -660,10 +629,9 @@ mod tests {
 
         let rows_in_page = bq_query_information.rows_in_page;
         let rows_total = bq_query_information.rows_total;
-        let header = bq_query_information.header;
-        let rows = bq_query_information.rows;
+        let table_builder = bq_query_information.table_builder;
 
-        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, table_builder);
         bq_table.render(parent_node);
 
         let c = parent_node.first_child().unwrap();
@@ -710,10 +678,10 @@ mod tests {
 
         let rows_in_page = bq_query_information.rows_in_page;
         let rows_total = bq_query_information.rows_total;
-        let header = bq_query_information.header;
-        let rows = bq_query_information.rows;
+        let table_builder = bq_query_information.table_builder;
 
-        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, table_builder);
+
         //1
         bq_table.render(parent_node);
 
@@ -752,10 +720,9 @@ mod tests {
 
         let rows_in_page = bq_query_information.rows_in_page;
         let rows_total = bq_query_information.rows_total;
-        let header = bq_query_information.header;
-        let rows = bq_query_information.rows;
+        let table_builder = bq_query_information.table_builder;
 
-        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, table_builder);
         //1
         bq_table.render(parent_node);
 
@@ -792,10 +759,9 @@ mod tests {
 
         let rows_in_page = bq_query_information.rows_in_page;
         let rows_total = bq_query_information.rows_total;
-        let header = bq_query_information.header;
-        let rows = bq_query_information.rows;
+        let table_builder = bq_query_information.table_builder;
 
-        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, table_builder);
         //1
         bq_table.render(parent_node);
 
@@ -831,10 +797,9 @@ mod tests {
 
         let rows_in_page = bq_query_information.rows_in_page;
         let rows_total = bq_query_information.rows_total;
-        let header = bq_query_information.header;
-        let rows = bq_query_information.rows;
+        let table_builder = bq_query_information.table_builder;
 
-        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, table_builder);
         //1
         bq_table.render(parent_node);
 
@@ -878,10 +843,9 @@ mod tests {
 
         let rows_in_page = bq_query_information.rows_in_page;
         let rows_total = bq_query_information.rows_total;
-        let header = bq_query_information.header;
-        let rows = bq_query_information.rows;
+        let table_builder = bq_query_information.table_builder;
 
-        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, table_builder);
         //1
         bq_table.render(parent_node);
 
@@ -924,10 +888,9 @@ mod tests {
 
         let rows_in_page = bq_query_information.rows_in_page;
         let rows_total = bq_query_information.rows_total;
-        let header = bq_query_information.header;
-        let rows = bq_query_information.rows;
+        let table_builder = bq_query_information.table_builder;
 
-        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, header, rows);
+        let bq_table = bq_table.with_table_info(rows_in_page, rows_total, table_builder);
 
         let start = instant::Instant::now();
 

@@ -1,11 +1,11 @@
 use wasm_bindgen::{closure::Closure, JsCast};
 use wasm_bindgen_futures::spawn_local;
 use web_sys::{Element, Event, Node};
+use website_component_table::TableBuilder;
 
 use crate::{
     bigquery::jobs::{GetJobRequest, GetListRequest, Job, JobStatus},
-    custom_elements::data_table_element::DataTable,
-    observe_element, parse_to_usize,
+    observe_element, parse_to_usize, utils::render_standalone,
 };
 
 use super::{
@@ -301,9 +301,9 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
         }
     }
 
-    fn inser_error_table(base_element: &BaseElement, table: &DataTable) {
+    fn inser_error_table(base_element: &BaseElement, table: &TableBuilder) {
         let element = base_element.element();
-        table.render_standalone(&element);
+        render_standalone(table, &element);
     }
 }
 

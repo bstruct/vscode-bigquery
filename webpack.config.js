@@ -65,37 +65,28 @@ const extensionConfig = {
     syncWebAssembly: true
   },
   plugins: [
-    // (a, b) => {
-    //   copyFileSync(
-    //     require('path').join(__dirname, 'node_modules', '@bstruct', 'bqsql-parser', 'bqsql_parser_bg.wasm'),
-    //     require('path').join(__dirname, 'dist', 'bqsql_parser_bg.wasm')
-    //   );
-    // },
-    (a, b) => {
-      copyFileSync(
-        require('path').join(__dirname, 'node_modules', 'grid_render', 'grid_render_bg.wasm'),
-        require('path').join(__dirname, 'dist', 'grid_render_bg.wasm')
-      );
-    },
-    (a, b) => {
-      copyFileSync(
-        require('path').join(__dirname, 'node_modules', 'grid_render', 'grid_render.js'),
-        require('path').join(__dirname, 'dist', 'grid_render.js')
-      );
-    },
-    (a, b) => {
-      copyFileSync(
-        require('path').join(__dirname, 'bqsql_parser', 'pkg', 'bqsql_parser_bg.wasm'),
-        require('path').join(__dirname, 'dist', 'bqsql_parser_bg.wasm')
-      );
-    },
-    (a, b) => {
-      copyFileSync(
-        require('path').join(__dirname, 'bqsql_parser', 'pkg', 'bqsql_parser.js'),
-        require('path').join(__dirname, 'dist', 'bqsql_parser.js')
-      );
-    },
-    // copyFileSync('', '')
+    {
+      apply: (compiler) => {
+        compiler.hooks.afterEmit.tap('CopyWasmPlugin', () => {
+          copyFileSync(
+            require('path').join(__dirname, 'grid_render', 'pkg', 'grid_render_bg.wasm'),
+            require('path').join(__dirname, 'dist', 'grid_render_bg.wasm')
+          );
+          copyFileSync(
+            require('path').join(__dirname, 'grid_render', 'pkg', 'grid_render.js'),
+            require('path').join(__dirname, 'dist', 'grid_render.js')
+          );
+          copyFileSync(
+            require('path').join(__dirname, 'bqsql_parser', 'pkg', 'bqsql_parser_bg.wasm'),
+            require('path').join(__dirname, 'dist', 'bqsql_parser_bg.wasm')
+          );
+          copyFileSync(
+            require('path').join(__dirname, 'bqsql_parser', 'pkg', 'bqsql_parser.js'),
+            require('path').join(__dirname, 'dist', 'bqsql_parser.js')
+          );
+        });
+      }
+    }
   ],
   infrastructureLogging: {
     level: "log", // enables logging required for problem matchers
