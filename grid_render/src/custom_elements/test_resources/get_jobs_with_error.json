@@ -3,10 +3,10 @@
     "kind": "bigquery#jobList",
     "jobs": [
         {
-            "id": "rca-stream-loader-dev:US.script_job_12919cfffd01b36353465872f783d82c_1",
+            "id": "asdfasdfqwer:US.script_job_12919cfffd01b36353465872f783d82c_1",
             "kind": "bigquery#job",
             "jobReference": {
-                "projectId": "rca-stream-loader-dev",
+                "projectId": "asdfasdfqwer",
                 "jobId": "script_job_12919cfffd01b36353465872f783d82c_1",
                 "location": "US"
             },
@@ -67,14 +67,14 @@
                 ],
                 "state": "DONE"
             },
-            "user_email": "damiaocastro@pvh.com",
-            "principal_subject": "user:damiaocastro@pvh.com"
+            "user_email": "dc@gmail.com",
+            "principal_subject": "user:dc@gmail.com"
         },
         {
-            "id": "rca-stream-loader-dev:US.script_job_b8aab5896d9a99ad48205d9cda941159_0",
+            "id": "asdfasdfqwer:US.script_job_b8aab5896d9a99ad48205d9cda941159_0",
             "kind": "bigquery#job",
             "jobReference": {
-                "projectId": "rca-stream-loader-dev",
+                "projectId": "asdfasdfqwer",
                 "jobId": "script_job_b8aab5896d9a99ad48205d9cda941159_0",
                 "location": "US"
             },
@@ -225,7 +225,7 @@
                 "query": {
                     "query": "SELECT \n    t1\nFROM UNNEST([1,2,3,4]) t1",
                     "destinationTable": {
-                        "projectId": "rca-stream-loader-dev",
+                        "projectId": "asdfasdfqwer",
                         "datasetId": "_190aed7d041ecb8acb416b7991969f30ee2b5b67",
                         "tableId": "anon9561acc762c64abaef5849e53ddbd2e18224a878ec512635500f810b4e9ab2c6"
                     },
@@ -241,8 +241,8 @@
             "status": {
                 "state": "DONE"
             },
-            "user_email": "damiaocastro@pvh.com",
-            "principal_subject": "user:damiaocastro@pvh.com"
+            "user_email": "dc@gmail.com",
+            "principal_subject": "user:dc@gmail.com"
         }
     ]
 }

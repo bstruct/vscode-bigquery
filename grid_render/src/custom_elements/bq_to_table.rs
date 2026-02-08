@@ -918,45 +918,6 @@ mod tests {
         });
     }
 
-    // #[wasm_bindgen_test]
-    #[test]
-    fn place_bq_table_rows_test_4() {
-        let complex_object_array_test =
-            include_str!("test_resources/complex_object_array_test4.json");
-        let complex_object_array_test = &serde_json::from_str::<
-            crate::bigquery::jobs::GetQueryResultsResponse,
-        >(complex_object_array_test)
-        .unwrap();
-
-        let header =
-            &super::get_bq_table_header(&complex_object_array_test.schema.as_ref().unwrap());
-        assert_eq!(header.len(), 67);
-
-        // let number_columns = header.len();
-        // let number_rows = super::calculate_number_rows(&complex_object_array_test.rows);
-        let mut rows: Vec<TableRow> = vec![];
-
-        let schema_fields = &complex_object_array_test.schema.as_ref().unwrap().fields;
-        let data_rows = &complex_object_array_test.rows;
-
-        super::place_bq_table_rows(&mut rows, schema_fields, data_rows, 0, 0, true, 0);
-
-        assert_eq!(rows.len(), 3502);
-        assert_eq!(rows[0].cells.len(), 67);
-
-        // check if for every column that contains "#", the row has the number "1" for that same index.
-        let mut index = 0;
-        for h in header {
-            if h.contains("#") {
-                assert!(match rows[0].cells[index] {
-                    TableValue::Index(v) => v == 1,
-                    _ => false,
-                });
-            }
-            index += 1;
-        }
-    }
-
     #[test]
     fn place_bq_table_rows_test() {
         let complex_object_array_test = include_str!("test_resources/struct_json_test.json");

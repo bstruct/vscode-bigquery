@@ -1,12 +1,7 @@
-use std::ops::Index;
-
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::console;
-
-use crate::parse_to_usize;
-
 use super::base::TableSchema;
 
 pub struct Jobs {
@@ -351,15 +346,16 @@ impl Job {
         false
     }
 
-    pub(crate) fn is_multi_query_job(&self) -> bool {
-        if let Some(stats) = self.statistics.as_ref() {
-            if let Some(num_child_jobs) = parse_to_usize(stats.num_child_jobs.clone()) {
-                return num_child_jobs > 1;
-            }
-        }
+    // pub(crate) fn is_multi_query_job(&self) -> bool {
+    //     if let Some(stats) = self.statistics.as_ref() {
+    //         if let Some(num_child_jobs) = parse_to_usize(stats.num_child_jobs.clone()) {
+    //             return num_child_jobs > 1;
+    //         }
+    //     }
 
-        false
-    }
+    //     false
+    // }
+
     pub(crate) fn has_error(&self) -> bool {
         if let Some(status) = self.status.as_ref() {
             if let Some(error_result) = status.error_result.as_ref() {
@@ -401,14 +397,14 @@ impl Job {
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct QueryRequest {
-    pub query: String,
-    // #[serde(alias = "maxResults")]
-    // pub max_results: Option<u64>,
-    //incomplete
-    // https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#QueryRequest
-}
+// #[derive(Debug, Serialize)]
+// pub struct QueryRequest {
+//     pub query: String,
+//     // #[serde(alias = "maxResults")]
+//     // pub max_results: Option<u64>,
+//     //incomplete
+//     // https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#QueryRequest
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct QueryResponseSessionInfo {

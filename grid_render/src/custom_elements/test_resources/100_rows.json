@@ -26,8 +26,8 @@
         ]
     },
     "jobReference": {
-        "projectId": "rca-stream-loader-dev",
-        "jobId": "c9e36783-bff0-4231-b5da-60386e8acc55",
+        "projectId": "xxx",
+        "jobId": "1234-bff0-4231-b5da-60386e8acc55",
         "location": "EU"
     },
     "totalRows": "100",

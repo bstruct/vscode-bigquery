@@ -61,10 +61,9 @@ wasm-bindgen-test = "0.3"
 instant = { version = "0.1", features = [ "wasm-bindgen", "inaccurate" ] }
 
 [profile.dev]
-# opt-level = "s"
-# # opt-level = "z"
-opt-level = 3
-lto = true
+opt-level = 0
+lto = false
+debug = 2
 
 [profile.release]
 # opt-level = "s"

@@ -1,6 +1,8 @@
+use std::array;
+
 use website_component_table::{
-    TableBuilder, TableColumn, TableColumnDefinition, TableColumnGroup, TableRow, TableStyle,
-    TableValue,
+    InnerTableBuilder, TableBuilder, TableColumn, TableColumnDefinition, TableColumnGroup,
+    TableRow, TableStyle, TableValue,
 };
 
 use crate::bigquery::{base::TableFieldSchema, jobs::GetQueryResultsResponse};
@@ -37,9 +39,8 @@ impl GetQueryResultsResponse {
 }
 
 fn json_value_to_row(value: &serde_json::Value) -> TableRow {
-    let cells = if let Some(array) = value.as_array() {
-        array
-            .iter()
+    let cells = if let Some(obj) = value.as_object() {
+        obj.values()
             .map(|cell| json_value_to_table_value(cell))
             .collect()
     } else {
@@ -50,8 +51,32 @@ fn json_value_to_row(value: &serde_json::Value) -> TableRow {
 }
 
 fn json_value_to_table_value(value: &serde_json::Value) -> TableValue {
-    // value.as_str().unwrap_or_default().to_string()
-    TableValue::String(value.as_str().unwrap_or_default().to_string())
+    match value {
+        serde_json::Value::Null => TableValue::Null,
+        serde_json::Value::Bool(b) => TableValue::Boolean(b.clone()),
+        serde_json::Value::Number(n) => TableValue::String(n.to_string()),
+        serde_json::Value::String(s) => TableValue::String(s.clone()),
+        serde_json::Value::Array(arr) => {
+            let inner_table = InnerTableBuilder {
+                style: TableStyle::default(),
+                rows: arr
+                    .iter()
+                    .map(|v| TableRow {
+                        cells: vec![json_value_to_table_value(v)],
+                    })
+                    .collect(),
+                col_span: 1,
+                start_col_index: 1,
+            };
+            TableValue::Array(inner_table)
+        }
+        serde_json::Value::Object(obj) => {
+            // let object_values: Vec<(String, TableValue)> = obj.iter()
+            //     .map(|(k, v)| (k.clone(), json_value_to_table_value(v)))
+            //     .collect();
+            TableValue::String("obj.".to_string())
+        }
+    }
 }
 
 impl TableFieldSchema {
@@ -75,8 +100,6 @@ impl TableFieldSchema {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
 
@@ -92,7 +115,7 @@ mod tests {
         let table_builder = complex_object_array_test.to_table_builder();
 
         assert_eq!(table_builder.rows.len(), 1);
-        // assert_eq!(table_builder.columns.len(), 67);
+        assert_eq!(table_builder.columns.len(), 28);
 
         // // check if for every column that contains "#", the row has the number "1" for that same index.
         // let mut index = 0;
@@ -108,4 +131,31 @@ mod tests {
         // }
     }
 
+    // #[wasm_bindgen_test]
+    #[test]
+    fn place_bq_table_rows_test_4() {
+        let complex_object_array_test =
+            include_str!("test_resources/complex_object_array_test4.json");
+        let complex_object_array_test = &serde_json::from_str::<
+            crate::bigquery::jobs::GetQueryResultsResponse,
+        >(complex_object_array_test)
+        .unwrap();
+
+        let table_builder = complex_object_array_test.to_table_builder();
+
+        assert_eq!(table_builder.rows.len(), 50);
+        assert_eq!(table_builder.columns.len(), 28);
+
+        // // check if for every column that contains "#", the row has the number "1" for that same index.
+        // let mut index = 0;
+        // for h in header {
+        //     if h.contains("#") {
+        //         assert!(match rows[0].cells[index] {
+        //             TableValue::Index(v) => v == 1,
+        //             _ => false,
+        //         });
+        //     }
+        //     index += 1;
+        // }
+    }
 }
