@@ -129,183 +129,198 @@ impl TableFieldSchema {
 
 #[cfg(test)]
 mod tests {
+    use crate::bigquery::jobs::GetQueryResultsResponse;
+    use serde_json::Value;
     use website_component_table::{TableColumnDefinition, TableValue};
+
+    fn load_query_results(contents: &str) -> GetQueryResultsResponse {
+        serde_json::from_str::<GetQueryResultsResponse>(contents).unwrap()
+    }
+
+    fn assert_table_value_matches_json(actual: &TableValue, expected_cell: &Value) {
+        let expected_value = expected_cell.pointer("/v").unwrap_or(&Value::Null);
+
+        match expected_value {
+            Value::Null => assert!(matches!(actual, TableValue::Null)),
+            Value::Bool(expected) => match actual {
+                TableValue::Boolean(actual) => assert_eq!(actual, expected),
+                _ => panic!("expected boolean table value"),
+            },
+            Value::Number(expected) => match actual {
+                TableValue::String(actual) => assert_eq!(actual, &expected.to_string()),
+                _ => panic!("expected numeric string table value"),
+            },
+            Value::String(expected) => match actual {
+                TableValue::String(actual) => assert_eq!(actual, expected),
+                _ => panic!("expected string table value"),
+            },
+            Value::Array(expected_rows) => match actual {
+                TableValue::Array(actual_table) => {
+                    assert_eq!(actual_table.rows.len(), expected_rows.len());
+
+                    expected_rows
+                        .iter()
+                        .enumerate()
+                        .for_each(|(row_index, row_value)| {
+                            let expected_cells = row_value
+                                .pointer("/v/f")
+                                .and_then(|v| v.as_array())
+                                .expect("expected nested row array");
+                            let actual_row = &actual_table.rows[row_index];
+
+                            assert_eq!(actual_row.cells.len(), expected_cells.len());
+
+                            expected_cells.iter().enumerate().for_each(
+                                |(cell_index, cell_value)| {
+                                    assert_table_value_matches_json(
+                                        &actual_row.cells[cell_index],
+                                        cell_value,
+                                    );
+                                },
+                            );
+                        });
+                }
+                _ => panic!("expected array table value"),
+            },
+            Value::Object(_) => match actual {
+                TableValue::String(actual) => assert_eq!(actual, &expected_cell.to_string()),
+                _ => panic!("expected object string table value"),
+            },
+        }
+    }
+
+    fn assert_table_builder_matches_response(response: &GetQueryResultsResponse, row_index: usize) {
+        let table_builder = response.to_table_builder(row_index);
+
+        if let Some(schema) = &response.schema {
+            assert_eq!(table_builder.columns.len(), schema.fields.len());
+
+            table_builder
+                .columns
+                .iter()
+                .enumerate()
+                .for_each(|(index, col)| {
+                    let col_name = schema.fields[index].name.clone();
+
+                    match col {
+                        TableColumnDefinition::Group(group) => {
+                            assert_eq!(group.text, col_name);
+                        }
+                        TableColumnDefinition::Column(column) => {
+                            assert_eq!(column.text, col_name);
+                        }
+                    }
+                });
+        } else {
+            assert_eq!(table_builder.columns.len(), 0);
+        }
+
+        if let Some(rows) = &response.rows {
+            assert_eq!(table_builder.rows.len(), rows.len());
+
+            rows.iter().enumerate().for_each(|(index, row)| {
+                let expected_row_cells = row
+                    .pointer("/f")
+                    .and_then(|row| row.as_array())
+                    .expect("expected row cells array");
+                let actual_row = &table_builder.rows[index];
+
+                assert!(matches!(
+                    actual_row.cells[0],
+                    TableValue::Index(value) if value == row_index + index
+                ));
+                assert_eq!(actual_row.cells.len(), expected_row_cells.len() + 1);
+
+                expected_row_cells
+                    .iter()
+                    .enumerate()
+                    .for_each(|(cell_index, expected_cell)| {
+                        assert_table_value_matches_json(
+                            &actual_row.cells[cell_index + 1],
+                            expected_cell,
+                        );
+                    });
+            });
+        } else {
+            assert_eq!(table_builder.rows.len(), 0);
+        }
+    }
 
     #[test]
     fn place_bq_table_rows_test_3() {
-        let complex_object_array_test =
-            include_str!("test_resources/complex_object_array_test3.json");
-        let complex_object_array_test = &serde_json::from_str::<
-            crate::bigquery::jobs::GetQueryResultsResponse,
-        >(complex_object_array_test)
-        .unwrap();
-
-        let table_builder = complex_object_array_test.to_table_builder(1);
-
-        assert_eq!(table_builder.rows.len(), 1);
-        assert_eq!(table_builder.columns.len(), 28);
-
-        table_builder
-            .columns
-            .iter()
-            .enumerate()
-            .for_each(|(index, col)| {
-                let col_name = if let Some(schema) = &complex_object_array_test.schema {
-                    schema.fields.get(index).unwrap().name.clone()
-                } else {
-                    "".to_string()
-                };
-
-                match col {
-                    TableColumnDefinition::Group(group) => {
-                        assert_eq!(group.text, col_name);
-                    }
-                    TableColumnDefinition::Column(column) => {
-                        assert_eq!(column.text, col_name);
-                    }
-                }
-            });
-
-        let row1 = &table_builder.rows[0];
-
-        assert!(match row1.cells[0].clone() {
-            TableValue::Index(index) => {
-                index == 1
-            }
-            _ => false,
-        });
-
-        assert!(match row1.cells[1].clone() {
-            TableValue::String(s) => {
-                s == "1.71965592E9"
-            }
-            _ => false,
-        });
-
-        assert!(match row1.cells[2].clone() {
-            TableValue::String(s) => {
-                s == "CB"
-            }
-            _ => false,
-        });
-
-        assert!(match row1.cells[3].clone() {
-            TableValue::String(s) => {
-                s == "DQ2MH67779LAK891"
-            }
-            _ => false,
-        });
-
-        assert!(match row1.cells[4].clone() {
-            TableValue::String(s) => {
-                s == "4484557887039"
-            }
-            _ => false,
-        });
-
-        assert!(match row1.cells[5].clone() {
-            TableValue::String(s) => {
-                s == "2003-12-02"
-            }
-            _ => false,
-        });
-
-        assert!(match row1.cells[6].clone() {
-            TableValue::Null => {
-                true
-            }
-            _ => false,
-        });
-
-        assert!(match row1.cells[7].clone() {
-            TableValue::String(s) => {
-                s == "5"
-            }
-            _ => false,
-        });
-
-        assert!(match row1.cells[8].clone() {
-            TableValue::String(s) => {
-                s == "ASIJPI"
-            }
-            _ => false,
-        });
-
-        assert!(match row1.cells[9].clone() {
-            TableValue::String(s) => {
-                s == "GXBHH"
-            }
-            _ => false,
-        });
-
-        assert!(match row1.cells[10].clone() {
-            TableValue::Array(arr) => {
-                assert_eq!(arr.rows.len(), 1);
-                let row1 = &arr.rows[0];
-                assert_eq!(row1.cells.len(), 4);
-                assert!(match &row1.cells[0] {
-                    TableValue::String(s) => {
-                        s == "ggiz"
-                    }
-                    _ => false,
-                });
-                assert!(match &row1.cells[1] {
-                    TableValue::String(s) => {
-                        s == "11"
-                    }
-                    _ => false,
-                });
-                assert!(match &row1.cells[2] {
-                    TableValue::String(s) => {
-                        s == "tc"
-                    }
-                    _ => false,
-                });
-                assert!(match &row1.cells[3] {
-                    TableValue::Null => {
-                        true
-                    }
-                    _ => false,
-                });
-            
-                true
-            }
-            _ => false,
-        });
-
-
-
-
-
-
-
+        let response =
+            load_query_results(include_str!("test_resources/complex_object_array_test3.json"));
+        assert_table_builder_matches_response(&response, 1);
     }
 
-    // #[wasm_bindgen_test]
     #[test]
     fn place_bq_table_rows_test_4() {
-        let complex_object_array_test =
-            include_str!("test_resources/complex_object_array_test4.json");
-        let complex_object_array_test = &serde_json::from_str::<
-            crate::bigquery::jobs::GetQueryResultsResponse,
-        >(complex_object_array_test)
-        .unwrap();
+        let response =
+            load_query_results(include_str!("test_resources/complex_object_array_test4.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
 
-        let table_builder = complex_object_array_test.to_table_builder(1);
+    #[test]
+    fn place_bq_table_rows_test_100_rows() {
+        let response = load_query_results(include_str!("test_resources/100_rows.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
 
-        assert_eq!(table_builder.rows.len(), 50);
-        assert_eq!(table_builder.columns.len(), 28);
+    #[test]
+    fn place_bq_table_rows_test_all_types() {
+        let response = load_query_results(include_str!("test_resources/all_types_test.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
 
-        // // check if for every column that contains "#", the row has the number "1" for that same index.
-        // let mut index = 0;
-        // for h in header {
-        //     if h.contains("#") {
-        //         assert!(match rows[0].cells[index] {
-        //             TableValue::Index(v) => v == 1,
-        //             _ => false,
-        //         });
-        //     }
-        //     index += 1;
-        // }
+    #[test]
+    fn place_bq_table_rows_test_complex_object_array() {
+        let response =
+            load_query_results(include_str!("test_resources/complex_object_array_test.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
+
+    #[test]
+    fn place_bq_table_rows_test_complex_object_array_2() {
+        let response =
+            load_query_results(include_str!("test_resources/complex_object_array_test2.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
+
+    #[test]
+    fn place_bq_table_rows_test_get_jobs_with_error() {
+        let response =
+            load_query_results(include_str!("test_resources/get_jobs_with_error.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
+
+    #[test]
+    fn place_bq_table_rows_test_no_rows() {
+        let response = load_query_results(include_str!("test_resources/no_rows.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
+
+    #[test]
+    fn place_bq_table_rows_test_simple_array() {
+        let response = load_query_results(include_str!("test_resources/simple_array.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
+
+    #[test]
+    fn place_bq_table_rows_test_simple_table() {
+        let response = load_query_results(include_str!("test_resources/simple_table.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
+
+    #[test]
+    fn place_bq_table_rows_test_simple_table_data_list() {
+        let response =
+            load_query_results(include_str!("test_resources/simple_table_data_list.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
+
+    #[test]
+    fn place_bq_table_rows_test_struct_json() {
+        let response = load_query_results(include_str!("test_resources/struct_json_test.json"));
+        assert_table_builder_matches_response(&response, 1);
     }
 }
