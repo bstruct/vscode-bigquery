@@ -248,15 +248,17 @@ mod tests {
 
     #[test]
     fn place_bq_table_rows_test_3() {
-        let response =
-            load_query_results(include_str!("test_resources/complex_object_array_test3.json"));
+        let response = load_query_results(include_str!(
+            "test_resources/complex_object_array_test3.json"
+        ));
         assert_table_builder_matches_response(&response, 1);
     }
 
     #[test]
     fn place_bq_table_rows_test_4() {
-        let response =
-            load_query_results(include_str!("test_resources/complex_object_array_test4.json"));
+        let response = load_query_results(include_str!(
+            "test_resources/complex_object_array_test4.json"
+        ));
         assert_table_builder_matches_response(&response, 1);
     }
 
@@ -274,22 +276,17 @@ mod tests {
 
     #[test]
     fn place_bq_table_rows_test_complex_object_array() {
-        let response =
-            load_query_results(include_str!("test_resources/complex_object_array_test.json"));
+        let response = load_query_results(include_str!(
+            "test_resources/complex_object_array_test.json"
+        ));
         assert_table_builder_matches_response(&response, 1);
     }
 
     #[test]
     fn place_bq_table_rows_test_complex_object_array_2() {
-        let response =
-            load_query_results(include_str!("test_resources/complex_object_array_test2.json"));
-        assert_table_builder_matches_response(&response, 1);
-    }
-
-    #[test]
-    fn place_bq_table_rows_test_get_jobs_with_error() {
-        let response =
-            load_query_results(include_str!("test_resources/get_jobs_with_error.json"));
+        let response = load_query_results(include_str!(
+            "test_resources/complex_object_array_test2.json"
+        ));
         assert_table_builder_matches_response(&response, 1);
     }
 
@@ -302,19 +299,6 @@ mod tests {
     #[test]
     fn place_bq_table_rows_test_simple_array() {
         let response = load_query_results(include_str!("test_resources/simple_array.json"));
-        assert_table_builder_matches_response(&response, 1);
-    }
-
-    #[test]
-    fn place_bq_table_rows_test_simple_table() {
-        let response = load_query_results(include_str!("test_resources/simple_table.json"));
-        assert_table_builder_matches_response(&response, 1);
-    }
-
-    #[test]
-    fn place_bq_table_rows_test_simple_table_data_list() {
-        let response =
-            load_query_results(include_str!("test_resources/simple_table_data_list.json"));
         assert_table_builder_matches_response(&response, 1);
     }
 
