@@ -8,7 +8,7 @@ use super::{
     },
 };
 use crate::{custom_elements::base_element::BaseElement, parse_to_usize, utils};
-use wasm_bindgen::{prelude::Closure, JsCast};
+use wasm_bindgen::{JsCast, prelude::Closure};
 use wasm_bindgen_futures::spawn_local;
 use web_sys::Element;
 use website_component_table::{HtmlNodeRender, TableBuilder};
@@ -429,17 +429,15 @@ impl BaseElementTrait for BigqueryTableCustomElement {
         let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
 
         let base_element = BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
-            .apply_fn(&set_attributes, self)
-            .append_shadow()
-            .append_child_style(css_content, "style1")
-            // .append_sibling("div", "spacer")
-            // .apply_fn(&configure_spacer, &None)
-            .append_sibling_base_element(&self.to_data_table_controls());
-        // .append_sibling_base_element(&self.to_data_table("t1"))
+            .apply_fn(&set_attributes, self);
+
+        let shadow = base_element.append_shadow();
+        shadow.append_child_style(css_content, "style1");
+        shadow.append_base_child(&self.to_data_table_controls());
 
         if let Some(table_builder) = &self.table_builder {
             if let Ok(render_result) = table_builder.render() {
-                utils::base_element_append_sibbling_base_element(&base_element, &render_result);
+                shadow.append_nodes(&render_result);
             }
         }
 
@@ -490,7 +488,7 @@ fn get_num_attribute(element: &Element, attribute_name: &str) -> usize {
 mod tests {
     use wasm_bindgen_test::*;
 
-    use super::{set_attributes, BigqueryTableCustomElement};
+    use super::{BigqueryTableCustomElement, set_attributes};
     use crate::custom_elements::base_element_trait::BaseElementTrait;
     wasm_bindgen_test_configure!(run_in_browser);
 
@@ -551,26 +549,7 @@ mod tests {
         let bq_table = bq_table.with_table_info(rows_in_page, rows_total, table_builder);
         bq_table.render(parent_node);
 
-        // let c = parent_node.first_child().unwrap();
-        // assert_eq!(c.node_type(), web_sys::Node::ELEMENT_NODE);
-        // let element: web_sys::Element = wasm_bindgen::JsCast::dyn_into(c.value_of())
-        //     .expect("unexpected error on casting Node to Element");
-        // assert_eq!(element.tag_name().to_lowercase(), TAG_NAME);
-
-        // assert!(element.shadow_root().is_some());
-        // let shadow = element.shadow_root().unwrap();
-
-        // let c = shadow.first_element_child().unwrap();
-        // assert_eq!(c.tag_name().to_lowercase(), "style");
-
-        // let c = c.next_element_sibling().unwrap();
-        // assert_eq!(c.tag_name().to_lowercase(), "div");
-        // assert_eq!(c.get_attribute("be_id").unwrap(), "controls-background");
-
-        // let c = c.next_element_sibling().unwrap();
-        // assert_eq!(c.tag_name().to_lowercase(), "table");
-
-        // assert_eq!(c.outer_html(), "...");
+        append_to_body(&parent_node);
     }
 
     // #[wasm_bindgen_test]
@@ -652,4 +631,17 @@ mod tests {
 
     //     assert_eq!(page_start_index, "989250");
     // }
+
+
+    fn append_to_body(node: &web_sys::Node) {
+        web_sys::window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .body()
+            .unwrap()
+            .append_child(node)
+            .unwrap();
+    }
+
 }

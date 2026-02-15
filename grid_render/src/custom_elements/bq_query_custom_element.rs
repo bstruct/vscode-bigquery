@@ -11,7 +11,7 @@ use crate::{
     bigquery::jobs::{GetJobRequest, GetQueryResultsRequest, JobReference},
     custom_elements::base_element::BaseElement,
     parse_to_usize, set_state,
-    utils::{base_element_append_sibbling_base_element, render_standalone},
+    utils::render_standalone,
 };
 use wasm_bindgen::{JsCast, prelude::Closure};
 use wasm_bindgen_futures::spawn_local;
@@ -505,19 +505,20 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
         )));
 
         let bq_query = BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
-            .apply_fn(&set_attributes, self)
-            .append_shadow();
+            .apply_fn(&set_attributes, self);
+
+        let shadow = bq_query.append_shadow();
 
         let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
-        let tree = bq_query.append_child_style(css_content, "style1");
+        shadow.append_child_style(css_content, "style1");
 
         if let Some(table_builder) = &self.table_builder {
             if let Ok(render) = table_builder.render() {
                 if self.is_dml_statement() {
-                    base_element_append_sibbling_base_element(&bq_query, &render);
+                    shadow.append_nodes(&render);
                 } else {
-                    tree.append_sibling_base_element(&self.to_data_table_controls());
-                    base_element_append_sibbling_base_element(&bq_query, &render);
+                    let _ = &self.to_data_table_controls().render(&shadow.node());
+                    shadow.append_nodes(&render);
                 }
             }
         }
@@ -659,7 +660,7 @@ mod tests {
         assert_eq!(c.get_attribute("be_id").unwrap(), "controls-background");
 
         let c = c.next_element_sibling().unwrap();
-        assert_eq!(c.tag_name().to_lowercase(), "table");
+        assert_eq!(c.tag_name().to_lowercase(), "bstruct-table");
 
         // assert_eq!(c.outer_html(), "...");
     }
@@ -697,17 +698,17 @@ mod tests {
         //1
         bq_table.render(parent_node);
 
-        // let first_html_output = parent_node.outer_html();
+        let first_html_output = parent_node.outer_html();
 
-        // //2 - render again
-        // bq_table.render(parent_node);
+        //2 - render again
+        bq_table.render(parent_node);
 
-        // assert_eq!(parent_node.outer_html(), first_html_output);
+        assert_eq!(parent_node.outer_html(), first_html_output);
 
-        // //3 - render again
-        // bq_table.render(parent_node);
+        //3 - render again
+        bq_table.render(parent_node);
 
-        // assert_eq!(parent_node.outer_html(), first_html_output);
+        assert_eq!(parent_node.outer_html(), first_html_output);
 
         append_to_body(&parent_node);
     }
@@ -893,12 +894,7 @@ mod tests {
             Some("statement_type".to_string()),
         );
 
-        // let start = instant::Instant::now();
-
         let bq_query_information = complex_object_array_test.to_bq_query(bq_table);
-
-        // let elapsed = start.elapsed().as_millis();
-        // assert_eq!(elapsed, 20);
 
         let rows_in_page = bq_query_information.rows_in_page;
         let rows_total = bq_query_information.rows_total;

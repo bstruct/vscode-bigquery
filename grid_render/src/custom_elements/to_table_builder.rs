@@ -10,32 +10,47 @@ impl GetQueryResultsResponse {
         TableBuilder {
             style: TableStyle::default(),
             dynamic_table_render: false,
-            columns: self.get_columns(),
-            rows: self.get_rows_new(row_index),
+            columns: get_columns(&self.schema),
+            rows: get_rows(&self.rows, row_index),
         }
     }
+}
 
-    fn get_columns(&self) -> Vec<TableColumnDefinition> {
-        if let Some(schema) = &self.schema {
-            schema
-                .fields
-                .iter()
-                .map(|field| field.to_table_column_definition())
-                .collect()
-        } else {
-            vec![]
+impl crate::bigquery::tables::Table {
+    pub(crate) fn to_table_builder(
+        &self,
+        rows: &Option<Vec<serde_json::Value>>,
+        row_index: usize,
+    ) -> TableBuilder {
+        TableBuilder {
+            style: TableStyle::default(),
+            dynamic_table_render: false,
+            columns: get_columns(&self.schema),
+            rows: get_rows(rows, row_index),
         }
     }
+}
 
-    fn get_rows_new(&self, row_index: usize) -> Vec<TableRow> {
-        if let Some(rows) = &self.rows {
-            rows.iter()
-                .enumerate()
-                .map(|(index, row)| json_value_to_row(row, row_index + index))
-                .collect()
-        } else {
-            vec![]
-        }
+fn get_columns(schema: &Option<crate::bigquery::base::TableSchema>) -> Vec<TableColumnDefinition> {
+    if let Some(schema) = schema {
+        schema
+            .fields
+            .iter()
+            .map(|field| field.to_table_column_definition())
+            .collect()
+    } else {
+        vec![]
+    }
+}
+
+fn get_rows(rows: &Option<Vec<serde_json::Value>>, row_index: usize) -> Vec<TableRow> {
+    if let Some(rows) = rows {
+        rows.iter()
+            .enumerate()
+            .map(|(index, row)| json_value_to_row(row, row_index + index))
+            .collect()
+    } else {
+        vec![]
     }
 }
 
