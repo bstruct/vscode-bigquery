@@ -49,7 +49,6 @@ features = [
     "MouseEvent",
     "MessageEvent",
     # "SubmitEvent",
-    # "MutationObserver",
     # "MutationRecord"
 ]
 

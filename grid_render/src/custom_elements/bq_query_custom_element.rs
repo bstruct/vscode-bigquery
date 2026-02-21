@@ -690,7 +690,7 @@ mod tests {
             .parse::<usize>()
             .unwrap_or(0);
         let rows_in_page = complex_object_array_test.rows.iter().len();
-        let table_builder = complex_object_array_test.to_table_builder(0);
+        let table_builder = complex_object_array_test.to_table_builder(1);
 
         let bq_table =
             bq_table.with_table_info(Some(rows_in_page), Some(rows_total), Some(table_builder));

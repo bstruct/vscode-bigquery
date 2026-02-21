@@ -2,8 +2,8 @@ use crate::bigquery::{base::TableReference, jobs::JobReference};
 
 use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
 use serde_json::json;
-use wasm_bindgen::{closure::Closure, JsCast};
-use web_sys::Element;
+use wasm_bindgen::{JsCast, closure::Closure};
+use web_sys::{Element, console::log_1};
 
 const PAGING: &str = "paging";
 const BTN_FIRST_PAGE: &str = "btn_first_page";
@@ -68,16 +68,6 @@ impl BaseElementTrait for DataTableControls {
 }
 
 fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
-    // //set the attribute PARENT_BQ_TABLE_ATT, with the id of the parent bq-table element, to later be possible to capture on the click event
-    // base_element
-    //     .element()
-    //     .set_attribute(
-    //         PARENT_BQ_TABLE_ATT,
-    //         &settings.parent_bq_table_id.to_string(),
-    //     )
-    //     .unwrap();
-
-    //
     match base_element.id().as_ref().unwrap().as_str() {
         PAGING => {
             if settings.rows_in_page.is_some()

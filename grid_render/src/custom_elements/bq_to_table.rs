@@ -1,3 +1,4 @@
+use web_sys::console::log_1;
 use website_component_table::{
     TableBuilder, TableColumn, TableColumnDefinition, TableRow, TableStyle, TableValue,
 };
@@ -25,6 +26,8 @@ impl GetQueryResultsResponse {
         let rows_total = self.get_rows_total();
         let table_builder = self.to_table_builder(1);
 
+        log_1(&format!("rows_in_page: {:?}, rows_total: {:?}", rows_in_page, rows_total).into());
+
         bq_query_requested.with_table_info(Some(rows_in_page), rows_total, Some(table_builder))
     }
 
@@ -42,7 +45,6 @@ impl Table {
         bq_table_element: &crate::custom_elements::bq_table_custom_element::BigqueryTableCustomElement,
         response_rows: &Option<TableDataListResponse>,
     ) -> BigqueryTableCustomElement {
-        let rows_in_page = self.get_rows_total();
         let rows_total = self.get_rows_total();
 
         let rows = match response_rows {
@@ -50,8 +52,11 @@ impl Table {
             None => &None,
         };
 
-        let row_index = bq_table_element.get_page_start_index();
+        let row_index = bq_table_element.get_page_start_index() + 1;
         let table_builder = self.to_table_builder(rows, row_index);
+        let rows_in_page = rows.as_ref().map_or(0, |r| r.len());
+        
+        log_1(&format!("rows_in_page: {:?}, rows_total: {:?}", rows_in_page, rows_total).into());
 
         bq_table_element.with_table_info(Some(rows_in_page), Some(rows_total), Some(table_builder))
     }

@@ -5,7 +5,7 @@ use website_component_table::TableBuilder;
 
 use crate::{
     bigquery::jobs::{GetJobRequest, GetListRequest, Job, JobStatus},
-    observe_element, parse_to_usize, utils::render_standalone,
+    parse_to_usize, utils::render_standalone,
 };
 
 use super::{
@@ -291,12 +291,12 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                 job_body.append_base_child(&bq_query);
                 // element.append_base_child(&bq_query);
 
-                //observe
-                let bq_query_element = &job_body.first_child().unwrap().element();
-                if !bq_query_element.has_attribute("beo") {
-                    observe_element(&job_body.first_child().unwrap().element());
-                    bq_query_element.set_attribute("beo", "1").unwrap();
-                }
+                // //observe
+                // let bq_query_element = &job_body.first_child().unwrap().element();
+                // if !bq_query_element.has_attribute("beo") {
+                //     observe_element(&job_body.first_child().unwrap().element());
+                //     bq_query_element.set_attribute("beo", "1").unwrap();
+                // }
             }
         }
     }

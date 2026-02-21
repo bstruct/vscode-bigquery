@@ -106,7 +106,7 @@ impl BigqueryTableCustomElement {
             dataset_id: get_attribute(element, "dataset_id"),
             table_id: get_attribute(element, "table_id"),
             token: get_attribute(element, "token"),
-            page_start_index: get_opt_num_attribute(element, PAGE_START_INDEX_ATT).unwrap_or(0),
+            page_start_index: get_opt_num_attribute(element, PAGE_START_INDEX_ATT).unwrap_or(1),
             page_size: get_num_attribute(element, PAGE_SIZE_ATT),
             rows_in_page: get_opt_num_attribute(element, ROWS_IN_PAGE_ATT),
             rows_total: get_opt_num_attribute(element, ROWS_TOTAL_ATT),
@@ -181,7 +181,6 @@ impl BigqueryTableCustomElement {
     pub(crate) fn first_page(&self) -> bool {
         assert!(self.element.is_some());
         let element = self.element.as_ref().unwrap();
-        // let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
 
         let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
         element.set_attribute(PAGE_START_INDEX_ATT, "0").unwrap();
@@ -194,7 +193,7 @@ impl BigqueryTableCustomElement {
     pub(crate) fn previous_page(&self) -> bool {
         assert!(self.element.is_some());
         let element = self.element.as_ref().unwrap();
-        let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
+        let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(1);
         let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
 
         let new_value = if start_index > page_size {
@@ -218,7 +217,7 @@ impl BigqueryTableCustomElement {
         let element = self.element.as_ref().unwrap();
         assert!(element.get_attribute(ROWS_TOTAL_ATT).is_some());
 
-        let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
+        let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(1);
         let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
         let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap();
 
@@ -516,6 +515,8 @@ mod tests {
         assert_eq!(bq_table.page_size, bq_table_from.page_size);
         assert_eq!(bq_table.rows_in_page, bq_table_from.rows_in_page);
         assert_eq!(bq_table.rows_total, bq_table_from.rows_total);
+
+        append_to_body(&parent_node);
     }
 
     #[wasm_bindgen_test]

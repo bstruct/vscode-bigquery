@@ -32,14 +32,23 @@ impl crate::bigquery::tables::Table {
 }
 
 fn get_columns(schema: &Option<crate::bigquery::base::TableSchema>) -> Vec<TableColumnDefinition> {
+    let column_row = TableColumnDefinition::Column(TableColumn {
+        text: "#".to_string(),
+        name: "index".to_string(),
+        width_px: 50,
+    });
+
     if let Some(schema) = schema {
-        schema
-            .fields
-            .iter()
-            .map(|field| field.to_table_column_definition())
-            .collect()
+        let mut columns = vec![column_row];
+        columns.extend(
+            schema
+                .fields
+                .iter()
+                .map(|field| field.to_table_column_definition()),
+        );
+        columns
     } else {
-        vec![]
+        vec![column_row]
     }
 }
 
