@@ -166,16 +166,20 @@ fn json_value_to_row(
 
     let cells = if let Some(f) = f {
         let mut cells = vec![TableValue::Index(row_index)];
-        let row_cells = f
-            .iter()
-            .enumerate()
-            .map(|(i, cell)| {
-                let field_type = fields.get(i).map(|f| f.r#type.as_str()).unwrap_or("");
-                let nested_fields = fields.get(i).and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
-                json_value_to_table_value(cell, field_type, nested_fields)
-            })
-            .collect::<Vec<TableValue>>();
-        cells.extend(row_cells);
+        // leaf_start tracks the 0-based flat leaf index of the current field.
+        // The index column occupies flat leaf 0, so data fields start at 1.
+        let mut leaf_start: usize = 1;
+        for (i, cell) in f.iter().enumerate() {
+            let field_type = fields.get(i).map(|f| f.r#type.as_str()).unwrap_or("");
+            let nested_fields = fields.get(i).and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
+            let leaf_count = if nested_fields.is_empty() {
+                1
+            } else {
+                count_leaf_fields(nested_fields)
+            };
+            cells.push(json_value_to_table_value(cell, field_type, nested_fields, leaf_start));
+            leaf_start += leaf_count;
+        }
         cells
     } else {
         vec![]
@@ -201,6 +205,7 @@ fn json_value_to_table_value(
     value: &serde_json::Value,
     field_type: &str,
     nested_fields: &[TableFieldSchema],
+    start_col_index: usize,
 ) -> TableValue {
     let v = value.pointer("/v").unwrap_or_default();
 
@@ -240,13 +245,17 @@ fn json_value_to_table_value(
                             .map(|(i, cell)| {
                                 let nf_type = nested_fields.get(i).map(|f| f.r#type.as_str()).unwrap_or("");
                                 let nf_nested = nested_fields.get(i).and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
-                                json_value_to_table_value(cell, nf_type, nf_nested)
+                                // Inner table cells reference --cN relative to the inner
+                                // table's own shadow scope starting at start_col_index+i.
+                                json_value_to_table_value(cell, nf_type, nf_nested, start_col_index + i)
                             })
                             .collect(),
                     })
                     .collect(),
                 col_span,
-                start_col_index: 1,
+                // start_col_index is the 0-based flat leaf position of the first
+                // sub-column in the outer table's --cN CSS variable set.
+                start_col_index,
             };
             TableValue::Array(inner_table)
         }
