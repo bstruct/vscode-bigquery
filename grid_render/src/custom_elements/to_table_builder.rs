@@ -30,20 +30,10 @@ fn value_char_len(v: &TableValue) -> usize {
     }
 }
 
-/// Approximate rendered width of a column header in characters.
-fn header_char_len(col: &TableColumnDefinition) -> usize {
-    match col {
-        TableColumnDefinition::Column(c) => c.text.chars().count(),
-        TableColumnDefinition::Group(g) => {
-            // Sum child header widths plus small separator gap between them.
-            g.columns.iter().map(header_char_len).sum::<usize>()
-                + g.columns.len().saturating_sub(1) * 2
-        }
-    }
-}
-
-/// Set `width_px` on every `Column` leaf using the wider of header vs. content.
+/// Set `width_px` on every column using the wider of header vs. content.
 /// `columns[0]` is the index column and is left at its fixed 50 px.
+/// Group columns (RECORD fields) occupy one row-cell position (an Array cell),
+/// so col_idx maps 1:1 to row cell index for both Column and Group.
 fn patch_column_widths(columns: &mut Vec<TableColumnDefinition>, rows: &[TableRow]) {
     for (col_idx, col_def) in columns.iter_mut().enumerate() {
         if col_idx == 0 {
@@ -63,8 +53,8 @@ fn patch_column_widths(columns: &mut Vec<TableColumnDefinition>, rows: &[TableRo
                 col.width_px = clamp_width(desired);
             }
             TableColumnDefinition::Group(group) => {
-                // RECORD fields: size sub-columns from header text only
-                // (cell content is a nested inner table, not flat strings).
+                // RECORD fields: the row cell is a TableValue::Array (inner table).
+                // Size sub-columns from their header text since there is no flat content.
                 patch_group_header_widths(&mut group.columns);
             }
         }
@@ -232,6 +222,9 @@ fn json_value_to_table_value(
             }
         }
         serde_json::Value::Array(arr) => {
+            // col_span must equal the number of leaf columns so the <td colspan="N">
+            // spans exactly the N sub-column headers produced by the Group definition.
+            let col_span = count_leaf_fields(nested_fields).max(1);
             let inner_table = InnerTableBuilder {
                 style: TableStyle::default(),
                 rows: arr
@@ -252,7 +245,7 @@ fn json_value_to_table_value(
                             .collect(),
                     })
                     .collect(),
-                col_span: 1,
+                col_span,
                 start_col_index: 1,
             };
             TableValue::Array(inner_table)
@@ -266,6 +259,10 @@ fn json_value_to_table_value(
 impl TableFieldSchema {
     pub(crate) fn to_table_column_definition(&self) -> TableColumnDefinition {
         if let Some(fields) = &self.fields {
+            // RECORD (STRUCT) field: emit a Group so sub-field names appear as
+            // sub-column headers. The matching row cell is a TableValue::Array
+            // with col_span = number of leaf fields, so <td colspan="N"> aligns
+            // with the N leaf header columns produced by this Group.
             TableColumnDefinition::Group(TableColumnGroup {
                 text: self.name.clone(),
                 name: self.name.clone(),
@@ -282,6 +279,18 @@ impl TableFieldSchema {
             })
         }
     }
+}
+
+/// Count the total number of leaf (non-group) columns a field produces,
+/// recursing into nested RECORD sub-fields.
+fn count_leaf_fields(fields: &[TableFieldSchema]) -> usize {
+    fields
+        .iter()
+        .map(|f| match &f.fields {
+            Some(sub) => count_leaf_fields(sub),
+            None => 1,
+        })
+        .sum()
 }
 
 #[cfg(test)]
