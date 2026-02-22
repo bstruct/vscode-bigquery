@@ -298,6 +298,10 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                 // Dispatch render_table to trigger the async query results fetch.
                 // Only done when job is complete, so on_render_query won't race against
                 // a still-running job and permanently mark loaded=1 with no data.
+                // Clear 'loaded' first: on re-render (refresh / polling cycle) the
+                // bq-query element already exists with loaded=1, and on_render_query
+                // would silently skip the fetch without this reset.
+                let _ = bq_query_element.element().remove_attribute("loaded");
                 if let Ok(event) = web_sys::Event::new(RENDER_QUERY_EVENT_NAME) {
                     let _ = bq_query_element.element().dispatch_event(&event);
                 }
@@ -333,7 +337,36 @@ fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Op
     };
 
     let html_element = element.element();
-    html_element.set_text_content(Some(&content));
+    // Use inner HTML so we can embed the refresh button alongside the text.
+    html_element.set_inner_html(&format!(
+        r#"<span class="job-title-text">{}</span><button class="job-refresh-btn" title="Refresh">&#x21BB;</button>"#,
+        content
+    ));
+
+    // Add refresh click listener to the button each time (button is recreated by set_inner_html).
+    if let Some(btn) = html_element.query_selector(".job-refresh-btn").ok().flatten() {
+        let on_refresh = Closure::wrap(Box::new(|event: web_sys::Event| {
+            event.stop_propagation();
+            let target = match event
+                .current_target()
+                .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
+            {
+                Some(e) => e,
+                None => return,
+            };
+            let script = match target.closest(TAG_NAME).ok().flatten() {
+                Some(e) => e,
+                None => return,
+            };
+            let _ = script.remove_attribute("loaded");
+            if let Ok(render_event) = web_sys::Event::new(RENDER_SCRIPT_EVENT_NAME) {
+                let _ = script.dispatch_event(&render_event);
+            }
+        }) as Box<dyn FnMut(_)>);
+
+        let _ = btn.add_event_listener_with_callback("click", on_refresh.as_ref().unchecked_ref());
+        on_refresh.forget();
+    }
 
     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
         "job_status: {:?}",

@@ -67,3 +67,24 @@ div[be_id="jobs"] div div.job_body_open {
 div[be_id="jobs"] div div.job_body_open bq-query {
     display: block;
 }
+
+/* Refresh button inside the script job-title bar */
+div[be_id="jobs"] div div.title .job-refresh-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.5;
+    padding: 1px 5px;
+    font-size: 14px;
+    margin-left: auto;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+div[be_id="jobs"] div div.title .job-refresh-btn:hover {
+    opacity: 1;
+    border-color: var(--vscode-button-separator);
+    background: var(--vscode-button-secondaryBackground);
+}

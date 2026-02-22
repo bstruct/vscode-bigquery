@@ -13,6 +13,8 @@ const BTN_LAST_PAGE: &str = "btn_last_page";
 const BTN_DOWNLOAD_CSV: &str = "btn_download_csv";
 const BTN_DOWNLOAD_JSONL: &str = "btn_download_json";
 const BTN_SEND_PUBSUB: &str = "btn_send_pubsub";
+const JOB_ID_LABEL: &str = "job_id_label";
+const BTN_REFRESH: &str = "btn_refresh";
 
 pub(crate) const EVENT_GO_TO_FIRST_PAGE: &str = "go_to_first_page";
 pub(crate) const EVENT_GO_TO_PREVIOUS_PAGE: &str = "go_to_previous_page";
@@ -64,6 +66,8 @@ impl BaseElementTrait for DataTableControls {
             .append_sibling_fn("button", BTN_DOWNLOAD_CSV, &modify_controls, self)
             .append_sibling_fn("button", BTN_DOWNLOAD_JSONL, &modify_controls, self)
             .append_sibling_fn("button", BTN_SEND_PUBSUB, &modify_controls, self)
+            .append_sibling_fn("span", JOB_ID_LABEL, &modify_controls, self)
+            .append_sibling_fn("button", BTN_REFRESH, &modify_controls, self)
     }
 }
 
@@ -169,6 +173,72 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
                 element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1 1l14 7-14 7V9.5l10-1.5-10-1.5V1z"/></svg> Pub/Sub"#);
             } else {
                 let _ = element.set_attribute("style", "display: none;");
+            }
+        }
+        JOB_ID_LABEL => {
+            let job_id = settings
+                .job_reference
+                .as_ref()
+                .map(|jr| jr.job_id.as_str())
+                .or_else(|| {
+                    settings
+                        .table_reference
+                        .as_ref()
+                        .map(|tr| tr.table_id.as_str())
+                })
+                .unwrap_or("");
+            if !job_id.is_empty() {
+                let display = if job_id.len() > 45 {
+                    format!("{}\u{2026}", &job_id[..45])
+                } else {
+                    job_id.to_string()
+                };
+                base_element.element().set_inner_html(&format!(
+                    r#"<span title="{}">{}</span>"#,
+                    job_id, display
+                ));
+            }
+        }
+        BTN_REFRESH => {
+            let element = &base_element.element();
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M13.451 5.609l-.579-.939-1.068.812-.076.094c-.335-.939-.912-1.765-1.696-2.433C9.211 2.422 8.05 2 6.75 2 3.936 2 1.641 4.295 1.641 7.109S3.936 12.218 6.75 12.218c1.71 0 3.22-.847 4.116-2.138l-.893-.612c-.71 1.038-1.897 1.727-3.223 1.727-2.183 0-3.955-1.773-3.955-3.956S4.567 3.286 6.75 3.286c.973 0 1.862.375 2.527.986.479.436.834.994 1.024 1.617l-1.461-.39-.189.702 2.509.672.48-2.509-.189-.735z"/></svg> Refresh"#);
+            if element.get_attribute("bee").is_none() {
+                let on_refresh = Closure::wrap(Box::new(|event: web_sys::Event| {
+                    let target = match event
+                        .current_target()
+                        .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
+                    {
+                        Some(e) => e,
+                        None => return,
+                    };
+                    // The button lives inside a shadow root — get_root_node() returns it.
+                    let shadow = match target
+                        .get_root_node()
+                        .dyn_into::<web_sys::ShadowRoot>()
+                        .ok()
+                    {
+                        Some(s) => s,
+                        None => return,
+                    };
+                    let host = shadow.host();
+                    let tag = host.tag_name().to_lowercase();
+                    let event_name = match tag.as_str() {
+                        "bq-query" => "render_query",
+                        "bq-table" => "render_table",
+                        _ => return,
+                    };
+                    let _ = host.remove_attribute("loaded");
+                    if let Ok(render_event) = web_sys::Event::new(event_name) {
+                        let _ = host.dispatch_event(&render_event);
+                    }
+                }) as Box<dyn FnMut(_)>);
+
+                let _ = element.add_event_listener_with_callback(
+                    "click",
+                    on_refresh.as_ref().unchecked_ref(),
+                );
+                let _ = element.set_attribute("bee", "1");
+                on_refresh.forget();
             }
         }
         _ => {}
