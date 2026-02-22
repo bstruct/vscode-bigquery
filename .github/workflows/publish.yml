@@ -21,6 +21,8 @@ jobs:
     - run: mkdir dist
     - name: Package extension (pre-release)
       run: npx vsce package --pre-release
+      env:
+        CARGO_NET_GIT_FETCH_WITH_CLI: true
     - name: Publish to Visual Studio Marketplace (pre-release)
       run: npx vsce publish --pre-release --packagePath *.vsix
       env:
