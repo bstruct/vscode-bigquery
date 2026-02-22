@@ -3,15 +3,96 @@ use website_component_table::{
     TableRow, TableStyle, TableValue,
 };
 
-use crate::bigquery::{base::TableFieldSchema, jobs::GetQueryResultsResponse};
+use crate::bigquery::{base::{TableFieldSchema, TableSchema}, jobs::GetQueryResultsResponse};
+
+// ── Dynamic column-width constants ────────────────────────────────────────────────
+/// Estimated pixels per character (~13 px UI font).
+const CHAR_WIDTH_PX: usize = 8;
+/// Horizontal cell padding: `padding: 5px 15px` → 30 px (15 × 2).
+const CELL_PADDING_PX: usize = 30;
+const MIN_COL_WIDTH_PX: usize = 80;
+const MAX_COL_WIDTH_PX: usize = 500;
+
+fn clamp_width(px: usize) -> usize {
+    px.max(MIN_COL_WIDTH_PX).min(MAX_COL_WIDTH_PX)
+}
+
+/// Approximate rendered width of a cell value in characters.
+fn value_char_len(v: &TableValue) -> usize {
+    match v {
+        TableValue::String(s) => s.chars().count(),
+        TableValue::Boolean(_) => 5, // "false"
+        TableValue::Null => 4,        // "null"
+        TableValue::Index(n) => n.to_string().len(),
+        TableValue::Int(n) => n.to_string().len(),
+        TableValue::Float(f) => f.to_string().len(),
+        TableValue::Array(_) => 0,    // rendered as inner table; skip
+    }
+}
+
+/// Approximate rendered width of a column header in characters.
+fn header_char_len(col: &TableColumnDefinition) -> usize {
+    match col {
+        TableColumnDefinition::Column(c) => c.text.chars().count(),
+        TableColumnDefinition::Group(g) => {
+            // Sum child header widths plus small separator gap between them.
+            g.columns.iter().map(header_char_len).sum::<usize>()
+                + g.columns.len().saturating_sub(1) * 2
+        }
+    }
+}
+
+/// Set `width_px` on every `Column` leaf using the wider of header vs. content.
+/// `columns[0]` is the index column and is left at its fixed 50 px.
+fn patch_column_widths(columns: &mut Vec<TableColumnDefinition>, rows: &[TableRow]) {
+    for (col_idx, col_def) in columns.iter_mut().enumerate() {
+        if col_idx == 0 {
+            continue; // index column stays fixed
+        }
+        match col_def {
+            TableColumnDefinition::Column(col) => {
+                let header_chars = col.text.chars().count();
+                let max_content_chars = rows
+                    .iter()
+                    .filter_map(|r| r.cells.get(col_idx))
+                    .map(value_char_len)
+                    .max()
+                    .unwrap_or(0);
+                let desired =
+                    header_chars.max(max_content_chars) * CHAR_WIDTH_PX + CELL_PADDING_PX;
+                col.width_px = clamp_width(desired);
+            }
+            TableColumnDefinition::Group(group) => {
+                // RECORD fields: size sub-columns from header text only
+                // (cell content is a nested inner table, not flat strings).
+                patch_group_header_widths(&mut group.columns);
+            }
+        }
+    }
+}
+
+fn patch_group_header_widths(cols: &mut Vec<TableColumnDefinition>) {
+    for col_def in cols.iter_mut() {
+        match col_def {
+            TableColumnDefinition::Column(col) => {
+                let desired = col.text.chars().count() * CHAR_WIDTH_PX + CELL_PADDING_PX;
+                col.width_px = clamp_width(desired);
+            }
+            TableColumnDefinition::Group(g) => patch_group_header_widths(&mut g.columns),
+        }
+    }
+}
 
 impl GetQueryResultsResponse {
     pub(crate) fn to_table_builder(&self, row_index: usize) -> TableBuilder {
+        let mut columns = get_columns(&self.schema);
+        let rows = get_rows(&self.rows, &self.schema, row_index);
+        patch_column_widths(&mut columns, &rows);
         TableBuilder {
             style: TableStyle::default(),
             dynamic_table_render: false,
-            columns: get_columns(&self.schema),
-            rows: get_rows(&self.rows, row_index),
+            columns,
+            rows,
         }
     }
 }
@@ -22,11 +103,14 @@ impl crate::bigquery::tables::Table {
         rows: &Option<Vec<serde_json::Value>>,
         row_index: usize,
     ) -> TableBuilder {
+        let mut columns = get_columns(&self.schema);
+        let built_rows = get_rows(rows, &self.schema, row_index);
+        patch_column_widths(&mut columns, &built_rows);
         TableBuilder {
             style: TableStyle::default(),
             dynamic_table_render: false,
-            columns: get_columns(&self.schema),
-            rows: get_rows(rows, row_index),
+            columns,
+            rows: built_rows,
         }
     }
 }
@@ -52,18 +136,31 @@ fn get_columns(schema: &Option<crate::bigquery::base::TableSchema>) -> Vec<Table
     }
 }
 
-fn get_rows(rows: &Option<Vec<serde_json::Value>>, row_index: usize) -> Vec<TableRow> {
+fn get_rows(
+    rows: &Option<Vec<serde_json::Value>>,
+    schema: &Option<TableSchema>,
+    row_index: usize,
+) -> Vec<TableRow> {
+    let fields: &[TableFieldSchema] = schema
+        .as_ref()
+        .map(|s| s.fields.as_slice())
+        .unwrap_or(&[]);
+
     if let Some(rows) = rows {
         rows.iter()
             .enumerate()
-            .map(|(index, row)| json_value_to_row(row, row_index + index))
+            .map(|(index, row)| json_value_to_row(row, fields, row_index + index))
             .collect()
     } else {
         vec![]
     }
 }
 
-fn json_value_to_row(value: &serde_json::Value, row_index: usize) -> TableRow {
+fn json_value_to_row(
+    value: &serde_json::Value,
+    fields: &[TableFieldSchema],
+    row_index: usize,
+) -> TableRow {
     let f = if let Some(obj) = value.as_object() {
         if let Some(f) = obj.get("f") {
             match f {
@@ -81,7 +178,12 @@ fn json_value_to_row(value: &serde_json::Value, row_index: usize) -> TableRow {
         let mut cells = vec![TableValue::Index(row_index)];
         let row_cells = f
             .iter()
-            .map(|cell| json_value_to_table_value(cell))
+            .enumerate()
+            .map(|(i, cell)| {
+                let field_type = fields.get(i).map(|f| f.r#type.as_str()).unwrap_or("");
+                let nested_fields = fields.get(i).and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
+                json_value_to_table_value(cell, field_type, nested_fields)
+            })
             .collect::<Vec<TableValue>>();
         cells.extend(row_cells);
         cells
@@ -92,14 +194,43 @@ fn json_value_to_row(value: &serde_json::Value, row_index: usize) -> TableRow {
     TableRow { cells }
 }
 
-fn json_value_to_table_value(value: &serde_json::Value) -> TableValue {
+/// Format a BigQuery TIMESTAMP (seconds since Unix epoch, possibly in scientific notation)
+/// as an ISO 8601 string using the JS Date API.
+fn format_timestamp(s: &str) -> String {
+    if let Ok(seconds) = s.parse::<f64>() {
+        let ms = seconds * 1000.0;
+        let date = js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(ms));
+        if let Some(iso) = date.to_iso_string().as_string() {
+            return iso;
+        }
+    }
+    s.to_string()
+}
+
+fn json_value_to_table_value(
+    value: &serde_json::Value,
+    field_type: &str,
+    nested_fields: &[TableFieldSchema],
+) -> TableValue {
     let v = value.pointer("/v").unwrap_or_default();
 
     match v {
         serde_json::Value::Null => TableValue::Null,
         serde_json::Value::Bool(b) => TableValue::Boolean(b.clone()),
-        serde_json::Value::Number(n) => TableValue::String(n.to_string()),
-        serde_json::Value::String(s) => TableValue::String(s.clone()),
+        serde_json::Value::Number(n) => {
+            if field_type == "TIMESTAMP" {
+                TableValue::String(format_timestamp(&n.to_string()))
+            } else {
+                TableValue::String(n.to_string())
+            }
+        }
+        serde_json::Value::String(s) => {
+            if field_type == "TIMESTAMP" {
+                TableValue::String(format_timestamp(s))
+            } else {
+                TableValue::String(s.clone())
+            }
+        }
         serde_json::Value::Array(arr) => {
             let inner_table = InnerTableBuilder {
                 style: TableStyle::default(),
@@ -112,7 +243,12 @@ fn json_value_to_table_value(value: &serde_json::Value) -> TableValue {
                             .as_array()
                             .unwrap_or(&vec![])
                             .iter()
-                            .map(|cell| json_value_to_table_value(cell))
+                            .enumerate()
+                            .map(|(i, cell)| {
+                                let nf_type = nested_fields.get(i).map(|f| f.r#type.as_str()).unwrap_or("");
+                                let nf_nested = nested_fields.get(i).and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
+                                json_value_to_table_value(cell, nf_type, nf_nested)
+                            })
                             .collect(),
                     })
                     .collect(),
@@ -121,10 +257,7 @@ fn json_value_to_table_value(value: &serde_json::Value) -> TableValue {
             };
             TableValue::Array(inner_table)
         }
-        serde_json::Value::Object(obj) => {
-            // let object_values: Vec<(String, TableValue)> = obj.iter()
-            //     .map(|(k, v)| (k.clone(), json_value_to_table_value(v)))
-            //     .collect();
+        serde_json::Value::Object(_obj) => {
             TableValue::String(value.to_string())
         }
     }

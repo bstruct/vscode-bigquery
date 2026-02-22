@@ -2,33 +2,54 @@ div[be_id='controls-background'] {
     position: sticky;
     top: 0;
     left: 0;
+    z-index: 10;
     background-color: var(--vscode-activityBar-border);
-    width: 100%;
-    height: 30px;
     box-shadow: inset 0 0 0 2000px rgba(0, 0, 0, 255);
+    width: 100%;
+    padding: 2px 4px;
+    box-sizing: border-box;
 }
 
 div[be_id='controls'] {
-    top: 0;
-    left: 0;
-    position: sticky;
-    background: var(--vscode-activityBar-border);
-    display: inline-block;
+    /* not sticky — parent controls-background already is */
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
     text-wrap: nowrap;
+    gap: 2px;
 }
 
 div[be_id='controls'] span {
-    padding: 5px 10px;
-    display: inline-block;
-    margin-right: 5px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
 }
 
 div[be_id='controls'] button {
-    margin-right: 5px;
+    padding: 3px 8px;
+    height: 26px;
+    box-sizing: border-box;   /* height: 26px includes padding+border */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    line-height: 1;
 
     background-color: var(--vscode-button-secondaryBackground);
     border: 1px solid var(--vscode-button-separator);
     color: var(--vscode-button-secondaryForeground);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+div[be_id='controls'] button:hover:not(:disabled) {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+div[be_id='controls'] button svg {
+    flex-shrink: 0;
+    vertical-align: middle;
+    pointer-events: none;
 }
 
 div[be_id='controls'] button:disabled {
@@ -52,11 +73,12 @@ div.t {
     border-collapse: collapse;
 }
 
-/* table header */
+/* table header — top must match controls-background height: 2px padding + 26px button + 2px padding = 30px */
 div.th {
     display: table-header-group;
     position: sticky;
     top: 30px;
+    z-index: 9;
 }
 
 /* table body */

@@ -101,7 +101,8 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
         BTN_FIRST_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_FIRST_PAGE);
-            element.set_inner_html("<< First page");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h1.5v12H2V2zm4.5 6L13 2v12L6.5 8z"/></svg> First page"#);
+            let _ = element.set_attribute("title", "First page");
             if settings.page_start_index.unwrap_or(0) == 0 {
                 let _ = element.set_attribute("disabled", "disabled");
             } else {
@@ -111,7 +112,8 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
         BTN_PREVIOUS_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_PREVIOUS_PAGE);
-            element.set_inner_html("< Previous page");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M10.5 2L4 8l6.5 6V2z"/></svg> Previous page"#);
+            let _ = element.set_attribute("title", "Previous page");
             if settings.page_start_index.unwrap_or(0) == 0 {
                 let _ = element.set_attribute("disabled", "disabled");
             } else {
@@ -121,7 +123,8 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
         BTN_NEXT_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_NEXT_PAGE);
-            element.set_inner_html("> Next page");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 2L12 8l-6.5 6V2z"/></svg> Next page"#);
+            let _ = element.set_attribute("title", "Next page");
 
             let start_index = settings.page_start_index.unwrap_or(0);
             let page_size = settings.rows_in_page.unwrap_or(0);
@@ -136,7 +139,8 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
         BTN_LAST_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_LAST_PAGE);
-            element.set_inner_html(">> Last page");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M12.5 2h1.5v12h-1.5V2zM3 2l6.5 6L3 14V2z"/></svg> Last page"#);
+            let _ = element.set_attribute("title", "Last page");
 
             let start_index = settings.page_start_index.unwrap_or(0);
             let page_size = settings.rows_in_page.unwrap_or(0);
@@ -151,18 +155,18 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
         BTN_DOWNLOAD_CSV => {
             let element = &base_element.element();
             add_event_listener_command(element, BTN_DOWNLOAD_CSV, settings);
-            element.set_inner_html("Download CSV");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M7.25 1v8.19L4.28 6.22 3.22 7.28 8 12.06l4.78-4.78-1.06-1.06-2.97 2.97V1h-1.5zM2 14h12v1.5H2V14z"/></svg> CSV"#);
         }
         BTN_DOWNLOAD_JSONL => {
             let element = &base_element.element();
             add_event_listener_command(element, BTN_DOWNLOAD_JSONL, settings);
-            element.set_inner_html("Download JSONL");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M7.25 1v8.19L4.28 6.22 3.22 7.28 8 12.06l4.78-4.78-1.06-1.06-2.97 2.97V1h-1.5zM2 14h12v1.5H2V14z"/></svg> JSONL"#);
         }
         BTN_SEND_PUBSUB => {
             let element = &base_element.element();
             if settings.job_reference.is_some() {
                 add_event_listener_command(element, BTN_SEND_PUBSUB, settings);
-                element.set_inner_html("Send to Pub/Sub");
+                element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1 1l14 7-14 7V9.5l10-1.5-10-1.5V1z"/></svg> Pub/Sub"#);
             } else {
                 let _ = element.set_attribute("style", "display: none;");
             }
