@@ -14,6 +14,8 @@ jobs:
       with:
         node-version: 20.x
     - run: npm install
+    - name: Install wasm-pack
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
     - run: mkdir dist
     - name: Package extension (pre-release)
       run: npx vsce package --pre-release
