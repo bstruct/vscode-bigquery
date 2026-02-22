@@ -7,8 +7,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
+    - name: Configure Git for private repos
+      run: |
+        git config --global user.name "bstruct"
+        git config --global user.email "git@bstruct.com"
+        git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+    
     - name: Install Node.js
       uses: actions/setup-node@v3
       with:
@@ -17,17 +23,12 @@ jobs:
     - name: Install wasm-pack
       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
     
-    - name: Configure Git for private repos
-      run: |
-        git config --global user.name "bstruct"
-        git config --global user.email "git@bstruct.com"
-        git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
-    
     - run: mkdir dist
     - name: Package extension (pre-release)
-      run: npx vsce package --pre-release
       env:
         CARGO_NET_GIT_FETCH_WITH_CLI: true
+      run: npx vsce package --pre-release
+      
     - name: Publish to Visual Studio Marketplace (pre-release)
       run: npx vsce publish --pre-release --packagePath *.vsix
       env:
