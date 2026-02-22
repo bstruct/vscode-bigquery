@@ -96,14 +96,23 @@ impl BigqueryQueryCustomElement {
         rows_total: Option<usize>,
         table_builder: Option<TableBuilder>,
     ) -> BigqueryQueryCustomElement {
-        //information about the job as potentially changed, set new state with that information
-        let state = serde_json::json!({
-            "jobId": self.job_id.to_string(),
-            "projectId": self.project_id.to_string(),
-            "location": self.location.to_string(),
-        });
-        //because in unit tests, this browser function is not available, here, no panic is set
-        set_state(&state.to_string()).unwrap_or(());
+        // Only save state for top-level bq-query elements (i.e. run directly,
+        // not as a child of bq-script).  Child bq-query elements live in the
+        // light DOM of bq-script, so closest("bq-script") finds an ancestor.
+        // When running inside a script, bq-script::render() already saved the
+        // correct top-level job_id and we must not let child queries overwrite it.
+        let is_child_of_script = self.element.as_ref()
+            .and_then(|el| el.closest("bq-script").ok().flatten())
+            .is_some();
+
+        if !is_child_of_script {
+            let state = serde_json::json!({
+                "jobId":     self.job_id.to_string(),
+                "projectId": self.project_id.to_string(),
+                "location":  self.location.to_string(),
+            });
+            set_state(&state.to_string()).unwrap_or(());
+        }
 
         BigqueryQueryCustomElement {
             element: self.element.to_owned(),

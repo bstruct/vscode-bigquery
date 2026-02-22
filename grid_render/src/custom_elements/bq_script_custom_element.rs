@@ -5,7 +5,7 @@ use website_component_table::TableBuilder;
 
 use crate::{
     bigquery::jobs::{GetJobRequest, GetListRequest, Job, JobStatus},
-    parse_to_usize, utils::render_standalone,
+    parse_to_usize, set_state, utils::render_standalone,
 };
 
 use super::{
@@ -160,6 +160,15 @@ impl BaseElementTrait for BigqueryScriptCustomElement {
     }
 
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
+        // Persist the top-level script job so VS Code can restore all child
+        // jobs on restart.  Child bq-query elements must NOT overwrite this.
+        let state = serde_json::json!({
+            "jobId":     self.job_id,
+            "projectId": self.project_id,
+            "location":  self.location,
+        });
+        set_state(&state.to_string()).unwrap_or(());
+
         let css_content = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/resources/bqscript.css"
