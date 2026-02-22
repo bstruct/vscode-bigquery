@@ -16,6 +16,8 @@ jobs:
     - run: npm install
     - name: Install wasm-pack
       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+    - name: Configure git credentials for private cargo deps
+      run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
     - run: mkdir dist
     - name: Package extension (pre-release)
       run: npx vsce package --pre-release
