@@ -26,7 +26,7 @@ const PAGE_START_INDEX_ATT: &str = "page_start_index";
 const PAGE_SIZE_ATT: &str = "page_size";
 const ROWS_IN_PAGE_ATT: &str = "rows_in_page";
 const ROWS_TOTAL_ATT: &str = "rows_total";
-const RENDER_QUERY_EVENT_NAME: &str = "render_table";
+pub(crate) const RENDER_QUERY_EVENT_NAME: &str = "render_table";
 
 pub(crate) struct BigqueryQueryCustomElement {
     element: Option<Element>,

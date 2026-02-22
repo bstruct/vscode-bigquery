@@ -21,9 +21,9 @@ impl GetQueryResultsResponse {
         bq_query_requested: &BigqueryQueryCustomElement,
     ) -> BigqueryQueryCustomElement {
         let page_start_index = bq_query_requested.get_page_start_index();
-        let rows_in_page = self.get_rows_total().unwrap_or(0) - page_start_index;
+        let rows_in_page = self.rows.as_ref().map_or(0, |r| r.len());
         let rows_total = self.get_rows_total();
-        let table_builder = self.to_table_builder(1);
+        let table_builder = self.to_table_builder(page_start_index + 1);
 
         bq_query_requested.with_table_info(Some(rows_in_page), rows_total, Some(table_builder))
     }

@@ -12,11 +12,12 @@ use super::{
     base_element::BaseElement,
     base_element_trait::BaseElementTrait,
     bq_common_custom_element::{get_attribute, get_opt_attribute, remove_attribute, set_attribute},
-    bq_query_custom_element::BigqueryQueryCustomElement,
+    bq_query_custom_element::{BigqueryQueryCustomElement, RENDER_QUERY_EVENT_NAME},
     custom_element_definition::CustomElementDefinition,
 };
 
 const TAG_NAME: &'static str = "bq-script";
+const RENDER_SCRIPT_EVENT_NAME: &str = "render_script";
 
 pub(crate) struct BigqueryScriptCustomElement {
     element: Option<Element>,
@@ -114,26 +115,33 @@ impl BigqueryScriptCustomElement {
         let all_jobs_completed = self.all_jobs_completed() && self.num_child_jobs.is_some();
 
         if !all_jobs_completed {
-            // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            //     "============= set_refresh_timeout ============= ",
-            // )));
+            if let Some(window) = web_sys::window() {
+                let parent_node = parent_node.clone();
+                let on_timeout = Closure::once(Box::new(move || {
+                    if let Some(child) = parent_node.first_child() {
+                        if let Ok(element) = child.dyn_into::<web_sys::Element>() {
+                            if let Ok(event) = web_sys::Event::new(RENDER_SCRIPT_EVENT_NAME) {
+                                let _ = element.dispatch_event(&event);
+                            }
+                        }
+                    }
+                }) as Box<dyn FnOnce()>);
+                let _ = window.set_timeout_with_callback_and_timeout_and_arguments_0(
+                    on_timeout.as_ref().unchecked_ref(),
+                    5000,
+                );
+                on_timeout.forget();
+            }
+        }
+    }
 
-            // if let Some(window) = web_sys::window() {
-            //     let dispatch_event = Closure::wrap(Box::new(|node: Node| {
-            //         let event = &Event::new(ELEMENT_INTERSECTED_EVENT_NAME).unwrap();
-            //         node.first_child().unwrap().dispatch_event(event).unwrap();
-            //     }) as Box<dyn FnMut(_)>);
-
-            //     window
-            //         .set_timeout_with_callback_and_timeout_and_arguments(
-            //             dispatch_event.as_ref().unchecked_ref(),
-            //             5000,
-            //             &js_sys::Array::of1(parent_node),
-            //         )
-            //         .unwrap();
-
-            //     dispatch_event.forget();
-            // }
+    pub(crate) fn dispatch_on_render_event(&self, element: &Element) {
+        if let Some(first_child) = element.first_child() {
+            if let Ok(first_child) = first_child.dyn_into::<web_sys::Element>() {
+                if let Ok(event) = web_sys::Event::new(RENDER_SCRIPT_EVENT_NAME) {
+                    let _ = first_child.dispatch_event(&event);
+                }
+            }
         }
     }
 
@@ -250,7 +258,7 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                 .apply_fn(&resolve_job_title, &(job_name, job_status))
                 .append_sibling("DIV", &format!("job_body_{}", index));
 
-        //insert bq-query custom element if there's a job already
+        //insert bq-query custom element only when the job is complete
         if chid_job.is_some() {
             let child_job = chid_job.as_ref().unwrap();
 
@@ -259,43 +267,34 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                 job_body
                     .apply_default_class_name("job_body_open")
                     .apply_fn(&inser_error_table, &child_job.to_error_table());
-            } else {
-                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-                    "index: {}, num_child_jobs: {}, is_complete: {}",
-                    index,
-                    num_child_jobs,
-                    child_job.is_complete()
-                )));
-
-                //if it's the last job on the list, open the grid
-                if index == (num_child_jobs - 1) && child_job.is_complete() {
+            } else if child_job.is_complete() {
+                // Open the last job body, collapse the rest
+                if index == (num_child_jobs - 1) {
                     let _ = &job_body.apply_class_name("job_body_open");
                 } else {
                     let _ = &job_body.apply_class_name("job_body_closed");
                 }
 
-                let job_reference = chid_job.as_ref().unwrap().job_reference.as_ref().unwrap();
-                let token = script_element.token.clone();
-                let job_statement_type = child_job.get_statement_type();
-
+                let job_reference = child_job.job_reference.as_ref().unwrap();
                 let bq_query = BigqueryQueryCustomElement::base_new(
                     format!("job_query_{}", index),
                     job_reference.job_id.clone(),
                     job_reference.project_id.clone(),
                     job_reference.location.clone(),
-                    token,
-                    job_statement_type,
+                    script_element.token.clone(),
+                    child_job.get_statement_type(),
                 );
 
-                job_body.append_base_child(&bq_query);
-                // element.append_base_child(&bq_query);
-
-                // //observe
-                // let bq_query_element = &job_body.first_child().unwrap().element();
-                // if !bq_query_element.has_attribute("beo") {
-                //     observe_element(&job_body.first_child().unwrap().element());
-                //     bq_query_element.set_attribute("beo", "1").unwrap();
-                // }
+                let bq_query_element = job_body.append_base_child(&bq_query);
+                // Dispatch render_table to trigger the async query results fetch.
+                // Only done when job is complete, so on_render_query won't race against
+                // a still-running job and permanently mark loaded=1 with no data.
+                if let Ok(event) = web_sys::Event::new(RENDER_QUERY_EVENT_NAME) {
+                    let _ = bq_query_element.element().dispatch_event(&event);
+                }
+            } else {
+                // Job is still pending/running — keep body closed, results not yet available
+                let _ = &job_body.apply_class_name("job_body_closed");
             }
         }
     }
@@ -365,18 +364,17 @@ fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Op
 
 impl CustomElementDefinition for BigqueryScriptCustomElement {
     fn define(_document: &web_sys::Document, element: &web_sys::Element) {
-        // let on_event_type_closure =
-        //     Closure::wrap(Box::new(BigqueryScriptCustomElement::on_render_query)
-        //         as Box<dyn Fn(&web_sys::Event)>);
+        let on_event_type_closure =
+            Closure::wrap(Box::new(on_render) as Box<dyn Fn(&web_sys::Event)>);
 
-        // element
-        //     .add_event_listener_with_callback(
-        //         RENDER_QUERY_EVENT_NAME,
-        //         on_event_type_closure.as_ref().unchecked_ref(),
-        //     )
-        //     .unwrap();
+        element
+            .add_event_listener_with_callback(
+                RENDER_SCRIPT_EVENT_NAME,
+                on_event_type_closure.as_ref().unchecked_ref(),
+            )
+            .unwrap();
 
-        // on_event_type_closure.forget();
+        on_event_type_closure.forget();
     }
 }
 
@@ -388,11 +386,6 @@ fn on_render(event: &web_sys::Event) {
         .unwrap();
 
     if !element.has_attribute("loaded") {
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "1) on_render event on element: {:?}",
-            element.id()
-        )));
-
         let bq_script_element = BigqueryScriptCustomElement::from_element(&element);
 
         let jobs = crate::bigquery::jobs::Jobs::new(&bq_script_element.token);

@@ -1,7 +1,8 @@
-div[be_id="jobs"] div div.title, div[be_id="jobs"] div[be_id="job_loading"] {
-    margin-bottom: 5px;
+div[be_id="jobs"] div div.title,
+div[be_id="jobs"] div[be_id="job_loading"] {
+    margin-bottom: 4px;
     border: 1px solid var(--vscode-dropdown-border);
-    padding: 5px;
+    padding: 5px 8px;
     background-color: var(--vscode-dropdown-background);
 }
 
@@ -24,9 +25,33 @@ div[be_id="jobs"] div[be_id="job_loading"] span {
     margin-right: -40px;
 }
 
-/* title */
-div[be_id="jobs"] div div.ready {
+/* title: always collapsible */
+div[be_id="jobs"] div div.title {
     cursor: pointer;
+    user-select: none;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* collapse/expand arrow via :has() — works in VS Code's Electron/Chromium */
+div[be_id="jobs"] div:has(> div.job_body_open) > div.title::before {
+    content: "▼";
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+div[be_id="jobs"] div:has(> div.job_body_closed) > div.title::before {
+    content: "▶";
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+/* DONE jobs get a subtle left accent */
+div[be_id="jobs"] div div.title.ready {
+    border-left: 3px solid var(--vscode-testing-iconPassed, #4caf50);
+    padding-left: 6px;
 }
 
 /* job body */
