@@ -17,7 +17,6 @@ use super::{
 };
 
 const TAG_NAME: &'static str = "bq-script";
-const ELEMENT_INTERSECTED_EVENT_NAME: &str = "element_intersected";
 
 pub(crate) struct BigqueryScriptCustomElement {
     element: Option<Element>,
@@ -115,26 +114,26 @@ impl BigqueryScriptCustomElement {
         let all_jobs_completed = self.all_jobs_completed() && self.num_child_jobs.is_some();
 
         if !all_jobs_completed {
-            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-                "============= set_refresh_timeout ============= ",
-            )));
+            // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            //     "============= set_refresh_timeout ============= ",
+            // )));
 
-            if let Some(window) = web_sys::window() {
-                let dispatch_event = Closure::wrap(Box::new(|node: Node| {
-                    let event = &Event::new(ELEMENT_INTERSECTED_EVENT_NAME).unwrap();
-                    node.first_child().unwrap().dispatch_event(event).unwrap();
-                }) as Box<dyn FnMut(_)>);
+            // if let Some(window) = web_sys::window() {
+            //     let dispatch_event = Closure::wrap(Box::new(|node: Node| {
+            //         let event = &Event::new(ELEMENT_INTERSECTED_EVENT_NAME).unwrap();
+            //         node.first_child().unwrap().dispatch_event(event).unwrap();
+            //     }) as Box<dyn FnMut(_)>);
 
-                window
-                    .set_timeout_with_callback_and_timeout_and_arguments(
-                        dispatch_event.as_ref().unchecked_ref(),
-                        5000,
-                        &js_sys::Array::of1(parent_node),
-                    )
-                    .unwrap();
+            //     window
+            //         .set_timeout_with_callback_and_timeout_and_arguments(
+            //             dispatch_event.as_ref().unchecked_ref(),
+            //             5000,
+            //             &js_sys::Array::of1(parent_node),
+            //         )
+            //         .unwrap();
 
-                dispatch_event.forget();
-            }
+            //     dispatch_event.forget();
+            // }
         }
     }
 
@@ -378,18 +377,6 @@ impl CustomElementDefinition for BigqueryScriptCustomElement {
         //     .unwrap();
 
         // on_event_type_closure.forget();
-
-        //ELEMENT_INTERSECTED_EVENT_NAME
-        let on_event_type_closure =
-            Closure::wrap(Box::new(on_render) as Box<dyn Fn(&web_sys::Event)>);
-
-        element
-            .add_event_listener_with_callback(
-                ELEMENT_INTERSECTED_EVENT_NAME,
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
-        on_event_type_closure.forget();
     }
 }
 

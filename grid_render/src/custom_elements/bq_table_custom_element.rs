@@ -7,10 +7,10 @@ use super::{
         EVENT_GO_TO_PREVIOUS_PAGE,
     },
 };
-use crate::{custom_elements::base_element::BaseElement, parse_to_usize, utils};
+use crate::{custom_elements::base_element::BaseElement, parse_to_usize};
 use wasm_bindgen::{JsCast, prelude::Closure};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::Element;
+use web_sys::{Element, console::log_1};
 use website_component_table::{HtmlNodeRender, TableBuilder};
 
 const TAG_NAME: &'static str = "bq-table";
@@ -19,7 +19,6 @@ const PAGE_SIZE_ATT: &str = "page_size";
 const ROWS_IN_PAGE_ATT: &str = "rows_in_page";
 const ROWS_TOTAL_ATT: &str = "rows_total";
 const RENDER_TABLE_EVENT_NAME: &str = "render_table";
-const ELEMENT_INTERSECTED_EVENT_NAME: &str = "element_intersected";
 
 pub(crate) struct BigqueryTableCustomElement {
     element: Option<Element>,
@@ -61,6 +60,7 @@ impl BigqueryTableCustomElement {
             table_builder: None,
         }
     }
+
     pub(crate) fn to_data_table_controls(&self) -> DataTableControls {
         DataTableControls::new(
             Some(self.page_start_index),
@@ -213,6 +213,9 @@ impl BigqueryTableCustomElement {
     }
 
     pub(crate) fn next_page(&self) -> bool {
+
+        log_1(&"next_page".into());
+
         assert!(self.element.is_some());
         let element = self.element.as_ref().unwrap();
         assert!(element.get_attribute(ROWS_TOTAL_ATT).is_some());
@@ -265,6 +268,15 @@ impl BigqueryTableCustomElement {
         //return bool true if value was changed
         previous_value != current_value
     }
+
+    pub(crate) fn dispatch_on_render_event(&self, element: &Element) {
+        if let Some(first_child) = element.first_child() {
+            let first_child = first_child.dyn_into::<web_sys::Element>();
+            if let Ok(first_child) = first_child {
+                dispatch_on_render_event(&first_child);
+            }
+        }
+    }
 }
 
 impl CustomElementDefinition for BigqueryTableCustomElement {
@@ -277,19 +289,6 @@ impl CustomElementDefinition for BigqueryTableCustomElement {
         element
             .add_event_listener_with_callback(
                 RENDER_TABLE_EVENT_NAME,
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
-        on_event_type_closure.forget();
-
-        //ELEMENT_INTERSECTED_EVENT_NAME
-        let on_event_type_closure =
-            Closure::wrap(Box::new(BigqueryTableCustomElement::on_render_table)
-                as Box<dyn Fn(&web_sys::Event)>);
-
-        element
-            .add_event_listener_with_callback(
-                ELEMENT_INTERSECTED_EVENT_NAME,
                 on_event_type_closure.as_ref().unchecked_ref(),
             )
             .unwrap();
@@ -323,10 +322,9 @@ impl CustomElementDefinition for BigqueryTableCustomElement {
         let on_event_type_closure =
             Closure::wrap(Box::new(next_page) as Box<dyn Fn(&web_sys::Event)>);
         element
-            .add_event_listener_with_callback_and_bool(
+            .add_event_listener_with_callback(
                 EVENT_GO_TO_NEXT_PAGE,
                 on_event_type_closure.as_ref().unchecked_ref(),
-                false,
             )
             .unwrap();
         on_event_type_closure.forget();
@@ -380,6 +378,9 @@ fn previous_page(event: &web_sys::Event) {
 }
 
 fn next_page(event: &web_sys::Event) {
+
+    log_1(&"next_page".into());
+
     let element = event.current_target().unwrap();
     let element = element.dyn_into::<web_sys::Element>().unwrap();
 
@@ -633,7 +634,6 @@ mod tests {
     //     assert_eq!(page_start_index, "989250");
     // }
 
-
     fn append_to_body(node: &web_sys::Node) {
         web_sys::window()
             .unwrap()
@@ -644,5 +644,4 @@ mod tests {
             .append_child(node)
             .unwrap();
     }
-
 }

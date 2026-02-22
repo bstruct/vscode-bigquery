@@ -71,7 +71,6 @@ fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest) {
 }
 
 fn preview_table(q1: &web_sys::Element, external_request: &ExternalRequest) {
-    //clear the div
     q1.set_inner_html(&"");
 
     if external_request.project_id.is_some()
@@ -81,9 +80,7 @@ fn preview_table(q1: &web_sys::Element, external_request: &ExternalRequest) {
         let element_id = "bq_table_1";
         let bq_table = external_request.to_bq_table(element_id);
         bq_table.render(q1);
-
-        // //https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-        // observe_element(&q1.last_element_child().unwrap());
+        bq_table.dispatch_on_render_event(&q1);
     } else {
         q1.set_inner_html(&"Unexpected error occured.");
     }

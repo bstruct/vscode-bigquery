@@ -246,10 +246,10 @@ fn on_click(event: &web_sys::Event) {
         .dyn_into::<web_sys::Element>()
         .unwrap();
 
-    let mut custom_event_init = web_sys::CustomEventInit::new();
-    custom_event_init.bubbles(true);
-    custom_event_init.cancelable(true);
-    custom_event_init.composed(true);
+    let custom_event_init = web_sys::CustomEventInit::new();
+    custom_event_init.set_bubbles(true);
+    custom_event_init.set_cancelable(true);
+    custom_event_init.set_composed(true);
 
     let base_element = BaseElement::from_element(&element);
     let type_ = match base_element.id().as_ref().unwrap().as_str() {
@@ -260,16 +260,17 @@ fn on_click(event: &web_sys::Event) {
         _ => panic!("unknown button"),
     };
 
-    let controls = element.closest(":host > [be_id=\"controls-background\"]");
-    if controls.is_ok() {
-        if let Some(controls) = controls.unwrap() {
+    if let Ok(controls) = element.closest(":host > [be_id=\"controls-background\"]") {
+        log_1(&format!("on_click element 1 {:?}", element).into());
+
+        if let Some(controls) = controls {
             if let Some(shadow) = controls.parent_node() {
-                if let Some(st1) = shadow.last_child() {
-                    st1.remove_child(&st1.last_child().unwrap()).unwrap();
+                if let Some(bstruct_table) = shadow.last_child() {
+                    let _ = shadow.remove_child(&bstruct_table);
 
                     let loading_div = &crate::createElement("div");
                     loading_div.set_text_content(Some("Loading..."));
-                    st1.append_child(&loading_div).unwrap();
+                    shadow.append_child(&loading_div).unwrap();
 
                     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
                         "clear parent_element",

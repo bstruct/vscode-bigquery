@@ -15,7 +15,7 @@ use crate::{
 };
 use wasm_bindgen::{JsCast, prelude::Closure};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::Element;
+use web_sys::{Element, console::log_1};
 use website_component_table::{HtmlNodeRender, TableBuilder};
 
 const TAG_NAME: &'static str = "bq-query";
@@ -24,7 +24,6 @@ const PAGE_SIZE_ATT: &str = "page_size";
 const ROWS_IN_PAGE_ATT: &str = "rows_in_page";
 const ROWS_TOTAL_ATT: &str = "rows_total";
 const RENDER_QUERY_EVENT_NAME: &str = "render_table";
-const ELEMENT_INTERSECTED_EVENT_NAME: &str = "element_intersected";
 
 pub(crate) struct BigqueryQueryCustomElement {
     element: Option<Element>,
@@ -268,6 +267,9 @@ impl BigqueryQueryCustomElement {
     }
 
     pub(crate) fn next_page(&self) -> bool {
+
+        log_1(&"next_page".into());
+
         assert!(self.element.is_some());
         let element = self.element.as_ref().unwrap();
         assert!(element.get_attribute(ROWS_TOTAL_ATT).is_some());
@@ -356,19 +358,6 @@ impl CustomElementDefinition for BigqueryQueryCustomElement {
 
         on_event_type_closure.forget();
 
-        //ELEMENT_INTERSECTED_EVENT_NAME
-        let on_event_type_closure =
-            Closure::wrap(Box::new(BigqueryQueryCustomElement::on_render_query)
-                as Box<dyn Fn(&web_sys::Event)>);
-
-        element
-            .add_event_listener_with_callback(
-                ELEMENT_INTERSECTED_EVENT_NAME,
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
-        on_event_type_closure.forget();
-
         //EVENT_GO_TO_FIRST_PAGE
         let on_event_type_closure =
             Closure::wrap(Box::new(first_page) as Box<dyn Fn(&web_sys::Event)>);
@@ -397,10 +386,9 @@ impl CustomElementDefinition for BigqueryQueryCustomElement {
         let on_event_type_closure =
             Closure::wrap(Box::new(next_page) as Box<dyn Fn(&web_sys::Event)>);
         element
-            .add_event_listener_with_callback_and_bool(
+            .add_event_listener_with_callback(
                 EVENT_GO_TO_NEXT_PAGE,
                 on_event_type_closure.as_ref().unchecked_ref(),
-                false,
             )
             .unwrap();
         on_event_type_closure.forget();
@@ -454,6 +442,9 @@ fn previous_page(event: &web_sys::Event) {
 }
 
 fn next_page(event: &web_sys::Event) {
+
+    log_1(&"next_page".into());
+
     let element = event.current_target().unwrap();
     let element = element.dyn_into::<web_sys::Element>().unwrap();
 
