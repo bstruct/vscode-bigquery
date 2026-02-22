@@ -1,6 +1,9 @@
 use super::{
     base_element_trait::BaseElementTrait,
-    bq_common_custom_element::{get_attribute, get_opt_attribute, set_attribute},
+    bq_common_custom_element::{
+        get_attribute, get_num_attribute, get_opt_attribute, get_opt_num_attribute,
+        handle_page_nav_event, set_attribute, set_optional_attribute,
+    },
     custom_element_definition::CustomElementDefinition,
     data_table_controls_element::{
         DataTableControls, EVENT_GO_TO_FIRST_PAGE, EVENT_GO_TO_LAST_PAGE, EVENT_GO_TO_NEXT_PAGE,
@@ -10,12 +13,12 @@ use super::{
 use crate::{
     bigquery::jobs::{GetJobRequest, GetQueryResultsRequest, JobReference},
     custom_elements::base_element::BaseElement,
-    parse_to_usize, set_state,
+    set_state,
     utils::render_standalone,
 };
 use wasm_bindgen::{JsCast, prelude::Closure};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{Element, console::log_1};
+use web_sys::Element;
 use website_component_table::{HtmlNodeRender, TableBuilder};
 
 const TAG_NAME: &'static str = "bq-query";
@@ -118,27 +121,28 @@ impl BigqueryQueryCustomElement {
         }
     }
 
-    pub(crate) fn from_element(element: &Element) -> BigqueryQueryCustomElement {
-        let element_id = BaseElement::from_element(element)
-            .id()
-            .as_ref()
-            .unwrap()
-            .to_string();
+    pub(crate) fn from_element(element: &Element) -> Option<BigqueryQueryCustomElement> {
+        let element_id = element.get_attribute("be_id")?;
+        let job_id = element.get_attribute("job_id")?;
+        let project_id = element.get_attribute("project_id")?;
+        let location = element.get_attribute("location")?;
+        let token = element.get_attribute("token")?;
+        let page_size = get_opt_num_attribute(element, PAGE_SIZE_ATT)?;
 
-        BigqueryQueryCustomElement {
+        Some(BigqueryQueryCustomElement {
             element: Some(element.to_owned()),
             element_id,
-            job_id: get_attribute(element, "job_id"),
-            project_id: get_attribute(element, "project_id"),
-            location: get_attribute(element, "location"),
-            token: get_attribute(element, "token"),
+            job_id,
+            project_id,
+            location,
+            token,
             statement_type: get_opt_attribute(element, "statement_type"),
             page_start_index: get_opt_num_attribute(element, PAGE_START_INDEX_ATT).unwrap_or(0),
-            page_size: get_num_attribute(element, PAGE_SIZE_ATT),
+            page_size,
             rows_in_page: get_opt_num_attribute(element, ROWS_IN_PAGE_ATT),
             rows_total: get_opt_num_attribute(element, ROWS_TOTAL_ATT),
             table_builder: None,
-        }
+        })
     }
 
     fn as_query_results_request(&self) -> GetQueryResultsRequest {
@@ -162,57 +166,77 @@ impl BigqueryQueryCustomElement {
     }
 
     fn on_render_query(event: &web_sys::Event) {
-        let element = event
+        let element = match event
             .target()
-            .unwrap()
-            .dyn_into::<web_sys::Element>()
-            .unwrap();
+            .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
+        {
+            Some(e) => e,
+            None => {
+                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(
+                    "on_render_query: event target is not an element",
+                ));
+                return;
+            }
+        };
 
         if !element.has_attribute("loaded") {
-            element.set_attribute("loaded", "1").unwrap();
+            if element.set_attribute("loaded", "1").is_err() {
+                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(
+                    "on_render_query: could not set 'loaded' attribute",
+                ));
+                return;
+            }
 
-            let bq_query_element = BigqueryQueryCustomElement::from_element(&element);
+            let bq_query_element = match BigqueryQueryCustomElement::from_element(&element) {
+                Some(e) => e,
+                None => {
+                    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(
+                        "on_render_query: element is missing required attributes",
+                    ));
+                    return;
+                }
+            };
             let is_dml_statement = bq_query_element.is_dml_statement();
 
-            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-                "1) on_render_table event on element: {:?}, is_dml_statement: {}",
-                element.id(),
-                is_dml_statement
-            )));
-
             let jobs = crate::bigquery::jobs::Jobs::new(&bq_query_element.token);
-            let parent_node = element.parent_element().unwrap();
+            let parent_node = match element.parent_element() {
+                Some(p) => p,
+                None => {
+                    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(
+                        "on_render_query: bq-query element has no parent element",
+                    ));
+                    return;
+                }
+            };
 
             if is_dml_statement {
                 let request = bq_query_element.as_job_request();
 
                 spawn_local(async move {
-                    let response = jobs.get(request).await;
-                    if let Some(response) = response {
-                        if response.has_error() {
-                            render_standalone(&response.to_error_table(), &parent_node);
-                        } else {
-                            render_standalone(&response.to_dml_table(), &parent_node);
+                    match jobs.get(request).await {
+                        Some(response) => {
+                            if response.has_error() {
+                                render_standalone(&response.to_error_table(), &parent_node);
+                            } else {
+                                render_standalone(&response.to_dml_table(), &parent_node);
+                            }
                         }
-                    } else {
-                        element.set_inner_html(&format!("unexpected response: {:?}", response));
+                        None => {
+                            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(
+                                "on_render_query: job get returned None",
+                            ));
+                        }
                     }
                 });
             } else {
                 let request = bq_query_element.as_query_results_request();
 
                 spawn_local(async move {
-                    let response = jobs.get_query_results(request).await;
-                    if let Some(response) = response {
-                        render_standalone(
-                            &response
-                                .to_bq_query(&bq_query_element)
-                                .table_builder
-                                .unwrap(),
-                            &parent_node,
-                        );
-                    } else {
-                        element.set_inner_html(&format!("unexpected response: {:?}", response));
+                    match jobs.get_query_results(request).await {
+                        Some(response) => {
+                            response.to_bq_query(&bq_query_element).render(&parent_node);
+                        }
+                        None => {}
                     }
                 });
             }
@@ -224,27 +248,31 @@ impl BigqueryQueryCustomElement {
     }
 
     pub(crate) fn first_page(&self) -> bool {
-        assert!(self.element.is_some());
-        let element = self.element.as_ref().unwrap();
-        // let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
+        let element = match self.element.as_ref() {
+            Some(e) => e,
+            None => return false,
+        };
 
         let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-        element.set_attribute(PAGE_START_INDEX_ATT, "0").unwrap();
+        if element.set_attribute(PAGE_START_INDEX_ATT, "0").is_err() {
+            return false;
+        }
         let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
         if previous_value != current_value {
-            element.remove_attribute("loaded").unwrap();
+            let _ = element.remove_attribute("loaded");
         }
 
-        //return bool true if value was changed
         previous_value != current_value
     }
 
     pub(crate) fn previous_page(&self) -> bool {
-        assert!(self.element.is_some());
-        let element = self.element.as_ref().unwrap();
-        let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
-        let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
+        let element = match self.element.as_ref() {
+            Some(e) => e,
+            None => return false,
+        };
+        let start_index = get_opt_num_attribute(element, PAGE_START_INDEX_ATT).unwrap_or(0);
+        let page_size = get_opt_num_attribute(element, PAGE_SIZE_ATT).unwrap_or(50);
 
         let new_value = if start_index > page_size {
             start_index - page_size
@@ -253,30 +281,33 @@ impl BigqueryQueryCustomElement {
         };
 
         let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-        element
+        if element
             .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
-            .unwrap();
+            .is_err()
+        {
+            return false;
+        }
         let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
         if previous_value != current_value {
-            element.remove_attribute("loaded").unwrap();
+            let _ = element.remove_attribute("loaded");
         }
 
-        //return bool true if value was changed
         previous_value != current_value
     }
 
     pub(crate) fn next_page(&self) -> bool {
+        let element = match self.element.as_ref() {
+            Some(e) => e,
+            None => return false,
+        };
+        let rows_total = match get_opt_num_attribute(element, ROWS_TOTAL_ATT) {
+            Some(r) => r,
+            None => return false,
+        };
 
-        log_1(&"next_page".into());
-
-        assert!(self.element.is_some());
-        let element = self.element.as_ref().unwrap();
-        assert!(element.get_attribute(ROWS_TOTAL_ATT).is_some());
-
-        let start_index = parse_to_usize(element.get_attribute(PAGE_START_INDEX_ATT)).unwrap_or(0);
-        let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
-        let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap();
+        let start_index = get_opt_num_attribute(element, PAGE_START_INDEX_ATT).unwrap_or(0);
+        let page_size = get_opt_num_attribute(element, PAGE_SIZE_ATT).unwrap_or(50);
 
         let new_value = if start_index + page_size >= rows_total {
             start_index
@@ -285,24 +316,28 @@ impl BigqueryQueryCustomElement {
         };
 
         let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-        element
+        if element
             .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
-            .unwrap();
+            .is_err()
+        {
+            return false;
+        }
         let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
         if previous_value != current_value {
-            element.remove_attribute("loaded").unwrap();
+            let _ = element.remove_attribute("loaded");
         }
 
-        //return bool true if value was changed
         previous_value != current_value
     }
 
     pub(crate) fn last_page(&self) -> bool {
-        assert!(self.element.is_some());
-        let element = self.element.as_ref().unwrap();
-        let page_size = parse_to_usize(element.get_attribute(PAGE_SIZE_ATT)).unwrap_or(50);
-        let rows_total = parse_to_usize(element.get_attribute(ROWS_TOTAL_ATT)).unwrap_or(50);
+        let element = match self.element.as_ref() {
+            Some(e) => e,
+            None => return false,
+        };
+        let page_size = get_opt_num_attribute(element, PAGE_SIZE_ATT).unwrap_or(50);
+        let rows_total = get_opt_num_attribute(element, ROWS_TOTAL_ATT).unwrap_or(0);
 
         let new_value = if page_size > rows_total {
             0
@@ -317,16 +352,18 @@ impl BigqueryQueryCustomElement {
         };
 
         let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);
-        element
+        if element
             .set_attribute(PAGE_START_INDEX_ATT, &format!("{0}", new_value))
-            .unwrap();
+            .is_err()
+        {
+            return false;
+        }
         let current_value = element.get_attribute(PAGE_START_INDEX_ATT);
 
         if previous_value != current_value {
-            element.remove_attribute("loaded").unwrap();
+            let _ = element.remove_attribute("loaded");
         }
 
-        //return bool true if value was changed
         previous_value != current_value
     }
 
@@ -408,80 +445,19 @@ impl CustomElementDefinition for BigqueryQueryCustomElement {
 }
 
 fn first_page(event: &web_sys::Event) {
-    let element = event.current_target().unwrap();
-    let element = element.dyn_into::<web_sys::Element>().unwrap();
-
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        "next_page on: {}",
-        element.tag_name(),
-    )));
-
-    assert_eq!(element.tag_name(), TAG_NAME.to_uppercase());
-
-    let bq_table = BigqueryQueryCustomElement::from_element(&element);
-    if bq_table.first_page() {
-        dispatch_on_render_event(&element);
-    }
+    handle_page_nav_event(event, TAG_NAME, |e| BigqueryQueryCustomElement::from_element(e).map(|el| el.first_page()).unwrap_or(false), RENDER_QUERY_EVENT_NAME);
 }
 
 fn previous_page(event: &web_sys::Event) {
-    let element = event.current_target().unwrap();
-    let element = element.dyn_into::<web_sys::Element>().unwrap();
-
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        "next_page on: {}",
-        element.tag_name(),
-    )));
-
-    assert_eq!(element.tag_name(), TAG_NAME.to_uppercase());
-
-    let bq_table = BigqueryQueryCustomElement::from_element(&element);
-    if bq_table.previous_page() {
-        dispatch_on_render_event(&element);
-    }
+    handle_page_nav_event(event, TAG_NAME, |e| BigqueryQueryCustomElement::from_element(e).map(|el| el.previous_page()).unwrap_or(false), RENDER_QUERY_EVENT_NAME);
 }
 
 fn next_page(event: &web_sys::Event) {
-
-    log_1(&"next_page".into());
-
-    let element = event.current_target().unwrap();
-    let element = element.dyn_into::<web_sys::Element>().unwrap();
-
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        "next_page on: {}",
-        element.tag_name(),
-    )));
-
-    assert_eq!(element.tag_name(), TAG_NAME.to_uppercase());
-
-    let bq_table = BigqueryQueryCustomElement::from_element(&element);
-    if bq_table.next_page() {
-        dispatch_on_render_event(&element);
-    }
+    handle_page_nav_event(event, TAG_NAME, |e| BigqueryQueryCustomElement::from_element(e).map(|el| el.next_page()).unwrap_or(false), RENDER_QUERY_EVENT_NAME);
 }
 
 fn last_page(event: &web_sys::Event) {
-    let element = event.current_target().unwrap();
-    let element = element.dyn_into::<web_sys::Element>().unwrap();
-
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        "next_page on: {}",
-        element.tag_name(),
-    )));
-
-    assert_eq!(element.tag_name(), TAG_NAME.to_uppercase());
-
-    let bq_table = BigqueryQueryCustomElement::from_element(&element);
-    if bq_table.last_page() {
-        dispatch_on_render_event(&element);
-    }
-}
-
-fn dispatch_on_render_event(element: &Element) {
-    element
-        .dispatch_event(&web_sys::Event::new(RENDER_QUERY_EVENT_NAME).unwrap())
-        .unwrap();
+    handle_page_nav_event(event, TAG_NAME, |e| BigqueryQueryCustomElement::from_element(e).map(|el| el.last_page()).unwrap_or(false), RENDER_QUERY_EVENT_NAME);
 }
 
 impl BaseElementTrait for BigqueryQueryCustomElement {
@@ -490,15 +466,23 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
     }
 
     fn render(&self, parent_node: &web_sys::Node) -> BaseElement {
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "render - BigqueryQueryCustomElement, page_start_index: {}, rows_total: {:?}",
-            self.page_start_index, self.rows_total,
-        )));
-
         let bq_query = BaseElement::new_and_append(parent_node, TAG_NAME, &self.element_id)
             .apply_fn(&set_attributes, self);
 
         let shadow = bq_query.append_shadow();
+
+        // Remove any loading placeholder (no be_id) added by on_click during navigation.
+        while let Some(last) = shadow.node.last_child() {
+            if last.node_type() == web_sys::Node::ELEMENT_NODE {
+                if let Ok(el) = wasm_bindgen::JsCast::dyn_into::<web_sys::Element>(last.value_of()) {
+                    if el.get_attribute("be_id").is_none() {
+                        let _ = shadow.node.remove_child(&el);
+                        continue;
+                    }
+                }
+            }
+            break;
+        }
 
         let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
         shadow.append_child_style(css_content, "style1");
@@ -541,26 +525,6 @@ fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryQueryCustomElem
     set_optional_attribute(&element, ROWS_TOTAL_ATT, &bq_table.rows_total);
 }
 
-fn set_optional_attribute(element: &web_sys::Element, attribute_name: &str, value: &Option<usize>) {
-    if value.is_some() {
-        element
-            .set_attribute(attribute_name, &value.unwrap().to_string())
-            .unwrap();
-    } else {
-        element.remove_attribute(attribute_name).unwrap();
-    }
-}
-
-fn get_opt_num_attribute(element: &Element, attribute_name: &str) -> Option<usize> {
-    parse_to_usize(element.get_attribute(attribute_name))
-}
-
-fn get_num_attribute(element: &Element, attribute_name: &str) -> usize {
-    match parse_to_usize(element.get_attribute(attribute_name)) {
-        Some(num) => num,
-        None => panic!("attribute not found: {attribute_name}"),
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -595,7 +559,8 @@ mod tests {
 
         set_attributes(base_element, bq_table);
 
-        let bq_table_from = BigqueryQueryCustomElement::from_element(&base_element.element());
+        let bq_table_from = BigqueryQueryCustomElement::from_element(&base_element.element())
+            .expect("test: element should have all required attributes");
 
         assert_eq!(bq_table.job_id, bq_table_from.job_id);
         assert_eq!(bq_table.project_id, bq_table_from.project_id);
@@ -733,7 +698,8 @@ mod tests {
         bq_table.render(parent_node);
 
         let element = &parent_node.first_element_child().unwrap();
-        let bq_table = BigqueryQueryCustomElement::from_element(element);
+        let bq_table = BigqueryQueryCustomElement::from_element(element)
+            .expect("test: element should have all required attributes");
 
         bq_table.last_page();
 
@@ -772,7 +738,8 @@ mod tests {
         bq_table.render(parent_node);
 
         let element = &parent_node.first_element_child().unwrap();
-        let bq_table = BigqueryQueryCustomElement::from_element(element);
+        let bq_table = BigqueryQueryCustomElement::from_element(element)
+            .expect("test: element should have all required attributes");
 
         bq_table.last_page();
 
@@ -810,7 +777,8 @@ mod tests {
         bq_table.render(parent_node);
 
         let element = &parent_node.first_element_child().unwrap();
-        let bq_table = BigqueryQueryCustomElement::from_element(element);
+        let bq_table = BigqueryQueryCustomElement::from_element(element)
+            .expect("test: element should have all required attributes");
 
         bq_table.last_page();
 
@@ -856,7 +824,8 @@ mod tests {
         bq_table.render(parent_node);
 
         let element = &parent_node.first_element_child().unwrap();
-        let bq_table = BigqueryQueryCustomElement::from_element(element);
+        let bq_table = BigqueryQueryCustomElement::from_element(element)
+            .expect("test: element should have all required attributes");
 
         bq_table.last_page();
 
