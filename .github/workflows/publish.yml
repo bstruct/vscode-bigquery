@@ -3,6 +3,9 @@ on:
     tags:
       - '*'
 
+env:
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+  
 jobs:
   build:
     runs-on: ubuntu-latest
