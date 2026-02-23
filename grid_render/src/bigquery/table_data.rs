@@ -49,16 +49,16 @@ impl TableData {
         self: &Self,
         request: TableDataListRequest,
     ) -> Option<TableDataListResponse> {
-        let mut opts = web_sys::RequestInit::new();
-        opts.method("GET");
-        opts.mode(web_sys::RequestMode::Cors);
+        let opts = web_sys::RequestInit::new();
+        opts.set_method("GET");
+        opts.set_mode(web_sys::RequestMode::Cors);
         let headers = web_sys::Headers::new().unwrap();
         // headers.set("Accept", "application/json").unwrap();
         headers.set("Content-Type", "application/json").unwrap();
         headers
             .set("Authorization", &format!("Bearer {}", &self.token))
             .unwrap();
-        opts.headers(&headers);
+        opts.set_headers(&headers);
 
         let mut url = format!(
             "https://bigquery.googleapis.com/bigquery/v2/projects/{}/datasets/{}/tables/{}/data",

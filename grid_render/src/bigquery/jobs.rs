@@ -406,57 +406,12 @@ impl Job {
 //     // https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#QueryRequest
 // }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct QueryResponseSessionInfo {
-    #[serde(alias = "sessionId")]
-    pub session_id: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct QueryResponseSessionDmlStats {
-    #[serde(alias = "insertedRowCount")]
-    pub inserted_row_count: String,
-    #[serde(alias = "deletedRowCount")]
-    pub deleted_row_count: String,
-    #[serde(alias = "updatedRowCount")]
-    pub updated_row_count: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct QueryResponse {
-    pub kind: String,
-    pub schema: Option<TableSchema>,
-    #[serde(alias = "jobReference")]
-    pub job_reference: JobReference,
-    #[serde(alias = "totalRows")]
-    pub total_rows: String,
-    #[serde(alias = "pageToken")]
-    pub page_token: String,
-    pub rows: Vec<serde_json::Value>,
-    #[serde(alias = "totalBytesProcessed")]
-    pub total_bytes_processed: String,
-    #[serde(alias = "jobComplete")]
-    pub job_complete: bool,
-    pub errors: Vec<serde_json::Value>,
-    #[serde(alias = "cacheHit")]
-    pub cache_hit: Option<bool>,
-    #[serde(alias = "numDmlAffectedRows")]
-    pub num_dml_affected_rows: String,
-    #[serde(alias = "sessionInfo")]
-    pub session_info: QueryResponseSessionInfo,
-    #[serde(alias = "dmlStats")]
-    pub dml_stats: QueryResponseSessionDmlStats,
-}
-
 #[derive(Debug)]
 pub struct GetQueryResultsRequest {
     pub project_id: String,
     pub job_id: String,
     pub start_index: Option<String>,
-    pub page_token: Option<String>,
     pub max_results: Option<usize>,
-    pub timeout_ms: Option<usize>,
-    pub location: Option<String>,
     // formatOptions: DataFormatOptions;
 }
 
@@ -510,7 +465,6 @@ pub struct GetQueryResultsResponse {
 
 #[derive(Debug, Serialize)]
 pub(crate) enum Projection {
-    MINIMAL,
     FULL,
 }
 
@@ -677,16 +631,16 @@ impl Jobs {
         self: &Self,
         request: GetQueryResultsRequest,
     ) -> Option<GetQueryResultsResponse> {
-        let mut opts = web_sys::RequestInit::new();
-        opts.method("GET");
-        opts.mode(web_sys::RequestMode::Cors);
+        let opts = web_sys::RequestInit::new();
+        opts.set_method("GET");
+        opts.set_mode(web_sys::RequestMode::Cors);
         let headers = web_sys::Headers::new().unwrap();
         // headers.set("Accept", "application/json").unwrap();
         headers.set("Content-Type", "application/json").unwrap();
         headers
             .set("Authorization", &format!("Bearer {}", &self.token))
             .unwrap();
-        opts.headers(&headers);
+        opts.set_headers(&headers);
 
         let mut url = format!(
             "https://bigquery.googleapis.com/bigquery/v2/projects/{}/queries/{}",
@@ -758,16 +712,16 @@ impl Jobs {
     https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/list
     */
     pub async fn get(self: &Self, request: GetJobRequest) -> Option<Job> {
-        let mut opts = web_sys::RequestInit::new();
-        opts.method("GET");
-        opts.mode(web_sys::RequestMode::Cors);
+        let opts = web_sys::RequestInit::new();
+        opts.set_method("GET");
+        opts.set_mode(web_sys::RequestMode::Cors);
         let headers = web_sys::Headers::new().unwrap();
         // headers.set("Accept", "application/json").unwrap();
         headers.set("Content-Type", "application/json").unwrap();
         headers
             .set("Authorization", &format!("Bearer {}", &self.token))
             .unwrap();
-        opts.headers(&headers);
+        opts.set_headers(&headers);
 
         let mut url = format!(
             "https://bigquery.googleapis.com/bigquery/v2/projects/{}/jobs/{}",
@@ -819,16 +773,16 @@ impl Jobs {
     https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/list
     */
     pub async fn get_list(self: &Self, request: GetListRequest) -> Option<GetListResponse> {
-        let mut opts = web_sys::RequestInit::new();
-        opts.method("GET");
-        opts.mode(web_sys::RequestMode::Cors);
+        let opts = web_sys::RequestInit::new();
+        opts.set_method("GET");
+        opts.set_mode(web_sys::RequestMode::Cors);
         let headers = web_sys::Headers::new().unwrap();
         // headers.set("Accept", "application/json").unwrap();
         headers.set("Content-Type", "application/json").unwrap();
         headers
             .set("Authorization", &format!("Bearer {}", &self.token))
             .unwrap();
-        opts.headers(&headers);
+        opts.set_headers(&headers);
 
         let mut url = format!(
             "https://bigquery.googleapis.com/bigquery/v2/projects/{}/jobs",
@@ -849,7 +803,6 @@ impl Jobs {
                 "{}&projection={}",
                 url,
                 match request.projection.unwrap() {
-                    Projection::MINIMAL => "minimal",
                     Projection::FULL => "full",
                 }
             );

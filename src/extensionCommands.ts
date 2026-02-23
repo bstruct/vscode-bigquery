@@ -124,7 +124,12 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 
 	} else {
 
-		const panel = vscode.window.createWebviewPanel(QUERY_RESULTS_VIEW_TYPE, label, { viewColumn: vscode.ViewColumn.Two, preserveFocus: true }, { enableFindWidget: true, enableScripts: true });
+		const panel = vscode.window.createWebviewPanel(
+			QUERY_RESULTS_VIEW_TYPE,
+			label,
+			{ viewColumn: vscode.ViewColumn.Two, preserveFocus: true },
+			{ enableFindWidget: true, enableScripts: true, retainContextWhenHidden: true }
+		);
 		resultsGridRender = new ResultsGridRender(panel);
 
 		//lock the tab group in vscode.ViewColumn.Two
@@ -152,6 +157,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 			job: null,
 			error: null
 		} as ResultsGridRenderRequestV2);
+		console.log(`[vscode-bigquery] query results clear message delivered=${_postMessageResult1} uuid=${uuid}`);
 
 		const bqClient = await getBigQueryClient();
 		const projectId = await bqClient.getProjectId();
@@ -170,6 +176,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 			job: job.metadata,
 			error: null
 		} as ResultsGridRenderRequestV2);
+		console.log(`[vscode-bigquery] query results execute_query message delivered=${_postMessageResult2} uuid=${uuid}`);
 
 	} catch (errorx) {
 		// resultsGridRender.renderException(error);
@@ -186,6 +193,7 @@ const runQuery = async function (globalState: vscode.Memento, queryResultsWebvie
 			job: null,
 			error: error
 		} as ResultsGridRenderRequestV2);
+		console.log(`[vscode-bigquery] query results error message delivered=${_postMessageResult3} uuid=${uuid}`);
 	}
 
 	return 0;
@@ -365,7 +373,12 @@ export const commandViewTable = async function (...args: any[]) {
 			if (args.length > 1 && args[1] && args[1].viewType === TABLE_RESULTS_VIEW_TYPE) {
 				panel = args[1];
 			} else {
-				panel = vscode.window.createWebviewPanel(TABLE_RESULTS_VIEW_TYPE, title, { viewColumn: vscode.ViewColumn.Active }, { enableFindWidget: true, enableScripts: true });
+				panel = vscode.window.createWebviewPanel(
+					TABLE_RESULTS_VIEW_TYPE,
+					title,
+					{ viewColumn: vscode.ViewColumn.Active },
+					{ enableFindWidget: true, enableScripts: true, retainContextWhenHidden: true }
+				);
 			}
 
 			const resultsGridRender = new ResultsGridRender(panel);
@@ -390,6 +403,7 @@ export const commandViewTable = async function (...args: any[]) {
 					job: null,
 					error: null
 				} as ResultsGridRenderRequestV2);
+				console.log(`[vscode-bigquery] table results clear message delivered=${_postMessageResult1} table=${title}`);
 
 				const bqClient = await getBigQueryClient();
 				// const projectId = await bqClient.getProjectId();
@@ -412,6 +426,7 @@ export const commandViewTable = async function (...args: any[]) {
 					job: null,
 					error: null
 				} as ResultsGridRenderRequestV2);
+				console.log(`[vscode-bigquery] table results preview_table message delivered=${_postMessageResult2} table=${title}`);
 
 			} catch (errorx) {
 				// resultsGridRender.renderException(error);
@@ -428,6 +443,7 @@ export const commandViewTable = async function (...args: any[]) {
 					job: null,
 					error: error
 				} as ResultsGridRenderRequestV2);
+				console.log(`[vscode-bigquery] table results error message delivered=${_postMessageResult3} table=${title}`);
 			}
 		}
 	}

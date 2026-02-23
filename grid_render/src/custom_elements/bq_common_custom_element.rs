@@ -36,13 +36,6 @@ pub(crate) fn get_opt_num_attribute(element: &Element, attribute_name: &str) -> 
     parse_to_usize(element.get_attribute(attribute_name))
 }
 
-pub(crate) fn get_num_attribute(element: &Element, attribute_name: &str) -> usize {
-    match parse_to_usize(element.get_attribute(attribute_name)) {
-        Some(num) => num,
-        None => panic!("attribute not found: {attribute_name}"),
-    }
-}
-
 /// Shared handler for pagination button events (first / previous / next / last page).
 ///
 /// `page_op` receives the custom element's DOM `Element`, applies the page change,

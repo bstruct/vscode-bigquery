@@ -5,6 +5,7 @@ use website_component_table::{
 use super::{
     bq_query_custom_element::BigqueryQueryCustomElement,
     bq_table_custom_element::BigqueryTableCustomElement,
+    to_table_builder::patch_all_column_widths,
 };
 use crate::{
     bigquery::{
@@ -63,7 +64,7 @@ impl Table {
 
 impl Job {
     pub(crate) fn to_error_table(&self) -> TableBuilder {
-        let columns = [
+        let mut columns = [
             TableColumnDefinition::Column(TableColumn {
                 name: "message".to_string(),
                 text: "message".to_string(),
@@ -103,11 +104,12 @@ impl Job {
             None => Self::get_errors_rows_default(),
         };
 
+        patch_all_column_widths(&mut columns, &rows);
         TableBuilder {
             style: TableStyle::default(),
             dynamic_table_render: false,
-            columns: columns,
-            rows: rows,
+            columns,
+            rows,
         }
     }
 
@@ -121,7 +123,7 @@ impl Job {
     }
 
     pub(crate) fn to_dml_table(&self) -> TableBuilder {
-        let columns = [
+        let mut columns: Vec<TableColumnDefinition> = [
             "inserted_row_count".to_string(),
             "updated_row_count".to_string(),
             "deleted_row_count".to_string(),
@@ -155,6 +157,7 @@ impl Job {
             None => Vec::<TableRow>::new(),
         };
 
+        patch_all_column_widths(&mut columns, &rows);
         TableBuilder {
             style: TableStyle::default(),
             dynamic_table_render: false,

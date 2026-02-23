@@ -1,7 +1,7 @@
 use super::{
     base_element_trait::BaseElementTrait,
     bq_common_custom_element::{
-        get_attribute, get_num_attribute, get_opt_num_attribute, handle_page_nav_event,
+        get_opt_num_attribute, handle_page_nav_event,
         set_attribute, set_optional_attribute,
     },
     custom_element_definition::CustomElementDefinition,
@@ -419,6 +419,16 @@ impl BaseElementTrait for BigqueryTableCustomElement {
         if let Some(table_builder) = &self.table_builder {
             if let Ok(render_result) = table_builder.render() {
                 shadow.append_nodes(&render_result);
+            }
+        } else {
+            // Show loading placeholder while data is being fetched from the BigQuery API.
+            // No be_id → cleaned up automatically at the start of the next render pass.
+            if let Some(doc) = web_sys::window().and_then(|w| w.document()) {
+                if let Ok(el) = doc.create_element("div") {
+                    el.set_class_name("loading-indicator");
+                    el.set_text_content(Some("Rendering\u{2026}"));
+                    let _ = shadow.node.append_child(&el);
+                }
             }
         }
 

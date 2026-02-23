@@ -8,9 +8,26 @@ import { ResultsGridRenderRequestV2 } from './resultsGridRenderRequestV2';
 export class ResultsGridRender {
 
     private webViewPanel: vscode.WebviewPanel;
+    private diagnosticsAttached: boolean = false;
 
     constructor(webViewPanel: vscode.WebviewPanel) {
         this.webViewPanel = webViewPanel;
+        this.attachDiagnostics();
+    }
+
+    private attachDiagnostics(): void {
+        if (this.diagnosticsAttached) {
+            return;
+        }
+        this.diagnosticsAttached = true;
+
+        this.webViewPanel.onDidChangeViewState(e => {
+            console.log(`[vscode-bigquery] results panel viewState title="${e.webviewPanel.title}" visible=${e.webviewPanel.visible} active=${e.webviewPanel.active}`);
+        });
+
+        this.webViewPanel.onDidDispose(() => {
+            console.log(`[vscode-bigquery] results panel disposed title="${this.webViewPanel.title}"`);
+        });
     }
 
     public static executeCommand(c: any) {
@@ -52,6 +69,7 @@ export class ResultsGridRender {
 
             this.webViewPanel.webview.onDidReceiveMessage(c => {
                 if ((c as any).command === 'load_complete') {
+                    console.log(`[vscode-bigquery] webview load_complete received title="${this.webViewPanel.title}"`);
                     clearTimeout(timer);
                     resolve(true);
                 } else {
@@ -96,6 +114,8 @@ export class ResultsGridRender {
         this.webViewPanel.webview.onDidReceiveMessage(c => {
             if ((c as any).command !== 'load_complete') {
                 ResultsGridRender.executeCommand(c);
+            } else {
+                console.log(`[vscode-bigquery] webview load_complete received (render2) title="${this.webViewPanel.title}"`);
             }
         });
 

@@ -66,27 +66,6 @@ div[be_id='controls'] span.button {
     user-select: none;
 }
 
-/* Job ID label in controls bar */
-span[be_id='job_id_label'] {
-    opacity: 0.55;
-    font-size: 11px;
-    margin-left: 8px;
-    font-family: var(--vscode-editor-font-family, monospace);
-    max-width: 320px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-}
-
-/* Refresh button — separated from the rest of the controls */
-button[be_id='btn_refresh'] {
-    margin-left: 8px;
-    border-left: 2px solid var(--vscode-button-separator) !important;
-    padding-left: 10px !important;
-}
-
 /* table */
 div.t {
     display: table;
@@ -192,6 +171,14 @@ td.index {
 } */
 
 
+
+/* Loading placeholder shown while BigQuery data is being fetched */
+.loading-indicator {
+    padding: 16px 12px;
+    color: var(--vscode-foreground, #cccccc);
+    opacity: 0.65;
+    font-style: italic;
+}
 
 /* 
 table thead th,

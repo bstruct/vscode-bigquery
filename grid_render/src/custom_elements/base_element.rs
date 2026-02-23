@@ -303,27 +303,6 @@ impl BaseElement {
         )
     }
 
-    pub(crate) fn append_sibling_base_element<T>(&self, base_element: &T) -> BaseElement
-    where
-        T: BaseElementTrait,
-    {
-        let parent_node = &self.node.parent_node().unwrap();
-
-        base_element.render(parent_node);
-
-        //return the top level of the item just added.
-        // otherwise will return the element that was added last in the render method
-        // being inner element or not
-        BaseElement::from_node(&parent_node.last_child().unwrap())
-    }
-
-    pub(crate) fn first_child(&self) -> Option<BaseElement> {
-        match self.node.first_child() {
-            Some(node) => Some(BaseElement::from_node(&node)),
-            None => None,
-        }
-    }
-
     pub(crate) fn append_nodes(&self, render: &[website_component_table::HtmlNode]) {
         match self.node_type {
             Node::ELEMENT_NODE => {

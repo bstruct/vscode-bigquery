@@ -30,14 +30,16 @@ fn value_char_len(v: &TableValue) -> usize {
     }
 }
 
-/// Set `width_px` on every column using the wider of header vs. content.
-/// `columns[0]` is the index column and is left at its fixed 50 px.
-/// Group columns (RECORD fields) occupy one row-cell position (an Array cell),
-/// so col_idx maps 1:1 to row cell index for both Column and Group.
-fn patch_column_widths(columns: &mut Vec<TableColumnDefinition>, rows: &[TableRow]) {
+/// Set `width_px` on every column starting from `start_col` using the wider of
+/// header vs. content.  Columns before `start_col` are left untouched.
+fn patch_column_widths_from(
+    columns: &mut Vec<TableColumnDefinition>,
+    rows: &[TableRow],
+    start_col: usize,
+) {
     for (col_idx, col_def) in columns.iter_mut().enumerate() {
-        if col_idx == 0 {
-            continue; // index column stays fixed
+        if col_idx < start_col {
+            continue;
         }
         match col_def {
             TableColumnDefinition::Column(col) => {
@@ -59,6 +61,20 @@ fn patch_column_widths(columns: &mut Vec<TableColumnDefinition>, rows: &[TableRo
             }
         }
     }
+}
+
+/// Resize every column except the leading row-index column (position 0).
+fn patch_column_widths(columns: &mut Vec<TableColumnDefinition>, rows: &[TableRow]) {
+    patch_column_widths_from(columns, rows, 1);
+}
+
+/// Resize every column starting from position 0 — use for tables that have no
+/// leading index column (e.g. error and DML result tables).
+pub(crate) fn patch_all_column_widths(
+    columns: &mut Vec<TableColumnDefinition>,
+    rows: &[TableRow],
+) {
+    patch_column_widths_from(columns, rows, 0);
 }
 
 fn patch_group_header_widths(cols: &mut Vec<TableColumnDefinition>) {
