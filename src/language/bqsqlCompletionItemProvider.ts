@@ -1,67 +1,176 @@
-import { suggest } from '@bstruct/bqsql-parser';
 import * as vscode from 'vscode';
-import { CompletionItemProvider, CompletionItem, CancellationToken, CompletionContext, CompletionList, Position, ProviderResult, TextDocument, CompletionItemKind, MarkdownString } from 'vscode';
-import { bigqueryTableSchemaService } from '../extension';
-import { BqsqlSuggestion } from './bqsqlSuggestion';
+import { CompletionItemProvider, CompletionItem, CancellationToken, CompletionContext, CompletionList, Position, TextDocument, CompletionItemKind } from 'vscode';
+import { bigqueryTableSchemaService, outputChannel } from '../extension';
+import { BqsqlTsParser, SelectSource } from './bqsqlTsParser';
 
 
 export class BqsqlCompletionItemProvider implements CompletionItemProvider<CompletionItem> {
 
-    provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext): vscode.CompletionList<vscode.CompletionItem> | vscode.CompletionItem[] | null | undefined {
+    async provideCompletionItems(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        _context: CompletionContext,
+    ): Promise<vscode.CompletionList<vscode.CompletionItem> | vscode.CompletionItem[] | null | undefined> {
 
-        const suggestions = suggest(document.getText(), position.line, position.character) as BqsqlSuggestion[];
+        const sql = document.getText();
 
-        const list = this.getBaseCompletionList();
-
-        function pad(num: number | string) {
-            var s = "0000" + num;
-            return s.substring(s.length - 4);
+        // ── 1. Dot-trigger:  alias.  →  columns for that specific table ───
+        // IMPORTANT: in any "qualifier." context we must NEVER fall through to
+        // the function list – that causes Copilot to suggest non-existent columns.
+        const dotFullName = BqsqlTsParser.getColumnSuggestionContext(sql, position.line, position.character);
+        if (dotFullName) {
+            return this.columnsForTable(dotFullName, token);
         }
 
-        if (suggestions.length > 0) {
-            for (let index0 = 0; index0 < suggestions.length; index0++) {
-                const element = suggestions[index0];
+        // ── 2. SELECT clause context  (cursor inside SELECT … FROM block) ─
+        // Column lookup is SYNCHRONOUS from cache so it never races against
+        // VS Code's cancellation timeout.  A background load is kicked off
+        // whenever the cache is empty; the next trigger will include columns.
+        const selectCtx = BqsqlTsParser.getSelectContext(sql, position.line, position.character);
+        outputChannel.appendLine(`[completion] cursor=${position.line}:${position.character}  selectCtx=${selectCtx === null ? 'null (not in SELECT clause)' : JSON.stringify(selectCtx)}`);
+        if (selectCtx) {
+            // Always warm schemas in the background for table sources.
+            this.backgroundLoadSchemas(selectCtx.sources);
 
-                if (element.suggestion_type === 'TableColumns') {
+            let columnItems = this.columnItemsFromCache(selectCtx.sources);
+            outputChannel.appendLine(`[completion] cache hit: ${columnItems.length} columns for sources: ${selectCtx.sources.map(s => s.fullName).join(', ')}`);
 
-                    const bqsql = document.getText();
-
-                    let schema = bigqueryTableSchemaService.getSchemaFromCache(bqsql, element.table_identifier);
-                    let columns = schema.filter((element, position) => {
-                        return schema.findIndex(e => e.column_name === element.column_name) === position;
-                    });
-
-                    for (let index1 = 0; index1 < columns.length; index1++) {
-                        const element = columns[index1];
-                        let c1 = new CompletionItem(element.column_name, CompletionItemKind.Field);
-                        c1.insertText = `${element.column_name},`;
-                        c1.detail = `${element.data_type}${element.is_partitioning_column === 'YES' ? " - PARTITION COLUMN" : ""}\n\n${element.description ? element.description : ""}`;
-                        // c1.command = {
-                        //     command: "editor.action.triggerSuggest"
-                        // } as vscode.Command;
-                        c1.sortText = pad(index0) + pad(element.ordinal_position);
-
-                        list.items.push(c1);
+            // Fast path for the common case: a single table source with cold cache.
+            // Try one direct load on the same request so users can see columns
+            // immediately (e.g. typing "pro" should surface "profile").
+            if (columnItems.length === 0 && !token.isCancellationRequested) {
+                const tableSources = selectCtx.sources.filter((s): s is SelectSource => s.kind === 'table');
+                if (tableSources.length === 1) {
+                    try {
+                        await bigqueryTableSchemaService.preLoadSchemaByFullName(tableSources[0].fullName);
+                        columnItems = this.columnItemsFromCache(selectCtx.sources);
+                    } catch {
+                        // Keep fallback behavior: return functions even if schema fetch fails.
                     }
                 }
+            }
 
-                // if (element.suggestion_type === 'Function') {
-                //     for (let j = 0; j < element.snippets.length; j++) {
-                //         const func = element.snippets[j];
+            const baseList = this.getBaseCompletionList();
+            for (const fn of baseList.items) {
+                fn.sortText = 'z' + (fn.sortText ?? fn.label);
+            }
 
-                //         const fn = new CompletionItem(func.name, CompletionItemKind.Function);
+            // Add a hint if we still have no columns (e.g. schema load failed or is taking too long)
+            if (columnItems.length === 0) {
+                const hint = new CompletionItem('(schema loading...)', CompletionItemKind.Text);
+                hint.detail = 'Table schema is loading or unavailable';
+                hint.insertText = '';
+                hint.filterText = '\0';
+                hint.sortText = '00000';
+                columnItems.push(hint);
+            }
 
-                //         fn.insertText = new vscode.SnippetString(func.snippet);
-                //         // fn.documentation = new MarkdownString('#### Description\nReturns a random universally unique identifier (UUID) as a `STRING`.\nThe returned STRING consists of 32 hexadecimal digits in five groups separated by hyphens in the form 8-4-4-4-12. The hexadecimal digits represent 122 random bits and 6 fixed bits, in compliance with [RFC 4122 section 4.4](https://tools.ietf.org/html/rfc4122#section-4.4). The returned STRING is lowercase.\n#### Return Data Type\nSTRING');
-                //         list.items.push(fn);
-                //     }
+            return new CompletionList([...columnItems, ...baseList.items], false);
+        }
 
-                // }
+        // ── 3. Function / keyword completions (outside any column context) ─
+        return this.getBaseCompletionList();
+    }
 
+    // -----------------------------------------------------------------------
+    // Dot-trigger helper – single table, column list
+    // -----------------------------------------------------------------------
+
+    private async columnsForTable(
+        fullName: string,
+        token: CancellationToken,
+    ): Promise<CompletionList> {
+
+        let schema = bigqueryTableSchemaService.getSchemaByFullName(fullName);
+
+        if (schema.length === 0 && !token.isCancellationRequested) {
+            try {
+                await bigqueryTableSchemaService.preLoadSchemaByFullName(fullName);
+                schema = bigqueryTableSchemaService.getSchemaByFullName(fullName);
+            } catch {
+                return new CompletionList([], false);
+            }
+        }
+        if (token.isCancellationRequested) { return new CompletionList([], false); }
+
+        if (schema.length === 0) {
+            const hint = new CompletionItem('(no schema available)', CompletionItemKind.Text);
+            hint.detail = `Could not load schema for ${fullName}`;
+            hint.insertText = '';
+            hint.filterText = '\0';
+            return new CompletionList([hint], false);
+        }
+
+        return new CompletionList(
+            dedupeByName(schema).map((col, idx) => {
+                const item = new CompletionItem(col.column_name, CompletionItemKind.Field);
+                item.detail = col.data_type +
+                    (col.is_partitioning_column === 'YES' ? '  [PARTITION KEY]' : '');
+                item.documentation = buildColumnDoc(col.column_name, col.data_type,
+                    col.is_partitioning_column === 'YES', col.description);
+                item.sortText = String(idx).padStart(5, '0');
+                item.commitCharacters = ['\t'];
+                return item;
+            }),
+            false,
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // SELECT-clause context helpers – SYNCHRONOUS (cache reads only)
+    // -----------------------------------------------------------------------
+
+    /** Read columns from the in-memory cache – returns immediately, never blocks. */
+    private columnItemsFromCache(sources: SelectSource[]): CompletionItem[] {
+        const multiSource = sources.length > 1;
+        const items: CompletionItem[] = [];
+        let globalIdx = 0;
+
+        for (const source of sources) {
+            const qualifier = source.alias ?? source.fullName.split('.').pop() ?? source.fullName;
+
+            if (source.kind === 'cte') {
+                for (const col of source.cteColumns) {
+                    const label = multiSource ? `${qualifier}.${col}` : col;
+                    const item = new CompletionItem(label, CompletionItemKind.Field);
+                    item.detail = `CTE column · ${qualifier}`;
+                    item.documentation = new vscode.MarkdownString(
+                        `**\`${col}\`** from CTE **\`${qualifier}\`**`
+                    );
+                    item.sortText = '0' + String(globalIdx++).padStart(5, '0');
+                    item.commitCharacters = ['\t'];
+                    items.push(item);
+                }
+            } else {
+                const schema = dedupeByName(bigqueryTableSchemaService.getSchemaByFullName(source.fullName));
+                for (const col of schema) {
+                    const label = multiSource ? `${qualifier}.${col.column_name}` : col.column_name;
+                    const item = new CompletionItem(label, CompletionItemKind.Field);
+                    item.detail = col.data_type +
+                        (col.is_partitioning_column === 'YES' ? '  [PARTITION KEY]' : '') +
+                        (multiSource ? `  · ${qualifier}` : '');
+                    item.documentation = buildColumnDoc(col.column_name, col.data_type,
+                        col.is_partitioning_column === 'YES', col.description);
+                    item.sortText = '0' + String(globalIdx++).padStart(5, '0');
+                    item.commitCharacters = ['\t'];
+                    items.push(item);
+                }
             }
         }
 
-        return list;
+        return items;
+    }
+
+    /** Fire-and-forget: load schemas for any uncached real tables. */
+    private backgroundLoadSchemas(sources: SelectSource[]): void {
+        for (const source of sources) {
+            if (source.kind === 'table') {
+                bigqueryTableSchemaService
+                    .preLoadSchemaByFullName(source.fullName)
+                    .catch(() => undefined);
+            }
+        }
     }
 
     getBaseCompletionList(): CompletionList<CompletionItem> {
@@ -411,10 +520,32 @@ export class BqsqlCompletionItemProvider implements CompletionItemProvider<Compl
 
         const anchor = label.toLocaleLowerCase().replace('.', '');
         completionItem.documentation = new vscode.MarkdownString('Bigquery official [documentation](https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators#'.concat(anchor.concat(')')));
-        const alias = label.toLocaleLowerCase().replace('.', '_');
         completionItem.insertText = new vscode.SnippetString(`${label}($1)`);
 
         return completionItem;
     }
 
+}
+
+// ---------------------------------------------------------------------------
+// Module-level utilities
+// ---------------------------------------------------------------------------
+
+function dedupeByName<T extends { column_name: string }>(rows: T[]): T[] {
+    return rows.filter((el, idx, arr) =>
+        arr.findIndex(e => e.column_name === el.column_name) === idx
+    );
+}
+
+function buildColumnDoc(
+    name: string,
+    dataType: string,
+    isPartition: boolean,
+    description: string | undefined,
+): vscode.MarkdownString {
+    return new vscode.MarkdownString(
+        `**\`${name}\`** · \`${dataType}\`` +
+        (isPartition ? '\n\n🔑 *Partition column*' : '') +
+        (description ? `\n\n${description}` : '')
+    );
 }

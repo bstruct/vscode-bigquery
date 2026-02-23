@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigqueryClient';
-import { bigQueryTreeDataProvider, QUERY_RESULTS_VIEW_TYPE, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE, gcpAuthenticationTreeDataProvider } from './extension';
+import { bigQueryTreeDataProvider, QUERY_RESULTS_VIEW_TYPE, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE, gcpAuthenticationTreeDataProvider, bigqueryTableSchemaService } from './extension';
 // import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem, BigqueryTreeItemType } from './activitybar/bigqueryTreeItem';
@@ -369,6 +369,9 @@ export const commandViewTable = async function (...args: any[]) {
 			await openQueryEditor(item);
 		} else {
 
+			// Pre-load the schema into the cache so that column completions are immediately available
+			bigqueryTableSchemaService.preLoadSchemaByFullName(`${item.projectId}.${item.datasetId}.${item.tableId}`).catch(() => undefined);
+
 			let panel: vscode.WebviewPanel;
 			if (args.length > 1 && args[1] && args[1].viewType === TABLE_RESULTS_VIEW_TYPE) {
 				panel = args[1];
@@ -454,6 +457,9 @@ export const commandViewTable = async function (...args: any[]) {
 async function openQueryEditor(item: BigqueryTreeItem) {
 	const query = `SELECT * \nFROM \`${item.projectId}.${item.datasetId}.${item.tableId}\``;
 
+	// Await the schema load so the cache is hot before the editor opens
+	await bigqueryTableSchemaService.preLoadSchemaByFullName(`${item.projectId}.${item.datasetId}.${item.tableId}`).catch(() => undefined);
+
 	const doc = await vscode.workspace.openTextDocument({
 		language: 'bqsql',
 		content: query
@@ -498,7 +504,11 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 	let query = QueryGeneratorService.generateSelectQuerySimple(item.projectId, item.datasetId, item.tableId);
 	try {
 		const bqClient = await getBigQueryClient();
-		const metadata = await bqClient.getMetadata(item.projectId, item.datasetId, item.tableId);
+		// Load metadata and schema in parallel so the cache is hot before the editor opens
+		const [metadata] = await Promise.all([
+			bqClient.getMetadata(item.projectId, item.datasetId, item.tableId),
+			bigqueryTableSchemaService.preLoadSchemaByFullName(`${item.projectId}.${item.datasetId}.${item.tableId}`),
+		]);
 		query = QueryGeneratorService.generateSelectQuery(metadata);
 	} catch (error) { }
 
@@ -536,6 +546,9 @@ export const commandOpenDdl = async function (...args: any[]) {
 			language: 'bqsql',
 			content: ddl
 		});
+
+		// Pre-load the schema into the cache so that column completions are immediately available
+		bigqueryTableSchemaService.preLoadSchemaByFullName(`${item.projectId}.${item.datasetId}.${item.tableId}`).catch(() => undefined);
 
 		await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
 

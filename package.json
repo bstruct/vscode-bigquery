@@ -14,7 +14,7 @@
 		"url": "https://github.com/bstruct/vscode-bigquery/issues"
 	},
 	"engines": {
-		"vscode": "^1.63.0"
+		"vscode": "^1.90.0"
 	},
 	"categories": [
 		"Other"
@@ -90,6 +90,29 @@
 				"editor.semanticHighlighting.enabled": true
 			}
 		},
+		"chatParticipants": [
+			{
+				"id": "bigquery.sql",
+				"fullName": "BigQuery SQL",
+				"name": "bigquery",
+				"description": "BigQuery SQL assistant. Schema-aware, knows your tables' columns and types.",
+				"isSticky": true,
+				"commands": [
+					{
+						"name": "explain",
+						"description": "Explain the current .bqsql query in plain English"
+					},
+					{
+						"name": "optimize",
+						"description": "Suggest cost and performance optimisations for the current query"
+					},
+					{
+						"name": "schema",
+						"description": "Show the schemas of all tables referenced in the current query"
+					}
+				]
+			}
+		],
 		"commands": [
 			{
 				"command": "vscode-bigquery.run-query",
@@ -306,7 +329,7 @@
 		"@types/mocha": "^9.1.1",
 		"@types/node": "16.x",
 		"@types/uuid": "^9.0.0",
-		"@types/vscode": "^1.63.0",
+		"@types/vscode": "^1.90.0",
 		"@typescript-eslint/eslint-plugin": "^8.56.0",
 		"@typescript-eslint/parser": "^8.56.0",
 		"@vscode/test-electron": "^2.1.5",

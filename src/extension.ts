@@ -10,6 +10,7 @@ import { BqsqlDocumentSemanticTokensProvider } from './language/bqsqlDocumentSem
 import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
 import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaService';
 import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
+import { registerBqsqlCopilotParticipant } from './language/bqsqlCopilotParticipant';
 import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializer';
 import { QueryResultsMappingService } from './services/queryResultsMappingService';
 import { TableResultsSerializer } from './tableResultsPanel/tableResultsSerializer';
@@ -24,6 +25,9 @@ export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 export const gcpAuthenticationTreeDataProvider = new GcpAuthenticationTreeDataProvider();
 export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
 export const bigqueryTableSchemaService = new BigqueryTableSchemaService();
+
+// Re-export so callers can do `import { outputChannel } from '../extension'`
+export { outputChannel } from './logger';
 
 export const CHART_VIEW_TYPE = "bigquery-query-chart";
 export const QUERY_RESULTS_VIEW_TYPE = "bigquery-query-results";
@@ -316,7 +320,8 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(
 		vscode.languages.registerCompletionItemProvider(
 			{ language: 'bqsql' },
-			new BqsqlCompletionItemProvider()
+			new BqsqlCompletionItemProvider(),
+			'.'   // trigger column completions on dot
 		)
 	);
 
@@ -334,6 +339,9 @@ export function activate(context: ExtensionContext) {
 			new BqsqlInlayHintsProvider()
 		)
 	);
+
+	// Copilot chat participant (@bigquery)
+	registerBqsqlCopilotParticipant(context);
 
 	//later
 	// context.subscriptions.push(
