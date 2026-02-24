@@ -313,9 +313,8 @@
 		"vscode:prepublish": "npm run package",
 		"compile": "webpack",
 		"watch": "webpack --watch",
-		"package": "npm run compile-bqsql_parser && npm run compile-grid_render && webpack --mode production --devtool hidden-source-map",
+		"package": "npm run compile-grid_render && webpack --mode production --devtool hidden-source-map",
 		"compile-tests": "tsc -p . --outDir out",
-		"compile-bqsql_parser": "cd bqsql_parser && wasm-pack build --release --target web",
 		"compile-grid_render": "cd grid_render && wasm-pack build --release --target web",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
@@ -343,7 +342,6 @@
 		"webpack-cli": "^5.1.4"
 	},
 	"dependencies": {
-		"@bstruct/bqsql-parser": "file://.//bqsql_parser/pkg",
 		"@google-cloud/bigquery": "^8.1.1",
 		"@google-cloud/pubsub": "^5.2.2",
 		"@types/gapi.client.bigquery-v2": "^0.0.4",
