@@ -1,7 +1,6 @@
 on:
-  push:
-    tags:
-      - '*'
+  release:
+    types: [published]
 
 env:
   CARGO_NET_GIT_FETCH_WITH_CLI: true
@@ -17,6 +16,15 @@ jobs:
         git config --global user.name "bstruct"
         git config --global user.email "git@bstruct.com"
         git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+
+    - name: Set pre-release flag
+      id: release_type
+      run: |
+        if [ "${{ github.event.release.prerelease }}" = "true" ]; then
+          echo "flag=--pre-release" >> $GITHUB_OUTPUT
+        else
+          echo "flag=" >> $GITHUB_OUTPUT
+        fi
     
     - name: Install Node.js
       uses: actions/setup-node@v3
@@ -27,16 +35,16 @@ jobs:
       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
     
     - run: mkdir dist
-    - name: Package extension (pre-release)
+    - name: Package extension
       env:
         CARGO_NET_GIT_FETCH_WITH_CLI: true
-      run: npx vsce package --pre-release
+      run: npx vsce package ${{ steps.release_type.outputs.flag }}
       
-    - name: Publish to Visual Studio Marketplace (pre-release)
-      run: npx vsce publish --pre-release --packagePath *.vsix
+    - name: Publish to Visual Studio Marketplace
+      run: npx vsce publish ${{ steps.release_type.outputs.flag }} --packagePath *.vsix
       env:
         VSCE_PAT: ${{ secrets.VSCE_PAT }}
-    - name: Publish to Open VSX Registry (pre-release)
-      run: npx ovsx publish *.vsix --pre-release
+    - name: Publish to Open VSX Registry
+      run: npx ovsx publish *.vsix ${{ steps.release_type.outputs.flag }}
       env:
         OVSX_PAT: ${{ secrets.OVSX_PAT }}
