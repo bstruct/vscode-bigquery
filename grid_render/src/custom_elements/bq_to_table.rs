@@ -122,6 +122,66 @@ impl Job {
         }]
     }
 
+    pub(crate) fn to_ddl_table(&self) -> TableBuilder {
+        let statement_type = self.get_statement_type().unwrap_or_default();
+
+        let (operation, target) = self
+            .statistics
+            .as_ref()
+            .and_then(|s| s.query.as_ref())
+            .map(|q| {
+                let op = q.ddl_operation_performed.clone().unwrap_or_default();
+                let tgt = q
+                    .ddl_target_table
+                    .as_ref()
+                    .map(|t| {
+                        format!(
+                            "{}.{}.{}",
+                            t.project_id.as_deref().unwrap_or(""),
+                            t.dataset_id.as_deref().unwrap_or(""),
+                            t.table_id.as_deref().unwrap_or("")
+                        )
+                    })
+                    .unwrap_or_default();
+                (op, tgt)
+            })
+            .unwrap_or_default();
+
+        let mut columns: Vec<TableColumnDefinition> = vec![
+            TableColumnDefinition::Column(TableColumn {
+                name: "statement_type".to_string(),
+                text: "statement_type".to_string(),
+                width_px: 240,
+            }),
+            TableColumnDefinition::Column(TableColumn {
+                name: "ddl_operation".to_string(),
+                text: "ddl_operation".to_string(),
+                width_px: 120,
+            }),
+            TableColumnDefinition::Column(TableColumn {
+                name: "target".to_string(),
+                text: "target".to_string(),
+                width_px: 400,
+            }),
+        ];
+
+        let rows = vec![TableRow {
+            cells: vec![
+                TableValue::String(statement_type),
+                TableValue::String(operation),
+                TableValue::String(target),
+            ],
+        }];
+
+        patch_all_column_widths(&mut columns, &rows);
+        TableBuilder {
+            style: TableStyle::default(),
+            dynamic_table_render: false,
+            columns,
+            rows,
+        }
+    }
+
     pub(crate) fn to_dml_table(&self) -> TableBuilder {
         let mut columns: Vec<TableColumnDefinition> = [
             "inserted_row_count".to_string(),

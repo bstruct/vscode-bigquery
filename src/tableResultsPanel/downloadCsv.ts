@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as csv_writer from 'csv-writer';
 import { ObjectCsvStringifierParams } from 'csv-writer/src/lib/csv-stringifier-factory';
 import { JobReference } from '../services/queryResultsMapping';
@@ -13,13 +14,15 @@ export class DownloadCsv {
         try {
 
             const date = new Date();
-            const filename = `${table.dataset.projectId}_${table.dataset.id}_${table.id}_${date.toLocaleTimeString().replace(/:/g, '')}.csv`;
+            const dateStr = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+            const timeStr = `${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date.getSeconds().toString().padStart(2, '0')}`;
+            const filename = `${dateStr}${timeStr}_${table.dataset.projectId}_${table.dataset.id}_${table.id}.csv`;
 
             //download start
-            let defaultUri: vscode.Uri | undefined;
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-                defaultUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, filename);
-            }
+            const baseFolder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
+                ? vscode.workspace.workspaceFolders[0].uri
+                : vscode.Uri.file(os.homedir());
+            const defaultUri = vscode.Uri.joinPath(baseFolder, filename);
 
             const uri: vscode.Uri | undefined = await vscode.window.showSaveDialog(
                 {
@@ -35,7 +38,7 @@ export class DownloadCsv {
                 try {
                     const fsPath = uri.fsPath;
 
-                    vscode.window.showInformationMessage(`Initiated downloading into the file:\n${filename}`);
+                    vscode.window.showInformationMessage(`Initiated downloading into the file:\n${uri.fsPath}`);
 
                     const createCsvStringifier = csv_writer.createObjectCsvStringifier;
                     
@@ -54,7 +57,7 @@ export class DownloadCsv {
 
                     while (true) {
 
-                        const rows = (await table.getRows({ startIndex: startIndex.toString(), maxResults: 10000 }))[0];
+                        const rows = (await table.getRows({ startIndex: startIndex.toString(), maxResults: 10000, wrapIntegers: true }))[0];
 
                         let adjustedRecords = DownloadCsv.objectsToString(rows);
                         fs.appendFileSync(fsPath, csvStringifier.stringifyRecords(adjustedRecords));
@@ -71,7 +74,7 @@ export class DownloadCsv {
                     }
 
                     //success message
-                    vscode.window.showInformationMessage(`Download concluded:\n${filename}`);
+                    vscode.window.showInformationMessage(`Download concluded:\n${uri.fsPath}`);
 
                 } catch (error: any) {
                     vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);
@@ -90,13 +93,15 @@ export class DownloadCsv {
 
             const job = bigqueryClient.getJob(jobReference);
             const date = new Date();
-            const filename = `${date.getFullYear()}${(date.getMonth() + 1).toString(2)}${date.getDay()}${date.toLocaleTimeString().replace(/:/g, '')}_${job.id}.csv`;
+            const dateStr = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+            const timeStr = `${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date.getSeconds().toString().padStart(2, '0')}`;
+            const filename = `${dateStr}${timeStr}_${job.id}.csv`;
 
             //download start
-            let defaultUri: vscode.Uri | undefined;
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-                defaultUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, filename);
-            }
+            const baseFolder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
+                ? vscode.workspace.workspaceFolders[0].uri
+                : vscode.Uri.file(os.homedir());
+            const defaultUri = vscode.Uri.joinPath(baseFolder, filename);
 
             const uri: vscode.Uri | undefined = await vscode.window.showSaveDialog(
                 {
@@ -112,11 +117,11 @@ export class DownloadCsv {
                 try {
                     const fsPath = uri.fsPath;
 
-                    vscode.window.showInformationMessage(`Initiated downloading into the file:\n${filename}`);
+                    vscode.window.showInformationMessage(`Initiated downloading into the file:\n${uri.fsPath}`);
 
                     const createCsvStringifier = csv_writer.createObjectCsvStringifier;
 
-                    let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000 });
+                    let queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 1000, wrapIntegers: true });
                     const totalRows = Number.parseInt(queryResults[2]?.totalRows as string);
 
                     const columnNames = queryResults[2]?.schema?.fields?.filter(c => c.name && c.name.length > 0).map(c => { return { id: c.name as string, title: c.name as string }; });
@@ -140,12 +145,12 @@ export class DownloadCsv {
                             break;
                         }
 
-                        queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000, pageToken: pageToken });
+                        queryResults = await job.getQueryResults({ autoPaginate: true, maxResults: 10000, pageToken: pageToken, wrapIntegers: true });
                         records = queryResults[0];
                     }
 
                     //success message
-                    vscode.window.showInformationMessage(`Download concluded:\n${filename}`);
+                    vscode.window.showInformationMessage(`Download concluded:\n${uri.fsPath}`);
 
                 } catch (error: any) {
                     vscode.window.showErrorMessage(`Unexpected error!\n${error.message}`);

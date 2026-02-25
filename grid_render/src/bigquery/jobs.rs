@@ -153,10 +153,10 @@ pub struct JobStatistics2 {
     //   ],
     #[serde(alias = "statementType")]
     pub statement_type: String,
-    //   "ddlOperationPerformed": string,
-    //   "ddlTargetTable": {
-    //     object (TableReference)
-    //   },
+    #[serde(alias = "ddlOperationPerformed")]
+    pub ddl_operation_performed: Option<String>,
+    #[serde(alias = "ddlTargetTable")]
+    pub ddl_target_table: Option<DdlTargetTable>,
     //   "ddlDestinationTable": {
     //     object (TableReference)
     //   },
@@ -218,6 +218,16 @@ pub struct JobStatistics2 {
     //   "metadataCacheStatistics": {
     //     object (MetadataCacheStatistics)
     //   }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct DdlTargetTable {
+    #[serde(alias = "projectId")]
+    pub project_id: Option<String>,
+    #[serde(alias = "datasetId")]
+    pub dataset_id: Option<String>,
+    #[serde(alias = "tableId")]
+    pub table_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -341,6 +351,18 @@ impl Job {
             return ["INSERT", "UPDATE", "DELETE", "MERGE"]
                 .iter()
                 .any(|c| c == &statement_type);
+        }
+
+        false
+    }
+
+    // https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#jobstatistics2
+    pub(crate) fn is_ddl_statement(&self) -> bool {
+        if let Some(statement_type) = self.get_statement_type() {
+            return statement_type.starts_with("CREATE_")
+                || statement_type.starts_with("DROP_")
+                || statement_type.starts_with("ALTER_")
+                || statement_type == "TRUNCATE_TABLE";
         }
 
         false

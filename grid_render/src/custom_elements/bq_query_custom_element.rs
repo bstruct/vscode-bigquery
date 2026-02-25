@@ -203,6 +203,7 @@ impl BigqueryQueryCustomElement {
                 }
             };
             let is_dml_statement = bq_query_element.is_dml_statement();
+            let is_ddl_statement = bq_query_element.is_ddl_statement();
 
             let jobs = crate::bigquery::jobs::Jobs::new(&bq_query_element.token);
             let parent_node = match element.parent_element() {
@@ -215,7 +216,7 @@ impl BigqueryQueryCustomElement {
                 }
             };
 
-            if is_dml_statement {
+            if is_dml_statement || is_ddl_statement {
                 let request = bq_query_element.as_job_request();
 
                 spawn_local(async move {
@@ -223,6 +224,8 @@ impl BigqueryQueryCustomElement {
                         Some(response) => {
                             if response.has_error() {
                                 render_standalone(&response.to_error_table(), &parent_node);
+                            } else if is_ddl_statement {
+                                render_standalone(&response.to_ddl_table(), &parent_node);
                             } else {
                                 render_standalone(&response.to_dml_table(), &parent_node);
                             }
@@ -384,6 +387,18 @@ impl BigqueryQueryCustomElement {
 
         false
     }
+
+    fn is_ddl_statement(&self) -> bool {
+        if let Some(statement_type) = &self.statement_type {
+            let st = statement_type.as_str();
+            return st.starts_with("CREATE_")
+                || st.starts_with("DROP_")
+                || st.starts_with("ALTER_")
+                || st == "TRUNCATE_TABLE";
+        }
+
+        false
+    }
 }
 
 impl CustomElementDefinition for BigqueryQueryCustomElement {
@@ -502,9 +517,11 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
                     shadow.append_nodes(&render);
                 }
             }
-        } else if !self.is_dml_statement() {
+        } else if !self.is_dml_statement() && !self.is_ddl_statement() {
             // Show loading placeholder while data is being fetched from the BigQuery API.
             // No be_id → cleaned up automatically at the start of the next render pass.
+            // DML and DDL results are rendered via render_standalone into the parent, so
+            // they never populate the shadow DOM and must not show this indicator.
             if let Some(doc) = web_sys::window().and_then(|w| w.document()) {
                 if let Ok(el) = doc.create_element("div") {
                     el.set_class_name("loading-indicator");

@@ -88,7 +88,7 @@ impl BigqueryScriptCustomElement {
     }
 
     fn with_job_info(&self, job: &Job, jobs: &Vec<Job>) -> BigqueryScriptCustomElement {
-        let num_child_jobs = if job.is_dml_statement() || job.is_query_select() {
+        let num_child_jobs = if job.is_dml_statement() || job.is_query_select() || job.is_ddl_statement() {
             Some(1)
         } else {
             match job.statistics.as_ref() {
@@ -202,19 +202,6 @@ fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryScriptCustomEle
 }
 
 fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElement) {
-    //loading
-
-    let is_loaded = (script_element.num_child_jobs.is_some()
-        && script_element.all_jobs_completed())
-        || (script_element.jobs.is_some()
-            && script_element.jobs.as_ref().unwrap().len() == 1
-            && script_element.jobs.as_ref().unwrap()[0].is_complete());
-
-    let loading_class_name = if is_loaded { "loaded" } else { "" };
-    BaseElement::new_and_append(&element.element(), "DIV", "job_loading")
-        .apply_fn(&resolve_loading, &Some(loading_class_name));
-
-    //
     let num_child_jobs = if script_element.num_child_jobs.is_some() {
         script_element.num_child_jobs.unwrap()
     } else {
@@ -224,6 +211,32 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
             0
         }
     };
+
+    let is_loaded = (script_element.num_child_jobs.is_some()
+        && script_element.all_jobs_completed())
+        || (script_element.jobs.is_some()
+            && script_element.jobs.as_ref().unwrap().len() == 1
+            && script_element.jobs.as_ref().unwrap()[0].is_complete());
+
+    let loading_class_name = if is_loaded { "loaded" } else { "" };
+
+    // When we know the expected total and some jobs are still pending, show progress.
+    let completed_count = script_element
+        .jobs
+        .as_ref()
+        .map(|j| j.iter().filter(|job| job.is_complete()).count())
+        .unwrap_or(0);
+    let loading_content = if num_child_jobs > 1 && !is_loaded {
+        format!(
+            "Loading<span>...</span> <span class=\"progress\">({} / {} jobs complete)</span>",
+            completed_count, num_child_jobs
+        )
+    } else {
+        "Loading<span>...</span>".to_string()
+    };
+
+    BaseElement::new_and_append(&element.element(), "DIV", "job_loading")
+        .apply_fn(&resolve_loading, &(loading_content.as_str(), loading_class_name));
 
     // web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
     //     "num_child_jobs: {}",
@@ -258,7 +271,7 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                 job.status.as_ref().clone(),
             )
         } else {
-            ("?".to_string(), None)
+            (format!("job {}", index), None)
         };
 
         let job_body =
@@ -309,6 +322,9 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                 // Job is still pending/running — keep body closed, results not yet available
                 let _ = &job_body.apply_class_name("job_body_closed");
             }
+        } else {
+            // Job slot not yet created on BigQuery — keep body closed
+            let _ = &job_body.apply_class_name("job_body_closed");
         }
     }
 
@@ -318,10 +334,10 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
     }
 }
 
-fn resolve_loading(element: &BaseElement, class_name: &Option<&str>) {
+fn resolve_loading(element: &BaseElement, (content, class_name): &(&str, &str)) {
     let html_element = element.element();
-    html_element.set_inner_html("Loading<span>...</span>");
-    html_element.set_class_name(class_name.unwrap_or_default());
+    html_element.set_inner_html(content);
+    html_element.set_class_name(class_name);
 }
 
 fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Option<&JobStatus>)) {
@@ -333,7 +349,7 @@ fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Op
             format!("{} - {}", job_status.state, job_name)
         }
     } else {
-        format!("? - {}", job_name)
+        format!("Waiting \u{2014} {}", job_name)
     };
 
     let html_element = element.element();
@@ -375,10 +391,13 @@ fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Op
 
     //https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobStatus
     // Valid states include 'PENDING', 'RUNNING', and 'DONE'.
-    if job_status.is_some() && job_status.unwrap().state == "DONE" {
-        html_element.set_class_name("title ready");
-    } else {
-        html_element.set_class_name("title");
+    match job_status {
+        Some(status) => match status.state.as_str() {
+            "DONE" => html_element.set_class_name("title ready"),
+            "RUNNING" => html_element.set_class_name("title running"),
+            _ => html_element.set_class_name("title pending"),
+        },
+        None => html_element.set_class_name("title pending"),
     }
 
     //toggle job_body on click

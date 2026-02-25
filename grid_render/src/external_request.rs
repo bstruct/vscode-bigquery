@@ -51,8 +51,15 @@ impl ExternalRequest {
         let token = (&self.token.as_ref().unwrap()).to_string();
 
         let num_child_jobs: Option<usize> =
-            if self.job.is_some() && self.job.as_ref().unwrap().is_query_select_and_complete() {
-                Some(1)
+            if self.job.is_some() {
+                let job = self.job.as_ref().unwrap();
+                if (job.is_query_select() || job.is_dml_statement() || job.is_ddl_statement())
+                    && job.is_complete()
+                {
+                    Some(1)
+                } else {
+                    None
+                }
             } else {
                 None
             };

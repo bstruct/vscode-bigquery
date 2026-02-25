@@ -48,10 +48,30 @@ div[be_id="jobs"] div:has(> div.job_body_closed) > div.title::before {
     opacity: 0.7;
 }
 
-/* DONE jobs get a subtle left accent */
+/* DONE jobs get a green left accent */
 div[be_id="jobs"] div div.title.ready {
     border-left: 3px solid var(--vscode-testing-iconPassed, #4caf50);
     padding-left: 6px;
+}
+
+/* RUNNING jobs get an amber left accent */
+div[be_id="jobs"] div div.title.running {
+    border-left: 3px solid var(--vscode-notificationsWarningIcon-foreground, #cca700);
+    padding-left: 6px;
+}
+
+/* PENDING / not-yet-created job slots get a muted left accent */
+div[be_id="jobs"] div div.title.pending {
+    border-left: 3px solid var(--vscode-descriptionForeground, #888);
+    padding-left: 6px;
+    opacity: 0.6;
+}
+
+/* Progress counter inside the loading bar */
+div[be_id="jobs"] div[be_id="job_loading"] span.progress {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-left: 4px;
 }
 
 /* job body */
