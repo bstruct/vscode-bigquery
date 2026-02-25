@@ -26,9 +26,6 @@ export const gcpAuthenticationTreeDataProvider = new GcpAuthenticationTreeDataPr
 export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
 export const bigqueryTableSchemaService = new BigqueryTableSchemaService();
 
-// Re-export so callers can do `import { outputChannel } from '../extension'`
-export { outputChannel } from './logger';
-
 export const CHART_VIEW_TYPE = "bigquery-query-chart";
 export const QUERY_RESULTS_VIEW_TYPE = "bigquery-query-results";
 export const TABLE_RESULTS_VIEW_TYPE = "bigquery-table-results";

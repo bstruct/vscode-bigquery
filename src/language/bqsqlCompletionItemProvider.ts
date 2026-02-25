@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { CompletionItemProvider, CompletionItem, CancellationToken, CompletionContext, CompletionList, Position, TextDocument, CompletionItemKind } from 'vscode';
-import { bigqueryTableSchemaService, outputChannel } from '../extension';
+import { bigqueryTableSchemaService } from '../extension';
 import { BqsqlTsParser, SelectSource } from './bqsqlTsParser';
 
 
@@ -28,13 +28,11 @@ export class BqsqlCompletionItemProvider implements CompletionItemProvider<Compl
         // VS Code's cancellation timeout.  A background load is kicked off
         // whenever the cache is empty; the next trigger will include columns.
         const selectCtx = BqsqlTsParser.getSelectContext(sql, position.line, position.character);
-        outputChannel.appendLine(`[completion] cursor=${position.line}:${position.character}  selectCtx=${selectCtx === null ? 'null (not in SELECT clause)' : JSON.stringify(selectCtx)}`);
         if (selectCtx) {
             // Always warm schemas in the background for table sources.
             this.backgroundLoadSchemas(selectCtx.sources);
 
             let columnItems = this.columnItemsFromCache(selectCtx.sources);
-            outputChannel.appendLine(`[completion] cache hit: ${columnItems.length} columns for sources: ${selectCtx.sources.map(s => s.fullName).join(', ')}`);
 
             // Fast path for the common case: a single table source with cold cache.
             // Try one direct load on the same request so users can see columns

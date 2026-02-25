@@ -2,7 +2,6 @@ import { getBigQueryClient } from "../extensionCommands";
 import { BqsqlDocumentItem } from "../language/bqsqlDocument";
 import { Authentication } from "./authentication";
 import { BigqueryTableSchema } from "./bigqueryTableSchema";
-import { outputChannel } from "../logger";
 
 export class BigqueryTableSchemaService {
 
@@ -84,7 +83,6 @@ export class BigqueryTableSchemaService {
 
         const resolved = this.resolveFullName(fullName);
         if (!resolved) {
-            outputChannel.appendLine(`[schema] preLoad FAILED to resolve: "${fullName}"  defaultProject="${this.defaultProjectId}"`);
             return false;
         }
         const [projectId, datasetName, tableName] = resolved;
@@ -94,17 +92,12 @@ export class BigqueryTableSchemaService {
         );
         if (existing.length === 0) {
             try {
-                outputChannel.appendLine(`[schema] fetching ${projectId}.${datasetName}.${tableName} ...`);
                 const bqClient = await getBigQueryClient();
                 const tableSchema: BigqueryTableSchema[] = await bqClient.getTableSchema(projectId, datasetName, tableName);
                 this.schemas.push(...tableSchema);
-                outputChannel.appendLine(`[schema] loaded ${tableSchema.length} columns for ${projectId}.${datasetName}.${tableName}`);
                 return true;
             } catch (ex) {
-                outputChannel.appendLine(`[schema] ERROR loading ${projectId}.${datasetName}.${tableName}: ${ex}`);
             }
-        } else {
-            outputChannel.appendLine(`[schema] cache hit: ${existing.length} columns for ${projectId}.${datasetName}.${tableName}`);
         }
         return false;
     }
@@ -116,14 +109,12 @@ export class BigqueryTableSchemaService {
     public getSchemaByFullName(fullName: string): BigqueryTableSchema[] {
         const resolved = this.resolveFullName(fullName);
         if (!resolved) {
-            outputChannel.appendLine(`[schema] getSchema FAILED to resolve: "${fullName}"`);
             return [];
         }
         const [projectId, datasetName, tableName] = resolved;
         const result = this.schemas.filter(
             c => c.project_id === projectId && c.dataset_name === datasetName && c.table_name === tableName
         );
-        outputChannel.appendLine(`[schema] getSchema "${fullName}" → ${result.length} columns (resolved: ${projectId}.${datasetName}.${tableName})`);
         return result;
     }
 
