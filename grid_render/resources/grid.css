@@ -6,7 +6,7 @@ div[be_id='controls-background'] {
     background-color: var(--vscode-activityBar-border);
     box-shadow: inset 0 0 0 2000px rgba(0, 0, 0, 255);
     width: 100%;
-    padding: 2px 4px;
+    padding: 6px 4px;
     box-sizing: border-box;
 }
 
@@ -17,23 +17,27 @@ div[be_id='controls'] {
     align-items: center;
     text-wrap: nowrap;
     gap: 2px;
+    font-size: var(--vscode-font-size, 12px);
+    font-family: var(--vscode-font-family);
 }
 
 div[be_id='controls'] span {
-    padding: 0 10px;
+    padding: 0 6px;
     display: inline-flex;
     align-items: center;
 }
 
 div[be_id='controls'] button {
-    padding: 3px 8px;
-    height: 26px;
-    box-sizing: border-box;   /* height: 26px includes padding+border */
+    padding: 1px 6px;
+    height: 20px;
+    box-sizing: border-box;   /* height: 20px includes padding+border */
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     line-height: 1;
+    font-size: var(--vscode-font-size, 12px);
+    font-family: var(--vscode-font-family);
 
     background-color: var(--vscode-button-secondaryBackground);
     border: 1px solid var(--vscode-button-separator);
@@ -73,11 +77,11 @@ div.t {
     border-collapse: collapse;
 }
 
-/* table header — top must match controls-background height: 2px padding + 26px button + 2px padding = 30px */
+/* table header — top must match controls-background height: 4px padding + 20px button + 4px padding = 28px */
 div.th {
     display: table-header-group;
     position: sticky;
-    top: 30px;
+    top: 28px;
     z-index: 9;
 }
 
@@ -106,7 +110,9 @@ div.tc {
 
     /* max-width: 550px; */
     /* min-width: 100px; */
-    padding: 5px 15px;
+    padding: 2px 8px;
+    font-size: var(--vscode-font-size, 12px);
+    font-family: var(--vscode-font-family);
 }
 
 div.tc.v {
@@ -114,7 +120,7 @@ div.tc.v {
 }
 
 div.tc.v div {
-    min-height: 2.5em;
+    min-height: 1.4em;
 }
 
 div.tc.index {

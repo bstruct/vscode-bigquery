@@ -279,7 +279,13 @@ impl BigqueryTableCustomElement {
         let new_value = if page_size > rows_total {
             0
         } else {
-            (f64::floor(rows_total as f64 / page_size as f64) * page_size as f64) as usize
+            let start_index =
+                (f64::floor(rows_total as f64 / page_size as f64) * page_size as f64) as usize;
+            if start_index == rows_total {
+                start_index - page_size
+            } else {
+                start_index
+            }
         };
 
         let previous_value = element.get_attribute(PAGE_START_INDEX_ATT);

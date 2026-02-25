@@ -5,6 +5,86 @@ use website_component_table::{
 
 use crate::bigquery::{base::{TableFieldSchema, TableSchema}, jobs::GetQueryResultsResponse};
 
+// ── VS Code theme-aware table styles ─────────────────────────────────────────────
+/// Main result table: uses VS Code editor colours so it adapts to dark/light themes.
+fn vscode_main_style() -> TableStyle {
+    TableStyle {
+        margin_px: 1,
+        padding_px: 6,
+        css_entries: vec![
+            "th div.text { padding: 3px 6px; }",
+            "th, td.index {
+              background-color: var(--vscode-banner-background, #2a2d2e);
+              color: var(--vscode-editor-foreground, #cccccc);
+              border: 1px solid var(--vscode-settings-checkboxBorder, #454545);
+              text-align: left;
+              font-weight: 600;
+            }",
+            "td {
+              background-color: var(--vscode-editor-background, #1e1e1e);
+              color: var(--vscode-editor-foreground, #cccccc);
+              border: 1px solid var(--vscode-settings-checkboxBorder, #454545);
+              padding: 3px 6px;
+            }",
+            "td.null { font-style: italic; color: var(--vscode-disabledForeground, #888888); }",
+            "td.boolean { color: var(--vscode-debugIcon-startForeground, #89d185); font-weight: 500; }",
+            "td.number { text-align: right; color: var(--vscode-symbolIcon-numberForeground, #b5cea8); }",
+            "td.string { color: var(--vscode-editor-foreground, #cccccc); }",
+            "td.array { padding: 0; }",
+            "td.array div div.ias {
+              padding: 3px 6px;
+              background-color: var(--vscode-settings-checkboxBorder, #454545);
+              font-style: italic;
+              color: var(--vscode-disabledForeground, #888888);
+              text-align: center;
+              font-size: 0.9em;
+            }",
+            "tr:hover td { background-color: var(--vscode-list-hoverBackground, #2a2d2e); }",
+            "td.array div { max-height: 200px; overflow-y: auto; overflow-x: clip; }",
+        ],
+    }
+}
+
+/// Nested array table (level 1): uses a slightly recessed VS Code palette to visually
+/// distinguish sub-arrays from the outer table while still following the active theme.
+fn vscode_nested_style() -> TableStyle {
+    TableStyle {
+        margin_px: 1,
+        padding_px: 6,
+        css_entries: vec![
+            "th div.text { padding: 3px 6px; }",
+            "th, td.index {
+              background-color: var(--vscode-editorWidget-background, #252526);
+              color: var(--vscode-editor-foreground, #cccccc);
+              border: 1px solid var(--vscode-editorWidget-border, #454545);
+              text-align: left;
+              font-weight: 600;
+            }",
+            "td {
+              background-color: var(--vscode-sideBar-background, #252526);
+              color: var(--vscode-sideBar-foreground, #cccccc);
+              border: 1px solid var(--vscode-editorWidget-border, #3c3c3c);
+              padding: 3px 6px;
+            }",
+            "td.null { font-style: italic; color: var(--vscode-disabledForeground, #888888); }",
+            "td.boolean { color: var(--vscode-debugIcon-startForeground, #89d185); font-weight: 500; }",
+            "td.number { text-align: right; color: var(--vscode-symbolIcon-numberForeground, #b5cea8); }",
+            "td.string { color: var(--vscode-sideBar-foreground, #cccccc); }",
+            "td.array { padding: 0; }",
+            "td.array div div.ias {
+              padding: 3px 6px;
+              background-color: var(--vscode-editorGroupHeader-tabsBackground, #252526);
+              font-style: italic;
+              color: var(--vscode-disabledForeground, #888888);
+              text-align: center;
+              font-size: 0.9em;
+            }",
+            "tr:hover td { background-color: var(--vscode-list-activeSelectionBackground, #37373d); }",
+            "td.array div { max-height: 150px; overflow-y: auto; overflow-x: clip; }",
+        ],
+    }
+}
+
 // ── Dynamic column-width constants ────────────────────────────────────────────────
 /// Estimated pixels per character (~13 px UI font).
 const CHAR_WIDTH_PX: usize = 8;
@@ -63,9 +143,9 @@ fn patch_column_widths_from(
     }
 }
 
-/// Resize every column except the leading row-index column (position 0).
+/// Resize every column including the leading row-index column (position 0).
 fn patch_column_widths(columns: &mut Vec<TableColumnDefinition>, rows: &[TableRow]) {
-    patch_column_widths_from(columns, rows, 1);
+    patch_column_widths_from(columns, rows, 0);
 }
 
 /// Resize every column starting from position 0 — use for tables that have no
@@ -95,7 +175,7 @@ impl GetQueryResultsResponse {
         let rows = get_rows(&self.rows, &self.schema, row_index);
         patch_column_widths(&mut columns, &rows);
         TableBuilder {
-            style: TableStyle::default(),
+            style: vscode_main_style(),
             dynamic_table_render: false,
             columns,
             rows,
@@ -113,7 +193,7 @@ impl crate::bigquery::tables::Table {
         let built_rows = get_rows(rows, &self.schema, row_index);
         patch_column_widths(&mut columns, &built_rows);
         TableBuilder {
-            style: TableStyle::default(),
+            style: vscode_main_style(),
             dynamic_table_render: false,
             columns,
             rows: built_rows,
@@ -246,10 +326,39 @@ fn json_value_to_table_value(
             // col_span must equal the number of leaf columns so the <td colspan="N">
             // spans exactly the N sub-column headers produced by the Group definition.
             let col_span = count_leaf_fields(nested_fields).max(1);
-            let inner_table = InnerTableBuilder {
-                style: TableStyle::default(),
-                rows: arr
-                    .iter()
+
+            let rows = if nested_fields.is_empty() {
+                // Simple repeated field: ARRAY<FLOAT64>, ARRAY<STRING>, etc.
+                // Each element has the shape {"v": <primitive>} — no "/f" layer.
+                arr.iter()
+                    .filter_map(|item| {
+                        let v = item.pointer("/v")?;
+                        let cell = match v {
+                            serde_json::Value::String(s) => {
+                                if field_type == "TIMESTAMP" {
+                                    TableValue::String(format_timestamp(s))
+                                } else {
+                                    TableValue::String(s.clone())
+                                }
+                            }
+                            serde_json::Value::Number(n) => {
+                                if field_type == "TIMESTAMP" {
+                                    TableValue::String(format_timestamp(&n.to_string()))
+                                } else {
+                                    TableValue::String(n.to_string())
+                                }
+                            }
+                            serde_json::Value::Bool(b) => TableValue::Boolean(*b),
+                            serde_json::Value::Null => TableValue::Null,
+                            _ => TableValue::String(v.to_string()),
+                        };
+                        Some(TableRow { cells: vec![cell] })
+                    })
+                    .collect()
+            } else {
+                // Complex repeated field: ARRAY<STRUCT<...>>
+                // Each element has the shape {"v": {"f": [...]}}
+                arr.iter()
                     .filter_map(|v| v.pointer("/v/f"))
                     .filter(|v| v.is_array())
                     .map(|v| TableRow {
@@ -261,16 +370,17 @@ fn json_value_to_table_value(
                             .map(|(i, cell)| {
                                 let nf_type = nested_fields.get(i).map(|f| f.r#type.as_str()).unwrap_or("");
                                 let nf_nested = nested_fields.get(i).and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
-                                // Inner table cells reference --cN relative to the inner
-                                // table's own shadow scope starting at start_col_index+i.
                                 json_value_to_table_value(cell, nf_type, nf_nested, start_col_index + i)
                             })
                             .collect(),
                     })
-                    .collect(),
+                    .collect()
+            };
+
+            let inner_table = InnerTableBuilder {
+                style: vscode_nested_style(),
+                rows,
                 col_span,
-                // start_col_index is the 0-based flat leaf position of the first
-                // sub-column in the outer table's --cN CSS variable set.
                 start_col_index,
             };
             TableValue::Array(inner_table)
