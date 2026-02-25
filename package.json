@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.2.5",
+	"version": "0.2.9",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -14,7 +14,7 @@
 		"url": "https://github.com/bstruct/vscode-bigquery/issues"
 	},
 	"engines": {
-		"vscode": "^1.63.0"
+		"vscode": "^1.90.0"
 	},
 	"categories": [
 		"Other"
@@ -90,6 +90,29 @@
 				"editor.semanticHighlighting.enabled": true
 			}
 		},
+		"chatParticipants": [
+			{
+				"id": "bigquery.sql",
+				"fullName": "BigQuery SQL",
+				"name": "bigquery",
+				"description": "BigQuery SQL assistant. Schema-aware, knows your tables' columns and types.",
+				"isSticky": true,
+				"commands": [
+					{
+						"name": "explain",
+						"description": "Explain the current .bqsql query in plain English"
+					},
+					{
+						"name": "optimize",
+						"description": "Suggest cost and performance optimisations for the current query"
+					},
+					{
+						"name": "schema",
+						"description": "Show the schemas of all tables referenced in the current query"
+					}
+				]
+			}
+		],
 		"commands": [
 			{
 				"command": "vscode-bigquery.run-query",
@@ -290,7 +313,7 @@
 		"vscode:prepublish": "npm run package",
 		"compile": "webpack",
 		"watch": "webpack --watch",
-		"package": "webpack --mode production --devtool hidden-source-map",
+		"package": "npm run compile-grid_render && webpack --mode production --devtool hidden-source-map",
 		"compile-tests": "tsc -p . --outDir out",
 		"compile-grid_render": "cd grid_render && wasm-pack build --release --target web",
 		"watch-tests": "tsc -p . -w --outDir out",
@@ -305,25 +328,24 @@
 		"@types/mocha": "^9.1.1",
 		"@types/node": "16.x",
 		"@types/uuid": "^9.0.0",
-		"@types/vscode": "^1.63.0",
-		"@typescript-eslint/eslint-plugin": "^5.30.0",
-		"@typescript-eslint/parser": "^5.30.0",
+		"@types/vscode": "^1.90.0",
+		"@typescript-eslint/eslint-plugin": "^8.56.0",
+		"@typescript-eslint/parser": "^8.56.0",
 		"@vscode/test-electron": "^2.1.5",
 		"@vscode/vsce": "^2.18.0",
-		"eslint": "^8.18.0",
+		"eslint": "^10.0.1",
 		"glob": "^8.0.3",
-		"mocha": "^10.0.0",
+		"mocha": "^5.0.5",
 		"ts-loader": "^9.3.1",
 		"typescript": "^4.7.4",
 		"webpack": "^5.88.2",
 		"webpack-cli": "^5.1.4"
 	},
 	"dependencies": {
-		"@bstruct/bqsql-parser": "file://.//bqsql_parser/pkg",
-		"@google-cloud/bigquery": "^7.9.0",
-		"@google-cloud/pubsub": "^4.5.0",
-		"@types/gapi.client.bigquery-v2": "^0.0.2",
-		"@vscode/codicons": "^0.0.32",
+		"@google-cloud/bigquery": "^8.1.1",
+		"@google-cloud/pubsub": "^5.2.2",
+		"@types/gapi.client.bigquery-v2": "^0.0.4",
+		"@vscode/codicons": "^0.0.44",
 		"@vscode/webview-ui-toolkit": "^1.2.2",
 		"csv-writer": "^1.6.0",
 		"grid_render": "file://.//grid_render/pkg"

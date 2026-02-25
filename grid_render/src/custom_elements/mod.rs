@@ -5,8 +5,9 @@ mod bq_common_custom_element;
 mod bq_to_table;
 mod custom_element_definition;
 mod data_table_controls_element;
-pub(crate) mod data_table_element;
-mod base_element;
+mod to_table_builder;
+// pub(crate) mod data_table_element;
+pub(crate) mod base_element;
 pub(crate) mod base_element_trait;
 
 use self::custom_element_definition::CustomElementDefinition;

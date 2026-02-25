@@ -1,12 +1,7 @@
-use std::ops::Index;
-
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::console;
-
-use crate::parse_to_usize;
-
 use super::base::TableSchema;
 
 pub struct Jobs {
@@ -158,10 +153,10 @@ pub struct JobStatistics2 {
     //   ],
     #[serde(alias = "statementType")]
     pub statement_type: String,
-    //   "ddlOperationPerformed": string,
-    //   "ddlTargetTable": {
-    //     object (TableReference)
-    //   },
+    #[serde(alias = "ddlOperationPerformed")]
+    pub ddl_operation_performed: Option<String>,
+    #[serde(alias = "ddlTargetTable")]
+    pub ddl_target_table: Option<DdlTargetTable>,
     //   "ddlDestinationTable": {
     //     object (TableReference)
     //   },
@@ -223,6 +218,16 @@ pub struct JobStatistics2 {
     //   "metadataCacheStatistics": {
     //     object (MetadataCacheStatistics)
     //   }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct DdlTargetTable {
+    #[serde(alias = "projectId")]
+    pub project_id: Option<String>,
+    #[serde(alias = "datasetId")]
+    pub dataset_id: Option<String>,
+    #[serde(alias = "tableId")]
+    pub table_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -351,15 +356,28 @@ impl Job {
         false
     }
 
-    pub(crate) fn is_multi_query_job(&self) -> bool {
-        if let Some(stats) = self.statistics.as_ref() {
-            if let Some(num_child_jobs) = parse_to_usize(stats.num_child_jobs.clone()) {
-                return num_child_jobs > 1;
-            }
+    // https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#jobstatistics2
+    pub(crate) fn is_ddl_statement(&self) -> bool {
+        if let Some(statement_type) = self.get_statement_type() {
+            return statement_type.starts_with("CREATE_")
+                || statement_type.starts_with("DROP_")
+                || statement_type.starts_with("ALTER_")
+                || statement_type == "TRUNCATE_TABLE";
         }
 
         false
     }
+
+    // pub(crate) fn is_multi_query_job(&self) -> bool {
+    //     if let Some(stats) = self.statistics.as_ref() {
+    //         if let Some(num_child_jobs) = parse_to_usize(stats.num_child_jobs.clone()) {
+    //             return num_child_jobs > 1;
+    //         }
+    //     }
+
+    //     false
+    // }
+
     pub(crate) fn has_error(&self) -> bool {
         if let Some(status) = self.status.as_ref() {
             if let Some(error_result) = status.error_result.as_ref() {
@@ -401,66 +419,21 @@ impl Job {
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct QueryRequest {
-    pub query: String,
-    // #[serde(alias = "maxResults")]
-    // pub max_results: Option<u64>,
-    //incomplete
-    // https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#QueryRequest
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct QueryResponseSessionInfo {
-    #[serde(alias = "sessionId")]
-    pub session_id: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct QueryResponseSessionDmlStats {
-    #[serde(alias = "insertedRowCount")]
-    pub inserted_row_count: String,
-    #[serde(alias = "deletedRowCount")]
-    pub deleted_row_count: String,
-    #[serde(alias = "updatedRowCount")]
-    pub updated_row_count: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct QueryResponse {
-    pub kind: String,
-    pub schema: Option<TableSchema>,
-    #[serde(alias = "jobReference")]
-    pub job_reference: JobReference,
-    #[serde(alias = "totalRows")]
-    pub total_rows: String,
-    #[serde(alias = "pageToken")]
-    pub page_token: String,
-    pub rows: Vec<serde_json::Value>,
-    #[serde(alias = "totalBytesProcessed")]
-    pub total_bytes_processed: String,
-    #[serde(alias = "jobComplete")]
-    pub job_complete: bool,
-    pub errors: Vec<serde_json::Value>,
-    #[serde(alias = "cacheHit")]
-    pub cache_hit: Option<bool>,
-    #[serde(alias = "numDmlAffectedRows")]
-    pub num_dml_affected_rows: String,
-    #[serde(alias = "sessionInfo")]
-    pub session_info: QueryResponseSessionInfo,
-    #[serde(alias = "dmlStats")]
-    pub dml_stats: QueryResponseSessionDmlStats,
-}
+// #[derive(Debug, Serialize)]
+// pub struct QueryRequest {
+//     pub query: String,
+//     // #[serde(alias = "maxResults")]
+//     // pub max_results: Option<u64>,
+//     //incomplete
+//     // https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#QueryRequest
+// }
 
 #[derive(Debug)]
 pub struct GetQueryResultsRequest {
     pub project_id: String,
     pub job_id: String,
     pub start_index: Option<String>,
-    pub page_token: Option<String>,
     pub max_results: Option<usize>,
-    pub timeout_ms: Option<usize>,
-    pub location: Option<String>,
     // formatOptions: DataFormatOptions;
 }
 
@@ -514,7 +487,6 @@ pub struct GetQueryResultsResponse {
 
 #[derive(Debug, Serialize)]
 pub(crate) enum Projection {
-    MINIMAL,
     FULL,
 }
 
@@ -681,16 +653,16 @@ impl Jobs {
         self: &Self,
         request: GetQueryResultsRequest,
     ) -> Option<GetQueryResultsResponse> {
-        let mut opts = web_sys::RequestInit::new();
-        opts.method("GET");
-        opts.mode(web_sys::RequestMode::Cors);
+        let opts = web_sys::RequestInit::new();
+        opts.set_method("GET");
+        opts.set_mode(web_sys::RequestMode::Cors);
         let headers = web_sys::Headers::new().unwrap();
         // headers.set("Accept", "application/json").unwrap();
         headers.set("Content-Type", "application/json").unwrap();
         headers
             .set("Authorization", &format!("Bearer {}", &self.token))
             .unwrap();
-        opts.headers(&headers);
+        opts.set_headers(&headers);
 
         let mut url = format!(
             "https://bigquery.googleapis.com/bigquery/v2/projects/{}/queries/{}",
@@ -762,16 +734,16 @@ impl Jobs {
     https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/list
     */
     pub async fn get(self: &Self, request: GetJobRequest) -> Option<Job> {
-        let mut opts = web_sys::RequestInit::new();
-        opts.method("GET");
-        opts.mode(web_sys::RequestMode::Cors);
+        let opts = web_sys::RequestInit::new();
+        opts.set_method("GET");
+        opts.set_mode(web_sys::RequestMode::Cors);
         let headers = web_sys::Headers::new().unwrap();
         // headers.set("Accept", "application/json").unwrap();
         headers.set("Content-Type", "application/json").unwrap();
         headers
             .set("Authorization", &format!("Bearer {}", &self.token))
             .unwrap();
-        opts.headers(&headers);
+        opts.set_headers(&headers);
 
         let mut url = format!(
             "https://bigquery.googleapis.com/bigquery/v2/projects/{}/jobs/{}",
@@ -823,16 +795,16 @@ impl Jobs {
     https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/list
     */
     pub async fn get_list(self: &Self, request: GetListRequest) -> Option<GetListResponse> {
-        let mut opts = web_sys::RequestInit::new();
-        opts.method("GET");
-        opts.mode(web_sys::RequestMode::Cors);
+        let opts = web_sys::RequestInit::new();
+        opts.set_method("GET");
+        opts.set_mode(web_sys::RequestMode::Cors);
         let headers = web_sys::Headers::new().unwrap();
         // headers.set("Accept", "application/json").unwrap();
         headers.set("Content-Type", "application/json").unwrap();
         headers
             .set("Authorization", &format!("Bearer {}", &self.token))
             .unwrap();
-        opts.headers(&headers);
+        opts.set_headers(&headers);
 
         let mut url = format!(
             "https://bigquery.googleapis.com/bigquery/v2/projects/{}/jobs",
@@ -853,7 +825,6 @@ impl Jobs {
                 "{}&projection={}",
                 url,
                 match request.projection.unwrap() {
-                    Projection::MINIMAL => "minimal",
                     Projection::FULL => "full",
                 }
             );

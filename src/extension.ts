@@ -10,6 +10,7 @@ import { BqsqlDocumentSemanticTokensProvider } from './language/bqsqlDocumentSem
 import { BqsqlInlayHintsProvider } from './language/bqsqlInlayHintsProvider';
 import { BigqueryTableSchemaService } from './services/bigqueryTableSchemaService';
 import { BqsqlDiagnostics } from './language/bqsqlDiagnostics';
+import { registerBqsqlCopilotParticipant } from './language/bqsqlCopilotParticipant';
 import { QueryResultsSerializer } from './tableResultsPanel/queryResultsSerializer';
 import { QueryResultsMappingService } from './services/queryResultsMappingService';
 import { TableResultsSerializer } from './tableResultsPanel/tableResultsSerializer';
@@ -316,7 +317,8 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(
 		vscode.languages.registerCompletionItemProvider(
 			{ language: 'bqsql' },
-			new BqsqlCompletionItemProvider()
+			new BqsqlCompletionItemProvider(),
+			'.'   // trigger column completions on dot
 		)
 	);
 
@@ -334,6 +336,9 @@ export function activate(context: ExtensionContext) {
 			new BqsqlInlayHintsProvider()
 		)
 	);
+
+	// Copilot chat participant (@bigquery)
+	registerBqsqlCopilotParticipant(context);
 
 	//later
 	// context.subscriptions.push(

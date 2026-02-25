@@ -12,4 +12,3 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 grid_render/**
-bqsql_parser/**

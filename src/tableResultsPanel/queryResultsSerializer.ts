@@ -18,6 +18,7 @@ export class QueryResultsSerializer implements vscode.WebviewPanelSerializer {
     async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any): Promise<void> {
 
         const uuid = webviewPanel.title.substring(webviewPanel.title.length - 8);
+        console.log(`[vscode-bigquery] deserialize query results panel title="${webviewPanel.title}" uuid=${uuid} stateKeys=${Object.keys(state || {}).join(',')}`);
 
         const resultsGridRender = new ResultsGridRender(webviewPanel);
 
@@ -49,6 +50,7 @@ let loadComplete = async function (resultsGridRender: ResultsGridRender, state: 
         job: null,
         error: null
     } as ResultsGridRenderRequestV2);
+    console.log(`[vscode-bigquery] deserialize clear message delivered=${_postMessageResult1}`);
 
     const jobId: string | undefined = state.jobId;
     const projectId: string | undefined = state.projectId;
@@ -69,6 +71,7 @@ let loadComplete = async function (resultsGridRender: ResultsGridRender, state: 
         //     && startIndex !== undefined
         //     && jobIndex !== undefined
     ) {
+        console.log(`[vscode-bigquery] deserialize state valid jobId=${jobId} projectId=${projectId} location=${location}`);
 
         try {
             const bqClient = await getBigQueryClient();
@@ -111,8 +114,11 @@ let loadComplete = async function (resultsGridRender: ResultsGridRender, state: 
                 job: null,
                 error: error
             } as ResultsGridRenderRequestV2);
+            console.log(`[vscode-bigquery] deserialize error message delivered=${_postMessageResult3}`);
 
         }
+    } else {
+        console.log(`[vscode-bigquery] deserialize state incomplete jobId=${jobId} projectId=${projectId} location=${location}`);
     }
 };
 

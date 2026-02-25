@@ -1,0 +1,5 @@
+- [x] navigation not working
+- [x] correct indexes
+- [x] script vs query
+- [x] recover when re-opened
+- [ ] result page header vs body. header must stay in place

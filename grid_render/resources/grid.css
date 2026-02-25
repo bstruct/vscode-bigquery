@@ -2,33 +2,58 @@ div[be_id='controls-background'] {
     position: sticky;
     top: 0;
     left: 0;
+    z-index: 10;
     background-color: var(--vscode-activityBar-border);
-    width: 100%;
-    height: 30px;
     box-shadow: inset 0 0 0 2000px rgba(0, 0, 0, 255);
+    width: 100%;
+    padding: 6px 4px;
+    box-sizing: border-box;
 }
 
 div[be_id='controls'] {
-    top: 0;
-    left: 0;
-    position: sticky;
-    background: var(--vscode-activityBar-border);
-    display: inline-block;
+    /* not sticky — parent controls-background already is */
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
     text-wrap: nowrap;
+    gap: 2px;
+    font-size: var(--vscode-font-size, 12px);
+    font-family: var(--vscode-font-family);
 }
 
 div[be_id='controls'] span {
-    padding: 5px 10px;
-    display: inline-block;
-    margin-right: 5px;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
 }
 
 div[be_id='controls'] button {
-    margin-right: 5px;
+    padding: 1px 6px;
+    height: 20px;
+    box-sizing: border-box;   /* height: 20px includes padding+border */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    line-height: 1;
+    font-size: var(--vscode-font-size, 12px);
+    font-family: var(--vscode-font-family);
 
     background-color: var(--vscode-button-secondaryBackground);
     border: 1px solid var(--vscode-button-separator);
     color: var(--vscode-button-secondaryForeground);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+div[be_id='controls'] button:hover:not(:disabled) {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+div[be_id='controls'] button svg {
+    flex-shrink: 0;
+    vertical-align: middle;
+    pointer-events: none;
 }
 
 div[be_id='controls'] button:disabled {
@@ -52,11 +77,12 @@ div.t {
     border-collapse: collapse;
 }
 
-/* table header */
+/* table header — top must match controls-background height: 4px padding + 20px button + 4px padding = 28px */
 div.th {
     display: table-header-group;
     position: sticky;
-    top: 30px;
+    top: 28px;
+    z-index: 9;
 }
 
 /* table body */
@@ -84,7 +110,9 @@ div.tc {
 
     /* max-width: 550px; */
     /* min-width: 100px; */
-    padding: 5px 15px;
+    padding: 2px 8px;
+    font-size: var(--vscode-font-size, 12px);
+    font-family: var(--vscode-font-family);
 }
 
 div.tc.v {
@@ -92,7 +120,7 @@ div.tc.v {
 }
 
 div.tc.v div {
-    min-height: 2.5em;
+    min-height: 1.4em;
 }
 
 div.tc.index {
@@ -149,6 +177,14 @@ td.index {
 } */
 
 
+
+/* Loading placeholder shown while BigQuery data is being fetched */
+.loading-indicator {
+    padding: 16px 12px;
+    color: var(--vscode-foreground, #cccccc);
+    opacity: 0.65;
+    font-style: italic;
+}
 
 /* 
 table thead th,

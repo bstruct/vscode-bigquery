@@ -2,7 +2,7 @@ use crate::bigquery::{base::TableReference, jobs::JobReference};
 
 use super::{base_element::BaseElement, base_element_trait::BaseElementTrait};
 use serde_json::json;
-use wasm_bindgen::{closure::Closure, JsCast};
+use wasm_bindgen::{JsCast, closure::Closure};
 use web_sys::Element;
 
 const PAGING: &str = "paging";
@@ -68,17 +68,11 @@ impl BaseElementTrait for DataTableControls {
 }
 
 fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
-    // //set the attribute PARENT_BQ_TABLE_ATT, with the id of the parent bq-table element, to later be possible to capture on the click event
-    // base_element
-    //     .element()
-    //     .set_attribute(
-    //         PARENT_BQ_TABLE_ATT,
-    //         &settings.parent_bq_table_id.to_string(),
-    //     )
-    //     .unwrap();
-
-    //
-    match base_element.id().as_ref().unwrap().as_str() {
+    let id = match base_element.id().as_deref() {
+        Some(id) => id,
+        None => return,
+    };
+    match id {
         PAGING => {
             if settings.rows_in_page.is_some()
                 && settings.rows_total.is_some()
@@ -107,70 +101,74 @@ fn modify_controls(base_element: &BaseElement, settings: &DataTableControls) {
         BTN_FIRST_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_FIRST_PAGE);
-            element.set_inner_html("<< First page");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h1.5v12H2V2zm4.5 6L13 2v12L6.5 8z"/></svg> First page"#);
+            let _ = element.set_attribute("title", "First page");
             if settings.page_start_index.unwrap_or(0) == 0 {
-                element.set_attribute("disabled", "disabled").unwrap();
+                let _ = element.set_attribute("disabled", "disabled");
             } else {
-                element.remove_attribute("disabled").unwrap();
+                let _ = element.remove_attribute("disabled");
             }
         }
         BTN_PREVIOUS_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_PREVIOUS_PAGE);
-            element.set_inner_html("< Previous page");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M10.5 2L4 8l6.5 6V2z"/></svg> Previous page"#);
+            let _ = element.set_attribute("title", "Previous page");
             if settings.page_start_index.unwrap_or(0) == 0 {
-                element.set_attribute("disabled", "disabled").unwrap();
+                let _ = element.set_attribute("disabled", "disabled");
             } else {
-                element.remove_attribute("disabled").unwrap();
+                let _ = element.remove_attribute("disabled");
             }
         }
         BTN_NEXT_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_NEXT_PAGE);
-            element.set_inner_html("> Next page");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 2L12 8l-6.5 6V2z"/></svg> Next page"#);
+            let _ = element.set_attribute("title", "Next page");
 
             let start_index = settings.page_start_index.unwrap_or(0);
             let page_size = settings.rows_in_page.unwrap_or(0);
             let rows_total = settings.rows_total.unwrap_or(0);
             let has_next_page = start_index + page_size < rows_total;
             if has_next_page {
-                element.remove_attribute("disabled").unwrap();
+                let _ = element.remove_attribute("disabled");
             } else {
-                element.set_attribute("disabled", "disabled").unwrap();
+                let _ = element.set_attribute("disabled", "disabled");
             }
         }
         BTN_LAST_PAGE => {
             let element = &base_element.element();
             add_event_listener(element, EVENT_GO_TO_LAST_PAGE);
-            element.set_inner_html(">> Last page");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M12.5 2h1.5v12h-1.5V2zM3 2l6.5 6L3 14V2z"/></svg> Last page"#);
+            let _ = element.set_attribute("title", "Last page");
 
             let start_index = settings.page_start_index.unwrap_or(0);
             let page_size = settings.rows_in_page.unwrap_or(0);
             let rows_total = settings.rows_total.unwrap_or(0);
             let has_next_page = start_index + page_size < rows_total;
             if has_next_page {
-                element.remove_attribute("disabled").unwrap();
+                let _ = element.remove_attribute("disabled");
             } else {
-                element.set_attribute("disabled", "disabled").unwrap();
+                let _ = element.set_attribute("disabled", "disabled");
             }
         }
         BTN_DOWNLOAD_CSV => {
             let element = &base_element.element();
             add_event_listener_command(element, BTN_DOWNLOAD_CSV, settings);
-            element.set_inner_html("Download CSV");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M7.25 1v8.19L4.28 6.22 3.22 7.28 8 12.06l4.78-4.78-1.06-1.06-2.97 2.97V1h-1.5zM2 14h12v1.5H2V14z"/></svg> CSV"#);
         }
         BTN_DOWNLOAD_JSONL => {
             let element = &base_element.element();
             add_event_listener_command(element, BTN_DOWNLOAD_JSONL, settings);
-            element.set_inner_html("Download JSONL");
+            element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M7.25 1v8.19L4.28 6.22 3.22 7.28 8 12.06l4.78-4.78-1.06-1.06-2.97 2.97V1h-1.5zM2 14h12v1.5H2V14z"/></svg> JSONL"#);
         }
         BTN_SEND_PUBSUB => {
             let element = &base_element.element();
             if settings.job_reference.is_some() {
                 add_event_listener_command(element, BTN_SEND_PUBSUB, settings);
-                element.set_inner_html("Send to Pub/Sub");
+                element.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1 1l14 7-14 7V9.5l10-1.5-10-1.5V1z"/></svg> Pub/Sub"#);
             } else {
-                element.set_attribute("style", "display: none;").unwrap();
+                let _ = element.set_attribute("style", "display: none;");
             }
         }
         _ => {}
@@ -182,14 +180,12 @@ fn add_event_listener(element: &Element, _event_type: &str) {
         let on_event_type_closure =
             Closure::wrap(Box::new(on_click) as Box<dyn Fn(&web_sys::Event)>);
 
-        element
-            .add_event_listener_with_callback(
-                "click",
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
+        let _ = element.add_event_listener_with_callback(
+            "click",
+            on_event_type_closure.as_ref().unchecked_ref(),
+        );
 
-        element.set_attribute("bee", "1").unwrap();
+        let _ = element.set_attribute("bee", "1");
 
         on_event_type_closure.forget();
     }
@@ -205,7 +201,13 @@ fn add_event_listener_command(
             BTN_DOWNLOAD_CSV => "download_csv",
             BTN_DOWNLOAD_JSONL => "download_jsonl",
             BTN_SEND_PUBSUB => "send_pubsub",
-            _ => panic!("unexpected button"),
+            other => {
+                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                    "add_event_listener_command: unexpected button '{}'",
+                    other
+                )));
+                return;
+            }
         };
 
         // let job_reference = datatable_controls.job_reference.as_ref();
@@ -234,96 +236,71 @@ fn add_event_listener_command(
                     }
                 })
             } else {
-                panic!("Unexpected. No job_reference nor table_reference found");
+                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(
+                    "add_event_listener_command: neither job_reference nor table_reference found",
+                ));
+                return;
             }
         };
 
         let function_body = format!("vscode.postMessage({0});", function_body);
         let call_command = js_sys::Function::new_no_args(&function_body);
 
-        element
-            .add_event_listener_with_callback("click", call_command.as_ref())
-            .unwrap();
+        let _ = element.add_event_listener_with_callback("click", call_command.as_ref());
 
-        element.set_attribute("bee", "1").unwrap();
+        let _ = element.set_attribute("bee", "1");
     }
 }
 
 fn on_click(event: &web_sys::Event) {
-    let element = event
+    let element = match event
         .target()
-        .unwrap()
-        .dyn_into::<web_sys::Element>()
-        .unwrap();
-
-    let mut custom_event_init = web_sys::CustomEventInit::new();
-    custom_event_init.bubbles(true);
-    custom_event_init.cancelable(true);
-    custom_event_init.composed(true);
-
-    let base_element = BaseElement::from_element(&element);
-    let type_ = match base_element.id().as_ref().unwrap().as_str() {
-        BTN_FIRST_PAGE => EVENT_GO_TO_FIRST_PAGE,
-        BTN_PREVIOUS_PAGE => EVENT_GO_TO_PREVIOUS_PAGE,
-        BTN_NEXT_PAGE => EVENT_GO_TO_NEXT_PAGE,
-        BTN_LAST_PAGE => EVENT_GO_TO_LAST_PAGE,
-        _ => panic!("unknown button"),
+        .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
+    {
+        Some(e) => e,
+        None => {
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(
+                "on_click: event target is not an element",
+            ));
+            return;
+        }
     };
 
-    let controls = element.closest(":host > [be_id=\"controls-background\"]");
-    if controls.is_ok() {
-        if let Some(controls) = controls.unwrap() {
-            if let Some(shadow) = controls.parent_node() {
-                if let Some(st1) = shadow.last_child() {
-                    st1.remove_child(&st1.last_child().unwrap()).unwrap();
+    let custom_event_init = web_sys::CustomEventInit::new();
+    custom_event_init.set_bubbles(true);
+    custom_event_init.set_cancelable(true);
+    custom_event_init.set_composed(true);
 
-                    let loading_div = &crate::createElement("div");
-                    loading_div.set_text_content(Some("Loading..."));
-                    st1.append_child(&loading_div).unwrap();
+    let base_element = BaseElement::from_element(&element);
+    let type_ = match base_element.id().as_deref() {
+        Some(BTN_FIRST_PAGE) => EVENT_GO_TO_FIRST_PAGE,
+        Some(BTN_PREVIOUS_PAGE) => EVENT_GO_TO_PREVIOUS_PAGE,
+        Some(BTN_NEXT_PAGE) => EVENT_GO_TO_NEXT_PAGE,
+        Some(BTN_LAST_PAGE) => EVENT_GO_TO_LAST_PAGE,
+        other => {
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "on_click: unknown button id '{:?}'",
+                other
+            )));
+            return;
+        }
+    };
 
-                    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-                        "clear parent_element",
-                    )));
-                }
+    if let Ok(Some(controls)) = element.closest(":host > [be_id=\"controls-background\"]") {
+        if let Some(shadow) = controls.parent_node() {
+            if let Some(bstruct_table) = shadow.last_child() {
+                let _ = shadow.remove_child(&bstruct_table);
+
+                let loading_div = &crate::createElement("div");
+                loading_div.set_text_content(Some("Loading..."));
+                let _ = shadow.append_child(loading_div);
             }
         }
     }
 
-    let action_event =
-        web_sys::CustomEvent::new_with_event_init_dict(type_, &custom_event_init).unwrap();
-
-    element.dispatch_event(&action_event).unwrap();
+    if let Ok(action_event) =
+        web_sys::CustomEvent::new_with_event_init_dict(type_, &custom_event_init)
+    {
+        let _ = element.dispatch_event(&action_event);
+    }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use crate::custom_elements::base_element_trait::BaseElementTrait;
-
-//     use super::DataTableControls;
-//     use wasm_bindgen_test::*;
-//     wasm_bindgen_test_configure!(run_in_browser);
-
-//     #[wasm_bindgen_test]
-//     fn generate_html() {
-//         let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
-//         let element = &crate::createElement("div");
-//         let parent_element = &element.attach_shadow(&shadow_init).unwrap();
-//         // let parent_bq_table_id = "parent_bq_table_id";
-
-//         DataTableControls::new(Some(0), Some(10), Some(100), None, None).render(parent_element);
-
-//         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">1 - 10 of 100</span><button be_id=\"btn_first_page\" bee=\"1\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" bee=\"1\">&lt; Previous page</button><button be_id=\"btn_next_page\" bee=\"1\">&gt; Next page</button><button be_id=\"btn_last_page\" bee=\"1\">&gt;&gt; Last page</button><button be_id=\"btn_download_csv\" bee=\"1\">Download CSV</button><button be_id=\"btn_download_json\" bee=\"1\">Download JSONL</button><button be_id=\"btn_send_pubsub\" bee=\"1\">Send to Pub/Sub</button></div></div>");
-
-//         DataTableControls::new(Some(10), Some(10), Some(100), None, None).render(parent_element);
-
-//         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">11 - 20 of 100</span><button be_id=\"btn_first_page\" bee=\"1\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" bee=\"1\">&lt; Previous page</button><button be_id=\"btn_next_page\" bee=\"1\">&gt; Next page</button><button be_id=\"btn_last_page\" bee=\"1\">&gt;&gt; Last page</button><button be_id=\"btn_download_csv\" bee=\"1\">Download CSV</button><button be_id=\"btn_download_json\" bee=\"1\">Download JSONL</button><button be_id=\"btn_send_pubsub\" bee=\"1\">Send to Pub/Sub</button></div></div>");
-
-//         DataTableControls::new(Some(20), Some(10), Some(100), None, None).render(parent_element);
-
-//         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">21 - 30 of 100</span><button be_id=\"btn_first_page\" bee=\"1\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" bee=\"1\">&lt; Previous page</button><button be_id=\"btn_next_page\" bee=\"1\">&gt; Next page</button><button be_id=\"btn_last_page\" bee=\"1\">&gt;&gt; Last page</button><button be_id=\"btn_download_csv\" bee=\"1\">Download CSV</button><button be_id=\"btn_download_json\" bee=\"1\">Download JSONL</button><button be_id=\"btn_send_pubsub\" bee=\"1\">Send to Pub/Sub</button></div></div>");
-
-//         DataTableControls::new(Some(30), Some(10), Some(100), None, None).render(parent_element);
-
-//         assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">31 - 40 of 100</span><button be_id=\"btn_first_page\" bee=\"1\">&lt;&lt; First page</button><button be_id=\"btn_prev_page\" bee=\"1\">&lt; Previous page</button><button be_id=\"btn_next_page\" bee=\"1\">&gt; Next page</button><button be_id=\"btn_last_page\" bee=\"1\">&gt;&gt; Last page</button><button be_id=\"btn_download_csv\" bee=\"1\">Download CSV</button><button be_id=\"btn_download_json\" bee=\"1\">Download JSONL</button><button be_id=\"btn_send_pubsub\" bee=\"1\">Send to Pub/Sub</button></div></div>");
-//     }
-// }

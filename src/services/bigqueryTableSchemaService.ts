@@ -8,10 +8,20 @@ export class BigqueryTableSchemaService {
     private schemas: BigqueryTableSchema[] = [];
     private defaultProjectId: string | null = null;
 
+    private normalizeProjectId(projectId: string | null | undefined): string | null {
+        const value = (projectId ?? '').trim();
+        if (!value) { return null; }
+        const lower = value.toLowerCase();
+        if (lower === '(unset)' || lower === '(not set)' || lower === 'unset' || lower === 'null' || lower === 'undefined') {
+            return null;
+        }
+        return value;
+    }
+
     public async preLoadSchemaToCache(bqsql: & string, tableIdentifier: BqsqlDocumentItem): Promise<boolean> {
 
         if (this.defaultProjectId === null) {
-            this.defaultProjectId = await Authentication.getDefaultProjectId();
+            this.defaultProjectId = this.normalizeProjectId(await Authentication.getDefaultProjectId());
         }
 
         let table = this.resolveTableIdentifier(bqsql, tableIdentifier);
@@ -32,6 +42,80 @@ export class BigqueryTableSchemaService {
         }
 
         return false;
+    }
+
+    // -----------------------------------------------------------------------
+    // New helpers – work directly with a full table name string
+    // -----------------------------------------------------------------------
+
+    /**
+     * Resolve a full table name like 'project.dataset.table' (or 'dataset.table')
+     * into its [projectId, datasetName, tableName] tuple, falling back to the
+     * default project when the project part is absent.
+     */
+    private resolveFullName(fullName: string): [string, string, string] | null {
+        const parts = fullName.replace(/`/g, '').split('.');
+        let projectId: string | null = null;
+        let datasetName: string | null = null;
+        let tableName: string | null = null;
+
+        if (parts.length === 3) {
+            [projectId, datasetName, tableName] = parts;
+        } else if (parts.length === 2) {
+            projectId = this.normalizeProjectId(this.defaultProjectId);
+            [datasetName, tableName] = parts;
+        }
+
+        if (projectId && datasetName && tableName) {
+            return [projectId, datasetName, tableName];
+        }
+        return null;
+    }
+
+    /**
+     * Pre-load the schema for a table identified by its full name string.
+     * Safe to call multiple times – returns immediately if already cached.
+     */
+    public async preLoadSchemaByFullName(fullName: string): Promise<boolean> {
+        if (this.defaultProjectId === null) {
+            this.defaultProjectId = this.normalizeProjectId(await Authentication.getDefaultProjectId());
+        }
+
+        const resolved = this.resolveFullName(fullName);
+        if (!resolved) {
+            return false;
+        }
+        const [projectId, datasetName, tableName] = resolved;
+
+        const existing = this.schemas.filter(
+            c => c.project_id === projectId && c.dataset_name === datasetName && c.table_name === tableName
+        );
+        if (existing.length === 0) {
+            try {
+                const bqClient = await getBigQueryClient();
+                const tableSchema: BigqueryTableSchema[] = await bqClient.getTableSchema(projectId, datasetName, tableName);
+                this.schemas.push(...tableSchema);
+                return true;
+            } catch (ex) {
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Return the cached schema columns for a table identified by its full name.
+     * May return an empty array if the schema has not been loaded yet.
+     */
+    public getSchemaByFullName(fullName: string): BigqueryTableSchema[] {
+        const resolved = this.resolveFullName(fullName);
+        if (!resolved) {
+            return [];
+        }
+        const [projectId, datasetName, tableName] = resolved;
+        const result = this.schemas.filter(
+            c => c.project_id === projectId && c.dataset_name === datasetName && c.table_name === tableName
+        );
+        return result;
     }
 
     public getSchemaFromCache(bqsql: & string, tableIdentifier: BqsqlDocumentItem): BigqueryTableSchema[] {

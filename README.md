@@ -8,6 +8,8 @@ The authentication is taken care of by the [gcloud CLI](https://cloud.google.com
 
 The three buttons "User login", "User login + GDrive" and "Service account" reflect the three possible ways of authenticating the requests. Either user personal authentication is used, where the computer browser will be opened requesting authentication to Google Cloud for the options "User login" and "User login + GDrive". Use the "GDrive" option to be able to browse and select tables based on Google Drive. Or, a service account key file (json format) must be selected when requested by pressing the button "Service account".
 
+For environments where opening a browser is not possible (e.g. remote SSH sessions), the command `Bigquery: User login (no browser launch)` opens an integrated terminal and runs `gcloud auth login` with the `--no-launch-browser` flag. A URL will be printed in the terminal that can be copied into a browser on another machine to complete the authentication flow.
+
 When there's a valid account active and with the necessary permissions to interact with bigquery, this extension is ready to be used.
 
 Additional functionality to activate and revoke authentication accounts is also provided.
@@ -23,15 +25,14 @@ Refresh the explorer screen, which can be done by executing the command `Bigquer
 
 Is possible to change the default project that queries will run against.
 
-## Views, tables, and schemas
+## Views, tables, and DDL
 
 For `views` and `tables` is possible to access the menu via right-click.
 <img src="documentation/explorer_tree_menu.png" alt="explorer tree menu" width="600"/>
 - Create query: opens a new query editor with a basic SELECT FROM statement.
 - Preview: That opens a window with the table representation of the table. For external tables and views, a `SELECT *` statement will be run internally in order to show the results of the table.
 <img src="documentation/explorer_tree_table.png" alt="explorer tree table" width="600"/>
-- View schema: Opens a window that describes the meta information of the table or views
-<img src="documentation/schema_view.png" alt="schema view" width="900"/>
+- Open DDL: Opens a new `.bqsql` editor containing the full DDL (`CREATE` statement) for the selected table or view. The table schema is also pre-loaded into the auto-completion cache, so column completions are immediately available in the opened document.
 
 ## Settings
 
@@ -79,6 +80,10 @@ After the query returns a response, the bottom panel of Visual Studio code will 
 As visible in the image above, syntax highlight is very poor at the moment. Intellisence has too few features. This will be the next improvement's biggest area. 
 
 The query in the editor is evaluated with every change. If there are errors in the query, they will be underlined
+
+### Inlay hints
+
+Inlay hints are registered for `.bqsql` files. When implemented, they will show inline annotations (e.g. column types or expression labels) directly in the editor without modifying the source text. This feature is currently under development.
 
 <img src="documentation/query_error.png" alt="query error" width="600"/>
 
@@ -141,6 +146,12 @@ There is no limit size/row number imposed in this feature, so please be aware of
 <!-- ### Known Issues -->
 
 ### Troubleshooting
+
+The command `Bigquery: Authentication troubleshoot` opens a dedicated panel with guidance for the most common authentication and permission problems, including:
+- How to verify that the Google Cloud CLI is correctly set up and has an active account.
+- Steps to take when a GCP project is not listed in the explorer because permissions were granted at dataset or table level.
+- A workaround for a Windows-specific issue where credential changes are not picked up due to caching (involves deleting `application_default_credentials.json` from the gcloud configuration folder).
+
 Sometimes, after this extension is installed, the command `Bigquery: Run query` is not able to force open the bottom panel to display the results. Please restart Visual Studio Code when that happens.
 
 <!-- ### Generate a bug report -->

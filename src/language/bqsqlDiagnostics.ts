@@ -2,8 +2,6 @@ import { DiagnosticCollection, ExtensionContext } from "vscode";
 import { getBigQueryClient } from "../extensionCommands";
 import * as vscode from 'vscode';
 import { BigqueryJobErrorItem } from "../services/bigqueryJobError";
-import { parse } from "@bstruct/bqsql-parser";
-import { BqsqlDocument, BqsqlDocumentItem } from "./bqsqlDocument";
 import { getStatusBarInfo } from "../extension";
 
 export class BqsqlDiagnostics {
@@ -20,47 +18,36 @@ export class BqsqlDiagnostics {
         if (document.languageId !== 'bqsql') { return; }
 
         const documentContent = document.getText();
-        const parsed = parse(documentContent) as BqsqlDocument;
 
+        /**
+         * Map a BigQuery job error to a VS Code diagnostic, using the
+         * `at [line:col]` hint in the message or a text-search fallback.
+         */
         function createDiagnostic(errorItem: BigqueryJobErrorItem): vscode.Diagnostic | null {
 
             if (errorItem.reason === 'notFound') {
+                return findMissingTableIdentifier(documentContent, errorItem);
+            }
 
-                return findMissingTableIdentifier(documentContent, parsed.items, errorItem);
-
-            } else {
-                const reg = new RegExp(/at \[(\d+):(\d+)\]$/g);
-                const matches = errorItem.message.matchAll(reg);
-                let item = matches.next();
-                if ((!item.done) && item.value) {
-                    const p1 = Number.parseInt(item.value[1]);
-                    const p2 = Number.parseInt(item.value[2]);
-
-                    const errorDocumentItem = findDocumentItem(parsed.items, p1, p2);
-                    if (errorDocumentItem === null) {
-                        return new vscode.Diagnostic(
-                            new vscode.Range(p1 - 1, p2 - 1, p1 - 1, p2 + 4),
-                            errorItem.message,
-                            vscode.DiagnosticSeverity.Error
-                        );
-
-                    } else {
-                        return new vscode.Diagnostic(
-                            new vscode.Range(errorDocumentItem.range[0], errorDocumentItem.range[1], errorDocumentItem.range[0], errorDocumentItem.range[2]),
-                            errorItem.message,
-                            vscode.DiagnosticSeverity.Error
-                        );
-                    }
-                }
+            // Try to extract `at [line:col]` from the error message
+            const reg = /at \[(\d+):(\d+)\]$/;
+            const m = reg.exec(errorItem.message);
+            if (m) {
+                const p1 = Number.parseInt(m[1]);  // 1-based line
+                const p2 = Number.parseInt(m[2]);  // 1-based column
+                return new vscode.Diagnostic(
+                    new vscode.Range(p1 - 1, p2 - 1, p1 - 1, p2 + 4),
+                    errorItem.message,
+                    vscode.DiagnosticSeverity.Error
+                );
             }
 
             return null;
         }
 
-        //trigger query validation
-        let _ = getBigQueryClient()
+        // Trigger query validation against BigQuery
+        getBigQueryClient()
             .then(bqClient => {
-
                 bqClient.validateQuery(document.getText())
                     .then(response => {
                         const diagnostics: vscode.Diagnostic[] = [];
@@ -76,10 +63,8 @@ export class BqsqlDiagnostics {
                             }
                         }
 
-                        if (error && error.errors && error.errors.length > 0) {
-
-                            for (let index = 0; index < error.errors.length; index++) {
-                                const element = error.errors[index];
+                        if (error?.errors?.length) {
+                            for (const element of error.errors) {
                                 const diagnostic = createDiagnostic(element);
                                 if (diagnostic) { diagnostics.push(diagnostic); }
                             }
@@ -87,9 +72,8 @@ export class BqsqlDiagnostics {
 
                         bqsqlDiagnostics.set(document.uri, diagnostics);
                     });
-
-            });
-
+            })
+            .catch(ex => console.error('BqsqlDiagnostics error', ex));
     }
 
     static subscribeToDocumentChanges(context: ExtensionContext, diagnosticsCollection: DiagnosticCollection): void {
@@ -119,193 +103,50 @@ export class BqsqlDiagnostics {
     }
 }
 
-function findDocumentItem(items: BqsqlDocumentItem[], p1: number, p2: number): BqsqlDocumentItem | null {
-    for (let index = 0; index < items.length; index++) {
-        const element = items[index];
-
-        if (element.range && element.range.length === 3) {
-            if (element.range[0] === p1 - 1 && element.range[1] === p2 - 1) {
-                return element;
-            }
-        } else {
-            if (element.items && element.items.length > 0) {
-                const e1 = findDocumentItem(element.items, p1, p2);
-                if (e1) {
-                    return e1;
-                }
-            }
-        }
-
-    }
-    return null;
-}
-
-function findMissingTableIdentifier(documentContent: string, items: BqsqlDocumentItem[], errorItem: BigqueryJobErrorItem): vscode.Diagnostic | null {
-    //Not found: Table damiao-project-1:PvhTest.PimExportw was not found in location EU'
+/**
+ * Try to locate a missing table in the source text using the name from the
+ * BigQuery error message ("Not found: Table project:dataset.table was not found...").
+ */
+function findMissingTableIdentifier(
+    documentContent: string,
+    errorItem: BigqueryJobErrorItem,
+): vscode.Diagnostic | null {
 
     const message = errorItem.message;
 
-    if (message.startsWith('Not found: Table ')) {
+    // "Not found: Table damiao-project-1:PvhTest.PimExport was not found in location EU"
+    if (!message.startsWith('Not found: Table ')) { return null; }
 
-        const nextIndex = message.indexOf(' was not found in');
+    const nextIndex = message.indexOf(' was not found in');
+    if (nextIndex <= 0) { return null; }
 
-        if (nextIndex > 0) {
+    const tableNameNotFound = message.substring(17, nextIndex);  // e.g. "project:dataset.table"
 
-            const tableNameNotFound = message.substring(17, nextIndex);
+    // Normalise to  project.dataset.table  (BigQuery uses ':' as project separator)
+    const normalised = tableNameNotFound.replace(':', '.');
+    const parts = normalised.split('.');
+    if (parts.length < 2) { return null; }
 
-            const lines = documentContent.split('\n');
+    const datasetId = parts[parts.length - 2];
+    const tableId = parts[parts.length - 1];
+    const tableIdentifier = `${datasetId}.${tableId}`;
 
-            const sp = tableNameNotFound.split(':');
-            const projectId = sp[0];
-            const sp1 = sp[1].split('.');
-            const datasetId = sp1[0];
-            const tableId = sp1[1];
+    const lines = documentContent.split('\n');
+    const lineIndex = lines.findIndex(l => l.includes(tableIdentifier));
 
-            function getString(item: BqsqlDocumentItem): string | null {
-
-                if (item.range) {
-                    try {
-                        return lines[item.range[0]].substring(item.range[1], item.range[2]);
-                    } catch { }
-                }
-
-                return null;
-            }
-
-            function findTableIdentifier(items: BqsqlDocumentItem[]): BqsqlDocumentItem | null {
-                for (let index = 0; index < items.length; index++) {
-                    const element = items[index];
-
-                    let testElement = element.range === undefined;
-                    testElement = testElement && element.item_type === 'TableIdentifier';
-                    if (testElement) {
-
-                        //TableIdentifierProjectId
-                        const qTableIdentifierProjectId = element.items.find(c => c.item_type === 'TableIdentifierProjectId');
-                        if (qTableIdentifierProjectId) {
-                            const foundProjectId = getString(qTableIdentifierProjectId);
-                            if (foundProjectId !== projectId) {
-                                testElement = false;
-                            }
-                        }
-
-                        //TableIdentifierDatasetId
-                        const qTableIdentifierDatasetId = element.items.find(c => c.item_type === 'TableIdentifierDatasetId');
-                        if (testElement && qTableIdentifierDatasetId) {
-                            const foundDatasetId = getString(qTableIdentifierDatasetId);
-                            if (foundDatasetId !== datasetId) {
-                                testElement = false;
-                            }
-                        }
-
-                        //TableIdentifierTableId
-                        const qTableIdentifierTableId = element.items.find(c => c.item_type === 'TableIdentifierTableId');
-                        if (testElement && qTableIdentifierTableId) {
-                            const foundTableId = getString(qTableIdentifierTableId);
-                            if (foundTableId !== tableId) {
-                                testElement = false;
-                            }
-                        }
-
-                        //TableIdentifierProjectIdDatasetIdTableId
-                        const qTableIdentifierProjectIdDatasetIdTableId = element.items.find(c => c.item_type === 'TableIdentifierProjectIdDatasetIdTableId');
-                        if (testElement && qTableIdentifierProjectIdDatasetIdTableId) {
-                            let found = getString(qTableIdentifierProjectIdDatasetIdTableId);
-                            if (found && found.startsWith('`')) { found = found?.substring(1, found.length - 1); }
-                            const sp = found?.split('.');
-                            if (sp?.length === 3) {
-                                testElement = sp[0] === projectId
-                                    && sp[1] === datasetId
-                                    && sp[2] === tableId
-                                    ;
-                            }
-                        }
-
-                        //TableIdentifierProjectIdDatasetId
-                        const qTableIdentifierProjectIdDatasetId = element.items.find(c => c.item_type === 'TableIdentifierProjectIdDatasetId');
-                        if (testElement && qTableIdentifierProjectIdDatasetId) {
-                            let found = getString(qTableIdentifierProjectIdDatasetId);
-                            if (found && found.startsWith('`')) { found = found?.substring(1, found.length - 1); }
-                            const sp = found?.split('.');
-                            if (sp?.length === 2) {
-                                testElement = sp[0] === projectId
-                                    && sp[1] === datasetId
-                                    ;
-                            }
-                        }
-
-                        //TableIdentifierDatasetIdTableId
-                        const qTableIdentifierDatasetIdTableId = element.items.find(c => c.item_type === 'TableIdentifierDatasetIdTableId');
-                        if (testElement && qTableIdentifierDatasetIdTableId) {
-                            let found = getString(qTableIdentifierDatasetIdTableId);
-                            if (found && found.startsWith('`')) { found = found?.substring(1, found.length - 1); }
-                            const sp = found?.split('.');
-                            if (sp?.length === 2) {
-                                testElement = sp[0] === datasetId
-                                    && sp[1] === tableId
-                                    ;
-                            }
-                        }
-                    }
-
-                    if (testElement) {
-                        return element;
-                    } else {
-                        if (element.items && element.items.length > 0) {
-                            const e1 = findTableIdentifier(element.items);
-                            if (e1) {
-                                return e1;
-                            }
-                        }
-                    }
-
-                }
-                return null;
-            }
-
-            const item = findTableIdentifier(items);
-            if (item) {
-
-                const line = item.items.filter(c => c.range).map(c => c.range[0])[0];
-                const char1 = Math.min(...item.items.filter(c => c.range).map(c => c.range[1]));
-                const char2 = Math.max(...item.items.filter(c => c.range).map(c => c.range[2]));
-
-                return new vscode.Diagnostic(
-                    new vscode.Range(line, char1, line, char2),
-                    errorItem.message,
-                    vscode.DiagnosticSeverity.Error
-                );
-
-            } else {
-
-                //parsing did not help, try to find via text
-
-                const tableIndentifier = `${datasetId}.${tableId}`;
-                const indexTableText = documentContent.indexOf(tableIndentifier);
-                let l0 = 0;
-                let c0 = 0;
-                let c1 = 1;
-                if (indexTableText >= 0) {
-
-                    const lines: string[] = documentContent.split('\n');
-                    const lineIndex = lines.findIndex(l => l.indexOf(tableIndentifier) > 0);
-                    const charIndex = lines[lineIndex].indexOf(tableIndentifier);
-
-                    l0 = lineIndex;
-                    c0 = charIndex;
-                    c1 = charIndex + tableIndentifier.length;
-                }
-
-                return new vscode.Diagnostic(
-                    new vscode.Range(l0, c0, l0, c1),
-                    errorItem.message,
-                    vscode.DiagnosticSeverity.Error
-                );
-
-            }
-
-        }
+    if (lineIndex >= 0) {
+        const charIndex = lines[lineIndex].indexOf(tableIdentifier);
+        return new vscode.Diagnostic(
+            new vscode.Range(lineIndex, charIndex, lineIndex, charIndex + tableIdentifier.length),
+            errorItem.message,
+            vscode.DiagnosticSeverity.Error
+        );
     }
 
-    return null;
+    // Fallback: highlight position 0
+    return new vscode.Diagnostic(
+        new vscode.Range(0, 0, 0, 1),
+        errorItem.message,
+        vscode.DiagnosticSeverity.Error
+    );
 }

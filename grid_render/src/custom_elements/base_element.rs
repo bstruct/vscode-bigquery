@@ -6,7 +6,7 @@ use super::base_element_trait::BaseElementTrait;
 pub(crate) struct BaseElement {
     id: Option<String>,
     node_type: u16,
-    node: Box<Node>,
+    pub(crate) node: Box<Node>,
 }
 
 impl BaseElement {
@@ -99,21 +99,22 @@ impl BaseElement {
                     tag_name,
                     base_element_id,
                 )
-            },
+            }
             Node::ELEMENT_NODE => {
                 let element: Element = wasm_bindgen::JsCast::dyn_into(parent_node.value_of())
                     .expect("unexpected error on casting Node to Element");
 
                 // web_sys::console::log_1(&JsValue::from(format!("ELEMENT_NODE, {}, {}, {}, {:?}", tag_name, base_element_id, parent_node.node_name(), element.get_attribute("be_id"))));
                 BaseElement::new_and_append_internal(
-                    &||
-                            element.query_selector(&format!("[be_id='{0}']", base_element_id)),
+                    &|| element.query_selector(&format!("[be_id='{0}']", base_element_id)),
                     &|node: &Node| element.append_child(node),
                     tag_name,
                     base_element_id,
                 )
-            },
-            _ => panic!("base elements can only be appended to element nodes like `div` or `p` or shadow elements")
+            }
+            _ => panic!(
+                "base elements can only be appended to element nodes like `div` or `p` or shadow elements"
+            ),
         }
     }
 
@@ -207,8 +208,15 @@ impl BaseElement {
     }
 
     pub fn append_base_child(&self, base_element: &dyn BaseElementTrait) -> BaseElement {
-        let parent_node = &self.element();
-        base_element.render(parent_node)
+        // let parent_node = &self.element();
+        // base_element.render(parent_node)
+
+       base_element.render(&self.node);
+
+        //return the top level of the item just added.
+        // otherwise will return the element that was added last in the render method
+        // being inner element or not
+        BaseElement::from_node(&self.node.last_child().unwrap())
     }
 
     pub fn append_child_fn<T>(
@@ -295,24 +303,37 @@ impl BaseElement {
         )
     }
 
-    pub(crate) fn append_sibling_base_element<T>(&self, base_element: &T) -> BaseElement
-    where
-        T: BaseElementTrait,
-    {
-        let parent_node = &self.node.parent_node().unwrap();
+    pub(crate) fn append_nodes(&self, render: &[website_component_table::HtmlNode]) {
+        match self.node_type {
+            Node::ELEMENT_NODE => {
+                let element: Element = wasm_bindgen::JsCast::dyn_into(self.node.value_of())
+                    .expect("unexpected error on casting Node to Element");
 
-        base_element.render(parent_node);
+                for item in render.iter().filter_map(|n| n.to_element_node().ok()) {
+                    element.append_child(&item).unwrap();
+                }
+            }
+            Node::DOCUMENT_FRAGMENT_NODE => {
+                let document_fragment: DocumentFragment =
+                    wasm_bindgen::JsCast::dyn_into(self.node.value_of())
+                        .expect("unexpected error on casting Node to DocumentFragment");
 
-        //return the top level of the item just added.
-        // otherwise will return the element that was added last in the render method
-        // being inner element or not
-        BaseElement::from_node(&parent_node.last_child().unwrap())
-    }
+                for item in render.iter().filter_map(|n| n.to_element_node().ok()) {
+                    document_fragment.append_child(&item).unwrap();
+                }
+            }
+            Node::DOCUMENT_NODE => {
+                let document: web_sys::Document =
+                    wasm_bindgen::JsCast::dyn_into(self.node.value_of())
+                        .expect("unexpected error on casting Node to Document");
 
-    pub(crate) fn first_child(&self) -> Option<BaseElement> {
-        match self.node.first_child() {
-            Some(node) => Some(BaseElement::from_node(&node)),
-            None => None,
+                for item in render.iter().filter_map(|n| n.to_element_node().ok()) {
+                    document.append_child(&item).unwrap();
+                }
+            }
+            _ => todo!(
+                "append_nodes is currently only supported for shadow root, but can be easily extended to support normal elements as well by checking the node type and casting to element if it's an element node, then appending the child to the element instead of the shadow root"
+            ),
         }
     }
 
@@ -445,7 +466,10 @@ mod tests {
         //     &element.outer_html()
         // )));
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">1</span></div></div></div>");
+        assert_eq!(
+            &element.outer_html(),
+            "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">1</span></div></div></div>"
+        );
 
         let test_number = &Some(2);
 
@@ -454,7 +478,10 @@ mod tests {
             .append_child("span", "paging")
             .apply_fn(test_f, test_number);
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">2</span></div></div></div>");
+        assert_eq!(
+            &element.outer_html(),
+            "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">2</span></div></div></div>"
+        );
 
         let test_number = &Some(3);
 
@@ -463,7 +490,10 @@ mod tests {
             .append_child("span", "paging")
             .apply_fn(test_f, test_number);
 
-        assert_eq!(&element.outer_html(), "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">3</span></div></div></div>");
+        assert_eq!(
+            &element.outer_html(),
+            "<div><div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">3</span></div></div></div>"
+        );
     }
 
     #[wasm_bindgen_test]
@@ -490,7 +520,10 @@ mod tests {
         //     &element.outer_html()
         // )));
 
-        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">1</span></div></div>");
+        assert_eq!(
+            &parent_element.inner_html(),
+            "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">1</span></div></div>"
+        );
 
         let test_number = &Some(2);
 
@@ -499,7 +532,10 @@ mod tests {
             .append_child("span", "paging")
             .apply_fn(test_f, test_number);
 
-        assert_eq!(&parent_element.inner_html(), "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">2</span></div></div>");
+        assert_eq!(
+            &parent_element.inner_html(),
+            "<div be_id=\"controls-background\"><div be_id=\"controls\"><span be_id=\"paging\">2</span></div></div>"
+        );
 
         // let test_number = Some(3);
 
