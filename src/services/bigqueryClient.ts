@@ -127,49 +127,62 @@ export class BigQueryClient {
 
 	public getMetadata(projectId: string, datasetId: string, tableId: string): Promise<TableMetadata> {
 
-		const metadataPromise = this.bqclient
+		/**
+		 * Previously this method ran a BigQuery job against
+		 * INFORMATION_SCHEMA.COLUMN_FIELD_PATHS to obtain per-field descriptions
+		 * and collation names.  The BigQuery REST API (tables.get) already embeds
+		 * descriptions on every field – including deeply-nested RECORD fields –
+		 * and collation under `collationSpec`.  We read that data directly here,
+		 * avoiding a billable query job.
+		 *
+		 * API reference:
+		 *   GET https://bigquery.googleapis.com/bigquery/v2/projects/{p}/datasets/{d}/tables/{t}
+		 */
+		return this.bqclient
 			.dataset(datasetId, { projectId: projectId })
 			.table(tableId)
-			.getMetadata();
-
-		const fullSchema = this.runQuery(`
-		SELECT 
-			field_path AS fieldPath, 
-			collation_name AS collationName, 
-			description 
-		FROM \`${projectId}.${datasetId}\`.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS 
-		WHERE table_name = '${tableId}';
-		`).then(job => {
-			return job.getQueryResults();
-		});
-
-		return Promise.all([metadataPromise, fullSchema])
-			.then(this.onfulfilled);
+			.getMetadata()
+			.then(([rawMetadata]) => {
+				const metadata = rawMetadata as TableMetadata;
+				// Normalise collationSpec → collation so the rest of the codebase
+				// keeps working with the existing SchemaField.collation property.
+				BigQueryClient.normaliseCollation(metadata.schema?.fields ?? []);
+				return metadata;
+			});
 
 	}
 
 	public async getTableSchema(projectId: string, datasetName: string, tableName: string): Promise<BigqueryTableSchema[]> {
 
-		const query = `
-SELECT 
-	colums.table_catalog AS project_id,
-	colums.table_schema AS dataset_name,
-	colums.table_name,
-	colums.column_name,
-	colums.ordinal_position,
-	colums.data_type,
-  	colums.is_partitioning_column,
-  	paths.description,
-FROM \`${projectId}.${datasetName}\`.INFORMATION_SCHEMA.COLUMNS colums
-  LEFT JOIN \`${projectId}.${datasetName}\`.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS paths USING(table_catalog, table_schema, table_name, column_name)
-WHERE table_name = '${tableName}' AND is_hidden = 'NO';
-`;
+		/**
+		 * Previously this ran two INFORMATION_SCHEMA queries (COLUMNS +
+		 * COLUMN_FIELD_PATHS) to build the column list.  The BigQuery REST API
+		 * tables.get endpoint already returns the complete schema tree, including
+		 * descriptions and collation, at no query cost.  We flatten it here into
+		 * the same BigqueryTableSchema[] shape the rest of the codebase expects.
+		 *
+		 * API reference:
+		 *   GET https://bigquery.googleapis.com/bigquery/v2/projects/{p}/datasets/{d}/tables/{t}
+		 */
+		const [rawMetadata] = await this.bqclient
+			.dataset(datasetName, { projectId })
+			.table(tableName)
+			.getMetadata();
 
-		const q = await this.runQuery(query);
+		const metadata = rawMetadata as TableMetadata;
+		const partitioningField: string | null = metadata.timePartitioning?.field ?? null;
 
-		const results = await q.getQueryResults();
-
-		return results[0].map(c => c as BigqueryTableSchema);
+		const result: BigqueryTableSchema[] = [];
+		BigQueryClient.flattenSchemaFields(
+			projectId,
+			datasetName,
+			tableName,
+			metadata.schema?.fields ?? [],
+			partitioningField,
+			result,
+			null,
+		);
+		return result;
 
 	}
 
@@ -177,42 +190,264 @@ WHERE table_name = '${tableName}' AND is_hidden = 'NO';
 		return this.bqclient.job(jobReference.jobId, { location: jobReference.location, projectId: jobReference.projectId });
 	}
 
-	private onfulfilled(value: [any, any]): TableMetadata {
+	// ─── DDL via BigQuery & Routines REST APIs (no INFORMATION_SCHEMA) ──────────
 
-		const metadata = value[0][0] as TableMetadata;
+	/**
+	 * Return the DDL text for a table, view, materialized view, routine, or ML
+	 * model by calling the appropriate BigQuery REST API endpoint.
+	 *
+	 * Replaces INFORMATION_SCHEMA.TABLES / .ROUTINES / .MODELS queries that
+	 * previously ran a billable job.
+	 *
+	 * REST references:
+	 *   tables.get    → GET …/bigquery/v2/projects/{p}/datasets/{d}/tables/{t}
+	 *   routines.get  → GET …/bigquery/v2/projects/{p}/datasets/{d}/routines/{r}
+	 *   models.get    → GET …/bigquery/v2/projects/{p}/datasets/{d}/models/{m}
+	 */
+	public async getDdl(
+		projectId: string,
+		datasetId: string,
+		resourceId: string,
+		resourceType: 'table' | 'routine' | 'model',
+	): Promise<string> {
 
-		const extraInformation = value[1][0] as [{ fieldPath: string, collationName: string, description: string }];
+		const base = 'https://bigquery.googleapis.com/bigquery/v2/projects';
 
-		const fields = BigQueryClient.schemaEnrich(null, metadata.schema.fields, extraInformation);
-
-		metadata.schema = { fields: fields };
-
-		return metadata;
-	}
-
-	private static schemaEnrich(prefix: string | null, schemaItems: SchemaField[], extraInformation: [{ fieldPath: string, collationName: string, description: string }]): SchemaField[] {
-
-		const newSchemaItems: SchemaField[] = [];
-
-		for (let schemaItemIndex = 0; schemaItemIndex < schemaItems.length; schemaItemIndex++) {
-
-			const schemaItem = schemaItems[schemaItemIndex];
-
-			const fieldPath = `${prefix ? prefix : ''}${prefix ? '.' : ''}${schemaItem.name}`;
-			const extra = extraInformation.find(c => c.fieldPath === fieldPath);
-			if (extra) {
-				schemaItem.collation = extra.collationName === 'NULL' ? '' : extra.collationName;
-				schemaItem.description = extra.description;
-			}
-
-			if (schemaItem.fields && schemaItem.fields.length > 0) {
-				schemaItem.fields = this.schemaEnrich(fieldPath, schemaItem.fields, extraInformation);
-			}
-
-			newSchemaItems.push(schemaItem);
+		if (resourceType === 'routine') {
+			const uri = `${base}/${encodeURIComponent(projectId)}/datasets/${encodeURIComponent(datasetId)}/routines/${encodeURIComponent(resourceId)}`;
+			const raw = await this.makeAuthenticatedGet(uri);
+			const routine = JSON.parse(raw);
+			return BigQueryClient.buildRoutineDdl(projectId, datasetId, routine);
 		}
 
-		return newSchemaItems;
+		if (resourceType === 'model') {
+			const uri = `${base}/${encodeURIComponent(projectId)}/datasets/${encodeURIComponent(datasetId)}/models/${encodeURIComponent(resourceId)}`;
+			const raw = await this.makeAuthenticatedGet(uri);
+			const model = JSON.parse(raw);
+			return BigQueryClient.buildModelDdl(projectId, datasetId, resourceId, model);
+		}
+
+		// table / view / materialized-view
+		const uri = `${base}/${encodeURIComponent(projectId)}/datasets/${encodeURIComponent(datasetId)}/tables/${encodeURIComponent(resourceId)}`;
+		const raw = await this.makeAuthenticatedGet(uri);
+		const tableJson = JSON.parse(raw);
+		return BigQueryClient.buildTableDdl(projectId, datasetId, resourceId, tableJson);
+	}
+
+	// ─── DDL reconstruction helpers ─────────────────────────────────────────────
+
+	/** Reconstruct CREATE TABLE / VIEW / MATERIALIZED VIEW DDL from a tables.get response. */
+	private static buildTableDdl(projectId: string, datasetId: string, tableId: string, t: any): string {
+		const fqn = `\`${projectId}.${datasetId}.${tableId}\``;
+
+		if (t.type === 'VIEW') {
+			const query: string = t.view?.query ?? '';
+			return `CREATE OR REPLACE VIEW ${fqn}\nAS ${query}`;
+		}
+
+		if (t.type === 'MATERIALIZED_VIEW') {
+			const query: string = t.materializedView?.query ?? '';
+			return `CREATE OR REPLACE MATERIALIZED VIEW ${fqn}\nAS ${query}`;
+		}
+
+		// Regular TABLE (including EXTERNAL)
+		const fields: SchemaField[] = t.schema?.fields ?? [];
+		const columnsDdl = BigQueryClient.buildColumnsDdl(fields, 0);
+		let ddl = `CREATE TABLE ${fqn}\n(\n${columnsDdl}\n)`;
+
+		if (t.timePartitioning) {
+			const tp = t.timePartitioning;
+			ddl += tp.field
+				? `\nPARTITION BY DATE(${tp.field})`
+				: `\nPARTITION BY _PARTITIONDATE`;
+		} else if (t.rangePartitioning) {
+			const rp = t.rangePartitioning;
+			const r = rp.range ?? {};
+			ddl += `\nPARTITION BY RANGE_BUCKET(${rp.field}, GENERATE_ARRAY(${r.start}, ${r.end}, ${r.interval}))`;
+		}
+
+		if (t.clustering?.fields?.length > 0) {
+			ddl += `\nCLUSTER BY ${(t.clustering.fields as string[]).join(', ')}`;
+		}
+
+		const options: string[] = [];
+		if (t.description) {
+			options.push(`description="${(t.description as string).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+		}
+		if (options.length > 0) {
+			ddl += `\nOPTIONS(\n  ${options.join(',\n  ')}\n)`;
+		}
+
+		return ddl + ';';
+	}
+
+	/** Recursively emit column definitions, handling RECORD/STRUCT nesting. */
+	private static buildColumnsDdl(fields: SchemaField[], depth: number): string {
+		const pad = '  '.repeat(depth + 1);
+		return fields.map(f => {
+			let typeStr = (f.type ?? 'STRING').toUpperCase();
+
+			if ((typeStr === 'RECORD' || typeStr === 'STRUCT') && f.fields?.length > 0) {
+				const nested = BigQueryClient.buildColumnsDdl(f.fields, depth + 1);
+				const closePad = '  '.repeat(depth + 1);
+				typeStr = `STRUCT<\n${nested}\n${closePad}>`;
+			}
+
+			const isRepeated = (f.mode ?? '').toUpperCase() === 'REPEATED';
+			const finalType = isRepeated ? `ARRAY<${typeStr}>` : typeStr;
+			const notNull = (f.mode ?? '').toUpperCase() === 'REQUIRED' ? ' NOT NULL' : '';
+			const descOpt = f.description
+				? ` OPTIONS(description="${f.description.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`
+				: '';
+
+			return `${pad}${f.name} ${finalType}${notNull}${descOpt}`;
+		}).join(',\n');
+	}
+
+	/**
+	 * Reconstruct DDL from a routines.get response.
+	 *
+	 * REST reference:
+	 *   GET https://bigquery.googleapis.com/bigquery/v2/projects/{p}/datasets/{d}/routines/{r}
+	 */
+	private static buildRoutineDdl(projectId: string, datasetId: string, r: any): string {
+		const routineId: string = r.routineReference?.routineId ?? r.routineId ?? '';
+		const fqn = `\`${projectId}.${datasetId}.${routineId}\``;
+
+		const routineType: string = (r.routineType ?? 'SCALAR_FUNCTION').toUpperCase();
+		const language: string = (r.language ?? 'SQL').toUpperCase();
+		const body: string = r.definitionBody ?? '';
+		const args: any[] = r.arguments ?? [];
+
+		const argList = args.map((a: any) => {
+			const argMode: string = a.argumentKind === 'ANY_TYPE' ? '' : (a.mode ? `${a.mode} ` : '');
+			const argType: string = a.dataType?.typeKind ?? 'ANY TYPE';
+			return `${argMode}${a.name ?? ''} ${argType}`.trim();
+		}).join(',\n    ');
+
+		if (routineType === 'PROCEDURE') {
+			return `CREATE OR REPLACE PROCEDURE ${fqn}(\n    ${argList}\n)\nBEGIN\n${body}\nEND;`;
+		}
+
+		if (routineType === 'TABLE_VALUED_FUNCTION') {
+			return `CREATE OR REPLACE TABLE FUNCTION ${fqn}(\n    ${argList}\n)\nRETURNS TABLE<...>\nAS (\n${body}\n);`;
+		}
+
+		// SCALAR_FUNCTION (and other function-like types)
+		const retTypeKind: string = r.returnType?.typeKind ?? r.returnTableType?.columns ? '' : 'ANY TYPE';
+		const langClause = language !== 'SQL' ? `\nLANGUAGE ${language}\nAS r"""\n${body}\n"""` : `\nAS (\n${body}\n)`;
+		return `CREATE OR REPLACE FUNCTION ${fqn}(\n    ${argList}\n)\nRETURNS ${retTypeKind}${langClause};`;
+	}
+
+	/**
+	 * Build a descriptive representation for a BigQuery ML model using a
+	 * models.get response.  The REST API does not expose DDL text, so we emit
+	 * a best-effort CREATE MODEL stub with the model type and training options
+	 * as they would appear in `INFORMATION_SCHEMA.MODELS`.
+	 *
+	 * REST reference:
+	 *   GET https://bigquery.googleapis.com/bigquery/v2/projects/{p}/datasets/{d}/models/{m}
+	 */
+	private static buildModelDdl(projectId: string, datasetId: string, modelId: string, m: any): string {
+		const fqn = `\`${projectId}.${datasetId}.${modelId}\``;
+		const modelType: string = m.modelType ?? 'UNKNOWN';
+		const description: string = m.description ? `\n  description="${m.description}"` : '';
+		const labelCols: string = (m.labelColumns ?? []).map((c: any) => c.name).join(', ');
+		const featureCols: string = (m.featureColumns ?? []).map((c: any) => c.name).join(', ');
+
+		const lines: string[] = [
+			`-- Model type : ${modelType}`,
+			`-- Label cols : ${labelCols || '(none)'}`,
+			`-- Feature cols: ${featureCols || '(none)'}`,
+			`-- Fetched via BigQuery models.get REST API (no billable job).`,
+			``,
+			`CREATE OR REPLACE MODEL ${fqn}`,
+			`OPTIONS(`,
+			`  model_type='${modelType}'${description}`,
+			`)`,
+			`AS`,
+			`-- Re-run your original training query here.`,
+			`;`,
+		];
+		return lines.join('\n');
+	}
+
+	// ─── REST API helpers ────────────────────────────────────────────────────────
+
+	/** Issue an authenticated GET request and return the response body as a string. */
+	private makeAuthenticatedGet(uri: string): Promise<string> {
+		const request = this.bqclient.makeAuthenticatedRequest({ uri, method: 'GET' });
+		return new Promise((resolve, reject) => {
+			const chunks: Uint8Array[] = [];
+			request.on('data', (chunk: Uint8Array) => { chunks.push(chunk); });
+			request.on('end', () => { resolve(Buffer.concat(chunks).toString('utf-8')); });
+			request.on('error', reject);
+		});
+	}
+
+	// ─── Schema normalisation helpers ───────────────────────────────────────────
+
+	/**
+	 * The BigQuery REST API returns field collation under `collationSpec`.
+	 * Normalise it to `collation` (the property the rest of the codebase uses)
+	 * for every field in the tree in-place.
+	 */
+	private static normaliseCollation(fields: SchemaField[]): void {
+		for (const f of fields) {
+			if ((f as any).collationSpec !== undefined) {
+				f.collation = (f as any).collationSpec ?? '';
+			}
+			if (f.fields?.length > 0) {
+				BigQueryClient.normaliseCollation(f.fields);
+			}
+		}
+	}
+
+	/**
+	 * Recursively flatten a schema field tree into the `BigqueryTableSchema[]`
+	 * row format expected by the completion / schema service.
+	 *
+	 * Nested RECORD fields are expanded using dot-separated paths, mirroring
+	 * what INFORMATION_SCHEMA.COLUMN_FIELD_PATHS returned.
+	 */
+	private static flattenSchemaFields(
+		projectId: string,
+		datasetName: string,
+		tableName: string,
+		fields: SchemaField[],
+		partitioningField: string | null,
+		result: BigqueryTableSchema[],
+		prefix: string | null,
+		ordinalBase: number = 0,
+	): void {
+		for (let i = 0; i < fields.length; i++) {
+			const f = fields[i];
+			const columnName = prefix ? `${prefix}.${f.name}` : f.name;
+
+			result.push({
+				project_id: projectId,
+				dataset_name: datasetName,
+				table_name: tableName,
+				column_name: columnName,
+				ordinal_position: String(ordinalBase + i + 1),
+				data_type: f.type ?? '',
+				is_partitioning_column: columnName === partitioningField ? 'YES' : 'NO',
+				description: f.description ?? '',
+			});
+
+			if (f.fields?.length > 0) {
+				BigQueryClient.flattenSchemaFields(
+					projectId,
+					datasetName,
+					tableName,
+					f.fields,
+					partitioningField,
+					result,
+					columnName,
+					0,
+				);
+			}
+		}
 	}
 
 	//GET https://bigquery.googleapis.com/bigquery/v2/projects

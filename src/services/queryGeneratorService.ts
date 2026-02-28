@@ -1,5 +1,4 @@
 import { TableMetadata } from "@google-cloud/bigquery";
-import { BigqueryTreeItem } from "../activitybar/bigqueryTreeItem";
 
 
 export class QueryGeneratorService {
@@ -21,22 +20,26 @@ LIMIT 10;`;
 
     }
 
-    public static generateDdlQuery(item: BigqueryTreeItem): string {
-
-        if (item.contextValue === 'bq-routine') {
-
-            return `SELECT ddl
-            FROM \`${item.projectId}\`.${item.datasetId}.INFORMATION_SCHEMA.ROUTINES
-            WHERE routine_name = '${item.tableId}';`;
-
-        } else {
-
-            return `SELECT ddl
-            FROM \`${item.projectId}\`.${item.datasetId}.INFORMATION_SCHEMA.TABLES
-            WHERE table_name = '${item.tableId}';`;
-
-        }
-
+    public static generateModelQuery(projectId: string, datasetId: string, modelId: string): string {
+        const fqn = `\`${projectId}.${datasetId}.${modelId}\``;
+        return (
+            `-- ML.PREDICT — classification, regression, recommendation, clustering, etc.\n` +
+            `SELECT *\n` +
+            `FROM ML.PREDICT(\n` +
+            `\tMODEL ${fqn},\n` +
+            `\t(\n` +
+            `\t\tSELECT *\n` +
+            `\t\tFROM \`project.dataset.input_table\`\n` +
+            `\t\tLIMIT 100\n` +
+            `\t)\n` +
+            `);\n\n` +
+            `-- ML.FORECAST — ARIMA_PLUS / time-series models\n` +
+            `-- SELECT *\n` +
+            `-- FROM ML.FORECAST(\n` +
+            `-- \tMODEL ${fqn},\n` +
+            `-- \tSTRUCT(5 AS horizon, 0.8 AS confidence_level)\n` +
+            `-- );`
+        );
     }
 
     private static generateTimepartitionClause(metadata: TableMetadata): string {

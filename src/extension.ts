@@ -19,6 +19,7 @@ import { ResultsRender } from './services/resultsRender';
 import { QueryResultsVisualizationType } from './services/queryResultsVisualizationType';
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 import { GcpAuthenticationTreeDataProvider } from './activitybar/gcpAuthenticationTreeDataProvider';
+import { COMMAND_SEARCH, commandSearch } from './search/searchCommand';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 // export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -244,6 +245,14 @@ export function activate(context: ExtensionContext) {
 		vscode.commands.registerCommand(
 			commands.OPEN_SETTING_TABLES,
 			commands.commandOpenSettingTables
+		)
+	);
+
+	// bigquery-search command (opens editor-tab search panel)
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			COMMAND_SEARCH,
+			commandSearch
 		)
 	);
 

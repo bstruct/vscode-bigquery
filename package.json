@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.2.9",
+	"version": "0.3.0",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -203,6 +203,11 @@
 			{
 				"command": "vscode-bigquery.open-settings-projects",
 				"title": "BigueryView: open settings - projects"
+			},
+			{
+				"command": "vscode-bigquery.search",
+				"title": "BigQuery: Search datasets, tables, columns…",
+				"icon": "$(search)"
 			}
 		],
 		"menus": {
@@ -228,6 +233,11 @@
 					"command": "vscode-bigquery.explorer-refresh",
 					"group": "navigation",
 					"when": "view == 'bigquery-tree-data-provider'"
+				},
+				{
+					"command": "vscode-bigquery.search",
+					"group": "navigation",
+					"when": "view == bigquery-tree-data-provider"
 				}
 			],
 			"view/item/context": [
@@ -242,6 +252,14 @@
 				{
 					"command": "vscode-bigquery.open-ddl",
 					"when": "viewItem == 'bq-table' || viewItem == 'bq-routine'"
+				},
+				{
+					"command": "vscode-bigquery.open-ddl",
+					"when": "viewItem == 'bq-model'"
+				},
+				{
+					"command": "vscode-bigquery.create-table-default-query",
+					"when": "viewItem == 'bq-model'"
 				},
 				{
 					"command": "vscode-bigquery.gcp-user-activate",
@@ -300,6 +318,11 @@
 				"command": "vscode-bigquery.run-selected-query",
 				"key": "Ctrl+E",
 				"when": "editorLangId == bqsql"
+			},
+			{
+				"command": "vscode-bigquery.search",
+				"key": "Ctrl+Shift+F10",
+				"mac": "Cmd+Shift+F10"
 			}
 		],
 		"viewsWelcome": [
