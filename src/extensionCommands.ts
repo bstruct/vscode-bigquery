@@ -501,6 +501,14 @@ export const commandCreateTableDefaultQuery = async function (...args: any[]) {
 		return;
 	}
 
+	// Models get a ML.PREDICT / ML.FORECAST template
+	if (item.contextValue === 'bq-model') {
+		const content = QueryGeneratorService.generateModelQuery(item.projectId, item.datasetId, item.tableId);
+		const doc = await vscode.workspace.openTextDocument({ language: 'bqsql', content });
+		await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>('vscode.open', doc.uri);
+		return;
+	}
+
 	let query = QueryGeneratorService.generateSelectQuerySimple(item.projectId, item.datasetId, item.tableId);
 	try {
 		const bqClient = await getBigQueryClient();
@@ -535,12 +543,21 @@ export const commandOpenDdl = async function (...args: any[]) {
 
 	try {
 
-		let query = QueryGeneratorService.generateDdlQuery(item);
 		const bqClient = await getBigQueryClient();
 
-		const queryRun = await bqClient.runQuery(query);
-		const queryResult = await queryRun.getQueryResults();
-		const ddl = queryResult[0][0].ddl;
+		/**
+		 * Obtain DDL via the BigQuery REST API instead of running an
+		 * INFORMATION_SCHEMA query (no billable job created).
+		 *
+		 * tables.get  → tables / views / materialized views
+		 * routines.get → stored procedures and UDFs
+		 * models.get  → ML models
+		 */
+		let resourceType: 'table' | 'routine' | 'model' = 'table';
+		if (item.contextValue === 'bq-routine') { resourceType = 'routine'; }
+		else if (item.contextValue === 'bq-model') { resourceType = 'model'; }
+
+		const ddl = await bqClient.getDdl(item.projectId, item.datasetId, item.tableId, resourceType);
 
 		const doc = await vscode.workspace.openTextDocument({
 			language: 'bqsql',
@@ -548,7 +565,9 @@ export const commandOpenDdl = async function (...args: any[]) {
 		});
 
 		// Pre-load the schema into the cache so that column completions are immediately available
-		bigqueryTableSchemaService.preLoadSchemaByFullName(`${item.projectId}.${item.datasetId}.${item.tableId}`).catch(() => undefined);
+		if (item.contextValue !== 'bq-model') {
+			bigqueryTableSchemaService.preLoadSchemaByFullName(`${item.projectId}.${item.datasetId}.${item.tableId}`).catch(() => undefined);
+		}
 
 		await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
 

@@ -69,6 +69,9 @@ export class BigqueryTreeItem extends vscode.TreeItem {
                 break;
             case BigqueryTreeItemType.model:
                 this.iconPath = bigqueryIcons.model;
+                if (tableId !== null) {
+                    this.contextValue = 'bq-model';
+                }
                 break;
         }
 
