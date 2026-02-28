@@ -13,7 +13,9 @@ export enum BigqueryTreeItemType {
     tableView,
     routine,
     datasetLink,
-    model
+    model,
+    tableShardGroup,
+    loadMore
 }
 
 export class BigqueryTreeItem extends vscode.TreeItem {
@@ -29,7 +31,8 @@ export class BigqueryTreeItem extends vscode.TreeItem {
         private readonly version: string,
         private readonly pinned: boolean,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-        public readonly command?: vscode.Command
+        public readonly command?: vscode.Command,
+        public readonly pageOffset?: number
     ) {
         super(label, collapsibleState);
 
@@ -72,6 +75,13 @@ export class BigqueryTreeItem extends vscode.TreeItem {
                 if (tableId !== null) {
                     this.contextValue = 'bq-model';
                 }
+                break;
+            case BigqueryTreeItemType.tableShardGroup:
+                this.iconPath = bigqueryIcons.tablePartitioned;
+                this.contextValue = 'bq-table-shard-group';
+                break;
+            case BigqueryTreeItemType.loadMore:
+                this.contextValue = 'bq-load-more';
                 break;
         }
 

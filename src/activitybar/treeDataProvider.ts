@@ -9,10 +9,14 @@ import { TableReference } from '../services/tableMetadata';
 // const { google } = require('googleapis');
 // const vault = google.vault('v1');
 
+const PAGE_SIZE = 100;
+const SHARD_PATTERN = /^(.+)_(\d+)$/;
+
 export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<BigqueryTreeItem> {
 
     private routineTreeItems: BigqueryTreeItem[] = [];
     private modelTreeItems: BigqueryTreeItem[] = [];
+    private tableCache: Map<string, BigqueryTreeItem[]> = new Map();
 
     constructor() {
     }
@@ -90,6 +94,15 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
                         })
                         .catch(e => reject(e));
 
+
+                case BigqueryTreeItemType.loadMore: {
+                    const cacheKey = `${projectId}:${datasetId}`;
+                    const cachedItems = this.tableCache.get(cacheKey);
+                    if (!cachedItems) { resolve([]); return; }
+                    const pageOffset = element.pageOffset ?? 0;
+                    resolve(this.getTablePage(cachedItems, projectId, datasetId, pageOffset));
+                    return;
+                }
 
                 case BigqueryTreeItemType.routine:
 
@@ -245,36 +258,99 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
         const qTablesInSettings = tablesFromSettings.filter(c => c.projectId === projectId && c.datasetId === datasetId);
 
         if (qTablesInSettings.length > 0) {
-
             for (let index = 0; index < qTablesInSettings.length; index++) {
                 const element = qTablesInSettings[index];
-
                 if (!tables.find(c => c.id === element.tableId)) {
                     tables.push({
                         id: element.tableId,
-                        metadata: {
-                            type: 'TABLE'
-                        }
+                        metadata: { type: 'TABLE' }
                     } as Table);
                 }
             }
         }
 
-        return tables
-            .map(c => {
-                const tableId = c.id ?? 'xxx';
+        if (tables.length <= PAGE_SIZE) {
+            return tables.map(c => this.createTableTreeItem(c, projectId, datasetId));
+        }
 
-                let treeItemType = BigqueryTreeItemType.table;
-                if (c.metadata.timePartitioning) {
-                    treeItemType = BigqueryTreeItemType.partitionedTable;
-                } else {
-                    if (c.metadata.type === 'VIEW') {
-                        treeItemType = BigqueryTreeItemType.tableView;
-                    }
-                }
-                return new BigqueryTreeItem(treeItemType, projectId, datasetId, tableId, tableId, '', false, vscode.TreeItemCollapsibleState.None);
-            });
+        // More than PAGE_SIZE tables: apply shard grouping then paginate
+        const processedItems = this.processTablesWithShardGrouping(tables, projectId, datasetId);
+        const cacheKey = `${projectId}:${datasetId}`;
+        this.tableCache.set(cacheKey, processedItems);
 
+        return this.getTablePage(processedItems, projectId, datasetId, 0);
+    }
+
+    private createTableTreeItem(c: Table, projectId: string, datasetId: string): BigqueryTreeItem {
+        const tableId = c.id ?? 'xxx';
+        let treeItemType = BigqueryTreeItemType.table;
+        if (c.metadata.timePartitioning) {
+            treeItemType = BigqueryTreeItemType.partitionedTable;
+        } else if (c.metadata.type === 'VIEW') {
+            treeItemType = BigqueryTreeItemType.tableView;
+        }
+        return new BigqueryTreeItem(treeItemType, projectId, datasetId, tableId, tableId, '', false, vscode.TreeItemCollapsibleState.None);
+    }
+
+    private processTablesWithShardGrouping(tables: Table[], projectId: string, datasetId: string): BigqueryTreeItem[] {
+        const shardMap = new Map<string, Table[]>();
+        const nonShardTables: Table[] = [];
+
+        for (const table of tables) {
+            const id = table.id ?? '';
+            const match = SHARD_PATTERN.exec(id);
+            if (match) {
+                const prefix = match[1];
+                if (!shardMap.has(prefix)) { shardMap.set(prefix, []); }
+                shardMap.get(prefix)!.push(table);
+            } else {
+                nonShardTables.push(table);
+            }
+        }
+
+        const allItems: BigqueryTreeItem[] = [];
+
+        for (const [prefix, shardTables] of shardMap.entries()) {
+            if (shardTables.length > 1) {
+                allItems.push(new BigqueryTreeItem(
+                    BigqueryTreeItemType.tableShardGroup,
+                    projectId, datasetId, prefix,
+                    `${prefix}_*`,
+                    `${shardTables.length} shards`,
+                    false,
+                    vscode.TreeItemCollapsibleState.None
+                ));
+            } else {
+                allItems.push(this.createTableTreeItem(shardTables[0], projectId, datasetId));
+            }
+        }
+
+        for (const table of nonShardTables) {
+            allItems.push(this.createTableTreeItem(table, projectId, datasetId));
+        }
+
+        allItems.sort((a, b) => (a.label?.toString() ?? '').localeCompare(b.label?.toString() ?? ''));
+        return allItems;
+    }
+
+    private getTablePage(items: BigqueryTreeItem[], projectId: string, datasetId: string, offset: number): BigqueryTreeItem[] {
+        const page = items.slice(offset, offset + PAGE_SIZE);
+        const nextOffset = offset + PAGE_SIZE;
+        const remaining = items.length - nextOffset;
+        if (remaining > 0) {
+            const batchSize = Math.min(remaining, PAGE_SIZE);
+            page.push(new BigqueryTreeItem(
+                BigqueryTreeItemType.loadMore,
+                projectId, datasetId, null,
+                `Load ${batchSize} more\u2026 (${remaining} remaining)`,
+                '',
+                false,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                undefined,
+                nextOffset
+            ));
+        }
+        return page;
     }
 
     private getProjectsFromSettings(): string[] {
@@ -350,6 +426,7 @@ export class BigQueryTreeDataProvider implements vscode.TreeDataProvider<Bigquer
     }
 
     refresh(): void {
+        this.tableCache.clear();
         this._onDidChangeTreeData.fire();
     }
 
