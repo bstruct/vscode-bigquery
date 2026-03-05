@@ -1,0 +1,197 @@
+-- ============================================================================
+-- Complex nested query for testing rendering of STRUCT / ARRAY / RECORD types
+-- Issue #82: Render of complex results is wrong
+-- ============================================================================
+
+-- This query produces a single result set with many nesting patterns:
+--   1. Scalar columns (STRING, INT64, FLOAT64, BOOL, TIMESTAMP, DATE, JSON)
+--   2. Simple ARRAY<STRING>
+--   3. Simple ARRAY<INT64>
+--   4. Non-repeated (nullable) STRUCT with scalar sub-fields
+--   5. Non-repeated STRUCT with a nested STRUCT inside (2 levels deep)
+--   6. Non-repeated STRUCT with 3 levels of nesting
+--   7. ARRAY<STRUCT<...>> (repeated STRUCT with scalar sub-fields)
+--   8. ARRAY<STRUCT<...>> where the inner STRUCT itself contains an ARRAY
+--   9. ARRAY<STRUCT<...>> where the inner STRUCT contains a nested STRUCT
+--  10. Nullable STRUCT that is NULL
+--  11. Empty ARRAY
+--  12. STRUCT containing a mix of ARRAY and nested STRUCT
+
+SELECT
+  -- 1. Scalar columns
+  'hello world' AS scalar_string,
+  42 AS scalar_int,
+  3.14159 AS scalar_float,
+  TRUE AS scalar_bool,
+  CURRENT_TIMESTAMP() AS scalar_timestamp,
+  CURRENT_DATE() AS scalar_date,
+  JSON '{"key": "value", "nested": {"a": 1}}' AS scalar_json,
+
+  -- 2. Simple ARRAY<STRING>
+  ['alpha', 'beta', 'gamma', 'delta'] AS simple_string_array,
+
+  -- 3. Simple ARRAY<INT64>
+  [10, 20, 30, 40, 50] AS simple_int_array,
+
+  -- 4. Non-repeated STRUCT (nullable) with scalar sub-fields
+  STRUCT(
+    'John' AS first_name,
+    'Doe' AS last_name,
+    30 AS age,
+    TRUE AS is_active
+  ) AS flat_struct,
+
+  -- 5. Non-repeated STRUCT with a nested STRUCT inside (2 levels)
+  STRUCT(
+    'order-001' AS order_id,
+    99.99 AS total,
+    STRUCT(
+      '123 Main St' AS street,
+      'Springfield' AS city,
+      'IL' AS state,
+      '62701' AS zip
+    ) AS shipping_address
+  ) AS nested_struct_2_levels,
+
+  -- 6. Non-repeated STRUCT with 3 levels of nesting
+  STRUCT(
+    'company-abc' AS company_id,
+    STRUCT(
+      'HQ' AS office_name,
+      STRUCT(
+        37.7749 AS latitude,
+        -122.4194 AS longitude,
+        'US' AS country_code
+      ) AS coordinates
+    ) AS headquarters
+  ) AS nested_struct_3_levels,
+
+  -- 7. ARRAY<STRUCT<...>> (repeated STRUCT with scalar sub-fields)
+  [
+    STRUCT('item-1' AS product_id, 'Widget A' AS name, 2 AS quantity, 19.99 AS price),
+    STRUCT('item-2' AS product_id, 'Widget B' AS name, 1 AS quantity, 49.99 AS price),
+    STRUCT('item-3' AS product_id, 'Widget C' AS name, 5 AS quantity, 9.99 AS price)
+  ] AS array_of_structs,
+
+  -- 8. ARRAY<STRUCT<...>> where inner STRUCT contains an ARRAY
+  [
+    STRUCT('dept-1' AS dept_id, 'Engineering' AS dept_name, ['Alice', 'Bob', 'Charlie'] AS members),
+    STRUCT('dept-2' AS dept_id, 'Marketing' AS dept_name, ['Diana', 'Eve'] AS members),
+    STRUCT('dept-3' AS dept_id, 'Sales' AS dept_name, ['Frank'] AS members)
+  ] AS array_struct_with_inner_array,
+
+  -- 9. ARRAY<STRUCT<...>> where inner STRUCT contains a nested STRUCT
+  [
+    STRUCT(
+      'emp-1' AS employee_id,
+      'Alice Smith' AS full_name,
+      STRUCT('Engineering' AS dept, 'Senior' AS level, TRUE AS is_manager) AS role
+    ),
+    STRUCT(
+      'emp-2' AS employee_id,
+      'Bob Jones' AS full_name,
+      STRUCT('Marketing' AS dept, 'Junior' AS level, FALSE AS is_manager) AS role
+    )
+  ] AS array_struct_with_nested_struct,
+
+  -- 10. Nullable STRUCT that is NULL
+  CAST(NULL AS STRUCT<x INT64, y INT64, label STRING>) AS null_struct,
+
+  -- 11. Empty ARRAY
+  CAST([] AS ARRAY<STRUCT<id INT64, value STRING>>) AS empty_array,
+
+  -- 12. STRUCT containing a mix of ARRAY and nested STRUCT
+  STRUCT(
+    'config-v2' AS version,
+    ['read', 'write', 'admin'] AS permissions,
+    STRUCT(
+      TRUE AS dark_mode,
+      'en-US' AS locale,
+      STRUCT(
+        TRUE AS email_enabled,
+        FALSE AS sms_enabled
+      ) AS notification_settings
+    ) AS preferences,
+    [
+      STRUCT('feat-1' AS flag_name, TRUE AS enabled),
+      STRUCT('feat-2' AS flag_name, FALSE AS enabled),
+      STRUCT('feat-3' AS flag_name, TRUE AS enabled)
+    ] AS feature_flags
+  ) AS complex_mixed_struct
+
+UNION ALL
+
+SELECT
+  -- Second row with different data to test multiple rows
+  'goodbye world',
+  -7,
+  2.71828,
+  FALSE,
+  TIMESTAMP '2024-01-15 10:30:00 UTC',
+  DATE '2024-06-15',
+  JSON '{"items": [1, 2, 3], "meta": null}',
+
+  ['epsilon', 'zeta'],
+  [100, 200],
+
+  STRUCT('Jane' AS first_name, 'Smith' AS last_name, 25 AS age, FALSE AS is_active),
+
+  STRUCT(
+    'order-002' AS order_id,
+    250.00 AS total,
+    STRUCT('456 Oak Ave' AS street, 'Shelbyville' AS city, 'IN' AS state, '46176' AS zip) AS shipping_address
+  ),
+
+  STRUCT(
+    'company-xyz' AS company_id,
+    STRUCT(
+      'Branch' AS office_name,
+      STRUCT(40.7128 AS latitude, -74.0060 AS longitude, 'US' AS country_code) AS coordinates
+    ) AS headquarters
+  ),
+
+  [
+    STRUCT('item-4' AS product_id, 'Gadget X' AS name, 10 AS quantity, 5.99 AS price)
+  ],
+
+  [
+    STRUCT('dept-4' AS dept_id, 'HR' AS dept_name, ['Grace', 'Heidi', 'Ivan', 'Judy'] AS members)
+  ],
+
+  [
+    STRUCT(
+      'emp-3' AS employee_id,
+      'Charlie Brown' AS full_name,
+      STRUCT('Sales' AS dept, 'Mid' AS level, TRUE AS is_manager) AS role
+    ),
+    STRUCT(
+      'emp-4' AS employee_id,
+      'Diana Prince' AS full_name,
+      STRUCT('HR' AS dept, 'Senior' AS level, FALSE AS is_manager) AS role
+    ),
+    STRUCT(
+      'emp-5' AS employee_id,
+      'Eve Adams' AS full_name,
+      STRUCT('Engineering' AS dept, 'Lead' AS level, TRUE AS is_manager) AS role
+    )
+  ],
+
+  -- NULL struct again
+  NULL,
+
+  -- empty array
+  [],
+
+  STRUCT(
+    'config-v1' AS version,
+    ['read'] AS permissions,
+    STRUCT(
+      FALSE AS dark_mode,
+      'pt-BR' AS locale,
+      STRUCT(FALSE AS email_enabled, TRUE AS sms_enabled) AS notification_settings
+    ) AS preferences,
+    [
+      STRUCT('feat-1' AS flag_name, FALSE AS enabled)
+    ] AS feature_flags
+  )
+;

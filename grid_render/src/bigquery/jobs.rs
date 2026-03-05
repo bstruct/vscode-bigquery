@@ -723,7 +723,9 @@ impl Jobs {
                     bq_response.err().unwrap().to_string()
                 )));
             } else {
-                return Some(bq_response.unwrap());
+                let response = bq_response.unwrap();
+
+                return Some(response);
             }
         }
 

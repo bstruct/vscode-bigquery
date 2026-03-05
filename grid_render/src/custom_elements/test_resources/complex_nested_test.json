@@ -1,0 +1,322 @@
+{
+  "kind": "bigquery#getQueryResultsResponse",
+  "etag": "uFj3Jc3lQv+RLyFsNbHodQ==",
+  "schema": {
+    "fields": [
+      {
+        "name": "scalar_string",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "scalar_int",
+        "type": "INTEGER",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "scalar_float",
+        "type": "FLOAT",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "scalar_bool",
+        "type": "BOOLEAN",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "scalar_timestamp",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "scalar_date",
+        "type": "DATE",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "scalar_json",
+        "type": "JSON",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "simple_string_array",
+        "type": "STRING",
+        "mode": "REPEATED"
+      },
+      {
+        "name": "simple_int_array",
+        "type": "INTEGER",
+        "mode": "REPEATED"
+      },
+      {
+        "name": "flat_struct",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+          { "name": "first_name", "type": "STRING", "mode": "NULLABLE" },
+          { "name": "last_name", "type": "STRING", "mode": "NULLABLE" },
+          { "name": "age", "type": "INTEGER", "mode": "NULLABLE" },
+          { "name": "is_active", "type": "BOOLEAN", "mode": "NULLABLE" }
+        ]
+      },
+      {
+        "name": "nested_struct_2_levels",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+          { "name": "order_id", "type": "STRING", "mode": "NULLABLE" },
+          { "name": "total", "type": "FLOAT", "mode": "NULLABLE" },
+          {
+            "name": "shipping_address",
+            "type": "RECORD",
+            "mode": "NULLABLE",
+            "fields": [
+              { "name": "street", "type": "STRING", "mode": "NULLABLE" },
+              { "name": "city", "type": "STRING", "mode": "NULLABLE" },
+              { "name": "state", "type": "STRING", "mode": "NULLABLE" },
+              { "name": "zip", "type": "STRING", "mode": "NULLABLE" }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "nested_struct_3_levels",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+          { "name": "company_id", "type": "STRING", "mode": "NULLABLE" },
+          {
+            "name": "headquarters",
+            "type": "RECORD",
+            "mode": "NULLABLE",
+            "fields": [
+              { "name": "office_name", "type": "STRING", "mode": "NULLABLE" },
+              {
+                "name": "coordinates",
+                "type": "RECORD",
+                "mode": "NULLABLE",
+                "fields": [
+                  { "name": "latitude", "type": "FLOAT", "mode": "NULLABLE" },
+                  { "name": "longitude", "type": "FLOAT", "mode": "NULLABLE" },
+                  { "name": "country_code", "type": "STRING", "mode": "NULLABLE" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "array_of_structs",
+        "type": "RECORD",
+        "mode": "REPEATED",
+        "fields": [
+          { "name": "product_id", "type": "STRING", "mode": "NULLABLE" },
+          { "name": "name", "type": "STRING", "mode": "NULLABLE" },
+          { "name": "quantity", "type": "INTEGER", "mode": "NULLABLE" },
+          { "name": "price", "type": "FLOAT", "mode": "NULLABLE" }
+        ]
+      },
+      {
+        "name": "array_struct_with_inner_array",
+        "type": "RECORD",
+        "mode": "REPEATED",
+        "fields": [
+          { "name": "dept_id", "type": "STRING", "mode": "NULLABLE" },
+          { "name": "dept_name", "type": "STRING", "mode": "NULLABLE" },
+          { "name": "members", "type": "STRING", "mode": "REPEATED" }
+        ]
+      },
+      {
+        "name": "array_struct_with_nested_struct",
+        "type": "RECORD",
+        "mode": "REPEATED",
+        "fields": [
+          { "name": "employee_id", "type": "STRING", "mode": "NULLABLE" },
+          { "name": "full_name", "type": "STRING", "mode": "NULLABLE" },
+          {
+            "name": "role",
+            "type": "RECORD",
+            "mode": "NULLABLE",
+            "fields": [
+              { "name": "dept", "type": "STRING", "mode": "NULLABLE" },
+              { "name": "level", "type": "STRING", "mode": "NULLABLE" },
+              { "name": "is_manager", "type": "BOOLEAN", "mode": "NULLABLE" }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "null_struct",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+          { "name": "x", "type": "INTEGER", "mode": "NULLABLE" },
+          { "name": "y", "type": "INTEGER", "mode": "NULLABLE" },
+          { "name": "label", "type": "STRING", "mode": "NULLABLE" }
+        ]
+      },
+      {
+        "name": "empty_array",
+        "type": "RECORD",
+        "mode": "REPEATED",
+        "fields": [
+          { "name": "id", "type": "INTEGER", "mode": "NULLABLE" },
+          { "name": "value", "type": "STRING", "mode": "NULLABLE" }
+        ]
+      },
+      {
+        "name": "complex_mixed_struct",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+          { "name": "version", "type": "STRING", "mode": "NULLABLE" },
+          { "name": "permissions", "type": "STRING", "mode": "REPEATED" },
+          {
+            "name": "preferences",
+            "type": "RECORD",
+            "mode": "NULLABLE",
+            "fields": [
+              { "name": "dark_mode", "type": "BOOLEAN", "mode": "NULLABLE" },
+              { "name": "locale", "type": "STRING", "mode": "NULLABLE" },
+              {
+                "name": "notification_settings",
+                "type": "RECORD",
+                "mode": "NULLABLE",
+                "fields": [
+                  { "name": "email_enabled", "type": "BOOLEAN", "mode": "NULLABLE" },
+                  { "name": "sms_enabled", "type": "BOOLEAN", "mode": "NULLABLE" }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "feature_flags",
+            "type": "RECORD",
+            "mode": "REPEATED",
+            "fields": [
+              { "name": "flag_name", "type": "STRING", "mode": "NULLABLE" },
+              { "name": "enabled", "type": "BOOLEAN", "mode": "NULLABLE" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "job_reference": {
+    "project_id": "damiao-project-1",
+    "job_id": "8e300f8b-70f0-4445-9ef2-d4bc2de14fd6",
+    "location": "US"
+  },
+  "total_rows": "2",
+  "rows": [
+    {
+      "f": [
+        { "v": "hello world" },
+        { "v": "42" },
+        { "v": "3.14159" },
+        { "v": "true" },
+        { "v": "1.772737121179359E9" },
+        { "v": "2026-03-05" },
+        { "v": "{\"key\":\"value\",\"nested\":{\"a\":1}}" },
+        { "v": [{ "v": "alpha" }, { "v": "beta" }, { "v": "gamma" }, { "v": "delta" }] },
+        { "v": [{ "v": "10" }, { "v": "20" }, { "v": "30" }, { "v": "40" }, { "v": "50" }] },
+        { "v": { "f": [{ "v": "John" }, { "v": "Doe" }, { "v": "30" }, { "v": "true" }] } },
+        { "v": { "f": [
+          { "v": "order-001" },
+          { "v": "99.99" },
+          { "v": { "f": [{ "v": "123 Main St" }, { "v": "Springfield" }, { "v": "IL" }, { "v": "62701" }] } }
+        ] } },
+        { "v": { "f": [
+          { "v": "company-abc" },
+          { "v": { "f": [
+            { "v": "HQ" },
+            { "v": { "f": [{ "v": "37.7749" }, { "v": "-122.4194" }, { "v": "US" }] } }
+          ] } }
+        ] } },
+        { "v": [
+          { "v": { "f": [{ "v": "item-1" }, { "v": "Widget A" }, { "v": "2" }, { "v": "19.99" }] } },
+          { "v": { "f": [{ "v": "item-2" }, { "v": "Widget B" }, { "v": "1" }, { "v": "49.99" }] } },
+          { "v": { "f": [{ "v": "item-3" }, { "v": "Widget C" }, { "v": "5" }, { "v": "9.99" }] } }
+        ] },
+        { "v": [
+          { "v": { "f": [{ "v": "dept-1" }, { "v": "Engineering" }, { "v": [{ "v": "Alice" }, { "v": "Bob" }, { "v": "Charlie" }] }] } },
+          { "v": { "f": [{ "v": "dept-2" }, { "v": "Marketing" }, { "v": [{ "v": "Diana" }, { "v": "Eve" }] }] } },
+          { "v": { "f": [{ "v": "dept-3" }, { "v": "Sales" }, { "v": [{ "v": "Frank" }] }] } }
+        ] },
+        { "v": [
+          { "v": { "f": [{ "v": "emp-1" }, { "v": "Alice Smith" }, { "v": { "f": [{ "v": "Engineering" }, { "v": "Senior" }, { "v": "true" }] } }] } },
+          { "v": { "f": [{ "v": "emp-2" }, { "v": "Bob Jones" }, { "v": { "f": [{ "v": "Marketing" }, { "v": "Junior" }, { "v": "false" }] } }] } }
+        ] },
+        { "v": null },
+        { "v": [] },
+        { "v": { "f": [
+          { "v": "config-v2" },
+          { "v": [{ "v": "read" }, { "v": "write" }, { "v": "admin" }] },
+          { "v": { "f": [
+            { "v": "true" },
+            { "v": "en-US" },
+            { "v": { "f": [{ "v": "true" }, { "v": "false" }] } }
+          ] } },
+          { "v": [
+            { "v": { "f": [{ "v": "feat-1" }, { "v": "true" }] } },
+            { "v": { "f": [{ "v": "feat-2" }, { "v": "false" }] } },
+            { "v": { "f": [{ "v": "feat-3" }, { "v": "true" }] } }
+          ] }
+        ] } }
+      ]
+    },
+    {
+      "f": [
+        { "v": "goodbye world" },
+        { "v": "-7" },
+        { "v": "2.71828" },
+        { "v": "false" },
+        { "v": "1.7053146E9" },
+        { "v": "2024-06-15" },
+        { "v": "{\"items\":[1,2,3],\"meta\":null}" },
+        { "v": [{ "v": "epsilon" }, { "v": "zeta" }] },
+        { "v": [{ "v": "100" }, { "v": "200" }] },
+        { "v": { "f": [{ "v": "Jane" }, { "v": "Smith" }, { "v": "25" }, { "v": "false" }] } },
+        { "v": { "f": [
+          { "v": "order-002" },
+          { "v": "250.0" },
+          { "v": { "f": [{ "v": "456 Oak Ave" }, { "v": "Shelbyville" }, { "v": "IN" }, { "v": "46176" }] } }
+        ] } },
+        { "v": { "f": [
+          { "v": "company-xyz" },
+          { "v": { "f": [
+            { "v": "Branch" },
+            { "v": { "f": [{ "v": "40.7128" }, { "v": "-74.006" }, { "v": "US" }] } }
+          ] } }
+        ] } },
+        { "v": [
+          { "v": { "f": [{ "v": "item-4" }, { "v": "Gadget X" }, { "v": "10" }, { "v": "5.99" }] } }
+        ] },
+        { "v": [
+          { "v": { "f": [{ "v": "dept-4" }, { "v": "HR" }, { "v": [{ "v": "Grace" }, { "v": "Heidi" }, { "v": "Ivan" }, { "v": "Judy" }] }] } }
+        ] },
+        { "v": [
+          { "v": { "f": [{ "v": "emp-3" }, { "v": "Charlie Brown" }, { "v": { "f": [{ "v": "Sales" }, { "v": "Mid" }, { "v": "true" }] } }] } },
+          { "v": { "f": [{ "v": "emp-4" }, { "v": "Diana Prince" }, { "v": { "f": [{ "v": "HR" }, { "v": "Senior" }, { "v": "false" }] } }] } },
+          { "v": { "f": [{ "v": "emp-5" }, { "v": "Eve Adams" }, { "v": { "f": [{ "v": "Engineering" }, { "v": "Lead" }, { "v": "true" }] } }] } }
+        ] },
+        { "v": null },
+        { "v": [] },
+        { "v": { "f": [
+          { "v": "config-v1" },
+          { "v": [{ "v": "read" }] },
+          { "v": { "f": [
+            { "v": "false" },
+            { "v": "pt-BR" },
+            { "v": { "f": [{ "v": "false" }, { "v": "true" }] } }
+          ] } },
+          { "v": [
+            { "v": { "f": [{ "v": "feat-1" }, { "v": "false" }] } }
+          ] }
+        ] } }
+      ]
+    }
+  ],
+  "total_bytes_processed": "0",
+  "job_complete": true
+}

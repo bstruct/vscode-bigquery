@@ -266,14 +266,16 @@ fn json_value_to_row(
         // The index column occupies flat leaf 0, so data fields start at 1.
         let mut leaf_start: usize = 1;
         for (i, cell) in f.iter().enumerate() {
-            let field_type = fields.get(i).map(|f| f.r#type.as_str()).unwrap_or("");
-            let nested_fields = fields.get(i).and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
+            let field = fields.get(i);
+            let field_type = field.map(|f| f.r#type.as_str()).unwrap_or("");
+            let nested_fields = field.and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
+            let mode = field.and_then(|f| f.mode.as_deref()).unwrap_or("");
             let leaf_count = if nested_fields.is_empty() {
                 1
             } else {
                 count_leaf_fields(nested_fields)
             };
-            cells.push(json_value_to_table_value(cell, field_type, nested_fields, leaf_start));
+            cells.extend(flatten_value_to_cells(cell, field_type, nested_fields, leaf_start, mode));
             leaf_start += leaf_count;
         }
         cells
@@ -286,6 +288,7 @@ fn json_value_to_row(
 
 /// Format a BigQuery TIMESTAMP (seconds since Unix epoch, possibly in scientific notation)
 /// as an ISO 8601 string using the JS Date API.
+#[cfg(target_arch = "wasm32")]
 fn format_timestamp(s: &str) -> String {
     if let Ok(seconds) = s.parse::<f64>() {
         let ms = seconds * 1000.0;
@@ -295,6 +298,62 @@ fn format_timestamp(s: &str) -> String {
         }
     }
     s.to_string()
+}
+
+/// Non-wasm fallback: return the raw timestamp string as-is.
+#[cfg(not(target_arch = "wasm32"))]
+fn format_timestamp(s: &str) -> String {
+    s.to_string()
+}
+
+/// Flatten a cell value into one or more `TableValue` cells.
+///
+/// Non-repeated STRUCT fields (mode != "REPEATED") are recursively expanded so
+/// their sub-field values become individual cells aligned with the leaf columns
+/// produced by the matching `TableColumnDefinition::Group`.
+///
+/// REPEATED fields (arrays) and scalar fields produce a single cell as before.
+fn flatten_value_to_cells(
+    value: &serde_json::Value,
+    field_type: &str,
+    nested_fields: &[TableFieldSchema],
+    start_col_index: usize,
+    mode: &str,
+) -> Vec<TableValue> {
+    let v = value.pointer("/v").unwrap_or_default();
+
+    // Non-repeated STRUCT with sub-fields: flatten into individual cells
+    if mode != "REPEATED" && !nested_fields.is_empty() {
+        if let serde_json::Value::Object(_) = v {
+            if let Some(f_array) = v.pointer("/f").and_then(|f| f.as_array()) {
+                let mut cells = Vec::new();
+                let mut sub_start = start_col_index;
+                for (i, cell) in f_array.iter().enumerate() {
+                    let nf = nested_fields.get(i);
+                    let nf_type = nf.map(|f| f.r#type.as_str()).unwrap_or("");
+                    let nf_nested = nf.and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
+                    let nf_mode = nf.and_then(|f| f.mode.as_deref()).unwrap_or("");
+                    let leaf_count = if nf_nested.is_empty() {
+                        1
+                    } else {
+                        count_leaf_fields(nf_nested)
+                    };
+                    // Recursively flatten nested structs
+                    cells.extend(flatten_value_to_cells(cell, nf_type, nf_nested, sub_start, nf_mode));
+                    sub_start += leaf_count;
+                }
+                return cells;
+            }
+        }
+        // NULL struct: emit Null for each leaf column
+        if v.is_null() {
+            let leaf_count = count_leaf_fields(nested_fields);
+            return vec![TableValue::Null; leaf_count];
+        }
+    }
+
+    // Default: single cell via the normal conversion
+    vec![json_value_to_table_value(value, field_type, nested_fields, start_col_index)]
 }
 
 fn json_value_to_table_value(
@@ -361,18 +420,19 @@ fn json_value_to_table_value(
                 arr.iter()
                     .filter_map(|v| v.pointer("/v/f"))
                     .filter(|v| v.is_array())
-                    .map(|v| TableRow {
-                        cells: v
-                            .as_array()
-                            .unwrap_or(&vec![])
-                            .iter()
-                            .enumerate()
-                            .map(|(i, cell)| {
-                                let nf_type = nested_fields.get(i).map(|f| f.r#type.as_str()).unwrap_or("");
-                                let nf_nested = nested_fields.get(i).and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
-                                json_value_to_table_value(cell, nf_type, nf_nested, start_col_index + i)
-                            })
-                            .collect(),
+                    .map(|v| {
+                        let mut cells = Vec::new();
+                        let mut sub_start = start_col_index;
+                        for (i, cell) in v.as_array().unwrap_or(&vec![]).iter().enumerate() {
+                            let nf = nested_fields.get(i);
+                            let nf_type = nf.map(|f| f.r#type.as_str()).unwrap_or("");
+                            let nf_nested = nf.and_then(|f| f.fields.as_deref()).unwrap_or(&[]);
+                            let nf_mode = nf.and_then(|f| f.mode.as_deref()).unwrap_or("");
+                            let leaf_count = if nf_nested.is_empty() { 1 } else { count_leaf_fields(nf_nested) };
+                            cells.extend(flatten_value_to_cells(cell, nf_type, nf_nested, sub_start, nf_mode));
+                            sub_start += leaf_count;
+                        }
+                        TableRow { cells }
                     })
                     .collect()
             };
@@ -386,7 +446,10 @@ fn json_value_to_table_value(
             TableValue::Array(inner_table)
         }
         serde_json::Value::Object(_obj) => {
-            TableValue::String(value.to_string())
+            // Non-repeated STRUCTs are handled by flatten_value_to_cells
+            // before reaching here. If we get here it's an unexpected object
+            // shape — fallback to string representation.
+            TableValue::String(v.to_string())
         }
     }
 }
@@ -430,6 +493,7 @@ fn count_leaf_fields(fields: &[TableFieldSchema]) -> usize {
 
 #[cfg(test)]
 mod tests {
+    use crate::bigquery::base::TableFieldSchema;
     use crate::bigquery::jobs::GetQueryResultsResponse;
     use serde_json::Value;
     use website_component_table::{TableColumnDefinition, TableValue};
@@ -438,67 +502,142 @@ mod tests {
         serde_json::from_str::<GetQueryResultsResponse>(contents).unwrap()
     }
 
-    fn assert_table_value_matches_json(actual: &TableValue, expected_cell: &Value) {
+    /// Assert that a slice of flat actual cells matches the expected JSON cell,
+    /// consuming leaf cells from `actual_cells` starting at `offset`.
+    /// Returns the number of actual cells consumed.
+    fn assert_cells_match(
+        actual_cells: &[TableValue],
+        offset: usize,
+        expected_cell: &Value,
+        field: &TableFieldSchema,
+    ) -> usize {
         let expected_value = expected_cell.pointer("/v").unwrap_or(&Value::Null);
+        let mode = field.mode.as_deref().unwrap_or("");
+        let nested = field.fields.as_deref().unwrap_or(&[]);
 
+        // Non-repeated STRUCT with sub-fields: was flattened into multiple cells
+        if mode != "REPEATED" && !nested.is_empty() {
+            if let Some(f_array) = expected_value.pointer("/f").and_then(|f| f.as_array()) {
+                let mut consumed = 0;
+                for (i, sub_cell) in f_array.iter().enumerate() {
+                    if let Some(nf) = nested.get(i) {
+                        consumed +=
+                            assert_cells_match(actual_cells, offset + consumed, sub_cell, nf);
+                    }
+                }
+                return consumed;
+            }
+            // NULL struct: each leaf should be Null
+            if expected_value.is_null() {
+                let leaf_count = super::count_leaf_fields(nested);
+                for j in 0..leaf_count {
+                    assert!(
+                        matches!(actual_cells[offset + j], TableValue::Null),
+                        "expected Null for NULL struct leaf at offset {}",
+                        offset + j
+                    );
+                }
+                return leaf_count;
+            }
+        }
+
+        // Single cell comparison
+        let actual = &actual_cells[offset];
         match expected_value {
-            Value::Null => assert!(matches!(actual, TableValue::Null)),
+            Value::Null => assert!(
+                matches!(actual, TableValue::Null),
+                "expected Null at offset {}",
+                offset
+            ),
             Value::Bool(expected) => match actual {
-                TableValue::Boolean(actual) => assert_eq!(actual, expected),
-                _ => panic!("expected boolean table value"),
+                TableValue::Boolean(b) => assert_eq!(b, expected),
+                _ => panic!("expected boolean at offset {}", offset),
             },
             Value::Number(expected) => match actual {
-                TableValue::String(actual) => assert_eq!(actual, &expected.to_string()),
-                _ => panic!("expected numeric string table value"),
+                TableValue::String(s) => assert_eq!(s, &expected.to_string()),
+                _ => panic!("expected numeric string at offset {}", offset),
             },
             Value::String(expected) => match actual {
-                TableValue::String(actual) => assert_eq!(actual, expected),
-                _ => panic!("expected string table value"),
+                TableValue::String(s) => assert_eq!(s, expected),
+                _ => panic!("expected string at offset {}", offset),
             },
             Value::Array(expected_rows) => match actual {
                 TableValue::Array(actual_table) => {
                     assert_eq!(actual_table.rows.len(), expected_rows.len());
-
-                    expected_rows
-                        .iter()
-                        .enumerate()
-                        .for_each(|(row_index, row_value)| {
-                            let expected_cells = row_value
+                    if nested.is_empty() {
+                        // Simple repeated field (ARRAY<scalar>): each element is {"v": scalar}
+                        for (row_idx, row_value) in expected_rows.iter().enumerate() {
+                            let actual_row = &actual_table.rows[row_idx];
+                            assert_eq!(actual_row.cells.len(), 1, "simple array row should have 1 cell");
+                            let expected_str = row_value
+                                .pointer("/v")
+                                .and_then(|v| v.as_str())
+                                .expect("expected simple array element /v to be string");
+                            match &actual_row.cells[0] {
+                                TableValue::String(s) => assert_eq!(s, expected_str),
+                                _ => panic!("expected string cell in simple array row {}", row_idx),
+                            }
+                        }
+                    } else {
+                        // ARRAY<STRUCT>: each element is {"v": {"f": [...]}}
+                        for (row_idx, row_value) in expected_rows.iter().enumerate() {
+                            let expected_inner_cells = row_value
                                 .pointer("/v/f")
                                 .and_then(|v| v.as_array())
-                                .expect("expected nested row array");
-                            let actual_row = &actual_table.rows[row_index];
-
-                            assert_eq!(actual_row.cells.len(), expected_cells.len());
-
-                            expected_cells.iter().enumerate().for_each(
-                                |(cell_index, cell_value)| {
-                                    assert_table_value_matches_json(
-                                        &actual_row.cells[cell_index],
-                                        cell_value,
+                                .expect("expected nested row to have /v/f array");
+                            let actual_row = &actual_table.rows[row_idx];
+                            // Inner rows may also have flattened sub-structs
+                            let mut inner_offset = 0;
+                            for (ci, inner_cell) in expected_inner_cells.iter().enumerate() {
+                                if let Some(nf) = nested.get(ci) {
+                                    inner_offset += assert_cells_match(
+                                        &actual_row.cells,
+                                        inner_offset,
+                                        inner_cell,
+                                        nf,
                                     );
-                                },
+                                }
+                            }
+                            assert_eq!(
+                                inner_offset,
+                                actual_row.cells.len(),
+                                "inner row cell count mismatch at row {}",
+                                row_idx
                             );
-                        });
+                        }
+                    }
                 }
-                _ => panic!("expected array table value"),
+                _ => panic!("expected array at offset {}", offset),
             },
             Value::Object(_) => match actual {
-                TableValue::String(actual) => assert_eq!(actual, &expected_cell.to_string()),
-                _ => panic!("expected object string table value"),
+                TableValue::String(s) => assert_eq!(s, &expected_value.to_string()),
+                _ => panic!("expected object-string at offset {}", offset),
             },
         }
+        1
     }
 
-    fn assert_table_builder_matches_response(response: &GetQueryResultsResponse, row_index: usize) {
+    fn assert_table_builder_matches_response(
+        response: &GetQueryResultsResponse,
+        row_index: usize,
+    ) {
         let table_builder = response.to_table_builder(row_index);
 
         if let Some(schema) = &response.schema {
-            assert_eq!(table_builder.columns.len(), schema.fields.len());
+            // +1 for the leading "#" index column
+            assert_eq!(table_builder.columns.len(), schema.fields.len() + 1);
 
+            // The first column is the index column
+            match &table_builder.columns[0] {
+                TableColumnDefinition::Column(col) => assert_eq!(col.name, "index"),
+                _ => panic!("expected index column"),
+            }
+
+            // Data columns start at index 1
             table_builder
                 .columns
                 .iter()
+                .skip(1)
                 .enumerate()
                 .for_each(|(index, col)| {
                     let col_name = schema.fields[index].name.clone();
@@ -517,6 +656,12 @@ mod tests {
         }
 
         if let Some(rows) = &response.rows {
+            let fields = response
+                .schema
+                .as_ref()
+                .map(|s| s.fields.as_slice())
+                .unwrap_or(&[]);
+
             assert_eq!(table_builder.rows.len(), rows.len());
 
             rows.iter().enumerate().for_each(|(index, row)| {
@@ -530,17 +675,28 @@ mod tests {
                     actual_row.cells[0],
                     TableValue::Index(value) if value == row_index + index
                 ));
-                assert_eq!(actual_row.cells.len(), expected_row_cells.len() + 1);
 
-                expected_row_cells
-                    .iter()
-                    .enumerate()
-                    .for_each(|(cell_index, expected_cell)| {
-                        assert_table_value_matches_json(
-                            &actual_row.cells[cell_index + 1],
+                // Walk through expected cells using the schema-aware matcher
+                // that accounts for flattened non-repeated STRUCTs.
+                let mut offset = 1; // skip the index cell
+                for (cell_index, expected_cell) in expected_row_cells.iter().enumerate() {
+                    if let Some(field) = fields.get(cell_index) {
+                        offset += assert_cells_match(
+                            &actual_row.cells,
+                            offset,
                             expected_cell,
+                            field,
                         );
-                    });
+                    }
+                }
+                assert_eq!(
+                    offset,
+                    actual_row.cells.len(),
+                    "row {} cell count mismatch: expected {} actual {}",
+                    index,
+                    offset,
+                    actual_row.cells.len()
+                );
             });
         } else {
             assert_eq!(table_builder.rows.len(), 0);
@@ -606,6 +762,13 @@ mod tests {
     #[test]
     fn place_bq_table_rows_test_struct_json() {
         let response = load_query_results(include_str!("test_resources/struct_json_test.json"));
+        assert_table_builder_matches_response(&response, 1);
+    }
+
+    #[test]
+    fn place_bq_table_rows_test_complex_nested() {
+        let response =
+            load_query_results(include_str!("test_resources/complex_nested_test.json"));
         assert_table_builder_matches_response(&response, 1);
     }
 }
