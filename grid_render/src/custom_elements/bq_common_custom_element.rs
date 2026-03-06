@@ -4,9 +4,13 @@ use web_sys::Element;
 use crate::parse_to_usize;
 
 pub(crate) fn get_attribute(element: &Element, attribute_name: &str) -> String {
-    let att = element.get_attribute(attribute_name);
-    assert!(att.is_some(), "attribute not found: {}", attribute_name);
-    att.unwrap()
+    element.get_attribute(attribute_name).unwrap_or_else(|| {
+        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "get_attribute: attribute '{}' not found",
+            attribute_name
+        )));
+        String::new()
+    })
 }
 
 pub(crate) fn get_opt_attribute(element: &Element, attribute_name: &str) -> Option<String> {
@@ -14,11 +18,21 @@ pub(crate) fn get_opt_attribute(element: &Element, attribute_name: &str) -> Opti
 }
 
 pub(crate) fn set_attribute(element: &web_sys::Element, attribute_name: &str, value: &str) {
-    element.set_attribute(attribute_name, value).unwrap();
+    if let Err(e) = element.set_attribute(attribute_name, value) {
+        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "set_attribute: failed to set '{}': {:?}",
+            attribute_name, e
+        )));
+    }
 }
 
 pub(crate) fn remove_attribute(element: &web_sys::Element, attribute_name: &str) {
-    element.remove_attribute(attribute_name).unwrap();
+    if let Err(e) = element.remove_attribute(attribute_name) {
+        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "remove_attribute: failed to remove '{}': {:?}",
+            attribute_name, e
+        )));
+    }
 }
 
 pub(crate) fn set_optional_attribute(
@@ -27,8 +41,8 @@ pub(crate) fn set_optional_attribute(
     value: &Option<usize>,
 ) {
     match value {
-        Some(v) => element.set_attribute(attribute_name, &v.to_string()).unwrap(),
-        None => element.remove_attribute(attribute_name).unwrap(),
+        Some(v) => set_attribute(element, attribute_name, &v.to_string()),
+        None => remove_attribute(element, attribute_name),
     }
 }
 

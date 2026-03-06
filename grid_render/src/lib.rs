@@ -42,16 +42,33 @@ pub fn get_web_components_list() -> Vec<JsValue> {
 
 #[wasm_bindgen]
 pub fn register_custom_element(custom_component_name: &JsValue, element: web_sys::Element) {
-    let custom_component_string = custom_component_name
-        .as_string()
-        .expect("custom_component name not provided");
+    let custom_component_string = match custom_component_name.as_string() {
+        Some(s) => s,
+        None => {
+            web_sys::console::error_1(&JsValue::from_str(
+                "register_custom_element: custom_component name not provided",
+            ));
+            return;
+        }
+    };
 
-    let custom_component =
-        CustomElement::from_str(&custom_component_string).expect("custom_component not found");
+    let custom_component = match CustomElement::from_str(&custom_component_string) {
+        Ok(c) => c,
+        Err(_) => {
+            web_sys::console::error_1(&JsValue::from_str(&format!(
+                "register_custom_element: unknown component '{}'",
+                custom_component_string
+            )));
+            return;
+        }
+    };
 
-    custom_component
-        .define_custom_component(&element)
-        .expect("custom_component not configured");
+    if let Err(e) = custom_component.define_custom_component(&element) {
+        web_sys::console::error_1(&JsValue::from_str(&format!(
+            "register_custom_element: failed to configure component '{}': {:?}",
+            custom_component_string, e
+        )));
+    }
 }
 
 #[wasm_bindgen]
@@ -60,17 +77,7 @@ pub async fn on_window_message_received(event: &web_sys::MessageEvent) {
 }
 
 fn parse_to_usize(number: Option<String>) -> Option<usize> {
-    match number {
-        Some(s) => {
-            let u = s.parse::<usize>();
-            if u.is_ok() {
-                Some(u.unwrap())
-            } else {
-                None
-            }
-        }
-        None => None,
-    }
+    number?.parse::<usize>().ok()
 }
 
 #[wasm_bindgen(start)]

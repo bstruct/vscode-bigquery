@@ -54,9 +54,8 @@ impl BigqueryScriptCustomElement {
     pub(crate) fn from_element(element: &Element) -> BigqueryScriptCustomElement {
         let element_id = BaseElement::from_element(element)
             .id()
-            .as_ref()
-            .unwrap()
-            .to_string();
+            .clone()
+            .unwrap_or_default();
 
         BigqueryScriptCustomElement {
             element: Some(element.to_owned()),
@@ -97,7 +96,24 @@ impl BigqueryScriptCustomElement {
             }
         };
 
-        let job_reference = job.job_reference.as_ref().expect("job_reference not found");
+        let job_reference = match job.job_reference.as_ref() {
+            Some(jr) => jr,
+            None => {
+                web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                    "with_job_info: job_reference not found, using current element values",
+                ));
+                return BigqueryScriptCustomElement {
+                    element: self.element.to_owned(),
+                    element_id: self.element_id.clone(),
+                    job_id: self.job_id.clone(),
+                    project_id: self.project_id.clone(),
+                    location: self.location.clone(),
+                    token: self.token.clone(),
+                    jobs: Some(jobs.clone()),
+                    num_child_jobs,
+                };
+            }
+        };
 
         BigqueryScriptCustomElement {
             element: self.element.to_owned(),
@@ -202,21 +218,17 @@ fn set_attributes(base_element: &BaseElement, bq_table: &BigqueryScriptCustomEle
 }
 
 fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElement) {
-    let num_child_jobs = if script_element.num_child_jobs.is_some() {
-        script_element.num_child_jobs.unwrap()
-    } else {
-        if let Some(jobs) = &script_element.jobs {
-            jobs.len()
-        } else {
-            0
-        }
-    };
+    let num_child_jobs = script_element.num_child_jobs.unwrap_or_else(|| {
+        script_element.jobs.as_ref().map(|j| j.len()).unwrap_or(0)
+    });
 
     let is_loaded = (script_element.num_child_jobs.is_some()
         && script_element.all_jobs_completed())
-        || (script_element.jobs.is_some()
-            && script_element.jobs.as_ref().unwrap().len() == 1
-            && script_element.jobs.as_ref().unwrap()[0].is_complete());
+        || script_element
+            .jobs
+            .as_ref()
+            .map(|j| j.len() == 1 && j[0].is_complete())
+            .unwrap_or(false);
 
     let loading_class_name = if is_loaded { "loaded" } else { "" };
 
@@ -246,32 +258,29 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
     for index in 0..num_child_jobs {
         let chid_job: Option<&Job> = match &script_element.jobs {
             Some(jobs) => {
-                let job_search = jobs.into_iter().find(|job| {
-                    job.id.is_some() && job.id.clone().unwrap().ends_with(&format!("_{}", index))
-                });
+                let job_search = jobs
+                    .iter()
+                    .find(|job| {
+                        job.id
+                            .as_deref()
+                            .map(|id| id.ends_with(&format!("_{}", index)))
+                            .unwrap_or(false)
+                    });
 
-                if job_search.is_some() && job_search.unwrap().id.is_some() {
-                    Some(job_search.unwrap())
+                if job_search.is_some() {
+                    job_search
+                } else if num_child_jobs == 1 {
+                    jobs.first()
                 } else {
-                    if num_child_jobs == 1 {
-                        Some(&script_element.jobs.as_ref().unwrap()[0])
-                    } else {
-                        None
-                    }
+                    None
                 }
             }
             None => None,
         };
 
-        let (job_name, job_status) = if chid_job.is_some() && chid_job.unwrap().id.is_some() {
-            let job = chid_job.as_ref().unwrap();
-
-            (
-                job.id.as_ref().unwrap().to_string(),
-                job.status.as_ref().clone(),
-            )
-        } else {
-            (format!("job {}", index), None)
+        let (job_name, job_status) = match chid_job.and_then(|j| j.id.as_ref().map(|id| (id, j))) {
+            Some((id, job)) => (id.to_string(), job.status.as_ref()),
+            None => (format!("job {}", index), None),
         };
 
         let job_body =
@@ -297,7 +306,16 @@ fn resolve_jobs(element: &BaseElement, script_element: &BigqueryScriptCustomElem
                     let _ = &job_body.apply_class_name("job_body_closed");
                 }
 
-                let job_reference = child_job.job_reference.as_ref().unwrap();
+                let job_reference = match child_job.job_reference.as_ref() {
+                    Some(jr) => jr,
+                    None => {
+                        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                            "resolve_jobs: job_reference missing for job at index {}",
+                            index
+                        )));
+                        continue;
+                    }
+                };
                 let bq_query = BigqueryQueryCustomElement::base_new(
                     format!("job_query_{}", index),
                     job_reference.job_id.clone(),
@@ -341,15 +359,10 @@ fn resolve_loading(element: &BaseElement, (content, class_name): &(&str, &str)) 
 }
 
 fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Option<&JobStatus>)) {
-    let content = if job_status.is_some() {
-        let job_status = job_status.as_ref().unwrap();
-        if job_status.error_result.is_some() {
-            format!("ERROR - {}", job_name)
-        } else {
-            format!("{} - {}", job_status.state, job_name)
-        }
-    } else {
-        format!("Waiting \u{2014} {}", job_name)
+    let content = match job_status {
+        Some(status) if status.error_result.is_some() => format!("ERROR - {}", job_name),
+        Some(status) => format!("{} - {}", status.state, job_name),
+        None => format!("Waiting \u{2014} {}", job_name),
     };
 
     let html_element = element.element();
@@ -403,8 +416,13 @@ fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Op
     //toggle job_body on click
     if html_element.get_attribute("bee").unwrap_or_default() != "1" {
         let on_click_event = Closure::wrap(Box::new(|event: Event| {
-            let element = event.current_target().unwrap();
-            let element = element.dyn_into::<web_sys::Element>().unwrap();
+            let element = match event
+                .current_target()
+                .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
+            {
+                Some(el) => el,
+                None => return,
+            };
             if let Some(next_element) = element.next_element_sibling() {
                 match next_element.class_name().as_str() {
                     "job_body_closed" => next_element.set_class_name("job_body_open"),
@@ -413,13 +431,23 @@ fn resolve_job_title(element: &BaseElement, (job_name, job_status): &(String, Op
             }
         }) as Box<dyn FnMut(_)>);
 
-        html_element
+        if let Err(e) = html_element
             .add_event_listener_with_callback("click", on_click_event.as_ref().unchecked_ref())
-            .unwrap();
+        {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "resolve_job_title: failed to add click listener: {:?}",
+                e
+            )));
+        }
 
         on_click_event.forget();
 
-        html_element.set_attribute("bee", "1").unwrap();
+        if let Err(e) = html_element.set_attribute("bee", "1") {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "resolve_job_title: failed to set 'bee' attribute: {:?}",
+                e
+            )));
+        }
     }
 }
 
@@ -428,45 +456,57 @@ impl CustomElementDefinition for BigqueryScriptCustomElement {
         let on_event_type_closure =
             Closure::wrap(Box::new(on_render) as Box<dyn Fn(&web_sys::Event)>);
 
-        element
-            .add_event_listener_with_callback(
-                RENDER_SCRIPT_EVENT_NAME,
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
+        if let Err(e) = element.add_event_listener_with_callback(
+            RENDER_SCRIPT_EVENT_NAME,
+            on_event_type_closure.as_ref().unchecked_ref(),
+        ) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "bq-script define: failed to add '{}' listener: {:?}",
+                RENDER_SCRIPT_EVENT_NAME, e
+            )));
+        }
 
         on_event_type_closure.forget();
     }
 }
 
 fn on_render(event: &web_sys::Event) {
-    let element = event
+    let element = match event
         .target()
-        .unwrap()
-        .dyn_into::<web_sys::Element>()
-        .unwrap();
+        .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
+    {
+        Some(el) => el,
+        None => {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                "on_render: event target is not an element",
+            ));
+            return;
+        }
+    };
 
     if !element.has_attribute("loaded") {
         let bq_script_element = BigqueryScriptCustomElement::from_element(&element);
 
         let jobs = crate::bigquery::jobs::Jobs::new(&bq_script_element.token);
-        let parent_node = element.parent_node().unwrap();
+        let parent_node = match element.parent_node() {
+            Some(p) => p,
+            None => {
+                web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                    "on_render: bq-script element has no parent node",
+                ));
+                return;
+            }
+        };
 
         spawn_local(async move {
             let get_request = bq_script_element.as_job_request();
             let get_job_response = jobs.get(get_request).await;
 
             if let Some(job) = get_job_response {
-                //mark as done.
-                // if job.has_error() {
-                //     element.set_attribute("loaded", "1").unwrap();
-                // }
-
                 //TODO: confirm what is the information when one of the jobs is in error
                 if job.is_dml_statement() || job.is_query_select() || job.is_unsupported_type() {
-                    // element.set_attribute("loaded", "1").unwrap();
                     if job.is_complete() {
-                        element.set_attribute("loaded", "1").unwrap();
+                        let _ = element.set_attribute("loaded", "1");
                     }
 
                     bq_script_element
@@ -482,7 +522,7 @@ fn on_render(event: &web_sys::Event) {
 
                             if let Some(statistics) = &job.statistics {
                                 if statistics.num_child_jobs.is_some() && all_jobs_done {
-                                    element.set_attribute("loaded", "1").unwrap();
+                                    let _ = element.set_attribute("loaded", "1");
                                 }
                             }
 
@@ -493,7 +533,7 @@ fn on_render(event: &web_sys::Event) {
                     }
                 }
             } else {
-                element.set_attribute("loaded", "1").unwrap();
+                let _ = element.set_attribute("loaded", "1");
                 element.set_inner_html(&format!("unexpected response: {:?}", get_job_response));
             }
         });

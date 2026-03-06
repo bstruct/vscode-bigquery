@@ -74,9 +74,16 @@ impl BaseElement {
             BaseElement::from_shadow(&shadow_root)
         } else {
             let shadow_init = web_sys::ShadowRootInit::new(web_sys::ShadowRootMode::Open);
-            let shadow_root = element.attach_shadow(&shadow_init).unwrap();
-
-            BaseElement::from_shadow(&shadow_root)
+            match element.attach_shadow(&shadow_init) {
+                Ok(shadow_root) => BaseElement::from_shadow(&shadow_root),
+                Err(e) => {
+                    web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                        "append_shadow: failed to attach shadow root: {:?}",
+                        e
+                    )));
+                    BaseElement::from_element(&element)
+                }
+            }
         }
     }
 
@@ -90,8 +97,15 @@ impl BaseElement {
                 // web_sys::console::log_1(&JsValue::from(format!("DOCUMENT_FRAGMENT_NODE, {}, {}, {}", tag_name, base_element_id, parent_node.node_name())));
 
                 let element: DocumentFragment =
-                    wasm_bindgen::JsCast::dyn_into(parent_node.value_of())
-                        .expect("unexpected error on casting Node to DocumentFragment");
+                    match wasm_bindgen::JsCast::dyn_into(parent_node.value_of()) {
+                        Ok(el) => el,
+                        Err(_) => {
+                            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                                "new_and_append: failed to cast Node to DocumentFragment",
+                            ));
+                            return BaseElement::create_element(tag_name, base_element_id);
+                        }
+                    };
 
                 BaseElement::new_and_append_internal(
                     &|| element.query_selector(&format!(":host > [be_id='{0}']", base_element_id)),
@@ -101,8 +115,16 @@ impl BaseElement {
                 )
             }
             Node::ELEMENT_NODE => {
-                let element: Element = wasm_bindgen::JsCast::dyn_into(parent_node.value_of())
-                    .expect("unexpected error on casting Node to Element");
+                let element: Element = match wasm_bindgen::JsCast::dyn_into(parent_node.value_of())
+                {
+                    Ok(el) => el,
+                    Err(_) => {
+                        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                            "new_and_append: failed to cast Node to Element",
+                        ));
+                        return BaseElement::create_element(tag_name, base_element_id);
+                    }
+                };
 
                 // web_sys::console::log_1(&JsValue::from(format!("ELEMENT_NODE, {}, {}, {}, {:?}", tag_name, base_element_id, parent_node.node_name(), element.get_attribute("be_id"))));
                 BaseElement::new_and_append_internal(
@@ -112,9 +134,14 @@ impl BaseElement {
                     base_element_id,
                 )
             }
-            _ => panic!(
-                "base elements can only be appended to element nodes like `div` or `p` or shadow elements"
-            ),
+            _ => {
+                web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                    "new_and_append: unsupported node type {} for element '{}' — only element and shadow nodes are supported",
+                    parent_node.node_type(),
+                    base_element_id
+                )));
+                BaseElement::create_element(tag_name, base_element_id)
+            }
         }
     }
 
@@ -124,24 +151,40 @@ impl BaseElement {
         tag_name: &str,
         base_element_id: &str,
     ) -> BaseElement {
-        let existing_element = query_selector();
-
-        assert!(existing_element.is_ok());
-
-        if let Some(existing_element) = existing_element.unwrap() {
-            // web_sys::console::log_1(&JsValue::from("existing_element exists"));
-            BaseElement::from_element(&existing_element)
-        } else {
-            // web_sys::console::log_1(&JsValue::from("existing_element does NOT exists"));
-            let new_element = BaseElement::create_element(tag_name, base_element_id);
-            append_child(&new_element.element()).unwrap();
-            new_element
+        match query_selector() {
+            Ok(Some(existing_element)) => {
+                // web_sys::console::log_1(&JsValue::from("existing_element exists"));
+                BaseElement::from_element(&existing_element)
+            }
+            Ok(None) => {
+                // web_sys::console::log_1(&JsValue::from("existing_element does NOT exists"));
+                let new_element = BaseElement::create_element(tag_name, base_element_id);
+                if let Err(e) = append_child(&new_element.element()) {
+                    web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                        "new_and_append_internal: failed to append child '{}': {:?}",
+                        base_element_id, e
+                    )));
+                }
+                new_element
+            }
+            Err(e) => {
+                web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                    "new_and_append_internal: query_selector failed for '{}': {:?}",
+                    base_element_id, e
+                )));
+                BaseElement::create_element(tag_name, base_element_id)
+            }
         }
     }
 
     pub fn create_element(tag_name: &str, base_element_id: &str) -> BaseElement {
         let element = &crate::createElement(tag_name);
-        element.set_attribute("be_id", base_element_id).unwrap();
+        if let Err(e) = element.set_attribute("be_id", base_element_id) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "create_element: failed to set be_id '{}': {:?}",
+                base_element_id, e
+            )));
+        }
         BaseElement {
             id: Some(base_element_id.to_owned()),
             node_type: element.node_type(),
@@ -150,7 +193,12 @@ impl BaseElement {
     }
 
     pub fn from_element(element: &Element) -> BaseElement {
-        let id = element.get_attribute("be_id").expect("not a base element");
+        let id = element.get_attribute("be_id").unwrap_or_else(|| {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                "from_element: element is missing 'be_id' attribute",
+            ));
+            String::new()
+        });
         BaseElement {
             id: Some(id),
             node_type: element.node_type(),
@@ -174,10 +222,19 @@ impl BaseElement {
     pub fn from_node(node: &Node) -> BaseElement {
         match node.node_type() {
             Node::ELEMENT_NODE => {
-                let element: Element = wasm_bindgen::JsCast::dyn_into(node.value_of())
-                    .expect("unexpected error on casting Node to Element");
-
-                BaseElement::from_element(&element)
+                match wasm_bindgen::JsCast::dyn_into::<Element>(node.value_of()) {
+                    Ok(element) => BaseElement::from_element(&element),
+                    Err(_) => {
+                        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                            "from_node: failed to cast ELEMENT_NODE to Element",
+                        ));
+                        BaseElement {
+                            id: None,
+                            node_type: node.node_type(),
+                            node: Box::new(node.to_owned().into()),
+                        }
+                    }
+                }
             }
             _ => BaseElement {
                 id: None,
@@ -208,15 +265,20 @@ impl BaseElement {
     }
 
     pub fn append_base_child(&self, base_element: &dyn BaseElementTrait) -> BaseElement {
-        // let parent_node = &self.element();
-        // base_element.render(parent_node)
-
-       base_element.render(&self.node);
+        base_element.render(&self.node);
 
         //return the top level of the item just added.
         // otherwise will return the element that was added last in the render method
         // being inner element or not
-        BaseElement::from_node(&self.node.last_child().unwrap())
+        match self.node.last_child() {
+            Some(child) => BaseElement::from_node(&child),
+            None => {
+                web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                    "append_base_child: parent node has no children after render",
+                ));
+                self.clone()
+            }
+        }
     }
 
     pub fn append_child_fn<T>(
@@ -231,12 +293,24 @@ impl BaseElement {
     }
 
     pub fn append_sibling(&self, tag_name: &str, base_element_id: &str) -> BaseElement {
+        let get_parent = || -> Box<Node> {
+            match self.node.parent_node() {
+                Some(parent) => Box::new(parent),
+                None => {
+                    web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                        "append_sibling: parent node not found for '{}'",
+                        base_element_id
+                    )));
+                    self.node.to_owned()
+                }
+            }
+        };
         BaseElement::append::<usize>(
             &self,
             tag_name,
             base_element_id,
             &|| self.node.next_sibling(),
-            &|| Box::new(self.node.parent_node().expect("parent element not found")),
+            &get_parent,
             None,
             None,
         )
@@ -265,27 +339,48 @@ impl BaseElement {
         if let Some(existing_node) = get_node() {
             if existing_node.node_type() == Node::ELEMENT_NODE {
                 let existing_element: Element =
-                    wasm_bindgen::JsCast::dyn_into(existing_node.value_of())
-                        .expect("unexpected error on casting Node to Element");
+                    match wasm_bindgen::JsCast::dyn_into(existing_node.value_of()) {
+                        Ok(el) => el,
+                        Err(_) => {
+                            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                                "append: failed to cast existing node to Element",
+                            ));
+                            return self.clone();
+                        }
+                    };
 
                 let existing_element_be_id = existing_element
                     .get_attribute("be_id")
-                    .expect("not a base element");
+                    .unwrap_or_default();
 
-                assert_eq!(existing_element_be_id, base_element_id);
+                if existing_element_be_id != base_element_id {
+                    web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                        "append: be_id mismatch: expected '{}', found '{}'",
+                        base_element_id, existing_element_be_id
+                    )));
+                }
 
                 let existing_element = BaseElement::from_element(&existing_element);
                 if let Some(element_fn) = element_fn {
-                    element_fn(&existing_element, fn_parameter.unwrap());
+                    if let Some(param) = fn_parameter {
+                        element_fn(&existing_element, param);
+                    }
                 }
                 return existing_element;
             }
         }
 
         let new_element = BaseElement::create_element(tag_name, base_element_id);
-        get_parent().append_child(&new_element.element()).unwrap();
+        if let Err(e) = get_parent().append_child(&new_element.element()) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "append: failed to append child '{}': {:?}",
+                base_element_id, e
+            )));
+        }
         if let Some(element_fn) = element_fn {
-            element_fn(&new_element, fn_parameter.unwrap());
+            if let Some(param) = fn_parameter {
+                element_fn(&new_element, param);
+            }
         }
         new_element
     }
@@ -297,7 +392,9 @@ impl BaseElement {
     ) -> BaseElement {
         self.append_child("style", base_element_id).apply_fn(
             &|base_element: &BaseElement, value: &Option<&str>| {
-                base_element.element().set_inner_html(value.unwrap());
+                if let Some(css) = value {
+                    base_element.element().set_inner_html(css);
+                }
             },
             &Some(css_content),
         )
@@ -306,34 +403,74 @@ impl BaseElement {
     pub(crate) fn append_nodes(&self, render: &[website_component_table::HtmlNode]) {
         match self.node_type {
             Node::ELEMENT_NODE => {
-                let element: Element = wasm_bindgen::JsCast::dyn_into(self.node.value_of())
-                    .expect("unexpected error on casting Node to Element");
+                let element: Element =
+                    match wasm_bindgen::JsCast::dyn_into(self.node.value_of()) {
+                        Ok(el) => el,
+                        Err(_) => {
+                            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                                "append_nodes: failed to cast ELEMENT_NODE to Element",
+                            ));
+                            return;
+                        }
+                    };
 
                 for item in render.iter().filter_map(|n| n.to_element_node().ok()) {
-                    element.append_child(&item).unwrap();
+                    if let Err(e) = element.append_child(&item) {
+                        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                            "append_nodes: failed to append child to element: {:?}",
+                            e
+                        )));
+                    }
                 }
             }
             Node::DOCUMENT_FRAGMENT_NODE => {
                 let document_fragment: DocumentFragment =
-                    wasm_bindgen::JsCast::dyn_into(self.node.value_of())
-                        .expect("unexpected error on casting Node to DocumentFragment");
+                    match wasm_bindgen::JsCast::dyn_into(self.node.value_of()) {
+                        Ok(df) => df,
+                        Err(_) => {
+                            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                                "append_nodes: failed to cast DOCUMENT_FRAGMENT_NODE to DocumentFragment",
+                            ));
+                            return;
+                        }
+                    };
 
                 for item in render.iter().filter_map(|n| n.to_element_node().ok()) {
-                    document_fragment.append_child(&item).unwrap();
+                    if let Err(e) = document_fragment.append_child(&item) {
+                        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                            "append_nodes: failed to append child to document fragment: {:?}",
+                            e
+                        )));
+                    }
                 }
             }
             Node::DOCUMENT_NODE => {
                 let document: web_sys::Document =
-                    wasm_bindgen::JsCast::dyn_into(self.node.value_of())
-                        .expect("unexpected error on casting Node to Document");
+                    match wasm_bindgen::JsCast::dyn_into(self.node.value_of()) {
+                        Ok(doc) => doc,
+                        Err(_) => {
+                            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                                "append_nodes: failed to cast DOCUMENT_NODE to Document",
+                            ));
+                            return;
+                        }
+                    };
 
                 for item in render.iter().filter_map(|n| n.to_element_node().ok()) {
-                    document.append_child(&item).unwrap();
+                    if let Err(e) = document.append_child(&item) {
+                        web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                            "append_nodes: failed to append child to document: {:?}",
+                            e
+                        )));
+                    }
                 }
             }
-            _ => todo!(
-                "append_nodes is currently only supported for shadow root, but can be easily extended to support normal elements as well by checking the node type and casting to element if it's an element node, then appending the child to the element instead of the shadow root"
-            ),
+            _ => {
+                web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                    "append_nodes: unsupported node type {}",
+                    self.node_type
+                )));
+            }
         }
     }
 

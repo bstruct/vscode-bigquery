@@ -27,51 +27,45 @@ pub struct ExternalRequest {
 }
 
 impl ExternalRequest {
-    pub fn to_bq_table(&self, element_id: &str) -> BigqueryTableCustomElement {
-        let project_id = self.project_id.as_ref().unwrap().to_string();
-        let dataset_id = self.dataset_id.as_ref().unwrap().to_string();
-        let table_id = self.table_id.as_ref().unwrap().to_string();
-        let token = (&self.token.as_ref().unwrap()).to_string();
+    pub fn to_bq_table(&self, element_id: &str) -> Option<BigqueryTableCustomElement> {
+        let project_id = self.project_id.as_ref()?.to_string();
+        let dataset_id = self.dataset_id.as_ref()?.to_string();
+        let table_id = self.table_id.as_ref()?.to_string();
+        let token = self.token.as_ref()?.to_string();
 
-        BigqueryTableCustomElement::base_new(
+        Some(BigqueryTableCustomElement::base_new(
             element_id.to_string(),
             project_id,
             dataset_id,
             table_id,
             token,
-        )
+        ))
     }
 
-    pub fn to_bq_script(&self, element_id: &str) -> BigqueryScriptCustomElement {
-        let job = self.job.as_ref().unwrap();
-        let job_reference = job.job_reference.as_ref().unwrap();
+    pub fn to_bq_script(&self, element_id: &str) -> Option<BigqueryScriptCustomElement> {
+        let job = self.job.as_ref()?;
+        let job_reference = job.job_reference.as_ref()?;
         let job_id = job_reference.job_id.to_string();
         let location = job_reference.location.to_string();
-        let project_id = self.project_id.as_ref().unwrap().to_string();
-        let token = (&self.token.as_ref().unwrap()).to_string();
+        let project_id = self.project_id.as_ref()?.to_string();
+        let token = self.token.as_ref()?.to_string();
 
-        let num_child_jobs: Option<usize> =
-            if self.job.is_some() {
-                let job = self.job.as_ref().unwrap();
-                if (job.is_query_select() || job.is_dml_statement() || job.is_ddl_statement())
-                    && job.is_complete()
-                {
-                    Some(1)
-                } else {
-                    None
-                }
-            } else {
-                None
-            };
+        let num_child_jobs = if (job.is_query_select() || job.is_dml_statement() || job.is_ddl_statement())
+            && job.is_complete()
+        {
+            Some(1)
+        } else {
+            None
+        };
 
-        BigqueryScriptCustomElement::base_new(
+        Some(BigqueryScriptCustomElement::base_new(
             element_id.to_string(),
             job_id,
             project_id,
             location,
             token,
             num_child_jobs,
-        )
+        ))
     }
 }
 

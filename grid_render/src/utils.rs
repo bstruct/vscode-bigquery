@@ -9,8 +9,22 @@ pub(crate) fn render_standalone(table_builder: &TableBuilder, parent_node: &Elem
     let parent_node = &parent.node();
     parent.append_child_style(css_content, "style1");
 
-    let elements = &table_builder.render().expect("table render failed");
+    let elements = match table_builder.render() {
+        Ok(els) => els,
+        Err(e) => {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "render_standalone: table render failed: {:?}",
+                e
+            )));
+            return;
+        }
+    };
     for item in elements.iter().filter_map(|n| n.to_element_node().ok()) {
-        parent_node.append_child(&item).expect("item not added");
+        if let Err(e) = parent_node.append_child(&item) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "render_standalone: failed to append child: {:?}",
+                e
+            )));
+        }
     }
 }

@@ -407,60 +407,74 @@ impl CustomElementDefinition for BigqueryQueryCustomElement {
             Closure::wrap(Box::new(BigqueryQueryCustomElement::on_render_query)
                 as Box<dyn Fn(&web_sys::Event)>);
 
-        element
-            .add_event_listener_with_callback(
-                RENDER_QUERY_EVENT_NAME,
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
-
+        if let Err(e) = element.add_event_listener_with_callback(
+            RENDER_QUERY_EVENT_NAME,
+            on_event_type_closure.as_ref().unchecked_ref(),
+        ) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "bq-query define: failed to add '{}' listener: {:?}",
+                RENDER_QUERY_EVENT_NAME, e
+            )));
+        }
         on_event_type_closure.forget();
 
         //EVENT_GO_TO_FIRST_PAGE
         let on_event_type_closure =
             Closure::wrap(Box::new(first_page) as Box<dyn Fn(&web_sys::Event)>);
-        element
-            .add_event_listener_with_callback_and_bool(
-                EVENT_GO_TO_FIRST_PAGE,
-                on_event_type_closure.as_ref().unchecked_ref(),
-                false,
-            )
-            .unwrap();
+        if let Err(e) = element.add_event_listener_with_callback_and_bool(
+            EVENT_GO_TO_FIRST_PAGE,
+            on_event_type_closure.as_ref().unchecked_ref(),
+            false,
+        ) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "bq-query define: failed to add '{}' listener: {:?}",
+                EVENT_GO_TO_FIRST_PAGE, e
+            )));
+        }
         on_event_type_closure.forget();
 
         //EVENT_GO_TO_PREVIOUS_PAGE
         let on_event_type_closure =
             Closure::wrap(Box::new(previous_page) as Box<dyn Fn(&web_sys::Event)>);
-        element
-            .add_event_listener_with_callback_and_bool(
-                EVENT_GO_TO_PREVIOUS_PAGE,
-                on_event_type_closure.as_ref().unchecked_ref(),
-                false,
-            )
-            .unwrap();
+        if let Err(e) = element.add_event_listener_with_callback_and_bool(
+            EVENT_GO_TO_PREVIOUS_PAGE,
+            on_event_type_closure.as_ref().unchecked_ref(),
+            false,
+        ) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "bq-query define: failed to add '{}' listener: {:?}",
+                EVENT_GO_TO_PREVIOUS_PAGE, e
+            )));
+        }
         on_event_type_closure.forget();
 
         //EVENT_GO_TO_NEXT_PAGE
         let on_event_type_closure =
             Closure::wrap(Box::new(next_page) as Box<dyn Fn(&web_sys::Event)>);
-        element
-            .add_event_listener_with_callback(
-                EVENT_GO_TO_NEXT_PAGE,
-                on_event_type_closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
+        if let Err(e) = element.add_event_listener_with_callback(
+            EVENT_GO_TO_NEXT_PAGE,
+            on_event_type_closure.as_ref().unchecked_ref(),
+        ) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "bq-query define: failed to add '{}' listener: {:?}",
+                EVENT_GO_TO_NEXT_PAGE, e
+            )));
+        }
         on_event_type_closure.forget();
 
         //EVENT_GO_TO_LAST_PAGE
         let on_event_type_closure =
             Closure::wrap(Box::new(last_page) as Box<dyn Fn(&web_sys::Event)>);
-        element
-            .add_event_listener_with_callback_and_bool(
-                EVENT_GO_TO_LAST_PAGE,
-                on_event_type_closure.as_ref().unchecked_ref(),
-                false,
-            )
-            .unwrap();
+        if let Err(e) = element.add_event_listener_with_callback_and_bool(
+            EVENT_GO_TO_LAST_PAGE,
+            on_event_type_closure.as_ref().unchecked_ref(),
+            false,
+        ) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "bq-query define: failed to add '{}' listener: {:?}",
+                EVENT_GO_TO_LAST_PAGE, e
+            )));
+        }
         on_event_type_closure.forget();
     }
 }

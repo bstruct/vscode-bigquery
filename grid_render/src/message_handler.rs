@@ -8,44 +8,46 @@ use crate::{
 };
 
 pub async fn handle(event: &web_sys::MessageEvent) {
-    let parse_event = &serde_wasm_bindgen::from_value::<ExternalRequest>(event.data());
-
-    if parse_event.is_err() {
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "error parsing json: {:?}",
-            parse_event.as_ref().unwrap_err()
-        )));
-    } else {
-        let external_request = parse_event.as_ref().unwrap();
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "request_type: {}",
-            external_request.request_type
-        )));
-
-        let q1 = getElementById("q1");
-        if q1.is_some() {
-            let q1 = &q1.unwrap();
-
-            match external_request.request_type.as_str() {
-                "clear" => {
-                    q1.set_inner_html(&"Loading...");
-                }
-                "execute_query" => {
-                    q1.set_inner_html(&"Loading...");
-                    execute_query(q1, external_request);
-                }
-                "preview_table" => {
-                    q1.set_inner_html(&"Loading...");
-                    preview_table(q1, external_request);
-                }
-                "error" => {
-                    show_error(q1, external_request);
-                }
-                _ => {}
-            }
-        } else {
-            web_sys::console::log_1(&JsValue::from("q1 not found"));
+    let external_request = match serde_wasm_bindgen::from_value::<ExternalRequest>(event.data()) {
+        Ok(r) => r,
+        Err(e) => {
+            web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "error parsing json: {:?}",
+                e
+            )));
+            return;
         }
+    };
+
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+        "request_type: {}",
+        external_request.request_type
+    )));
+
+    let q1 = match getElementById("q1") {
+        Some(el) => el,
+        None => {
+            web_sys::console::log_1(&JsValue::from("q1 not found"));
+            return;
+        }
+    };
+
+    match external_request.request_type.as_str() {
+        "clear" => {
+            q1.set_inner_html(&"Loading...");
+        }
+        "execute_query" => {
+            q1.set_inner_html(&"Loading...");
+            execute_query(&q1, &external_request);
+        }
+        "preview_table" => {
+            q1.set_inner_html(&"Loading...");
+            preview_table(&q1, &external_request);
+        }
+        "error" => {
+            show_error(&q1, &external_request);
+        }
+        _ => {}
     }
 }
 
@@ -60,9 +62,18 @@ fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest) {
         )));
 
         let element_id = "bq_script_1";
-        let bq_table = external_request.to_bq_script(element_id);
-        bq_table.render(q1);
-        bq_table.dispatch_on_render_event(q1);
+        match external_request.to_bq_script(element_id) {
+            Some(bq_script) => {
+                bq_script.render(q1);
+                bq_script.dispatch_on_render_event(q1);
+            }
+            None => {
+                web_sys::console::error_1(&JsValue::from_str(
+                    "execute_query: missing required fields (job_reference, project_id, or token)",
+                ));
+                q1.set_inner_html(&"Unexpected error occured.");
+            }
+        }
     } else {
         q1.set_inner_html(&"Unexpected error occured.");
     }
@@ -71,33 +82,44 @@ fn execute_query(q1: &web_sys::Element, external_request: &ExternalRequest) {
 fn preview_table(q1: &web_sys::Element, external_request: &ExternalRequest) {
     q1.set_inner_html(&"");
 
-    if external_request.project_id.is_some()
-        && external_request.dataset_id.is_some()
-        && external_request.table_id.is_some()
-    {
-        let element_id = "bq_table_1";
-        let bq_table = external_request.to_bq_table(element_id);
-        bq_table.render(q1);
-        bq_table.dispatch_on_render_event(&q1);
-    } else {
-        q1.set_inner_html(&"Unexpected error occured.");
+    let element_id = "bq_table_1";
+    match external_request.to_bq_table(element_id) {
+        Some(bq_table) => {
+            bq_table.render(q1);
+            bq_table.dispatch_on_render_event(q1);
+        }
+        None => {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(
+                "preview_table: missing required fields (project_id, dataset_id, table_id, or token)",
+            ));
+            q1.set_inner_html(&"Unexpected error occured.");
+        }
     }
 }
 
 fn show_error(q1: &web_sys::Element, external_request: &ExternalRequest) {
     q1.set_inner_html(&"Loading...");
 
-    let error: &Option<ExternalRequestError> = &external_request.error;
-    if error.is_some() {
-        let error = error.as_ref().unwrap();
+    if let Some(error) = &external_request.error {
         q1.set_inner_html(&"");
 
         let title = &createElement("h3");
         title.set_inner_html(&"ERROR");
-        q1.append_child(title).unwrap();
+        if let Err(e) = q1.append_child(title) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "show_error: failed to append title: {:?}",
+                e
+            )));
+        }
 
         let div_for_table = &createElement("div");
-        q1.append_child(div_for_table).unwrap();
+        if let Err(e) = q1.append_child(div_for_table) {
+            web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(&format!(
+                "show_error: failed to append error table container: {:?}",
+                e
+            )));
+            return;
+        }
 
         error.plot_table(div_for_table);
     } else {
