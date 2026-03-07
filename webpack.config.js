@@ -30,7 +30,7 @@ const extensionConfig = {
     rules: [
       {
         test: /\.ts$/,
-        exclude: /node_modules/,
+        exclude: [/node_modules/, /bqnbRenderer\.ts$/],
         use: [
           {
             loader: 'ts-loader'
@@ -70,4 +70,50 @@ const extensionConfig = {
   },
 };
 
-module.exports = [extensionConfig];
+const rendererConfig = {
+  target: 'web',
+  mode: 'none',
+  entry: './src/notebook/bqnbRenderer.ts',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bqnbRenderer.js',
+    libraryTarget: 'module'
+  },
+  experiments: {
+    outputModule: true
+  },
+  resolve: {
+    extensions: ['.ts', '.js']
+  },
+  module: {
+    parser: {
+      javascript: {
+        importMeta: false
+      }
+    },
+    rules: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              onlyCompileBundledFiles: true,
+              compilerOptions: {
+                module: 'esnext',
+                moduleResolution: 'node'
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  devtool: 'nosources-source-map',
+  infrastructureLogging: {
+    level: "log",
+  },
+};
+
+module.exports = [extensionConfig, rendererConfig];

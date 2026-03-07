@@ -57,6 +57,8 @@ export const SETTING_TABLES = "vscode-bigquery.tables";
 export const AUTHENTICATION_TROUBLESHOOT = "vscode-bigquery.troubleshoot";
 export const OPEN_SETTING_PROJECTS = "vscode-bigquery.open-settings-projects";
 export const OPEN_SETTING_TABLES = "vscode-bigquery.open-settings-tables";
+export const COMMAND_CREATE_NOTEBOOK = "vscode-bigquery.create-notebook";
+export const COMMAND_CREATE_QUERY = "vscode-bigquery.create-query";
 
 export const commandRunQuery = async function (this: any, ...args: any[]) {
 
@@ -372,6 +374,25 @@ export const commandJobOpenQuery = async function (...args: any[]) {
 		});
 		await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
 	}
+};
+
+export const commandCreateNotebook = async function (...args: any[]) {
+	// Create a new Untitled Notebook
+	const uri = vscode.Uri.parse(`untitled:Untitled-${Date.now()}.bqnb`);
+	// A new bigquery notebook
+	const notebookData = new vscode.NotebookData([
+		new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', 'bqsql')
+	]);
+	const doc = await vscode.workspace.openNotebookDocument('bqnb', notebookData);
+	await vscode.window.showNotebookDocument(doc);
+};
+
+export const commandCreateQuery = async function (...args: any[]) {
+	const doc = await vscode.workspace.openTextDocument({
+		language: 'bqsql',
+		content: ''
+	});
+	await vscode.window.showTextDocument(doc);
 };
 
 export const commandViewTable = async function (...args: any[]) {

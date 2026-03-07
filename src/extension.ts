@@ -21,6 +21,8 @@ import { QueryResultsVisualizationType } from './services/queryResultsVisualizat
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 import { GcpAuthenticationTreeDataProvider } from './activitybar/gcpAuthenticationTreeDataProvider';
 import { COMMAND_SEARCH, commandSearch } from './search/searchCommand';
+import { BqnbSerializer } from './notebook/bqnbSerializer';
+import { BqnbController } from './notebook/bqnbController';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 // export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -278,6 +280,20 @@ export function activate(context: ExtensionContext) {
 		)
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_CREATE_NOTEBOOK,
+			commands.commandCreateNotebook
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_CREATE_QUERY,
+			commands.commandCreateQuery
+		)
+	);
+
 	// bigquery-search command (opens editor-tab search panel)
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
@@ -386,6 +402,12 @@ export function activate(context: ExtensionContext) {
 
 	// Copilot chat participant (@bigquery)
 	registerBqsqlCopilotParticipant(context);
+
+	// Notebook Contributions
+	context.subscriptions.push(
+		vscode.workspace.registerNotebookSerializer('bqnb', new BqnbSerializer())
+	);
+	context.subscriptions.push(new BqnbController());
 
 	//later
 	// context.subscriptions.push(

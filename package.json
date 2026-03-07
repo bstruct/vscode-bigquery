@@ -22,8 +22,7 @@
 	"activationEvents": [
 		"onView:bigquery-main-activity-bar",
 		"onWebviewPanel:bigquery-table-results",
-		"onWebviewPanel:authentication-troubleshoot",
-		"onLanguage:bqsql"
+		"onWebviewPanel:authentication-troubleshoot"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -113,6 +112,27 @@
 						"name": "schema",
 						"description": "Show the schemas of all tables referenced in the current query"
 					}
+				]
+			}
+		],
+		"notebooks": [
+			{
+				"type": "bqnb",
+				"displayName": "BigQuery Notebook",
+				"selector": [
+					{
+						"filenamePattern": "*.bqnb"
+					}
+				]
+			}
+		],
+		"notebookRenderer": [
+			{
+				"id": "bstruct-bqnb-grid",
+				"displayName": "BigQuery Grid Renderer",
+				"entrypoint": "./dist/bqnbRenderer.js",
+				"mimeTypes": [
+					"application/x-bstruct-bqnb-grid"
 				]
 			}
 		],
@@ -229,6 +249,16 @@
 			{
 				"command": "vscode-bigquery.job-open-query",
 				"title": "BigueryView: Open script for job"
+			},
+			{
+				"command": "vscode-bigquery.create-notebook",
+				"title": "BigueryView: Create New Notebook",
+				"icon": "$(notebook)"
+			},
+			{
+				"command": "vscode-bigquery.create-query",
+				"title": "BigueryView: Create New Query",
+				"icon": "$(new-file)"
 			}
 		],
 		"menus": {
@@ -236,12 +266,12 @@
 				{
 					"command": "vscode-bigquery.run-query",
 					"group": "navigation@-3",
-					"when": "editorLangId == bqsql"
+					"when": "editorLangId == bqsql && !notebookEditorFocused"
 				},
 				{
 					"command": "vscode-bigquery.run-selected-query",
 					"group": "navigation@-2",
-					"when": "editorLangId == bqsql"
+					"when": "editorLangId == bqsql && !notebookEditorFocused"
 				}
 			],
 			"view/title": [
@@ -269,6 +299,16 @@
 					"command": "vscode-bigquery.job-toggle-my-jobs",
 					"group": "navigation",
 					"when": "view == 'bigquery-job-data-provider'"
+				},
+				{
+					"command": "vscode-bigquery.create-notebook",
+					"group": "navigation@1",
+					"when": "view == 'bigquery-tree-data-provider'"
+				},
+				{
+					"command": "vscode-bigquery.create-query",
+					"group": "navigation@2",
+					"when": "view == 'bigquery-tree-data-provider'"
 				}
 			],
 			"view/item/context": [
@@ -352,12 +392,12 @@
 			{
 				"command": "vscode-bigquery.run-query",
 				"key": "Ctrl+Enter",
-				"when": "editorLangId == bqsql"
+				"when": "editorLangId == bqsql && !notebookEditorFocused"
 			},
 			{
 				"command": "vscode-bigquery.run-selected-query",
 				"key": "Ctrl+E",
-				"when": "editorLangId == bqsql"
+				"when": "editorLangId == bqsql && !notebookEditorFocused"
 			},
 			{
 				"command": "vscode-bigquery.search",
@@ -392,6 +432,7 @@
 		"@types/node": "16.x",
 		"@types/uuid": "^9.0.0",
 		"@types/vscode": "^1.90.0",
+		"@types/vscode-notebook-renderer": "^1.72.4",
 		"@typescript-eslint/eslint-plugin": "^8.56.0",
 		"@typescript-eslint/parser": "^8.56.0",
 		"@vscode/test-electron": "^2.1.5",
