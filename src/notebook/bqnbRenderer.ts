@@ -66,6 +66,7 @@ async function ensureInitialized(): Promise<void> {
 
 interface RendererContext {
     readonly workspace: unknown;
+    postMessage?(message: unknown): void;
 }
 
 interface OutputItem {
@@ -75,6 +76,17 @@ interface OutputItem {
 }
 
 export function activate(_ctx: RendererContext) {
+    // The Rust WASM generates click handlers that call `vscode.postMessage(...)`.
+    // In the notebook renderer iframe, acquireVsCodeApi() is unavailable, so we
+    // provide a shim that forwards messages via the renderer context.
+    if (!(window as any).vscode) {
+        (window as any).vscode = {
+            postMessage: (msg: unknown) => { _ctx.postMessage?.(msg); },
+            getState: () => undefined,
+            setState: (_s: unknown) => {},
+        };
+    }
+
     return {
         async renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
 

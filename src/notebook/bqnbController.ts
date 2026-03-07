@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getBigQueryClient } from '../extensionCommands';
+import { getBigQueryClient, COMMAND_DOWNLOAD_CSV, COMMAND_DOWNLOAD_JSONL, COMMAND_SEND_PUBSUB } from '../extensionCommands';
 
 export class BqnbController {
     private readonly controllerId = 'bqnb-controller';
@@ -20,6 +20,22 @@ export class BqnbController {
         this._controller.supportedLanguages = this.supportedLanguages;
         this._controller.supportsExecutionOrder = true;
         this._controller.executeHandler = this._execute.bind(this);
+
+        const messaging = vscode.notebooks.createRendererMessaging('bstruct-bqnb-grid');
+        messaging.onDidReceiveMessage(e => {
+            const msg = e.message as any;
+            if (!msg?.command) { return; }
+            const data = {
+                command: msg.command,
+                jobReference: msg.job_reference,
+                tableReference: msg.table_reference,
+            };
+            switch (msg.command) {
+                case 'download_csv': vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV, data); break;
+                case 'download_jsonl': vscode.commands.executeCommand(COMMAND_DOWNLOAD_JSONL, data); break;
+                case 'send_pubsub': vscode.commands.executeCommand(COMMAND_SEND_PUBSUB, data); break;
+            }
+        });
     }
 
     public dispose(): void {
@@ -52,7 +68,7 @@ export class BqnbController {
             const jobWait: any = await job.promise();
 
             // We try to handle SCRIPT and straightforward executions here
-            const jobMeta = jobWait[1] as any;
+            const jobMeta = jobWait[0] as any;
             const statementType: string = jobMeta?.statistics?.query?.statementType || '';
 
             let outputJobs: any[] = [];

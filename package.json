@@ -133,7 +133,8 @@
 				"entrypoint": "./dist/bqnbRenderer.js",
 				"mimeTypes": [
 					"application/x-bstruct-bqnb-grid"
-				]
+				],
+				"requiresMessaging": "optional"
 			}
 		],
 		"commands": [
