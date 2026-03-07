@@ -225,6 +225,10 @@
 			{
 				"command": "vscode-bigquery.job-load-more",
 				"title": "BigueryView: Load more jobs"
+			},
+			{
+				"command": "vscode-bigquery.job-open-query",
+				"title": "BigueryView: Open script for job"
 			}
 		],
 		"menus": {
@@ -328,7 +332,7 @@
 				},
 				{
 					"id": "bigquery-job-data-provider",
-					"name": "Job",
+					"name": "Jobs",
 					"contextualTitle": "BigQuery",
 					"type": "tree",
 					"icon": "$(history)"

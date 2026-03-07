@@ -52,7 +52,8 @@ export class JobTreeDataProvider implements vscode.TreeDataProvider<JobTreeItem>
             const [jobs, nextQuery] = await bqClient.bigQuery.getJobs({
                 maxResults: PAGE_SIZE,
                 allUsers: !myJobsOnly,
-                pageToken: pageToken
+                pageToken: pageToken,
+                projection: 'full'
             });
 
             this.nextPageToken = nextQuery?.pageToken;
@@ -79,15 +80,17 @@ export class JobTreeDataProvider implements vscode.TreeDataProvider<JobTreeItem>
 
                 const email = job.metadata?.user_email || '';
                 const query = job.metadata?.configuration?.query?.query || '';
-                const shortQuery = query ? query.substring(0, 50) + (query.length > 50 ? '...' : '') : 'No query';
+                const shortQuery = query ? query.replace(/\n/g, ' ').substring(0, 60) + (query.length > 60 ? '...' : '') : 'No query';
 
                 const item = new JobTreeItem(
                     JobTreeItemType.job,
                     job.id || null,
-                    job.id || 'Unknown Job',
+                    shortQuery,
                     `${state} ${creationTime ? '- ' + creationTime : ''}`,
                     vscode.TreeItemCollapsibleState.None,
-                    `User: ${email}\nState: ${state}\nQuery: ${shortQuery}`
+                    `Job ID: ${job.id || 'Unknown Job'}\nUser: ${email}\nState: ${state}\nQuery: ${query}`,
+                    undefined,
+                    query
                 );
                 item.iconPath = new vscode.ThemeIcon(icon);
                 this.cachedJobs.push(item);

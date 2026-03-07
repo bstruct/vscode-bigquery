@@ -50,6 +50,7 @@ export const COMMAND_PLOT_CHART = "vscode-bigquery.plot-chart";
 export const COMMAND_JOB_REFRESH = "vscode-bigquery.job-refresh";
 export const COMMAND_JOB_TOGGLE_MY_JOBS = "vscode-bigquery.job-toggle-my-jobs";
 export const COMMAND_JOB_LOAD_MORE = "vscode-bigquery.job-load-more";
+export const COMMAND_JOB_OPEN_QUERY = "vscode-bigquery.job-open-query";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 export const SETTING_PROJECTS = "vscode-bigquery.projects";
 export const SETTING_TABLES = "vscode-bigquery.tables";
@@ -359,6 +360,17 @@ export const commandJobLoadMore = async function (...args: any[]) {
 	const item = args[0] as import('./activitybar/jobTreeItem').JobTreeItem;
 	if (item && item.pageToken) {
 		await jobTreeDataProvider.loadMore(item.pageToken);
+	}
+};
+
+export const commandJobOpenQuery = async function (...args: any[]) {
+	const item = args[0] as import('./activitybar/jobTreeItem').JobTreeItem;
+	if (item && item.queryText) {
+		const doc = await vscode.workspace.openTextDocument({
+			language: 'bqsql',
+			content: item.queryText
+		});
+		await vscode.commands.executeCommand<vscode.TextDocumentShowOptions>("vscode.open", doc.uri);
 	}
 };
 

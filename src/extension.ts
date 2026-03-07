@@ -203,6 +203,13 @@ export function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_JOB_OPEN_QUERY,
+			commands.commandJobOpenQuery
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_SET_DEFAULT_PROJECT,
 			commands.commandSetDefaultProject
 		)
