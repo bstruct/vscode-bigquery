@@ -15,6 +15,10 @@ export class BigQueryClient {
 		this.bqclient = new BigQuery({ 'projectId': projId });
 	}
 
+	public get bigQuery(): BigQuery {
+		return this.bqclient;
+	}
+
 	getToken(): Promise<string | null> {
 		return this.bqclient.authClient.getAccessToken()
 			.then(value => {

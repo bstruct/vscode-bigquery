@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { Uri, StatusBarItem, ExtensionContext } from 'vscode';
 // import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authenticationWebviewViewProvider';
 import { BigQueryTreeDataProvider } from './activitybar/treeDataProvider';
+import { JobTreeDataProvider } from './activitybar/jobTreeDataProvider';
 import * as commands from './extensionCommands';
 import { WebviewViewProvider } from './tableResultsPanel/webviewViewProvider';
 // import TelemetryReporter from '@vscode/extension-telemetry';
@@ -25,6 +26,7 @@ export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 // export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
 export const gcpAuthenticationTreeDataProvider = new GcpAuthenticationTreeDataProvider();
 export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
+export const jobTreeDataProvider = new JobTreeDataProvider();
 export const bigqueryTableSchemaService = new BigqueryTableSchemaService();
 
 export const CHART_VIEW_TYPE = "bigquery-query-chart";
@@ -180,6 +182,27 @@ export function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_JOB_REFRESH,
+			commands.commandJobRefresh
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_JOB_TOGGLE_MY_JOBS,
+			commands.commandJobToggleMyJobs
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_JOB_LOAD_MORE,
+			commands.commandJobLoadMore
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_SET_DEFAULT_PROJECT,
 			commands.commandSetDefaultProject
 		)
@@ -283,6 +306,14 @@ export function activate(context: ExtensionContext) {
 		vscode.window.registerTreeDataProvider(
 			'bigquery-tree-data-provider',
 			bigQueryTreeDataProvider
+		)
+	);
+
+	//bigquery-job-data-provider
+	context.subscriptions.push(
+		vscode.window.registerTreeDataProvider(
+			'bigquery-job-data-provider',
+			jobTreeDataProvider
 		)
 	);
 

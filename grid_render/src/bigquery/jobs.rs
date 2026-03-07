@@ -11,19 +11,15 @@ pub struct Jobs {
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct JobConfiguration {
     #[serde(alias = "jobType")]
-    pub job_type: String,
-    pub query: Option<JobConfigurationQuery>,
-    pub load: Option<JobConfigurationLoad>,
-    pub copy: Option<JobConfigurationTableCopy>,
-    pub extract: Option<JobConfigurationExtract>,
+    pub job_type: Option<String>,
+    pub query: Option<serde_json::Value>,
+    pub load: Option<serde_json::Value>,
+    pub copy: Option<serde_json::Value>,
+    pub extract: Option<serde_json::Value>,
     #[serde(alias = "dryRun")]
     pub dry_run: Option<bool>,
     #[serde(alias = "jobTimeoutMs")]
-    pub job_timeout_ms: Option<String>,
-    // "labels": {
-    //   string: string,
-    //   ...
-    // }
+    pub job_timeout_ms: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -243,51 +239,16 @@ pub struct DmlStats {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct JobStatistics {
     #[serde(alias = "creationTime")]
-    pub creation_time: Option<String>,
+    pub creation_time: Option<serde_json::Value>,
     #[serde(alias = "startTime")]
-    pub start_time: Option<String>,
+    pub start_time: Option<serde_json::Value>,
     #[serde(alias = "endTime")]
-    pub end_time: Option<String>,
+    pub end_time: Option<serde_json::Value>,
     #[serde(alias = "totalBytesProcessed")]
-    pub total_bytes_processed: Option<String>,
-    // "completionRatio": number,
-    // "quotaDeferments": [
-    //   string
-    // ],
+    pub total_bytes_processed: Option<serde_json::Value>,
     pub query: Option<JobStatistics2>,
-    // "load": {
-    //   object (JobStatistics3)
-    // },
-    // "extract": {
-    //   object (JobStatistics4)
-    // },
-    // "totalSlotMs": string,
-    // "reservationUsage": [
-    //   {
-    //     "name": string,
-    //     "slotMs": string
-    //   }
-    // ],
-    // "reservation_id": string,
     #[serde(alias = "numChildJobs")]
-    pub num_child_jobs: Option<String>,
-    // "parentJobId": string,
-    // "scriptStatistics": {
-    //   object (ScriptStatistics)
-    // },
-    // "rowLevelSecurityStatistics": {
-    //   object (RowLevelSecurityStatistics)
-    // },
-    // "dataMaskingStatistics": {
-    //   object (DataMaskingStatistics)
-    // },
-    // "transactionInfo": {
-    //   object (TransactionInfo)
-    // },
-    // "sessionInfo": {
-    //   object (SessionInfo)
-    // },
-    // "finalExecutionDurationMs": string
+    pub num_child_jobs: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from './services/bigqueryClient';
-import { bigQueryTreeDataProvider, QUERY_RESULTS_VIEW_TYPE, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE, gcpAuthenticationTreeDataProvider, bigqueryTableSchemaService } from './extension';
+import { bigQueryTreeDataProvider, jobTreeDataProvider, QUERY_RESULTS_VIEW_TYPE, TABLE_RESULTS_VIEW_TYPE, TROUBLESHOOT_VIEW_TYPE, gcpAuthenticationTreeDataProvider, bigqueryTableSchemaService } from './extension';
 // import { ResultsGridRenderRequest } from './tableResultsPanel/resultsGridRenderRequest';
 import { Authentication } from './services/authentication';
 import { BigqueryTreeItem, BigqueryTreeItemType } from './activitybar/bigqueryTreeItem';
@@ -47,6 +47,9 @@ export const COMMAND_DOWNLOAD_CSV = "vscode-bigquery.download-csv";
 export const COMMAND_DOWNLOAD_JSONL = "vscode-bigquery.download-jsonl";
 export const COMMAND_SEND_PUBSUB = "vscode-bigquery.send-pubsub";
 export const COMMAND_PLOT_CHART = "vscode-bigquery.plot-chart";
+export const COMMAND_JOB_REFRESH = "vscode-bigquery.job-refresh";
+export const COMMAND_JOB_TOGGLE_MY_JOBS = "vscode-bigquery.job-toggle-my-jobs";
+export const COMMAND_JOB_LOAD_MORE = "vscode-bigquery.job-load-more";
 export const SETTING_PINNED_PROJECTS = "vscode-bigquery.pinned-projects";
 export const SETTING_PROJECTS = "vscode-bigquery.projects";
 export const SETTING_TABLES = "vscode-bigquery.tables";
@@ -340,6 +343,23 @@ export const commandExplorerRefresh = function (...args: any[]) {
 	bigQueryTreeDataProvider.refresh();
 
 	// getTelemetryReporter()?.sendTelemetryEvent('commandExplorerRefresh', {}, { elapsedMs: Date.now() - t1 });
+};
+
+export const commandJobRefresh = function (...args: any[]) {
+	jobTreeDataProvider.refresh();
+};
+
+export const commandJobToggleMyJobs = async function (...args: any[]) {
+	const currentSetting = vscode.workspace.getConfiguration().get<boolean>('vscode-bigquery.my-jobs-only') ?? true;
+	await vscode.workspace.getConfiguration().update('vscode-bigquery.my-jobs-only', !currentSetting, vscode.ConfigurationTarget.Global);
+	jobTreeDataProvider.refresh();
+};
+
+export const commandJobLoadMore = async function (...args: any[]) {
+	const item = args[0] as import('./activitybar/jobTreeItem').JobTreeItem;
+	if (item && item.pageToken) {
+		await jobTreeDataProvider.loadMore(item.pageToken);
+	}
 };
 
 export const commandViewTable = async function (...args: any[]) {
