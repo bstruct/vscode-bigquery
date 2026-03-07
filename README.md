@@ -1,122 +1,252 @@
-# Bigquery extension for Visual Studio Code
-This extension aims to bring most of the functionality of Bigquery to Visual Studio Code. At the moment is possible to: authenticate ( using the [gcloud CLI](https://cloud.google.com/sdk/docs/install)); list projects, dataset, and tables; view table content; and run queries.
+# BigQuery Extension for Visual Studio Code
+
+A full-featured Google BigQuery extension for VS Code. Authenticate with GCP, browse projects/datasets/tables, run queries with live diagnostics, visualize results, use notebooks, and get schema-aware AI assistance — all without leaving your editor.
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Authentication](#authentication)
+- [Explorer](#explorer)
+- [Running Queries](#running-queries)
+- [Query Results](#query-results)
+- [Notebooks](#notebooks)
+- [Language Features](#language-features)
+- [Copilot Chat Integration](#copilot-chat-integration)
+- [Search](#search)
+- [Job History](#job-history)
+- [Export & Publish](#export--publish)
+- [Settings](#settings)
+- [Keyboard Shortcuts](#keyboard-shortcuts)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
+---
+
+## Prerequisites
+
+The [Google Cloud CLI (`gcloud`)](https://cloud.google.com/sdk/docs/install) must be installed. This extension uses `gcloud` for all authentication.
+
+---
 
 ## Authentication
-The authentication is taken care of by the [gcloud CLI](https://cloud.google.com/sdk/docs/install). Therefore, gcloud CLI must be installed. This extension makes a visual representation of what is provided by that console application.
 
-<img src="documentation/authentication.png" alt="authentication" width="500"/>
+Open the **BigQuery** activity bar (side panel) and expand the **Authentication** section. The panel is organized into three groups:
 
-The three buttons "User login", "User login + GDrive" and "Service account" reflect the three possible ways of authenticating the requests. Either user personal authentication is used, where the computer browser will be opened requesting authentication to Google Cloud for the options "User login" and "User login + GDrive". Use the "GDrive" option to be able to browse and select tables based on Google Drive. Or, a service account key file (json format) must be selected when requested by pressing the button "Service account".
+<img src="documentation/authentication.png" alt="authentication panel" width="300"/>
 
-For environments where opening a browser is not possible (e.g. remote SSH sessions), the command `Bigquery: User login (no browser launch)` opens an integrated terminal and runs `gcloud auth login` with the `--no-launch-browser` flag. A URL will be printed in the terminal that can be copied into a browser on another machine to complete the authentication flow.
+### Authenticated
 
-When there's a valid account active and with the necessary permissions to interact with bigquery, this extension is ready to be used.
+Lists all `gcloud` accounts currently available on the machine. The active account is marked with **[ACTIVE]**. Inline actions on each account allow you to:
 
-Additional functionality to activate and revoke authentication accounts is also provided.
+- **Activate** — switch the active `gcloud` account (used for all subsequent BigQuery requests).
+- **Remove** — revoke the account credentials.
 
-This screen is refreshed programmatically every time a change is detected. Additionally, refreshing the authentication screen can be done my executing the command `Bigquery: Authentication refresh`.
+Once an account is active and has the necessary BigQuery permissions, the extension is ready to use.
 
-## Projects, Dataset, and Tables tree
-In the Bigquery side panel, sub panel "explorer", a tree of projects, datasets, tables, views, functions, and ML models are available. Compared with the tree available in the Bigquery interface in the Google Cloud portal, the "saved queries" are missing. Other than that, it should be like-for-like. 
+### Add authentication
 
-<img src="documentation/explorer_tree.png" alt="explorer tree" width="600"/>
+| Option | Description |
+|--------|-------------|
+| **user login** | Opens the system browser for Google Cloud authentication. Sets up Application Default Credentials so the extension can make BigQuery API calls. |
+| **user login plus google drive** | Same browser-based flow, with additional Google Drive scope enabled. Required to query Google Sheets-backed external tables. |
+| **user login no browser launch** | For headless or remote SSH sessions where a browser cannot be opened. Runs `gcloud auth login --no-launch-browser` in an integrated terminal and prints a URL that can be copied to a browser on another machine to complete authentication. |
+| **service account** | Opens a file picker to select a service account JSON key file. The key is copied to the Application Default Credentials location. |
 
-Refresh the explorer screen, which can be done by executing the command `Bigquery: Explorer refresh`.
+### Problems authenticating?
 
-Is possible to change the default project that queries will run against.
+| Option | Description |
+|--------|-------------|
+| **troubleshoot** | Opens a dedicated webview panel with step-by-step guidance for the most common authentication and permission issues (see [Troubleshooting](#troubleshooting)). |
+| **gcloud init** | Opens an integrated terminal and runs `gcloud init` to perform a full Google Cloud CLI setup — useful for first-time configuration or resetting the active project and account. |
 
-## Views, tables, and DDL
+The authentication panel refreshes automatically when changes are detected, or manually via the command **`BigueryView: Authentication refresh`** or the refresh button in the panel toolbar.
 
-For `views` and `tables` is possible to access the menu via right-click.
-<img src="documentation/explorer_tree_menu.png" alt="explorer tree menu" width="600"/>
-- Create query: opens a new query editor with a basic SELECT FROM statement.
-- Preview: That opens a window with the table representation of the table. For external tables and views, a `SELECT *` statement will be run internally in order to show the results of the table.
-<img src="documentation/explorer_tree_table.png" alt="explorer tree table" width="600"/>
-- Open DDL: Opens a new `.bqsql` editor containing the full DDL (`CREATE` statement) for the selected table or view. The table schema is also pre-loaded into the auto-completion cache, so column completions are immediately available in the opened document.
+---
 
-## Settings
+## Explorer
 
-There are three different settings possible to configure.
-- Pin a project
-- Add GCP projects to the list (when there's no full access to the project)
-- Add Bigquery tables to the list (when there's no full access to the dataset)
+The **Explorer** panel displays a hierarchical tree of your GCP resources:
 
+**Projects → Datasets → Tables / Views / Routines / Models**
 
-To make changes at <b>user level</b>, meaning, that can be synced between computers under the same login, the settings must be modified via the settings menu and change the associated file.
+<img src="documentation/explorer_tree.png" alt="explorer tree" width="400"/>
 
-<img src="documentation/settings_menu.png" alt="settings menu" width="600"/>
-<br />
-<br />
+Key features:
+- **Distinct icons** for regular tables, partitioned tables, views, external tables, linked datasets, routines (procedures/UDFs), and ML models.
+- **Shard grouping** — tables following the `name_YYYYMMDD` naming pattern are collapsed into a single group.
+- **Pagination** — datasets with many tables show a "Load more…" node.
+- **Set default project** — choose which project queries run against (inline button on each project).
+- **Pin/Unpin projects** — pinned projects are sorted to the top of the list.
 
-### Pin a project
+### Context menu actions
 
-In order to influence the order of the different GCP projects on the list, is possible to pin one or more to stay on top of the list.
+Right-click tables, views, routines, or models to access:
 
-<img src="documentation/project_set_default.png" alt="set default project" width="600"/>
+<img src="documentation/explorer_tree_menu.png" alt="explorer tree context menu" width="400"/>
 
-<img src="documentation/pin_unpin_project.png" alt="pin/unpin project" width="600"/>
+| Action | Available on | Description |
+|--------|-------------|-------------|
+| **Create query** | Tables, Models | Opens a new `.bqsql` editor with a template query (`SELECT … FROM` for tables, `ML.PREDICT`/`ML.FORECAST` for models). Partition-aware — adds a `WHERE` clause for time-partitioned tables. |
+| **Open DDL** | Tables, Views, Routines, Models | Opens a new `.bqsql` editor with the full `CREATE` statement reconstructed from API metadata — no billable query is run. The table schema is pre-loaded for auto-completion. |
+| **Preview** | Tables, Views | Opens a data preview panel. For views and external tables, a `SELECT *` query is run internally. |
 
-By using the command shown in the image above, the local settings will be changed. 
+### Toolbar buttons
 
-<img src="documentation/settings_file.png" alt="setting file" width="600"/>
+The Explorer panel toolbar provides quick access to:
+- **Refresh** — reload the tree.
+- **Search** — open the [search panel](#search).
+- **Create Notebook** — create a new `.bqnb` notebook.
+- **Create Query** — create a new empty `.bqsql` file.
 
-### Add GCP projects
-For the cases where the user only has read permissions into Bigquery at dataset level, the normal list of projects will not detect the correspondent project. In this case, is possible to force a project to be listed and consequentially the dataset will also be listed.
+---
 
-### Add Bigquery tables
-When permission is given to a table, not a correspondent dataset or project, is possible to configure table IDs to assure that they are listed and can benefit from the usual functionality.
+## Running Queries
 
-<img src="documentation/setting_add_table.png" alt="add table" width="600"/>
+This extension registers the `.bqsql` file extension for BigQuery SQL. Create or open a `.bqsql` file to get started.
 
-## Run queries
-This extension responds to files with the extension `.bqsql`. The querie(s) in the editor can be run using the key `Ctrl+Enter` ( same as in the Google Cloud portal ), executing the command `Biguery: Run Query` or pressing the dedicated button in the file editor.
+| Action | Shortcut | Command |
+|--------|----------|---------|
+| **Run all queries** in the editor | `Ctrl+Enter` | `BigueryView: Run Query` |
+| **Run selected query** (text selection only) | `Ctrl+E` | `BigueryView: Run Selected Query` |
 
-To run only the query selected in the text can be done by the key combination `Ctrl+E`, using the command `Biguery: Run Selected Query` or pressing the dedicated button in the editor window. (<img src="documentation/run_selected_query_icon.png" alt="" width="20"/>)
+Both actions are also available as buttons in the editor title bar.
 
-<img src="documentation/file_explorer_query_result.png" alt="file explorer" width="900"/>
+<img src="documentation/file_explorer_query_result.png" alt="query execution and results" width="900"/>
 
-After the query returns a response, the bottom panel of Visual Studio code will be made visible with the selected tab `Bigquery: Query results`. There, the query results are displayed with the usual pagination functionality. For convenience, is possible to open the same query results in another tab for side-by-side comparisons or further persistence. The results in the bottom panel will only represent the latest query execution.
+Multi-statement scripts are fully supported — child jobs are resolved automatically.
 
-As visible in the image above, syntax highlight is very poor at the moment. Intellisence has too few features. This will be the next improvement's biggest area. 
+### Live diagnostics
 
-The query in the editor is evaluated with every change. If there are errors in the query, they will be underlined
+Every change in the editor triggers a [dry-run](https://cloud.google.com/bigquery/docs/dry-run-queries) validation against BigQuery:
 
-### Inlay hints
+- **Errors** are underlined in the editor with descriptive messages. Missing table references are highlighted directly on the table identifier.
 
-Inlay hints are registered for `.bqsql` files. When implemented, they will show inline annotations (e.g. column types or expression labels) directly in the editor without modifying the source text. This feature is currently under development.
+<img src="documentation/query_error.png" alt="query error diagnostics" width="600"/>
 
-<img src="documentation/query_error.png" alt="query error" width="600"/>
+- **Bytes estimate** — when the query is valid, the status bar shows the estimated bytes that will be processed.
 
-If the query is valid, the number of bytes that will be consumed will appear in the bottom bar
+<img src="documentation/query_size_evaluation.png" alt="bytes estimate in status bar" width="600"/>
 
-<img src="documentation/query_size_evaluation.png" alt="query error" width="600"/>
+---
 
-## Download CSV
+## Query Results
 
-After a query has run, in the result grid, there's the option of downloading the same results in CSV format. The file generated supports multiline but not nested complex objects. 
-There is no limit size/row number imposed in this feature, so please be aware of the effort that will be asked of your computer.
+Query results open in a panel with **three tabs**:
 
-<img src="documentation/download_csv.png" alt="file explorer" width="200"/>
+### Results
 
+A high-performance data grid powered by a custom Rust/WASM renderer. The grid supports pagination and an integrated find widget.
 
-## Download JSONL
-After a query has run, in the result grid, when focused, there's the option of downloading the same results in [jsonl](https://jsonlines.org/) format. 
+From the results grid you can:
+- **Download CSV** — export all rows to a `.csv` file.
+- **Download JSONL** — export all rows as newline-delimited JSON.
+- **Send to Pub/Sub** — publish rows to a Google Cloud Pub/Sub topic.
 
-<img src="documentation/download_jsonl.png" alt="download jsonl" width="200"/>
+See [Export & Publish](#export--publish) for details on each.
 
-There is no limit size/row number imposed in this feature, so please be aware of the effort that will be asked of your computer.
-<br />
-<br />
+### Visualization
 
-## Send to Pub/Sub
+Built-in charting powered by [Chart.js](https://www.chartjs.org/). Available chart types:
 
-It's possible to publish messages in Google Cloud Pub/Sub based on the row information. One message per row. 
-In order to produce a valid query that can be send to Pub/Sub there must be a column with the name `data` that can be of the type `STRING` or `JSON`. 
-Optionally, it possible to define the `attributes` of the message in a column with the same name. This column needs to be of the type `RECORD` as shown below.
+- Bar, Line, Scatter, Pie, Doughnut
 
+Select columns for the X and Y axes, then click **Render** to generate the chart. Supports up to 10,000 rows.
+
+### Job Information
+
+Displays the full BigQuery job metadata: job ID, project, location, statement type, bytes processed, timing, configuration, and statistics.
+
+---
+
+## Notebooks
+
+BigQuery Notebooks (`.bqnb` files) provide a cell-based workflow similar to Jupyter, but for BigQuery SQL.
+
+- Each cell uses the `bqsql` language with full syntax highlighting and completions.
+- Execute cells individually; results appear inline with the same grid, chart, and job-info tabs as the query results panel.
+- Multi-statement scripts are split into separate outputs per child job.
+- Export actions (CSV, JSONL, Pub/Sub) are available directly from notebook cell outputs.
+- Create a new notebook with the **`BigueryView: Create New Notebook`** command or the toolbar button in the Explorer panel.
+
+---
+
+## Language Features
+
+The following editor features are available in `.bqsql` files:
+
+| Feature | Description |
+|---------|-------------|
+| **Syntax highlighting** | TextMate grammar with semantic token enhancements for keywords, numbers, strings, operators, identifiers, and comments. |
+| **Code completion** | Context-aware suggestions: column names (from live BigQuery schemas), SQL functions, keywords. Dot-trigger (`alias.`) provides columns for the referenced table. Multi-table queries show qualified `alias.column` completions. CTE columns are resolved locally without API calls. |
+| **Diagnostics** | Real-time dry-run error highlighting with bytes-processed estimates in the status bar. |
+| **Snippets** | Registered for the `bqsql` language. |
+| **Bracket matching & folding** | Auto-closing pairs, comment toggling, and code folding. |
+
+---
+
+## Copilot Chat Integration
+
+The extension registers a **`@bigquery`** chat participant for GitHub Copilot Chat, providing schema-aware SQL assistance.
+
+| Command | Description |
+|---------|-------------|
+| `@bigquery` *(freeform)* | Ask any BigQuery SQL question. The assistant automatically loads schemas for all tables referenced in the active `.bqsql` editor. |
+| `@bigquery /explain` | Get a step-by-step plain-English explanation of the current query. |
+| `@bigquery /optimize` | Receive cost and performance optimization suggestions (partition pruning, bytes reduction, full-scan avoidance). |
+| `@bigquery /schema` | Display a formatted table of all referenced table schemas with column names, types, partition keys, and descriptions. |
+
+---
+
+## Search
+
+**Command:** `BigQuery: Search datasets, tables, columns…`
+**Shortcut:** `Ctrl+Shift+F10` (macOS: `Cmd+Shift+F10`)
+
+Opens a search panel powered by the [Dataplex Universal Catalog API](https://cloud.google.com/dataplex/docs/search-for-resources) — no billable BigQuery jobs are used.
+
+- Search across datasets, tables, views, and models.
+- Each result shows its kind with a badge and icon.
+- Click **Open** to preview a table or **Create Query** to generate a template query.
+- Paginated results with a "Load more" button.
+
+> **Note:** The Dataplex API must be enabled on your GCP project. If it is not, the extension will display activation instructions.
+
+---
+
+## Job History
+
+The **Jobs** panel in the activity bar lists recent BigQuery jobs.
+
+- Each job shows its state (success, failed, running), creation time, user, and a query preview.
+- **Toggle "My jobs only"** to filter between all project jobs and your own jobs.
+- **Load more** to paginate through history (50 jobs per page).
+- **Open query** — click a job to open its SQL in a new `.bqsql` editor.
+- **Refresh** the list manually via the toolbar button.
+
+---
+
+## Export & Publish
+
+All export actions are available from the results grid (after running a query or previewing a table).
+
+### Download CSV
+
+Exports all result rows to a `.csv` file. Supports multiline cell values. Paginates in batches of 10,000 rows.
+
+### Download JSONL
+
+Exports all result rows as [newline-delimited JSON](https://jsonlines.org/). Includes a progress notification with cancellation support.
+
+### Send to Pub/Sub
+
+Publishes query result rows as messages to a Google Cloud Pub/Sub topic (one message per row). Sends in batches of 1,000 messages with progress tracking and cancellation.
+
+**Requirements:**
+- The query must include a column named `data` of type `STRING` or `JSON`.
+- Optionally, include a column named `attributes` of type `RECORD` to set message attributes.
 
 ```sql
-SELECT 
+SELECT
     (
     SELECT AS STRUCT
         "my test test" AS test,
@@ -128,36 +258,66 @@ SELECT
 FROM `dataset.table` t
 ```
 
-
-This menu will be available in the result grid window, when focused.
-
 <img src="documentation/send_to_pubsub.png" alt="send to Pub/Sub" width="200"/>
 
+When prompted, enter the full topic name: `projects/<project_id>/topics/<topic_name>`.
 
-After invoking this feature, please put the topic name into the input box.
-Please use the topic name with normal shape `projects/<project_id>/topics/<topic_name>`.
+<img src="documentation/send_to_pubsub_topic_name.png" alt="Pub/Sub topic name input" width="200"/>
 
-<img src="documentation/send_to_pubsub_topic_name.png" alt="send to Pub/Sub" width="200"/>
+> **Warning:** There is no row limit on any export. Large result sets will require significant memory and time.
 
-There is no limit size/row number imposed in this feature, so please be aware of the effort that will be asked of your computer.
-<br />
-<br />
+---
 
-<!-- ### Known Issues -->
+## Settings
 
-### Troubleshooting
+Configure the extension via VS Code settings (`Preferences: Open Settings`) or the settings JSON file.
 
-The command `Bigquery: Authentication troubleshoot` opens a dedicated panel with guidance for the most common authentication and permission problems, including:
-- How to verify that the Google Cloud CLI is correctly set up and has an active account.
-- Steps to take when a GCP project is not listed in the explorer because permissions were granted at dataset or table level.
-- A workaround for a Windows-specific issue where credential changes are not picked up due to caching (involves deleting `application_default_credentials.json` from the gcloud configuration folder).
+<img src="documentation/settings_menu.png" alt="settings menu" width="600"/>
 
-Sometimes, after this extension is installed, the command `Bigquery: Run query` is not able to force open the bottom panel to display the results. Please restart Visual Studio Code when that happens.
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `vscode-bigquery.pinned-projects` | `array` | `[]` | GCP project IDs pinned to the top of the Explorer tree. |
+| `vscode-bigquery.projects` | `array` | `[]` | Additional project IDs to list when only dataset-level permissions exist. |
+| `vscode-bigquery.tables` | `array` | `[]` | Fully-qualified table IDs (`project.dataset.table`) to list when only table-level permissions exist. |
+| `vscode-bigquery.my-jobs-only` | `boolean` | `true` | Show only your own jobs in the Jobs panel. |
 
-<!-- ### Generate a bug report -->
+<img src="documentation/settings_file.png" alt="settings JSON" width="600"/>
 
-## Project board
-Available in github: https://github.com/orgs/bstruct/projects/1/views/2.
+### Adding projects without full access
 
-## Report a bug
-Please file an issue most descriptive as possible at https://github.com/bstruct/vscode-bigquery/issues.
+If you only have read permissions at the dataset or table level, the project won't appear automatically. Add the project ID to `vscode-bigquery.projects`, and its datasets will be listed.
+
+### Adding individual tables
+
+When access is granted to specific tables only, add their fully-qualified IDs to `vscode-bigquery.tables`.
+
+<img src="documentation/setting_add_table.png" alt="add table setting" width="600"/>
+
+---
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Enter` | Run all queries in the active `.bqsql` editor |
+| `Ctrl+E` | Run selected query text |
+| `Ctrl+Shift+F10` (`Cmd+Shift+F10` on macOS) | Open BigQuery search |
+
+---
+
+## Troubleshooting
+
+Run the command **`BigueryView: troubleshoot`** to open a dedicated panel with guidance for common issues:
+
+- Verifying the Google Cloud CLI is installed and has an active account.
+- Listing projects when only dataset- or table-level permissions are available.
+- Resolving a Windows-specific credential caching issue (deleting `application_default_credentials.json` from the `gcloud` configuration folder).
+
+If the results panel does not open after running a query for the first time, restart VS Code.
+
+---
+
+## Contributing
+
+- **Project board:** [github.com/orgs/bstruct/projects/1/views/2](https://github.com/orgs/bstruct/projects/1/views/2)
+- **Report a bug:** [github.com/bstruct/vscode-bigquery/issues](https://github.com/bstruct/vscode-bigquery/issues)

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { Uri, StatusBarItem, ExtensionContext } from 'vscode';
 // import { BigqueryAuthenticationWebviewViewProvider } from './activitybar/authenticationWebviewViewProvider';
 import { BigQueryTreeDataProvider } from './activitybar/treeDataProvider';
+import { JobTreeDataProvider } from './activitybar/jobTreeDataProvider';
 import * as commands from './extensionCommands';
 import { WebviewViewProvider } from './tableResultsPanel/webviewViewProvider';
 // import TelemetryReporter from '@vscode/extension-telemetry';
@@ -20,11 +21,14 @@ import { QueryResultsVisualizationType } from './services/queryResultsVisualizat
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 import { GcpAuthenticationTreeDataProvider } from './activitybar/gcpAuthenticationTreeDataProvider';
 import { COMMAND_SEARCH, commandSearch } from './search/searchCommand';
+import { BqnbSerializer } from './notebook/bqnbSerializer';
+import { BqnbController } from './notebook/bqnbController';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 // export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
 export const gcpAuthenticationTreeDataProvider = new GcpAuthenticationTreeDataProvider();
 export const bigQueryTreeDataProvider = new BigQueryTreeDataProvider();
+export const jobTreeDataProvider = new JobTreeDataProvider();
 export const bigqueryTableSchemaService = new BigqueryTableSchemaService();
 
 export const CHART_VIEW_TYPE = "bigquery-query-chart";
@@ -50,6 +54,24 @@ export function getExtensionUri(): Uri {
 export function activate(context: ExtensionContext) {
 
 	extensionUri = context.extensionUri;
+
+	// --- What's New notification on version update ---
+	const currentVersion = context.extension.packageJSON.version;
+	const previousVersion = context.globalState.get<string>('extensionVersion');
+	if (previousVersion !== currentVersion) {
+		context.globalState.update('extensionVersion', currentVersion);
+		if (previousVersion !== undefined) {
+			vscode.window.showInformationMessage(
+				`BigQuery Data View updated to v${currentVersion}!`,
+				"What's New"
+			).then(selection => {
+				if (selection === "What's New") {
+					const changelogUri = vscode.Uri.joinPath(context.extensionUri, 'CHANGELOG.md');
+					vscode.commands.executeCommand('markdown.showPreview', changelogUri);
+				}
+			});
+		}
+	}
 
 	let queryResultsWebviewMapping: Map<string, ResultsRender> = new Map<string, ResultsRender>();
 
@@ -180,6 +202,34 @@ export function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
+			commands.COMMAND_JOB_REFRESH,
+			commands.commandJobRefresh
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_JOB_TOGGLE_MY_JOBS,
+			commands.commandJobToggleMyJobs
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_JOB_LOAD_MORE,
+			commands.commandJobLoadMore
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_JOB_OPEN_QUERY,
+			commands.commandJobOpenQuery
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
 			commands.COMMAND_SET_DEFAULT_PROJECT,
 			commands.commandSetDefaultProject
 		)
@@ -248,6 +298,20 @@ export function activate(context: ExtensionContext) {
 		)
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_CREATE_NOTEBOOK,
+			commands.commandCreateNotebook
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			commands.COMMAND_CREATE_QUERY,
+			commands.commandCreateQuery
+		)
+	);
+
 	// bigquery-search command (opens editor-tab search panel)
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
@@ -283,6 +347,14 @@ export function activate(context: ExtensionContext) {
 		vscode.window.registerTreeDataProvider(
 			'bigquery-tree-data-provider',
 			bigQueryTreeDataProvider
+		)
+	);
+
+	//bigquery-job-data-provider
+	context.subscriptions.push(
+		vscode.window.registerTreeDataProvider(
+			'bigquery-job-data-provider',
+			jobTreeDataProvider
 		)
 	);
 
@@ -348,6 +420,12 @@ export function activate(context: ExtensionContext) {
 
 	// Copilot chat participant (@bigquery)
 	registerBqsqlCopilotParticipant(context);
+
+	// Notebook Contributions
+	context.subscriptions.push(
+		vscode.workspace.registerNotebookSerializer('bqnb', new BqnbSerializer())
+	);
+	context.subscriptions.push(new BqnbController());
 
 	//later
 	// context.subscriptions.push(

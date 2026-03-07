@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.3.2",
+	"version": "0.5.0",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -21,12 +21,8 @@
 	],
 	"activationEvents": [
 		"onView:bigquery-main-activity-bar",
-		"onView:bigquery-authentication",
-		"onView:bigquery-tree-data-provider",
-		"onWebviewPanel:bigquery-query-results",
 		"onWebviewPanel:bigquery-table-results",
-		"onWebviewPanel:authentication-troubleshoot",
-		"onLanguage:bqsql"
+		"onWebviewPanel:authentication-troubleshoot"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -53,6 +49,12 @@
 					"scope": "machine-overridable",
 					"title": "Table full name",
 					"description": "Tables that need to be listed, but there's no explicit permission to the project nor dataset, only the table"
+				},
+				"vscode-bigquery.my-jobs-only": {
+					"type": "boolean",
+					"default": true,
+					"title": "My Jobs Only",
+					"description": "Show only my jobs in the Job view"
 				}
 			}
 		},
@@ -111,6 +113,28 @@
 						"description": "Show the schemas of all tables referenced in the current query"
 					}
 				]
+			}
+		],
+		"notebooks": [
+			{
+				"type": "bqnb",
+				"displayName": "BigQuery Notebook",
+				"selector": [
+					{
+						"filenamePattern": "*.bqnb"
+					}
+				]
+			}
+		],
+		"notebookRenderer": [
+			{
+				"id": "bstruct-bqnb-grid",
+				"displayName": "BigQuery Grid Renderer",
+				"entrypoint": "./dist/bqnbRenderer.js",
+				"mimeTypes": [
+					"application/x-bstruct-bqnb-grid"
+				],
+				"requiresMessaging": "optional"
 			}
 		],
 		"commands": [
@@ -208,6 +232,34 @@
 				"command": "vscode-bigquery.search",
 				"title": "BigQuery: Search datasets, tables, columns…",
 				"icon": "$(search)"
+			},
+			{
+				"command": "vscode-bigquery.job-refresh",
+				"title": "BigueryView: Job refresh",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "vscode-bigquery.job-toggle-my-jobs",
+				"title": "BigueryView: Toggle my jobs only",
+				"icon": "$(filter)"
+			},
+			{
+				"command": "vscode-bigquery.job-load-more",
+				"title": "BigueryView: Load more jobs"
+			},
+			{
+				"command": "vscode-bigquery.job-open-query",
+				"title": "BigueryView: Open script for job"
+			},
+			{
+				"command": "vscode-bigquery.create-notebook",
+				"title": "BigueryView: Create New Notebook",
+				"icon": "$(notebook)"
+			},
+			{
+				"command": "vscode-bigquery.create-query",
+				"title": "BigueryView: Create New Query",
+				"icon": "$(new-file)"
 			}
 		],
 		"menus": {
@@ -215,12 +267,12 @@
 				{
 					"command": "vscode-bigquery.run-query",
 					"group": "navigation@-3",
-					"when": "editorLangId == bqsql"
+					"when": "editorLangId == bqsql && !notebookEditorFocused"
 				},
 				{
 					"command": "vscode-bigquery.run-selected-query",
 					"group": "navigation@-2",
-					"when": "editorLangId == bqsql"
+					"when": "editorLangId == bqsql && !notebookEditorFocused"
 				}
 			],
 			"view/title": [
@@ -238,6 +290,26 @@
 					"command": "vscode-bigquery.search",
 					"group": "navigation",
 					"when": "view == bigquery-tree-data-provider"
+				},
+				{
+					"command": "vscode-bigquery.job-refresh",
+					"group": "navigation",
+					"when": "view == 'bigquery-job-data-provider'"
+				},
+				{
+					"command": "vscode-bigquery.job-toggle-my-jobs",
+					"group": "navigation",
+					"when": "view == 'bigquery-job-data-provider'"
+				},
+				{
+					"command": "vscode-bigquery.create-notebook",
+					"group": "navigation@1",
+					"when": "view == 'bigquery-tree-data-provider'"
+				},
+				{
+					"command": "vscode-bigquery.create-query",
+					"group": "navigation@2",
+					"when": "view == 'bigquery-tree-data-provider'"
 				}
 			],
 			"view/item/context": [
@@ -289,13 +361,22 @@
 					"id": "bigquery-authentication",
 					"name": "Authentication",
 					"contextualTitle": "BigQuery",
-					"type": "tree"
+					"type": "tree",
+					"icon": "$(key)"
 				},
 				{
 					"id": "bigquery-tree-data-provider",
 					"name": "Explorer",
 					"contextualTitle": "BigQuery",
-					"type": "tree"
+					"type": "tree",
+					"icon": "$(list-tree)"
+				},
+				{
+					"id": "bigquery-job-data-provider",
+					"name": "Jobs",
+					"contextualTitle": "BigQuery",
+					"type": "tree",
+					"icon": "$(history)"
 				}
 			]
 		},
@@ -312,12 +393,12 @@
 			{
 				"command": "vscode-bigquery.run-query",
 				"key": "Ctrl+Enter",
-				"when": "editorLangId == bqsql"
+				"when": "editorLangId == bqsql && !notebookEditorFocused"
 			},
 			{
 				"command": "vscode-bigquery.run-selected-query",
 				"key": "Ctrl+E",
-				"when": "editorLangId == bqsql"
+				"when": "editorLangId == bqsql && !notebookEditorFocused"
 			},
 			{
 				"command": "vscode-bigquery.search",
@@ -352,6 +433,7 @@
 		"@types/node": "16.x",
 		"@types/uuid": "^9.0.0",
 		"@types/vscode": "^1.90.0",
+		"@types/vscode-notebook-renderer": "^1.72.4",
 		"@typescript-eslint/eslint-plugin": "^8.56.0",
 		"@typescript-eslint/parser": "^8.56.0",
 		"@vscode/test-electron": "^2.1.5",
@@ -370,6 +452,7 @@
 		"@types/gapi.client.bigquery-v2": "^0.0.4",
 		"@vscode/codicons": "^0.0.44",
 		"@vscode/webview-ui-toolkit": "^1.2.2",
+		"chart.js": "^4.5.1",
 		"csv-writer": "^1.6.0",
 		"grid_render": "file://.//grid_render/pkg"
 	}

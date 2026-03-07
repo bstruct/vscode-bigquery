@@ -91,7 +91,16 @@ impl BigqueryScriptCustomElement {
             Some(1)
         } else {
             match job.statistics.as_ref() {
-                Some(statistics) => parse_to_usize(statistics.num_child_jobs.clone()),
+                Some(statistics) => {
+                    let s = statistics.num_child_jobs.as_ref().map(|v| {
+                        if v.is_string() {
+                            v.as_str().unwrap().to_string()
+                        } else {
+                            v.to_string()
+                        }
+                    });
+                    parse_to_usize(s)
+                },
                 None => None,
             }
         };
