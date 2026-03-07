@@ -23,7 +23,8 @@
 		"onView:bigquery-main-activity-bar",
 		"onWebviewPanel:bigquery-table-results",
 		"onWebviewPanel:authentication-troubleshoot",
-		"onLanguage:bqsql"
+		"onLanguage:bqsql",
+		"onNotebook:bqnb"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -86,6 +87,15 @@
 			{
 				"language": "bqsql",
 				"path": "./resources/language/snippets.json"
+			}
+		],
+		"notebooks": [
+			{
+				"type": "bqnb",
+				"displayName": "BigQuery Notebook",
+				"selector": [
+					{ "filenamePattern": "*.bqnb" }
+				]
 			}
 		],
 		"configurationDefaults": {

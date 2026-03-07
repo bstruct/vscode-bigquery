@@ -21,6 +21,8 @@ import { QueryResultsVisualizationType } from './services/queryResultsVisualizat
 import { TroubleshootSerializer } from './activitybar/troubleshootSerializer';
 import { GcpAuthenticationTreeDataProvider } from './activitybar/gcpAuthenticationTreeDataProvider';
 import { COMMAND_SEARCH, commandSearch } from './search/searchCommand';
+import { BqNotebookSerializer } from './notebook/bqNotebookSerializer';
+import { BqNotebookController } from './notebook/bqNotebookController';
 
 export const bigqueryWebviewViewProvider = new WebviewViewProvider();
 // export const authenticationWebviewProvider = new BigqueryAuthenticationWebviewViewProvider();
@@ -355,6 +357,15 @@ export function activate(context: ExtensionContext) {
 			new TroubleshootSerializer()
 		)
 	);
+
+	// bqnb notebook serializer
+	context.subscriptions.push(
+		vscode.workspace.registerNotebookSerializer('bqnb', new BqNotebookSerializer())
+	);
+
+	// bqnb notebook controller
+	const bqNotebookController = new BqNotebookController();
+	context.subscriptions.push({ dispose: () => bqNotebookController.dispose() });
 
 	//language
 	const baseDiagnostics = vscode.languages.createDiagnosticCollection('base_diagnostics');
