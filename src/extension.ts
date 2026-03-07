@@ -55,6 +55,24 @@ export function activate(context: ExtensionContext) {
 
 	extensionUri = context.extensionUri;
 
+	// --- What's New notification on version update ---
+	const currentVersion = context.extension.packageJSON.version;
+	const previousVersion = context.globalState.get<string>('extensionVersion');
+	if (previousVersion !== currentVersion) {
+		context.globalState.update('extensionVersion', currentVersion);
+		if (previousVersion !== undefined) {
+			vscode.window.showInformationMessage(
+				`BigQuery Data View updated to v${currentVersion}!`,
+				"What's New"
+			).then(selection => {
+				if (selection === "What's New") {
+					const changelogUri = vscode.Uri.joinPath(context.extensionUri, 'CHANGELOG.md');
+					vscode.commands.executeCommand('markdown.showPreview', changelogUri);
+				}
+			});
+		}
+	}
+
 	let queryResultsWebviewMapping: Map<string, ResultsRender> = new Map<string, ResultsRender>();
 
 	// try {
