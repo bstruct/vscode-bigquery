@@ -116,4 +116,41 @@ const rendererConfig = {
   },
 };
 
-module.exports = [extensionConfig, rendererConfig];
+const chartGlobalConfig = {
+  target: 'web',
+  mode: 'none',
+  entry: './src/charts/chartGlobal.ts',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'chartGlobal.js',
+  },
+  resolve: {
+    extensions: ['.ts', '.js']
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              onlyCompileBundledFiles: true,
+              compilerOptions: {
+                module: 'esnext',
+                moduleResolution: 'node'
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  devtool: 'nosources-source-map',
+  infrastructureLogging: {
+    level: "log",
+  },
+};
+
+module.exports = [extensionConfig, rendererConfig, chartGlobalConfig];

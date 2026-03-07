@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
 import { TextDecoder, TextEncoder } from 'util';
 
-/**
- * Interface representing the JSON structure of a .bqnb file.
- */
+const GRID_MIME = 'application/x-bstruct-bqnb-grid';
+
 interface BqnbData {
     cells: BqnbCell[];
 }
@@ -12,6 +11,17 @@ interface BqnbCell {
     kind: vscode.NotebookCellKind;
     value: string;
     languageId: string;
+    outputs?: BqnbOutputGroup[];
+}
+
+/** One NotebookCellOutput = one group of MIME items */
+interface BqnbOutputGroup {
+    items: BqnbOutputItem[];
+}
+
+interface BqnbOutputItem {
+    mime: string;
+    data: any;
 }
 
 export class BqnbSerializer implements vscode.NotebookSerializer {
@@ -25,20 +35,26 @@ export class BqnbSerializer implements vscode.NotebookSerializer {
         try {
             raw = <BqnbData>JSON.parse(contents);
         } catch {
-            // fallback if file is empty or corrupted
             raw = undefined;
         }
 
         if (!raw || !raw.cells || raw.cells.length === 0) {
-            // Provide a default empty cell if file is brand new
             return new vscode.NotebookData([
                 new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', 'bqsql')
             ]);
         }
 
-        const cells = raw.cells.map(
-            item => new vscode.NotebookCellData(item.kind, item.value, item.languageId)
-        );
+        const cells = raw.cells.map(item => {
+            const cell = new vscode.NotebookCellData(item.kind, item.value, item.languageId);
+            if (item.outputs && item.outputs.length > 0) {
+                cell.outputs = item.outputs.map(group =>
+                    new vscode.NotebookCellOutput(
+                        group.items.map(i => vscode.NotebookCellOutputItem.json(i.data, i.mime))
+                    )
+                );
+            }
+            return cell;
+        });
 
         return new vscode.NotebookData(cells);
     }
@@ -50,11 +66,33 @@ export class BqnbSerializer implements vscode.NotebookSerializer {
         const contents: BqnbData = { cells: [] };
 
         for (const cell of data.cells) {
-            contents.cells.push({
+            const serializedOutputs: BqnbOutputGroup[] = [];
+
+            for (const output of (cell.outputs || [])) {
+                const gridItem = output.items.find(i => i.mime === GRID_MIME);
+                if (!gridItem) { continue; }
+
+                try {
+                    const payload = JSON.parse(new TextDecoder().decode(gridItem.data));
+                    // Strip token — it expires; controller will refresh on open
+                    const { token: _t, ...payloadWithoutToken } = payload;
+                    serializedOutputs.push({
+                        items: [{ mime: GRID_MIME, data: payloadWithoutToken }]
+                    });
+                } catch {
+                    // skip malformed output
+                }
+            }
+
+            const cellData: BqnbCell = {
                 kind: cell.kind,
                 languageId: cell.languageId,
-                value: cell.value
-            });
+                value: cell.value,
+            };
+            if (serializedOutputs.length > 0) {
+                cellData.outputs = serializedOutputs;
+            }
+            contents.cells.push(cellData);
         }
 
         return new TextEncoder().encode(JSON.stringify(contents, null, 2));
