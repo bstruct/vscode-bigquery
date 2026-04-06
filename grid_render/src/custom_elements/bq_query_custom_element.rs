@@ -158,6 +158,9 @@ impl BigqueryQueryCustomElement {
         GetQueryResultsRequest {
             project_id: self.project_id.clone(),
             job_id: self.job_id.clone(),
+            // Pass the job's location so the getQueryResults request includes the `location`
+            // query parameter. Jobs outside the default US region return a 404 without it.
+            location: Some(self.location.clone()),
             start_index: Some(self.page_start_index.clone().to_string()),
             max_results: Some(self.page_size),
         }

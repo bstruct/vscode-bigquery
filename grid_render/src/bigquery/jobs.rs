@@ -393,9 +393,12 @@ impl Job {
 pub struct GetQueryResultsRequest {
     pub project_id: String,
     pub job_id: String,
+    /// The BigQuery region where the job was created (e.g. "southamerica-east1", "US", "EU").
+    /// Required for jobs outside the default US region — omitting it causes a 404 from the API.
+    /// See: https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/getQueryResults
+    pub location: Option<String>,
     pub start_index: Option<String>,
     pub max_results: Option<usize>,
-    // formatOptions: DataFormatOptions;
 }
 
 #[derive(Debug)]
@@ -630,11 +633,17 @@ impl Jobs {
             request.project_id, request.job_id
         );
 
-        // if (request.location) { url.searchParams.append("location", request.location); }
         if request.max_results.is_some() {
             url = format!("{}?maxResults={}", url, request.max_results.unwrap());
         } else {
             url = format!("{}?maxResults=50", url);
+        }
+        // Append the `location` query parameter so the API can route the request to the correct
+        // region. Without this, jobs created outside the default US region return a 404.
+        if let Some(location) = &request.location {
+            if !location.is_empty() {
+                url = format!("{}&location={}", url, location);
+            }
         }
         if request.start_index.is_some() {
             url = format!("{}&startIndex={}", url, request.start_index.unwrap());
