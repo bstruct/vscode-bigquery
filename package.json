@@ -428,12 +428,13 @@
 		"package-dev": "vsce package --pre-release"
 	},
 	"devDependencies": {
-		"@types/glob": "^7.2.0",
+		"@types/glob": "^8.1.0",
 		"@types/mocha": "^9.1.1",
 		"@types/node": "16.x",
 		"@types/uuid": "^9.0.0",
 		"@types/vscode": "^1.90.0",
 		"@types/vscode-notebook-renderer": "^1.72.4",
+		"@types/eslint-scope": "^3.7.11",
 		"@typescript-eslint/eslint-plugin": "^8.56.0",
 		"@typescript-eslint/parser": "^8.56.0",
 		"@vscode/test-electron": "^2.1.5",
