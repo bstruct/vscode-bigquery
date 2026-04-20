@@ -4,6 +4,10 @@ All notable changes to the **BigQuery Data View** extension are documented here.
 
 ---
 
+## 0.5.1
+
+- **Fix** - Included `location` parameter in `getQueryResults` API request (Issue #90).
+
 ## 0.5.0
 
 ### BigQuery Notebooks are here! 🎉
