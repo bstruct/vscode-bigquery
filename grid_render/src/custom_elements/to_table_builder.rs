@@ -110,34 +110,70 @@ fn value_char_len(v: &TableValue) -> usize {
     }
 }
 
-/// Set `width_px` on every column starting from `start_col` using the wider of
-/// header vs. content.  Columns before `start_col` are left untouched.
+/// Longest content, in characters, per flat leaf column.
+///
+/// Cells of nested inner tables (arrays and repeated records) are mapped back to
+/// the flat column they occupy, starting at the inner table's `start_col_index`,
+/// so a column is sized by the widest value shown in it at any nesting level.
+fn collect_column_char_lens(cells: &[TableValue], start_col: usize, lens: &mut Vec<usize>) {
+    let mut col = start_col;
+    for cell in cells {
+        match cell {
+            TableValue::Array(inner) => {
+                for row in &inner.rows {
+                    collect_column_char_lens(&row.cells, inner.start_col_index, lens);
+                }
+                col += inner.col_span.max(1);
+            }
+            other => {
+                if col >= lens.len() {
+                    lens.resize(col + 1, 0);
+                }
+                lens[col] = lens[col].max(value_char_len(other));
+                col += 1;
+            }
+        }
+    }
+}
+
+/// Set `width_px` on every leaf column whose flat index is `>= start_col`, using
+/// the wider of header text vs. content (including nested-table content).
+/// Columns before `start_col` are left untouched.
 fn patch_column_widths_from(
     columns: &mut Vec<TableColumnDefinition>,
     rows: &[TableRow],
     start_col: usize,
 ) {
-    for (col_idx, col_def) in columns.iter_mut().enumerate() {
-        if col_idx < start_col {
-            continue;
-        }
-        match col_def {
-            TableColumnDefinition::Column(col) => {
+    let mut lens: Vec<usize> = Vec::new();
+    for row in rows {
+        collect_column_char_lens(&row.cells, 0, &mut lens);
+    }
+
+    let mut flat_index = 0usize;
+    for col_def in columns.iter_mut() {
+        patch_definition_widths(col_def, &lens, &mut flat_index, start_col);
+    }
+}
+
+fn patch_definition_widths(
+    col_def: &mut TableColumnDefinition,
+    lens: &[usize],
+    flat_index: &mut usize,
+    start_col: usize,
+) {
+    match col_def {
+        TableColumnDefinition::Column(col) => {
+            if *flat_index >= start_col {
                 let header_chars = col.text.chars().count();
-                let max_content_chars = rows
-                    .iter()
-                    .filter_map(|r| r.cells.get(col_idx))
-                    .map(value_char_len)
-                    .max()
-                    .unwrap_or(0);
-                let desired =
-                    header_chars.max(max_content_chars) * CHAR_WIDTH_PX + CELL_PADDING_PX;
+                let content_chars = lens.get(*flat_index).copied().unwrap_or(0);
+                let desired = header_chars.max(content_chars) * CHAR_WIDTH_PX + CELL_PADDING_PX;
                 col.width_px = clamp_width(desired);
             }
-            TableColumnDefinition::Group(group) => {
-                // RECORD fields: the row cell is a TableValue::Array (inner table).
-                // Size sub-columns from their header text since there is no flat content.
-                patch_group_header_widths(&mut group.columns);
+            *flat_index += 1;
+        }
+        TableColumnDefinition::Group(group) => {
+            for child in group.columns.iter_mut() {
+                patch_definition_widths(child, lens, flat_index, start_col);
             }
         }
     }
@@ -155,18 +191,6 @@ pub(crate) fn patch_all_column_widths(
     rows: &[TableRow],
 ) {
     patch_column_widths_from(columns, rows, 0);
-}
-
-fn patch_group_header_widths(cols: &mut Vec<TableColumnDefinition>) {
-    for col_def in cols.iter_mut() {
-        match col_def {
-            TableColumnDefinition::Column(col) => {
-                let desired = col.text.chars().count() * CHAR_WIDTH_PX + CELL_PADDING_PX;
-                col.width_px = clamp_width(desired);
-            }
-            TableColumnDefinition::Group(g) => patch_group_header_widths(&mut g.columns),
-        }
-    }
 }
 
 impl GetQueryResultsResponse {
@@ -770,5 +794,116 @@ mod tests {
         let response =
             load_query_results(include_str!("test_resources/complex_nested_test.json"));
         assert_table_builder_matches_response(&response, 1);
+    }
+
+    /// Flat leaf index at which a top-level field starts (the "#" column is 0).
+    fn flat_start(schema: &crate::bigquery::base::TableSchema, name: &str) -> usize {
+        let mut index = 1;
+        for field in &schema.fields {
+            if field.name == name {
+                return index;
+            }
+            index += field
+                .fields
+                .as_deref()
+                .map(super::count_leaf_fields)
+                .unwrap_or(1);
+        }
+        panic!("field {} not found", name);
+    }
+
+    /// Arrays nested inside arrays of structs must keep the flat column indexes
+    /// of the outer table, otherwise their cells cannot line up with the headers.
+    #[test]
+    fn nested_array_cells_keep_flat_column_indexes() {
+        let response =
+            load_query_results(include_str!("test_resources/complex_nested_test.json"));
+        let table = response.to_table_builder(1);
+        let schema = response.schema.as_ref().unwrap();
+
+        let start = flat_start(schema, "array_struct_with_inner_array");
+        let outer = table.rows[0]
+            .cells
+            .iter()
+            .find_map(|c| match c {
+                TableValue::Array(inner) if inner.start_col_index == start => Some(inner),
+                _ => None,
+            })
+            .expect("array_struct_with_inner_array cell");
+
+        // dept_id, dept_name, members
+        assert_eq!(outer.col_span, 3);
+        assert_eq!(outer.rows.len(), 3);
+
+        for inner_row in &outer.rows {
+            assert_eq!(inner_row.cells.len(), 3);
+            match &inner_row.cells[2] {
+                TableValue::Array(members) => {
+                    assert_eq!(members.start_col_index, start + 2);
+                    assert_eq!(members.col_span, 1);
+                    assert!(members.rows.iter().all(|r| r.cells.len() == 1));
+                }
+                other => panic!("expected members array, got {:?}", other),
+            }
+        }
+
+        // A repeated record nested inside a non-repeated struct keeps its offset too.
+        let mixed_start = flat_start(schema, "complex_mixed_struct");
+        // version(1) + permissions(1) + preferences(dark_mode, locale, email_enabled, sms_enabled = 4)
+        let feature_flags_start = mixed_start + 1 + 1 + 4;
+        let feature_flags = table.rows[0]
+            .cells
+            .iter()
+            .find_map(|c| match c {
+                TableValue::Array(inner) if inner.start_col_index == feature_flags_start => {
+                    Some(inner)
+                }
+                _ => None,
+            })
+            .expect("feature_flags cell");
+        assert_eq!(feature_flags.col_span, 2);
+        assert_eq!(feature_flags.rows.len(), 3);
+    }
+
+    /// Column widths must account for values shown inside nested tables, not only
+    /// for the header text of grouped columns.
+    #[test]
+    fn column_widths_include_nested_array_content() {
+        let long = "x".repeat(40);
+        let json = format!(
+            r#"{{
+                "kind": "bigquery#getQueryResultsResponse",
+                "etag": "e",
+                "jobReference": {{"projectId": "p", "jobId": "j", "location": "US"}},
+                "totalBytesProcessed": "0",
+                "jobComplete": true,
+                "totalRows": "1",
+                "schema": {{"fields": [
+                    {{"name": "items", "type": "RECORD", "mode": "REPEATED", "fields": [
+                        {{"name": "k", "type": "STRING", "mode": "NULLABLE"}},
+                        {{"name": "tags", "type": "STRING", "mode": "REPEATED"}}
+                    ]}}
+                ]}},
+                "rows": [{{"f": [{{"v": [{{"v": {{"f": [{{"v": "a"}}, {{"v": [{{"v": "{}"}}]}}]}}}}]}}]}}]
+            }}"#,
+            long
+        );
+        let response = load_query_results(&json);
+        let table = response.to_table_builder(1);
+
+        let group = match &table.columns[1] {
+            TableColumnDefinition::Group(g) => g,
+            other => panic!("expected group column, got {:?}", other),
+        };
+        let width = |d: &TableColumnDefinition| match d {
+            TableColumnDefinition::Column(c) => c.width_px,
+            other => panic!("expected leaf column, got {:?}", other),
+        };
+
+        assert_eq!(width(&group.columns[0]), super::MIN_COL_WIDTH_PX);
+        assert_eq!(
+            width(&group.columns[1]),
+            40 * super::CHAR_WIDTH_PX + super::CELL_PADDING_PX
+        );
     }
 }

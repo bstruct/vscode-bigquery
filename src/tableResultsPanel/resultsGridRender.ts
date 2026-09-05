@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { getExtensionUri } from '../extension';
 import { COMMAND_DOWNLOAD_CSV, COMMAND_DOWNLOAD_JSONL, COMMAND_SEND_PUBSUB } from '../extensionCommands';
 import { ResultsGridRenderRequestV2 } from './resultsGridRenderRequestV2';
+import { copyCellValueToClipboard, openCellValueInEditor } from './cellValue';
 
 //https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
 
@@ -31,19 +32,23 @@ export class ResultsGridRender {
     }
 
     public static executeCommand(c: any) {
-        if ((c as any).command) {
-            const command = (c as any).command;
-            const data = {
-                tableReference: (c as any).table_reference,
-                jobReference: (c as any).job_reference,
-                command: command,
-            };
+        const command = c?.command;
+        if (!command) {
+            return;
+        }
 
-            switch (command) {
-                case "download_csv": { vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV, data); }
-                case "download_jsonl": { vscode.commands.executeCommand(COMMAND_DOWNLOAD_JSONL, data); }
-                case "send_pubsub": { vscode.commands.executeCommand(COMMAND_SEND_PUBSUB, data); }
-            }
+        const data = {
+            tableReference: c.table_reference,
+            jobReference: c.job_reference,
+            command: command,
+        };
+
+        switch (command) {
+            case "download_csv": vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV, data); break;
+            case "download_jsonl": vscode.commands.executeCommand(COMMAND_DOWNLOAD_JSONL, data); break;
+            case "send_pubsub": vscode.commands.executeCommand(COMMAND_SEND_PUBSUB, data); break;
+            case "copy_cell_value": copyCellValueToClipboard(String(c.text ?? '')); break;
+            case "open_cell_value": openCellValueInEditor(String(c.text ?? '')); break;
         }
     }
 

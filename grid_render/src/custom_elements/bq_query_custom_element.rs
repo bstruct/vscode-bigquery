@@ -524,6 +524,7 @@ impl BaseElementTrait for BigqueryQueryCustomElement {
 
         let css_content = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/grid.css"));
         shadow.append_child_style(css_content, "style1");
+        super::cell_tools::install(&bq_query.element());
 
         if let Some(table_builder) = &self.table_builder {
             if let Ok(render) = table_builder.render() {
@@ -660,6 +661,11 @@ mod tests {
 
         let c = shadow.first_element_child().unwrap();
         assert_eq!(c.tag_name().to_lowercase(), "style");
+
+        // cell toolbar always sits right after the style element
+        let c = c.next_element_sibling().unwrap();
+        assert_eq!(c.tag_name().to_lowercase(), "div");
+        assert_eq!(c.get_attribute("be_id").unwrap(), super::super::cell_tools::TOOLS_BE_ID);
 
         let c = c.next_element_sibling().unwrap();
         assert_eq!(c.tag_name().to_lowercase(), "div");

@@ -2,6 +2,7 @@ pub(crate) mod bq_table_custom_element;
 pub(crate) mod bq_script_custom_element;
 pub(crate) mod bq_query_custom_element;
 mod bq_common_custom_element;
+pub(crate) mod cell_tools;
 mod bq_to_table;
 mod custom_element_definition;
 mod data_table_controls_element;

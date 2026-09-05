@@ -1,0 +1,34 @@
+table {
+    table-layout: fixed;
+    border-spacing: 0;
+    font-family: monospace;
+    border-collapse: collapse;
+}
+
+table thead {
+    position: sticky;
+    top: -1px;
+}
+
+table tr {
+    height: 20px;
+    vertical-align: top;
+}
+
+table td,
+table th {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 10px;
+}
+
+table td:hover {
+    overflow: scroll;
+    text-overflow: unset;
+}
+
+table th div.resizable {
+    overflow: auto;
+    resize: horizontal;
+}

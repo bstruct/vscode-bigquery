@@ -3,7 +3,7 @@ use wasm_bindgen::JsValue;
 
 use crate::{
     createElement,
-    external_request::{ExternalRequest, ExternalRequestError},
+    external_request::ExternalRequest,
     getElementById,
 };
 

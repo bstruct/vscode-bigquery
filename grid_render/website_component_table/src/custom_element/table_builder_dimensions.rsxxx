@@ -1,0 +1,197 @@
+use crate::TableBuilder;
+
+impl TableBuilder {
+    pub(crate) fn calculate_total_height(&self) -> usize {
+        let row_count = calculate_header_row_count(&self.columns) + self.rows.len();
+
+        row_count * 20usize
+    }
+
+    pub(crate) fn get_widths(&self) -> Vec<usize> {
+        self.columns
+            .iter()
+            .flat_map(|col| col.get_widths())
+            .collect()
+    }
+}
+
+// fn calculate_widths(
+//     column: &crate::TableColumnDefinition,
+// ) -> Box<dyn std::iter::Iterator<Item = usize> + '_> {
+//     match column {
+//         crate::TableColumnDefinition::Column(column) => Box::new(std::iter::once(column.width_px)),
+//         crate::TableColumnDefinition::Group(group) => {
+//             Box::new(group.columns.iter().flat_map(|col| calculate_widths(col)))
+//         }
+//     }
+// }
+
+fn calculate_header_row_count(columns: &Vec<crate::TableColumnDefinition>) -> usize {
+    columns
+        .iter()
+        .map(|col| calculate_column_depth(col))
+        .max()
+        .unwrap_or(0)
+}
+
+fn calculate_column_depth(column: &crate::TableColumnDefinition) -> usize {
+    match column {
+        crate::TableColumnDefinition::Column(_) => 1,
+        crate::TableColumnDefinition::Group(group) => {
+            let child_depths: Vec<usize> = group
+                .columns
+                .iter()
+                .map(|child| calculate_column_depth(child))
+                .collect();
+            1 + child_depths.into_iter().max().unwrap_or(0)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{TableColumn, TableColumnDefinition, TableColumnGroup};
+
+    #[test]
+    fn test_calculate_header_row_count_single_level() {
+        let columns = vec![
+            TableColumnDefinition::Column(TableColumn {
+                name: "col1".to_string(),
+                text: "Column 1".to_string(),
+                width_px: 100,
+            }),
+            TableColumnDefinition::Column(TableColumn {
+                name: "col2".to_string(),
+                text: "Column 2".to_string(),
+                width_px: 150,
+            }),
+        ];
+
+        assert_eq!(calculate_header_row_count(&columns), 1);
+    }
+
+    #[test]
+    fn test_calculate_header_row_count_with_group() {
+        let columns = vec![
+            TableColumnDefinition::Column(TableColumn {
+                name: "id".to_string(),
+                text: "ID".to_string(),
+                width_px: 80,
+            }),
+            TableColumnDefinition::Group(TableColumnGroup {
+                name: "user_info".to_string(),
+                text: "User Information".to_string(),
+                columns: vec![
+                    TableColumnDefinition::Column(TableColumn {
+                        name: "first_name".to_string(),
+                        text: "First Name".to_string(),
+                        width_px: 120,
+                    }),
+                    TableColumnDefinition::Column(TableColumn {
+                        name: "last_name".to_string(),
+                        text: "Last Name".to_string(),
+                        width_px: 120,
+                    }),
+                ],
+            }),
+        ];
+
+        assert_eq!(calculate_header_row_count(&columns), 2); // 1 for group header + 1 for columns
+    }
+
+    #[test]
+    fn test_calculate_header_row_count_nested_groups() {
+        let columns = vec![
+            TableColumnDefinition::Column(TableColumn {
+                name: "id".to_string(),
+                text: "ID".to_string(),
+                width_px: 80,
+            }),
+            TableColumnDefinition::Group(TableColumnGroup {
+                name: "contact".to_string(),
+                text: "Contact Details".to_string(),
+                columns: vec![
+                    TableColumnDefinition::Column(TableColumn {
+                        name: "email".to_string(),
+                        text: "Email".to_string(),
+                        width_px: 200,
+                    }),
+                    TableColumnDefinition::Group(TableColumnGroup {
+                        name: "phone".to_string(),
+                        text: "Phone".to_string(),
+                        columns: vec![
+                            TableColumnDefinition::Column(TableColumn {
+                                name: "home".to_string(),
+                                text: "Home".to_string(),
+                                width_px: 120,
+                            }),
+                            TableColumnDefinition::Column(TableColumn {
+                                name: "mobile".to_string(),
+                                text: "Mobile".to_string(),
+                                width_px: 120,
+                            }),
+                        ],
+                    }),
+                ],
+            }),
+        ];
+
+        assert_eq!(calculate_header_row_count(&columns), 3); // 1 for contact + 1 for phone + 1 for columns
+    }
+
+    #[test]
+    fn test_calculate_header_row_count_empty() {
+        let columns = vec![];
+        assert_eq!(calculate_header_row_count(&columns), 0);
+    }
+
+    #[test]
+    fn test_calculate_column_depth_single_column() {
+        let column = TableColumnDefinition::Column(TableColumn {
+            name: "test".to_string(),
+            text: "Test".to_string(),
+            width_px: 150,
+        });
+
+        assert_eq!(calculate_column_depth(&column), 1);
+    }
+
+    #[test]
+    fn test_calculate_column_depth_group() {
+        let group = TableColumnDefinition::Group(TableColumnGroup {
+            name: "group".to_string(),
+            text: "Group".to_string(),
+            columns: vec![TableColumnDefinition::Column(TableColumn {
+                name: "col1".to_string(),
+                text: "Col 1".to_string(),
+                width_px: 100,
+            })],
+        });
+
+        assert_eq!(calculate_column_depth(&group), 2);
+    }
+
+    #[test]
+    fn test_calculate_column_depth_deeply_nested() {
+        let group = TableColumnDefinition::Group(TableColumnGroup {
+            name: "level1".to_string(),
+            text: "Level 1".to_string(),
+            columns: vec![TableColumnDefinition::Group(TableColumnGroup {
+                name: "level2".to_string(),
+                text: "Level 2".to_string(),
+                columns: vec![TableColumnDefinition::Group(TableColumnGroup {
+                    name: "level3".to_string(),
+                    text: "Level 3".to_string(),
+                    columns: vec![TableColumnDefinition::Column(TableColumn {
+                        name: "col".to_string(),
+                        text: "Column".to_string(),
+                        width_px: 100,
+                    })],
+                })],
+            })],
+        });
+
+        assert_eq!(calculate_column_depth(&group), 4); // 3 group levels + 1 column level
+    }
+}

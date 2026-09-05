@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Virtual Scrolling Table (IntersectionObserver)</title>
+    <style>
+        #main_container {
+            --total_height: 5000px;
+            --total_width: 3000px;
+            
+            --view_height: 500px;
+            --view_width: 300px;
+
+            --scroll_top: 0px;
+            --scroll_left: 0px;
+        }
+
+        #main_container {
+            overflow: auto;
+            margin: 50px 20px;
+            padding: 0px;
+            height: var(--view_height);
+            background-color: burlywood;
+            overflow-anchor: none; /* Disable Chrome's scroll anchoring */
+            white-space: nowrap; /* Prevent inline-block wrapping */
+        }
+        #margin_top {
+            background-color: lightpink;
+            height: var(--scroll_top);
+        }
+
+        #margin_left{
+            display: inline-block;
+            vertical-align: top;
+            width: var(--scroll_left); 
+            height: var(--view_height);
+            background-color:brown;
+        }
+        #main {
+            display: inline-block;
+            vertical-align: top;
+            height: var(--view_height);
+            width: var(--view_width);
+            background-color: aquamarine;
+        }
+        #margin_right{
+            display: inline-block;
+            vertical-align: top;
+            width: calc(var(--total_width) - var(--view_width) - var(--scroll_left)); 
+            height: var(--view_height); 
+            background-color:chartreuse;
+        }
+        #margin_bottom {
+            background-color: tomato;
+            height: calc(var(--total_height) - var(--view_height) - var(--scroll_top));
+        }
+
+    </style>
+</head>
+
+<body>
+    <h1>Virtual Scrolling Table</h1>
+
+    <div id="main_container" onscroll="sc(this)">
+        <div id="margin_top"></div>
+        <!-- do not format no spaces between the divs -->
+        <div id="margin_left"></div><div id="main"></div><div id="margin_right"></div>
+        <!-- do not format no spaces between the divs -->
+        <div id="margin_bottom"></div>
+    </div>
+
+    <script>
+        var main_container = document.querySelector('#main_container');
+
+        function set_width() {
+            main_container.style.setProperty('--view_width', main_container.clientWidth + 'px');
+            console.log('clientWidth: ' + main_container.clientWidth);
+        }
+        set_width();
+
+        // Use ResizeObserver to detect container resize
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                set_width();
+                sc();
+            }
+        });
+        resizeObserver.observe(main_container);
+
+        // var margin_top = document.querySelector('#margin_top');
+        // var margin_left = document.querySelector('#margin_left');
+        var main = document.querySelector('#main');
+
+        function sc() {
+            // console.log('scrollTop: ' + main_container.scrollTop + ', scrollLeft: ' + main_container.scrollLeft);
+            // Handle vertical scroll
+            let scroll_top = 5000;
+            if (main_container.scrollTop <= scroll_top) {
+                scroll_top = main_container.scrollTop;
+            }
+            main_container.style.setProperty('--scroll_top', scroll_top + 'px');
+
+            // Handle horizontal scroll
+            let scroll_left = 3000 - main_container.clientWidth;
+            if (main_container.scrollLeft <= scroll_left) {
+                scroll_left = main_container.scrollLeft;
+            }
+            main_container.style.setProperty('--scroll_left', '' + scroll_left + 'px');
+
+            update_text();
+        }
+
+        function update_text() {
+            main.innerHTML = 'scrollTop: ' + main_container.scrollTop + 'px, scrollLeft: ' + main_container.scrollLeft + 'px';
+        }
+    </script>
+
+</body>
+
+</html>

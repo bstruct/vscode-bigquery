@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getBigQueryClient, COMMAND_DOWNLOAD_CSV, COMMAND_DOWNLOAD_JSONL, COMMAND_SEND_PUBSUB } from '../extensionCommands';
+import { copyCellValueToClipboard, openCellValueInEditor } from '../tableResultsPanel/cellValue';
 
 export class BqnbController {
     private readonly controllerId = 'bqnb-controller';
@@ -34,6 +35,8 @@ export class BqnbController {
                 case 'download_csv': vscode.commands.executeCommand(COMMAND_DOWNLOAD_CSV, data); break;
                 case 'download_jsonl': vscode.commands.executeCommand(COMMAND_DOWNLOAD_JSONL, data); break;
                 case 'send_pubsub': vscode.commands.executeCommand(COMMAND_SEND_PUBSUB, data); break;
+                case 'copy_cell_value': copyCellValueToClipboard(String(msg.text ?? '')); break;
+                case 'open_cell_value': openCellValueInEditor(String(msg.text ?? '')); break;
             }
         });
 

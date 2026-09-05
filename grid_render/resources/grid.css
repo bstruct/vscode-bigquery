@@ -1,3 +1,59 @@
+:host {
+    display: block;
+    position: relative;
+}
+
+/* Hover toolbar for clipped text cells: Copy / Open (see cell_tools.rs) */
+div[be_id='cell-tools'] {
+    position: absolute;
+    z-index: 11;
+    display: none;
+    align-items: center;
+    gap: 1px;
+    padding: 1px;
+    border-radius: 3px;
+    background-color: var(--vscode-editorWidget-background, #252526);
+    border: 1px solid var(--vscode-editorWidget-border, #454545);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    font-size: 11px;
+    font-family: var(--vscode-font-family);
+    white-space: nowrap;
+}
+
+div[be_id='cell-tools'].visible {
+    display: inline-flex;
+}
+
+div[be_id='cell-tools'] button {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 5px;
+    height: 18px;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 2px;
+    background: transparent;
+    color: var(--vscode-foreground, #cccccc);
+    font-size: 11px;
+    font-family: var(--vscode-font-family);
+    line-height: 1;
+    cursor: pointer;
+}
+
+div[be_id='cell-tools'] button:hover {
+    background-color: var(--vscode-toolbar-hoverBackground, #2a2d2e);
+}
+
+div[be_id='cell-tools'] button[state='done'] {
+    color: var(--vscode-testing-iconPassed, #4caf50);
+}
+
+div[be_id='cell-tools'] button svg {
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
 div[be_id='controls-background'] {
     position: sticky;
     top: 0;

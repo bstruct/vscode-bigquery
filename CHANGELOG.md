@@ -4,6 +4,15 @@ All notable changes to the **BigQuery Data View** extension are documented here.
 
 ---
 
+## Unreleased
+
+- **Fix** - Nested arrays (arrays inside arrays of structs, repeated records inside structs) now line up with their column headers. Inner-table cells carry explicit widths derived from the header columns, including cells that span several columns.
+- **Fix** - Column widths take nested-table content into account, so values inside arrays of structs are no longer squeezed into header-only widths.
+- **Fix** - The CSV / JSONL / Pub/Sub buttons in the results panel triggered all three actions at once (missing `break` in the command dispatcher).
+- **New** - Hovering a text cell whose value is clipped shows a small toolbar: **Copy** puts the full value on the clipboard, **Open** opens it in a new editor tab (JSON values get JSON highlighting). Works in the results panel, table preview and notebook outputs, including cells of nested tables.
+- **Dev** - `grid_render/harness/index.html` renders the wasm grid against the JSON fixtures with a mocked BigQuery endpoint (see the file header for how to run it).
+- **Dev** - The table renderer crate is now a patched local copy under `grid_render/website_component_table` (Cargo `[patch]`), so the grid builds offline and the nested-array fixes live in this repository until they are upstreamed.
+
 ## 0.5.1
 
 - **Fix** - Included `location` parameter in `getQueryResults` API request (Issue #90).

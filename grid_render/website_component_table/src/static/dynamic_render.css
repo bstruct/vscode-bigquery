@@ -1,0 +1,56 @@
+div#viewport {
+  background-color: black;
+  display: block;
+  height: 100%;
+  overflow-anchor: none;
+  overflow: auto;
+  white-space: nowrap;
+  width: 100%;
+}
+
+div#viewport div#margin_top {
+  background-color: lightpink;
+  height: var(--scroll_top);
+}
+
+div#viewport div#margin_left {
+  background-color: lightblue;
+  display: inline-block;
+  vertical-align: top;
+  width: var(--scroll_left);
+  height: var(--view_height);
+}
+
+div#viewport div#display {
+  background-color: lightgreen;
+
+  display: inline-block;
+  vertical-align: top;
+  height: var(--view_height);
+  width: var(--view_width);
+}
+
+div#viewport div#margin_right {
+  background-color: lightyellow;
+
+  display: inline-block;
+  vertical-align: top;
+  width: calc(var(--total_width) - var(--view_width) - var(--scroll_left));
+  height: var(--view_height);
+}
+
+div#viewport div#margin_bottom {
+  background-color: lightgray;
+
+  height: calc(var(--total_height) - var(--view_height) - var(--scroll_top));
+}
+
+table {
+    position: relative;
+    left: var(--displace-left);
+    /* Enable GPU acceleration for smoother animations */
+    will-change: transform;
+    transform: translateZ(0);
+    /* Optional: Add a subtle transition for smoother visual updates */
+    transition: transform 0.1s ease-out;
+}

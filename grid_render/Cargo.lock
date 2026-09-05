@@ -431,7 +431,6 @@ dependencies = [
 [[package]]
 name = "website_component_table"
 version = "0.1.0"
-source = "git+https://github.com/bstruct/website_component_table#4ceb8374d558fdae65ec3175ae8ffb8f87092a4e"
 dependencies = [
  "website_base",
 ]

@@ -1,0 +1,2368 @@
+[
+  {
+    "Pim_Value": "",
+    "AttributeValueCategory": "",
+    "Colour_PDP": "",
+    "Width_accessoires": "",
+    "Height_accessoires": "",
+    "Lining": "",
+    "Shop_by_Sport": "",
+    "Not_searchable": null,
+    "Exclusive_Access": "",
+    "Promo_Activity": null,
+    "Additional_info": "",
+    "Lifestyle": "brand_b",
+    "Ranking": "",
+    "Product_GBPC": "",
+    "TradebyteActive_Combi": null,
+    "MainColorPDP": "",
+    "Sleeve_Length": "",
+    "Padding": "",
+    "Soldout": "false",
+    "NeQQ_Line": "",
+    "Key_Looks": "",
+    "pimExportDate": "2022-03-28",
+    "ProductGroupCategory": "",
+    "Heel_Height": "",
+    "USP_flag": "NEW",
+    "Material_2": "",
+    "Combi_number": "PROD-001-AAA",
+    "Flavour_Copy": "",
+    "Delete_Flag": [
+      {
+        "value": null,
+        "level": "Style"
+      },
+      {
+        "value": null,
+        "level": "Combi"
+      }
+    ],
+    "New_Arrivals": "true",
+    "Combi_Reference": "",
+    "RISE": "",
+    "CTP_date": null,
+    "STYLE": "",
+    "Proper_style_name": "",
+    "StyleLength": "",
+    "Actual_Online_Date": null,
+    "Structure_assignments": [
+      {
+        "assignment": "D012003",
+        "structure_system": "MerchandisingHierarchyWCS"
+      },
+      {
+        "assignment": "SALE",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "MEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_FR Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_DE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Summer/Pre-Fall 2022",
+        "structure_system": "Seasons"
+      },
+      {
+        "assignment": "Included_SCAN+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_NL Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_IBE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_UKI+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_BE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_CH Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "SALE_MEN_CLOTHING_TROUSERSSHORTS",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_RU Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "SALE_MEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_IT Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "SALE_MEN_CLOTHING",
+        "structure_system": "SalesCatalog"
+      }
+    ],
+    "Functionality": "",
+    "Promo_Flag": [
+      {
+        "value": "",
+        "country": "Russia"
+      },
+      {
+        "value": "",
+        "country": "Spain"
+      },
+      {
+        "value": "",
+        "country": "Belgium"
+      },
+      {
+        "value": "",
+        "country": "Romania"
+      },
+      {
+        "value": "",
+        "country": "Finland"
+      },
+      {
+        "value": "",
+        "country": "Czech Republic"
+      },
+      {
+        "value": "",
+        "country": "Denmark"
+      },
+      {
+        "value": "",
+        "country": "Slovenia"
+      },
+      {
+        "value": "",
+        "country": "Switzerland"
+      },
+      {
+        "value": "",
+        "country": "Estonia"
+      },
+      {
+        "value": "",
+        "country": "Latvia"
+      },
+      {
+        "value": "",
+        "country": "France"
+      },
+      {
+        "value": "",
+        "country": "Poland"
+      },
+      {
+        "value": "",
+        "country": "Bulgaria"
+      },
+      {
+        "value": "",
+        "country": "Lithuania"
+      },
+      {
+        "value": "",
+        "country": "Sweden"
+      },
+      {
+        "value": "",
+        "country": "Luxembourg"
+      },
+      {
+        "value": "",
+        "country": "Austria"
+      },
+      {
+        "value": "",
+        "country": "United Kingdom"
+      },
+      {
+        "value": "",
+        "country": "Hungary"
+      },
+      {
+        "value": "",
+        "country": "Portugal"
+      },
+      {
+        "value": "",
+        "country": "Croatia"
+      },
+      {
+        "value": "",
+        "country": "Germany"
+      },
+      {
+        "value": "",
+        "country": "Slovakia"
+      },
+      {
+        "value": "",
+        "country": "Netherlands"
+      },
+      {
+        "value": "",
+        "country": "Italy"
+      },
+      {
+        "value": "",
+        "country": "Ireland"
+      }
+    ],
+    "Fit_for_bottoms": "",
+    "Sustainable": "",
+    "Material_3": "",
+    "Fit_for_tops": "",
+    "Material": "",
+    "Program": "",
+    "ImageCount": "5",
+    "Collection": "",
+    "Occasion": "",
+    "Shop_by_Activity": "",
+    "Brand": "Example Brand",
+    "Length_accessoires": "",
+    "BaQQfill_AboutYou": "",
+    "DETAIL": ""
+  },
+  {
+    "Pim_Value": "",
+    "AttributeValueCategory": "",
+    "Colour_PDP": "",
+    "Width_accessoires": "",
+    "Height_accessoires": "",
+    "Lining": "",
+    "Shop_by_Sport": "",
+    "Not_searchable": null,
+    "Exclusive_Access": "",
+    "Promo_Activity": null,
+    "Additional_info": "",
+    "Lifestyle": "brand_a",
+    "Ranking": "",
+    "Product_GBPC": "",
+    "TradebyteActive_Combi": null,
+    "MainColorPDP": "",
+    "Sleeve_Length": "",
+    "Padding": "",
+    "Soldout": "false",
+    "NeQQ_Line": "",
+    "Key_Looks": "",
+    "pimExportDate": "2022-03-23",
+    "ProductGroupCategory": "",
+    "Heel_Height": "",
+    "USP_flag": "NEW",
+    "Material_2": "",
+    "Combi_number": "PROD-002-BBB",
+    "Flavour_Copy": "",
+    "Delete_Flag": [
+      {
+        "value": null,
+        "level": "Style"
+      },
+      {
+        "value": null,
+        "level": "Combi"
+      }
+    ],
+    "New_Arrivals": "true",
+    "Combi_Reference": "",
+    "RISE": "",
+    "CTP_date": null,
+    "STYLE": "",
+    "Proper_style_name": "",
+    "StyleLength": "",
+    "Actual_Online_Date": null,
+    "Structure_assignments": [
+      {
+        "assignment": "Included_CH Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_IT Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_SCAN+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Summer/Pre-Fall 2022",
+        "structure_system": "Seasons"
+      },
+      {
+        "assignment": "Included_NL Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_FR Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_UKI+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "D024004",
+        "structure_system": "MerchandisingHierarchyWCS"
+      },
+      {
+        "assignment": "Included_IBE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_RU Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_DE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_BE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      }
+    ],
+    "Functionality": "",
+    "Promo_Flag": [
+      {
+        "value": "",
+        "country": "Switzerland"
+      },
+      {
+        "value": "",
+        "country": "Slovakia"
+      },
+      {
+        "value": "",
+        "country": "Romania"
+      },
+      {
+        "value": "",
+        "country": "Ireland"
+      },
+      {
+        "value": "",
+        "country": "United Kingdom"
+      },
+      {
+        "value": "",
+        "country": "Lithuania"
+      },
+      {
+        "value": "",
+        "country": "France"
+      },
+      {
+        "value": "",
+        "country": "Spain"
+      },
+      {
+        "value": "",
+        "country": "Bulgaria"
+      },
+      {
+        "value": "",
+        "country": "Germany"
+      },
+      {
+        "value": "",
+        "country": "Estonia"
+      },
+      {
+        "value": "",
+        "country": "Czech Republic"
+      },
+      {
+        "value": "",
+        "country": "Denmark"
+      },
+      {
+        "value": "",
+        "country": "Sweden"
+      },
+      {
+        "value": "",
+        "country": "Hungary"
+      },
+      {
+        "value": "",
+        "country": "Belgium"
+      },
+      {
+        "value": "",
+        "country": "Netherlands"
+      },
+      {
+        "value": "",
+        "country": "Poland"
+      },
+      {
+        "value": "",
+        "country": "Austria"
+      },
+      {
+        "value": "",
+        "country": "Luxembourg"
+      },
+      {
+        "value": "",
+        "country": "Italy"
+      },
+      {
+        "value": "",
+        "country": "Portugal"
+      },
+      {
+        "value": "",
+        "country": "Slovenia"
+      },
+      {
+        "value": "",
+        "country": "Russia"
+      },
+      {
+        "value": "",
+        "country": "Croatia"
+      },
+      {
+        "value": "",
+        "country": "Finland"
+      },
+      {
+        "value": "",
+        "country": "Latvia"
+      }
+    ],
+    "Fit_for_bottoms": "",
+    "Sustainable": "",
+    "Material_3": "",
+    "Fit_for_tops": "",
+    "Material": "",
+    "Program": "",
+    "ImageCount": "0",
+    "Collection": "",
+    "Occasion": "",
+    "Shop_by_Activity": "",
+    "Brand": "Example Brand",
+    "Length_accessoires": "",
+    "BaQQfill_AboutYou": "",
+    "DETAIL": ""
+  },
+  {
+    "Pim_Value": "",
+    "AttributeValueCategory": "T-SHIRTS \u0026 TOPS",
+    "Colour_PDP": "",
+    "Width_accessoires": "",
+    "Height_accessoires": "",
+    "Lining": "",
+    "Shop_by_Sport": "",
+    "Not_searchable": null,
+    "Exclusive_Access": "",
+    "Promo_Activity": null,
+    "Additional_info": "",
+    "Lifestyle": "",
+    "Ranking": "",
+    "Product_GBPC": "",
+    "TradebyteActive_Combi": null,
+    "MainColorPDP": "",
+    "Sleeve_Length": "",
+    "Padding": "",
+    "Soldout": "false",
+    "NeQQ_Line": "",
+    "Key_Looks": "",
+    "pimExportDate": "2022-03-23",
+    "ProductGroupCategory": "",
+    "Heel_Height": "",
+    "USP_flag": "NEW",
+    "Material_2": "",
+    "Combi_number": "PROD-003-CCC",
+    "Flavour_Copy": "",
+    "Delete_Flag": [
+      {
+        "value": null,
+        "level": "Style"
+      },
+      {
+        "value": null,
+        "level": "Combi"
+      }
+    ],
+    "New_Arrivals": "true",
+    "Combi_Reference": "",
+    "RISE": "",
+    "CTP_date": null,
+    "STYLE": "",
+    "Proper_style_name": "",
+    "StyleLength": "",
+    "Actual_Online_Date": null,
+    "Structure_assignments": [
+      {
+        "assignment": "Summer/Pre-Fall 2022",
+        "structure_system": "Seasons"
+      },
+      {
+        "assignment": "WOMEN",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "D624017",
+        "structure_system": "MerchandisingHierarchyWCS"
+      },
+      {
+        "assignment": "WOMEN_CLOTHES",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "WOMEN_NEWIN",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "Included_NL Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_SCAN+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN_SALE_CLOTHES",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "Included_FR Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN_SALE",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "Included_IT Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_IBE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_CH Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_DE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_UKI+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_BE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN_CLOTHES_NEWIN",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "Included_RU Sales Catalog",
+        "structure_system": "RegionCatalog"
+      }
+    ],
+    "Functionality": "",
+    "Promo_Flag": [
+      {
+        "value": "",
+        "country": "Slovenia"
+      },
+      {
+        "value": "",
+        "country": "Ireland"
+      },
+      {
+        "value": "",
+        "country": "Italy"
+      },
+      {
+        "value": "",
+        "country": "Lithuania"
+      },
+      {
+        "value": "",
+        "country": "Finland"
+      },
+      {
+        "value": "",
+        "country": "Switzerland"
+      },
+      {
+        "value": "",
+        "country": "Russia"
+      },
+      {
+        "value": "",
+        "country": "Belgium"
+      },
+      {
+        "value": "",
+        "country": "Croatia"
+      },
+      {
+        "value": "",
+        "country": "Spain"
+      },
+      {
+        "value": "",
+        "country": "Sweden"
+      },
+      {
+        "value": "",
+        "country": "United Kingdom"
+      },
+      {
+        "value": "",
+        "country": "Czech Republic"
+      },
+      {
+        "value": "",
+        "country": "Netherlands"
+      },
+      {
+        "value": "",
+        "country": "Bulgaria"
+      },
+      {
+        "value": "",
+        "country": "Estonia"
+      },
+      {
+        "value": "",
+        "country": "Germany"
+      },
+      {
+        "value": "",
+        "country": "Austria"
+      },
+      {
+        "value": "",
+        "country": "Hungary"
+      },
+      {
+        "value": "",
+        "country": "France"
+      },
+      {
+        "value": "",
+        "country": "Slovakia"
+      },
+      {
+        "value": "",
+        "country": "Luxembourg"
+      },
+      {
+        "value": "",
+        "country": "Denmark"
+      },
+      {
+        "value": "",
+        "country": "Portugal"
+      },
+      {
+        "value": "",
+        "country": "Poland"
+      },
+      {
+        "value": "",
+        "country": "Latvia"
+      },
+      {
+        "value": "",
+        "country": "Romania"
+      }
+    ],
+    "Fit_for_bottoms": "",
+    "Sustainable": "",
+    "Material_3": "",
+    "Fit_for_tops": "",
+    "Material": "",
+    "Program": "",
+    "ImageCount": "0",
+    "Collection": "",
+    "Occasion": "",
+    "Shop_by_Activity": "",
+    "Brand": "Calvin Klein",
+    "Length_accessoires": "",
+    "BaQQfill_AboutYou": "",
+    "DETAIL": ""
+  },
+  {
+    "Pim_Value": "",
+    "AttributeValueCategory": "",
+    "Colour_PDP": "",
+    "Width_accessoires": "",
+    "Height_accessoires": "",
+    "Lining": "",
+    "Shop_by_Sport": "",
+    "Not_searchable": null,
+    "Exclusive_Access": "",
+    "Promo_Activity": null,
+    "Additional_info": "",
+    "Lifestyle": "brand_b",
+    "Ranking": "",
+    "Product_GBPC": "",
+    "TradebyteActive_Combi": null,
+    "MainColorPDP": "",
+    "Sleeve_Length": "",
+    "Padding": "",
+    "Soldout": "false",
+    "NeQQ_Line": "",
+    "Key_Looks": "",
+    "pimExportDate": "2022-03-23",
+    "ProductGroupCategory": "",
+    "Heel_Height": "",
+    "USP_flag": "NEW",
+    "Material_2": "",
+    "Combi_number": "PROD-004-DDD",
+    "Flavour_Copy": "",
+    "Delete_Flag": [
+      {
+        "value": null,
+        "level": "Style"
+      },
+      {
+        "value": null,
+        "level": "Combi"
+      }
+    ],
+    "New_Arrivals": "true",
+    "Combi_Reference": "",
+    "RISE": "",
+    "CTP_date": null,
+    "STYLE": "",
+    "Proper_style_name": "",
+    "StyleLength": "",
+    "Actual_Online_Date": null,
+    "Structure_assignments": [
+      {
+        "assignment": "WOMEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_NL Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_CH Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_RU Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_BE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_IT Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_UKI+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_DE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_IBE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_FR Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Summer/Pre-Fall 2022",
+        "structure_system": "Seasons"
+      },
+      {
+        "assignment": "D104056",
+        "structure_system": "MerchandisingHierarchyWCS"
+      },
+      {
+        "assignment": "Included_SCAN+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      }
+    ],
+    "Functionality": "",
+    "Promo_Flag": [
+      {
+        "value": "",
+        "country": "Netherlands"
+      },
+      {
+        "value": "",
+        "country": "Latvia"
+      },
+      {
+        "value": "",
+        "country": "Bulgaria"
+      },
+      {
+        "value": "",
+        "country": "Luxembourg"
+      },
+      {
+        "value": "",
+        "country": "Poland"
+      },
+      {
+        "value": "",
+        "country": "Croatia"
+      },
+      {
+        "value": "",
+        "country": "United Kingdom"
+      },
+      {
+        "value": "",
+        "country": "Spain"
+      },
+      {
+        "value": "",
+        "country": "Austria"
+      },
+      {
+        "value": "",
+        "country": "Sweden"
+      },
+      {
+        "value": "",
+        "country": "Slovenia"
+      },
+      {
+        "value": "",
+        "country": "Germany"
+      },
+      {
+        "value": "",
+        "country": "Lithuania"
+      },
+      {
+        "value": "",
+        "country": "Belgium"
+      },
+      {
+        "value": "",
+        "country": "Hungary"
+      },
+      {
+        "value": "",
+        "country": "France"
+      },
+      {
+        "value": "",
+        "country": "Finland"
+      },
+      {
+        "value": "",
+        "country": "Italy"
+      },
+      {
+        "value": "",
+        "country": "Ireland"
+      },
+      {
+        "value": "",
+        "country": "Denmark"
+      },
+      {
+        "value": "",
+        "country": "Russia"
+      },
+      {
+        "value": "",
+        "country": "Romania"
+      },
+      {
+        "value": "",
+        "country": "Czech Republic"
+      },
+      {
+        "value": "",
+        "country": "Switzerland"
+      },
+      {
+        "value": "",
+        "country": "Estonia"
+      },
+      {
+        "value": "",
+        "country": "Portugal"
+      },
+      {
+        "value": "",
+        "country": "Slovakia"
+      }
+    ],
+    "Fit_for_bottoms": "",
+    "Sustainable": "",
+    "Material_3": "",
+    "Fit_for_tops": "",
+    "Material": "",
+    "Program": "",
+    "ImageCount": "0",
+    "Collection": "",
+    "Occasion": "",
+    "Shop_by_Activity": "",
+    "Brand": "Example Brand",
+    "Length_accessoires": "",
+    "BaQQfill_AboutYou": "",
+    "DETAIL": ""
+  },
+  {
+    "Pim_Value": "",
+    "AttributeValueCategory": "",
+    "Colour_PDP": "",
+    "Width_accessoires": "",
+    "Height_accessoires": "",
+    "Lining": "",
+    "Shop_by_Sport": "",
+    "Not_searchable": null,
+    "Exclusive_Access": "",
+    "Promo_Activity": null,
+    "Additional_info": "",
+    "Lifestyle": "brand_b",
+    "Ranking": "",
+    "Product_GBPC": "",
+    "TradebyteActive_Combi": null,
+    "MainColorPDP": "",
+    "Sleeve_Length": "",
+    "Padding": "",
+    "Soldout": "false",
+    "NeQQ_Line": "",
+    "Key_Looks": "",
+    "pimExportDate": "2022-03-23",
+    "ProductGroupCategory": "",
+    "Heel_Height": "",
+    "USP_flag": "NEW",
+    "Material_2": "",
+    "Combi_number": "PROD-005-EEE",
+    "Flavour_Copy": "",
+    "Delete_Flag": [
+      {
+        "value": null,
+        "level": "Style"
+      },
+      {
+        "value": null,
+        "level": "Combi"
+      }
+    ],
+    "New_Arrivals": "true",
+    "Combi_Reference": "",
+    "RISE": "",
+    "CTP_date": null,
+    "STYLE": "",
+    "Proper_style_name": "",
+    "StyleLength": "",
+    "Actual_Online_Date": null,
+    "Structure_assignments": [
+      {
+        "assignment": "WOMEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_SCAN+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_IT Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_NL Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_FR Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_BE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Summer/Pre-Fall 2022",
+        "structure_system": "Seasons"
+      },
+      {
+        "assignment": "Included_DE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_UKI+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_CH Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_RU Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_IBE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "D054015",
+        "structure_system": "MerchandisingHierarchyWCS"
+      }
+    ],
+    "Functionality": "",
+    "Promo_Flag": [
+      {
+        "value": "",
+        "country": "Estonia"
+      },
+      {
+        "value": "",
+        "country": "Romania"
+      },
+      {
+        "value": "",
+        "country": "Belgium"
+      },
+      {
+        "value": "",
+        "country": "Luxembourg"
+      },
+      {
+        "value": "",
+        "country": "Croatia"
+      },
+      {
+        "value": "",
+        "country": "Hungary"
+      },
+      {
+        "value": "",
+        "country": "Finland"
+      },
+      {
+        "value": "",
+        "country": "Netherlands"
+      },
+      {
+        "value": "",
+        "country": "Sweden"
+      },
+      {
+        "value": "",
+        "country": "France"
+      },
+      {
+        "value": "",
+        "country": "Switzerland"
+      },
+      {
+        "value": "",
+        "country": "Ireland"
+      },
+      {
+        "value": "",
+        "country": "Poland"
+      },
+      {
+        "value": "",
+        "country": "Latvia"
+      },
+      {
+        "value": "",
+        "country": "Russia"
+      },
+      {
+        "value": "",
+        "country": "Denmark"
+      },
+      {
+        "value": "",
+        "country": "Slovakia"
+      },
+      {
+        "value": "",
+        "country": "Portugal"
+      },
+      {
+        "value": "",
+        "country": "Spain"
+      },
+      {
+        "value": "",
+        "country": "Germany"
+      },
+      {
+        "value": "",
+        "country": "Slovenia"
+      },
+      {
+        "value": "",
+        "country": "Lithuania"
+      },
+      {
+        "value": "",
+        "country": "Bulgaria"
+      },
+      {
+        "value": "",
+        "country": "Czech Republic"
+      },
+      {
+        "value": "",
+        "country": "United Kingdom"
+      },
+      {
+        "value": "",
+        "country": "Austria"
+      },
+      {
+        "value": "",
+        "country": "Italy"
+      }
+    ],
+    "Fit_for_bottoms": "",
+    "Sustainable": "",
+    "Material_3": "",
+    "Fit_for_tops": "",
+    "Material": "",
+    "Program": "",
+    "ImageCount": "0",
+    "Collection": "",
+    "Occasion": "",
+    "Shop_by_Activity": "",
+    "Brand": "Example Brand",
+    "Length_accessoires": "",
+    "BaQQfill_AboutYou": "",
+    "DETAIL": ""
+  },
+  {
+    "Pim_Value": "",
+    "AttributeValueCategory": "",
+    "Colour_PDP": "",
+    "Width_accessoires": "",
+    "Height_accessoires": "",
+    "Lining": "",
+    "Shop_by_Sport": "",
+    "Not_searchable": null,
+    "Exclusive_Access": "",
+    "Promo_Activity": null,
+    "Additional_info": "",
+    "Lifestyle": "brand_b",
+    "Ranking": "",
+    "Product_GBPC": "",
+    "TradebyteActive_Combi": null,
+    "MainColorPDP": "",
+    "Sleeve_Length": "",
+    "Padding": "",
+    "Soldout": "false",
+    "NeQQ_Line": "",
+    "Key_Looks": "",
+    "pimExportDate": "2022-03-23",
+    "ProductGroupCategory": "",
+    "Heel_Height": "",
+    "USP_flag": "NEW",
+    "Material_2": "",
+    "Combi_number": "PROD-006-FFF",
+    "Flavour_Copy": "",
+    "Delete_Flag": [
+      {
+        "value": null,
+        "level": "Style"
+      },
+      {
+        "value": null,
+        "level": "Combi"
+      }
+    ],
+    "New_Arrivals": "true",
+    "Combi_Reference": "",
+    "RISE": "",
+    "CTP_date": null,
+    "STYLE": "",
+    "Proper_style_name": "",
+    "StyleLength": "",
+    "Actual_Online_Date": null,
+    "Structure_assignments": [
+      {
+        "assignment": "Included_RU Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_SCAN+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "SALE",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "SALE_WOMEN_SHOES",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_NL Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_CH Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "SALE_WOMEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_IT Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_BE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Summer/Pre-Fall 2022",
+        "structure_system": "Seasons"
+      },
+      {
+        "assignment": "Included_IBE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_FR Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_DE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_UKI+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "D094070",
+        "structure_system": "MerchandisingHierarchyWCS"
+      }
+    ],
+    "Functionality": "",
+    "Promo_Flag": [
+      {
+        "value": "",
+        "country": "Latvia"
+      },
+      {
+        "value": "",
+        "country": "Netherlands"
+      },
+      {
+        "value": "",
+        "country": "Italy"
+      },
+      {
+        "value": "",
+        "country": "Slovakia"
+      },
+      {
+        "value": "",
+        "country": "Switzerland"
+      },
+      {
+        "value": "",
+        "country": "Russia"
+      },
+      {
+        "value": "",
+        "country": "Sweden"
+      },
+      {
+        "value": "",
+        "country": "France"
+      },
+      {
+        "value": "",
+        "country": "Spain"
+      },
+      {
+        "value": "",
+        "country": "Belgium"
+      },
+      {
+        "value": "",
+        "country": "Romania"
+      },
+      {
+        "value": "",
+        "country": "Germany"
+      },
+      {
+        "value": "",
+        "country": "Hungary"
+      },
+      {
+        "value": "",
+        "country": "Bulgaria"
+      },
+      {
+        "value": "",
+        "country": "United Kingdom"
+      },
+      {
+        "value": "",
+        "country": "Portugal"
+      },
+      {
+        "value": "",
+        "country": "Czech Republic"
+      },
+      {
+        "value": "",
+        "country": "Poland"
+      },
+      {
+        "value": "",
+        "country": "Finland"
+      },
+      {
+        "value": "",
+        "country": "Slovenia"
+      },
+      {
+        "value": "",
+        "country": "Croatia"
+      },
+      {
+        "value": "",
+        "country": "Denmark"
+      },
+      {
+        "value": "",
+        "country": "Ireland"
+      },
+      {
+        "value": "",
+        "country": "Lithuania"
+      },
+      {
+        "value": "",
+        "country": "Luxembourg"
+      },
+      {
+        "value": "",
+        "country": "Estonia"
+      },
+      {
+        "value": "",
+        "country": "Austria"
+      }
+    ],
+    "Fit_for_bottoms": "",
+    "Sustainable": "",
+    "Material_3": "",
+    "Fit_for_tops": "",
+    "Material": "",
+    "Program": "",
+    "ImageCount": "0",
+    "Collection": "",
+    "Occasion": "",
+    "Shop_by_Activity": "",
+    "Brand": "Example Brand",
+    "Length_accessoires": "",
+    "BaQQfill_AboutYou": "",
+    "DETAIL": ""
+  },
+  {
+    "Pim_Value": "",
+    "AttributeValueCategory": "",
+    "Colour_PDP": "",
+    "Width_accessoires": "",
+    "Height_accessoires": "",
+    "Lining": "",
+    "Shop_by_Sport": "",
+    "Not_searchable": null,
+    "Exclusive_Access": "",
+    "Promo_Activity": null,
+    "Additional_info": "",
+    "Lifestyle": "brand_b",
+    "Ranking": "",
+    "Product_GBPC": "",
+    "TradebyteActive_Combi": null,
+    "MainColorPDP": "",
+    "Sleeve_Length": "",
+    "Padding": "",
+    "Soldout": "false",
+    "NeQQ_Line": "",
+    "Key_Looks": "",
+    "pimExportDate": "2022-03-23",
+    "ProductGroupCategory": "",
+    "Heel_Height": "",
+    "USP_flag": "NEW",
+    "Material_2": "",
+    "Combi_number": "PROD-007-GGG",
+    "Flavour_Copy": "",
+    "Delete_Flag": [
+      {
+        "value": null,
+        "level": "Style"
+      },
+      {
+        "value": null,
+        "level": "Combi"
+      }
+    ],
+    "New_Arrivals": "true",
+    "Combi_Reference": "",
+    "RISE": "",
+    "CTP_date": null,
+    "STYLE": "",
+    "Proper_style_name": "",
+    "StyleLength": "",
+    "Actual_Online_Date": null,
+    "Structure_assignments": [
+      {
+        "assignment": "Included_UKI+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "SALE_WOMEN_CLOTHING_SWEATSHIRTSKNITWEAR",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_FR Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "SALE",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Spring 2022",
+        "structure_system": "Seasons"
+      },
+      {
+        "assignment": "Included_IBE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_SCAN+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_CH Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_IT Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_RU Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_BE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_DE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_NL Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "SALE_WOMEN_CLOTHING",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "SALE_WOMEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "D034005",
+        "structure_system": "MerchandisingHierarchyWCS"
+      }
+    ],
+    "Functionality": "",
+    "Promo_Flag": [
+      {
+        "value": "",
+        "country": "United Kingdom"
+      },
+      {
+        "value": "",
+        "country": "Slovakia"
+      },
+      {
+        "value": "",
+        "country": "Finland"
+      },
+      {
+        "value": "",
+        "country": "France"
+      },
+      {
+        "value": "",
+        "country": "Bulgaria"
+      },
+      {
+        "value": "",
+        "country": "Germany"
+      },
+      {
+        "value": "",
+        "country": "Hungary"
+      },
+      {
+        "value": "",
+        "country": "Romania"
+      },
+      {
+        "value": "",
+        "country": "Switzerland"
+      },
+      {
+        "value": "",
+        "country": "Russia"
+      },
+      {
+        "value": "",
+        "country": "Netherlands"
+      },
+      {
+        "value": "",
+        "country": "Austria"
+      },
+      {
+        "value": "",
+        "country": "Denmark"
+      },
+      {
+        "value": "",
+        "country": "Ireland"
+      },
+      {
+        "value": "",
+        "country": "Latvia"
+      },
+      {
+        "value": "",
+        "country": "Portugal"
+      },
+      {
+        "value": "",
+        "country": "Spain"
+      },
+      {
+        "value": "",
+        "country": "Sweden"
+      },
+      {
+        "value": "",
+        "country": "Slovenia"
+      },
+      {
+        "value": "",
+        "country": "Estonia"
+      },
+      {
+        "value": "",
+        "country": "Poland"
+      },
+      {
+        "value": "",
+        "country": "Italy"
+      },
+      {
+        "value": "",
+        "country": "Lithuania"
+      },
+      {
+        "value": "",
+        "country": "Czech Republic"
+      },
+      {
+        "value": "",
+        "country": "Croatia"
+      },
+      {
+        "value": "",
+        "country": "Luxembourg"
+      },
+      {
+        "value": "",
+        "country": "Belgium"
+      }
+    ],
+    "Fit_for_bottoms": "",
+    "Sustainable": "",
+    "Material_3": "",
+    "Fit_for_tops": "",
+    "Material": "",
+    "Program": "",
+    "ImageCount": "0",
+    "Collection": "",
+    "Occasion": "",
+    "Shop_by_Activity": "",
+    "Brand": "Example Brand",
+    "Length_accessoires": "",
+    "BaQQfill_AboutYou": "",
+    "DETAIL": ""
+  },
+  {
+    "Pim_Value": "",
+    "AttributeValueCategory": "",
+    "Colour_PDP": "",
+    "Width_accessoires": "",
+    "Height_accessoires": "",
+    "Lining": "",
+    "Shop_by_Sport": "",
+    "Not_searchable": null,
+    "Exclusive_Access": "",
+    "Promo_Activity": null,
+    "Additional_info": "",
+    "Lifestyle": "brand_b",
+    "Ranking": "",
+    "Product_GBPC": "",
+    "TradebyteActive_Combi": null,
+    "MainColorPDP": "",
+    "Sleeve_Length": "",
+    "Padding": "",
+    "Soldout": "false",
+    "NeQQ_Line": "",
+    "Key_Looks": "",
+    "pimExportDate": "2022-03-23",
+    "ProductGroupCategory": "",
+    "Heel_Height": "",
+    "USP_flag": "NEW",
+    "Material_2": "",
+    "Combi_number": "PROD-008-HHH",
+    "Flavour_Copy": "",
+    "Delete_Flag": [
+      {
+        "value": null,
+        "level": "Style"
+      },
+      {
+        "value": null,
+        "level": "Combi"
+      }
+    ],
+    "New_Arrivals": "true",
+    "Combi_Reference": "",
+    "RISE": "",
+    "CTP_date": null,
+    "STYLE": "",
+    "Proper_style_name": "",
+    "StyleLength": "",
+    "Actual_Online_Date": null,
+    "Structure_assignments": [
+      {
+        "assignment": "Included_BE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_CH Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "D094040",
+        "structure_system": "MerchandisingHierarchyWCS"
+      },
+      {
+        "assignment": "Included_UKI+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_SCAN+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_DE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_NL Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_IBE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Summer/Pre-Fall 2022",
+        "structure_system": "Seasons"
+      },
+      {
+        "assignment": "Included_IT Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_RU Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_FR Sales Catalog",
+        "structure_system": "RegionCatalog"
+      }
+    ],
+    "Functionality": "",
+    "Promo_Flag": [
+      {
+        "value": "",
+        "country": "Austria"
+      },
+      {
+        "value": "",
+        "country": "Denmark"
+      },
+      {
+        "value": "",
+        "country": "United Kingdom"
+      },
+      {
+        "value": "",
+        "country": "Poland"
+      },
+      {
+        "value": "",
+        "country": "Czech Republic"
+      },
+      {
+        "value": "",
+        "country": "Portugal"
+      },
+      {
+        "value": "",
+        "country": "Italy"
+      },
+      {
+        "value": "",
+        "country": "Belgium"
+      },
+      {
+        "value": "",
+        "country": "France"
+      },
+      {
+        "value": "",
+        "country": "Switzerland"
+      },
+      {
+        "value": "",
+        "country": "Latvia"
+      },
+      {
+        "value": "",
+        "country": "Finland"
+      },
+      {
+        "value": "",
+        "country": "Germany"
+      },
+      {
+        "value": "",
+        "country": "Ireland"
+      },
+      {
+        "value": "",
+        "country": "Slovakia"
+      },
+      {
+        "value": "",
+        "country": "Netherlands"
+      },
+      {
+        "value": "",
+        "country": "Lithuania"
+      },
+      {
+        "value": "",
+        "country": "Slovenia"
+      },
+      {
+        "value": "",
+        "country": "Luxembourg"
+      },
+      {
+        "value": "",
+        "country": "Sweden"
+      },
+      {
+        "value": "",
+        "country": "Russia"
+      },
+      {
+        "value": "",
+        "country": "Croatia"
+      },
+      {
+        "value": "",
+        "country": "Romania"
+      },
+      {
+        "value": "",
+        "country": "Spain"
+      },
+      {
+        "value": "",
+        "country": "Bulgaria"
+      },
+      {
+        "value": "",
+        "country": "Hungary"
+      },
+      {
+        "value": "",
+        "country": "Estonia"
+      }
+    ],
+    "Fit_for_bottoms": "",
+    "Sustainable": "",
+    "Material_3": "",
+    "Fit_for_tops": "",
+    "Material": "",
+    "Program": "",
+    "ImageCount": "5",
+    "Collection": "",
+    "Occasion": "",
+    "Shop_by_Activity": "",
+    "Brand": "Example Brand",
+    "Length_accessoires": "",
+    "BaQQfill_AboutYou": "",
+    "DETAIL": ""
+  },
+  {
+    "Pim_Value": "",
+    "AttributeValueCategory": "T-SHIRTS \u0026 TOPS",
+    "Colour_PDP": "",
+    "Width_accessoires": "",
+    "Height_accessoires": "",
+    "Lining": "",
+    "Shop_by_Sport": "",
+    "Not_searchable": null,
+    "Exclusive_Access": "",
+    "Promo_Activity": null,
+    "Additional_info": "",
+    "Lifestyle": "",
+    "Ranking": "",
+    "Product_GBPC": "",
+    "TradebyteActive_Combi": null,
+    "MainColorPDP": "",
+    "Sleeve_Length": "",
+    "Padding": "",
+    "Soldout": "false",
+    "NeQQ_Line": "",
+    "Key_Looks": "",
+    "pimExportDate": "2022-03-23",
+    "ProductGroupCategory": "",
+    "Heel_Height": "",
+    "USP_flag": "NEW",
+    "Material_2": "",
+    "Combi_number": "PROD-009-III",
+    "Flavour_Copy": "",
+    "Delete_Flag": [
+      {
+        "value": null,
+        "level": "Style"
+      },
+      {
+        "value": null,
+        "level": "Combi"
+      }
+    ],
+    "New_Arrivals": "true",
+    "Combi_Reference": "",
+    "RISE": "",
+    "CTP_date": null,
+    "STYLE": "",
+    "Proper_style_name": "",
+    "StyleLength": "",
+    "Actual_Online_Date": null,
+    "Structure_assignments": [
+      {
+        "assignment": "Included_IBE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN_NEWIN",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "Included_BE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_CH Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "D624017",
+        "structure_system": "MerchandisingHierarchyWCS"
+      },
+      {
+        "assignment": "Included_NL Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Summer/Pre-Fall 2022",
+        "structure_system": "Seasons"
+      },
+      {
+        "assignment": "WOMEN_CLOTHES",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "WOMEN_SALE_CLOTHES",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "Included_UKI+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "Included_SCAN+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_DE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_RU Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_IT Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN_SALE",
+        "structure_system": "QQ Sales Catalog"
+      },
+      {
+        "assignment": "Included_FR Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "WOMEN_CLOTHES_NEWIN",
+        "structure_system": "QQ Sales Catalog"
+      }
+    ],
+    "Functionality": "",
+    "Promo_Flag": [
+      {
+        "value": "",
+        "country": "Hungary"
+      },
+      {
+        "value": "",
+        "country": "Netherlands"
+      },
+      {
+        "value": "",
+        "country": "Finland"
+      },
+      {
+        "value": "",
+        "country": "Austria"
+      },
+      {
+        "value": "",
+        "country": "United Kingdom"
+      },
+      {
+        "value": "",
+        "country": "Russia"
+      },
+      {
+        "value": "",
+        "country": "Portugal"
+      },
+      {
+        "value": "",
+        "country": "Slovenia"
+      },
+      {
+        "value": "",
+        "country": "France"
+      },
+      {
+        "value": "",
+        "country": "Luxembourg"
+      },
+      {
+        "value": "",
+        "country": "Croatia"
+      },
+      {
+        "value": "",
+        "country": "Poland"
+      },
+      {
+        "value": "",
+        "country": "Romania"
+      },
+      {
+        "value": "",
+        "country": "Lithuania"
+      },
+      {
+        "value": "",
+        "country": "Italy"
+      },
+      {
+        "value": "",
+        "country": "Ireland"
+      },
+      {
+        "value": "",
+        "country": "Switzerland"
+      },
+      {
+        "value": "",
+        "country": "Spain"
+      },
+      {
+        "value": "",
+        "country": "Slovakia"
+      },
+      {
+        "value": "",
+        "country": "Czech Republic"
+      },
+      {
+        "value": "",
+        "country": "Bulgaria"
+      },
+      {
+        "value": "",
+        "country": "Estonia"
+      },
+      {
+        "value": "",
+        "country": "Germany"
+      },
+      {
+        "value": "",
+        "country": "Sweden"
+      },
+      {
+        "value": "",
+        "country": "Belgium"
+      },
+      {
+        "value": "",
+        "country": "Latvia"
+      },
+      {
+        "value": "",
+        "country": "Denmark"
+      }
+    ],
+    "Fit_for_bottoms": "",
+    "Sustainable": "",
+    "Material_3": "",
+    "Fit_for_tops": "",
+    "Material": "",
+    "Program": "",
+    "ImageCount": "0",
+    "Collection": "",
+    "Occasion": "",
+    "Shop_by_Activity": "",
+    "Brand": "Calvin Klein",
+    "Length_accessoires": "",
+    "BaQQfill_AboutYou": "",
+    "DETAIL": ""
+  },
+  {
+    "Pim_Value": "",
+    "AttributeValueCategory": "",
+    "Colour_PDP": "",
+    "Width_accessoires": "",
+    "Height_accessoires": "",
+    "Lining": "",
+    "Shop_by_Sport": "",
+    "Not_searchable": null,
+    "Exclusive_Access": "",
+    "Promo_Activity": null,
+    "Additional_info": "",
+    "Lifestyle": "brand_b",
+    "Ranking": "",
+    "Product_GBPC": "",
+    "TradebyteActive_Combi": null,
+    "MainColorPDP": "",
+    "Sleeve_Length": "",
+    "Padding": "",
+    "Soldout": "false",
+    "NeQQ_Line": "",
+    "Key_Looks": "",
+    "pimExportDate": "2022-03-23",
+    "ProductGroupCategory": "",
+    "Heel_Height": "",
+    "USP_flag": "NEW",
+    "Material_2": "",
+    "Combi_number": "PROD-010-JJJ",
+    "Flavour_Copy": "",
+    "Delete_Flag": [
+      {
+        "value": null,
+        "level": "Style"
+      },
+      {
+        "value": null,
+        "level": "Combi"
+      }
+    ],
+    "New_Arrivals": "true",
+    "Combi_Reference": "",
+    "RISE": "",
+    "CTP_date": null,
+    "STYLE": "",
+    "Proper_style_name": "",
+    "StyleLength": "",
+    "Actual_Online_Date": null,
+    "Structure_assignments": [
+      {
+        "assignment": "Included_FR Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Summer/Pre-Fall 2022",
+        "structure_system": "Seasons"
+      },
+      {
+        "assignment": "Included_NL Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_DE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_IBE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "SALE_WOMEN_BAGSACCESSORIES",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "WOMEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "D104050",
+        "structure_system": "MerchandisingHierarchyWCS"
+      },
+      {
+        "assignment": "SALE_WOMEN",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_CH Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_RU Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_BE+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_IT Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "SALE",
+        "structure_system": "SalesCatalog"
+      },
+      {
+        "assignment": "Included_SCAN+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      },
+      {
+        "assignment": "Included_UKI+ Sales Catalog",
+        "structure_system": "RegionCatalog"
+      }
+    ],
+    "Functionality": "",
+    "Promo_Flag": [
+      {
+        "value": "",
+        "country": "Germany"
+      },
+      {
+        "value": "",
+        "country": "Luxembourg"
+      },
+      {
+        "value": "",
+        "country": "Portugal"
+      },
+      {
+        "value": "",
+        "country": "Lithuania"
+      },
+      {
+        "value": "",
+        "country": "United Kingdom"
+      },
+      {
+        "value": "",
+        "country": "Hungary"
+      },
+      {
+        "value": "",
+        "country": "Switzerland"
+      },
+      {
+        "value": "",
+        "country": "Slovakia"
+      },
+      {
+        "value": "",
+        "country": "France"
+      },
+      {
+        "value": "",
+        "country": "Belgium"
+      },
+      {
+        "value": "",
+        "country": "Romania"
+      },
+      {
+        "value": "",
+        "country": "Latvia"
+      },
+      {
+        "value": "",
+        "country": "Bulgaria"
+      },
+      {
+        "value": "",
+        "country": "Spain"
+      },
+      {
+        "value": "",
+        "country": "Poland"
+      },
+      {
+        "value": "",
+        "country": "Finland"
+      },
+      {
+        "value": "",
+        "country": "Slovenia"
+      },
+      {
+        "value": "",
+        "country": "Italy"
+      },
+      {
+        "value": "",
+        "country": "Croatia"
+      },
+      {
+        "value": "",
+        "country": "Sweden"
+      },
+      {
+        "value": "",
+        "country": "Ireland"
+      },
+      {
+        "value": "",
+        "country": "Netherlands"
+      },
+      {
+        "value": "",
+        "country": "Estonia"
+      },
+      {
+        "value": "",
+        "country": "Austria"
+      },
+      {
+        "value": "",
+        "country": "Denmark"
+      },
+      {
+        "value": "",
+        "country": "Russia"
+      },
+      {
+        "value": "",
+        "country": "Czech Republic"
+      }
+    ],
+    "Fit_for_bottoms": "",
+    "Sustainable": "",
+    "Material_3": "",
+    "Fit_for_tops": "",
+    "Material": "",
+    "Program": "",
+    "ImageCount": "1",
+    "Collection": "",
+    "Occasion": "",
+    "Shop_by_Activity": "",
+    "Brand": "Example Brand",
+    "Length_accessoires": "",
+    "BaQQfill_AboutYou": "",
+    "DETAIL": ""
+  }
+]

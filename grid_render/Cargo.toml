@@ -18,6 +18,12 @@ serde_json = "1.0"
 instant = { version = "0.1", features = [ "wasm-bindgen", "inaccurate" ] }
 website_component_table = { git = "https://github.com/bstruct/website_component_table" }
 
+# Local, patched copy of the table renderer (nested-array column widths, cell column metadata).
+# Upstream: https://github.com/bstruct/website_component_table
+[patch."https://github.com/bstruct/website_component_table"]
+website_component_table = { path = "website_component_table" }
+
+
 [dependencies.web-sys]
 version = "0.3"
 
@@ -34,6 +40,8 @@ features = [
     # "Node",
     "Element",
     "HtmlElement",
+    "DomRect",
+    "Navigator",
     # "HtmlCollection",
     # "HtmlFormElement",
     # "HtmlInputElement",

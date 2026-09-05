@@ -435,6 +435,7 @@ impl BaseElementTrait for BigqueryTableCustomElement {
         }
 
         shadow.append_child_style(css_content, "style1");
+        super::cell_tools::install(&base_element.element());
         shadow.append_base_child(&self.to_data_table_controls());
 
         if let Some(table_builder) = &self.table_builder {

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>grid_render harness</title>
+    <!--
+        Development harness for the wasm grid.
+
+        Serves the built grid (dist/grid_render.js + dist/grid_render_bg.wasm) with a
+        fake BigQuery `getQueryResults` endpoint that answers with one of the JSON
+        fixtures under src/custom_elements/test_resources, so rendering can be checked
+        in a plain browser without credentials.
+
+        Run from the repository root (after `npm run compile`):
+            python3 -m http.server 8123
+        then open:
+            http://localhost:8123/grid_render/harness/index.html?fixture=complex_nested_test.json
+    -->
+    <link rel="stylesheet" href="/resources/grid.css">
+    <style>
+        html, body { margin: 0; height: 100%; }
+        body {
+            background: var(--vscode-editor-background, #1e1e1e);
+            color: var(--vscode-editor-foreground, #cccccc);
+            font-family: var(--vscode-font-family, sans-serif);
+            font-size: 12px;
+        }
+        #toolbar { padding: 6px 8px; border-bottom: 1px solid #444; display: flex; gap: 8px; align-items: center; }
+        #toolbar select, #toolbar button { font-size: 12px; }
+        #posts { color: #9cdcfe; font-family: monospace; white-space: pre-wrap; max-height: 80px; overflow: auto; }
+        #q1 { padding: 4px; overflow: auto; height: calc(100% - 40px); }
+    </style>
+    <script>
+        // The real webview exposes `vscode` as a global lexical binding
+        // (`const vscode = acquireVsCodeApi()`); mirror that so wasm-generated
+        // `vscode.postMessage(...)` calls resolve.
+        const vscode = {
+            postMessage: (message) => {
+                window.__posts = (window.__posts || []).concat([message]);
+                const el = document.getElementById('posts');
+                if (el) { el.textContent = JSON.stringify(message).slice(0, 300) + '\n' + el.textContent; }
+            },
+            setState: () => {},
+            getState: () => undefined,
+        };
+
+        // Fake BigQuery: answer getQueryResults with the selected fixture.
+        const params = new URLSearchParams(location.search);
+        const fixture = params.get('fixture') || 'complex_nested_test.json';
+        const realFetch = window.fetch.bind(window);
+        window.fetch = async (input, init) => {
+            const url = input instanceof Request ? input.url : String(input);
+            if (url.includes('bigquery.googleapis.com') && url.includes('/queries/')) {
+                const body = await (await realFetch('/grid_render/src/custom_elements/test_resources/' + fixture)).text();
+                return new Response(body, { status: 200, headers: { 'Content-Type': 'application/json' } });
+            }
+            return realFetch(input, init);
+        };
+    </script>
+</head>
+<body>
+    <div id="toolbar">
+        <label>Fixture:
+            <select id="fixture"></select>
+        </label>
+        <button id="reload">Render</button>
+        <span id="posts"></span>
+    </div>
+    <div id="q1"></div>
+
+    <script type="module">
+        import init, { get_web_components_list, register_custom_element } from '/dist/grid_render.js';
+
+        const fixtures = [
+            'complex_nested_test.json',
+            'complex_object_array_test.json',
+            'complex_object_array_test2.json',
+            'complex_object_array_test3.json',
+            'complex_object_array_test4.json',
+            'all_types_test.json',
+            'struct_json_test.json',
+            'simple_array.json',
+            '100_rows.json',
+            'no_rows.json',
+        ];
+        const select = document.getElementById('fixture');
+        for (const f of fixtures) {
+            const option = document.createElement('option');
+            option.value = f; option.textContent = f; option.selected = (f === fixture);
+            select.appendChild(option);
+        }
+        document.getElementById('reload').addEventListener('click', () => {
+            location.search = '?fixture=' + encodeURIComponent(select.value);
+        });
+
+        await init();
+        document.setState = () => {};
+        for (const name of get_web_components_list()) {
+            customElements.define(name, class extends HTMLElement {
+                connectedCallback() { register_custom_element(name, this); }
+            });
+        }
+
+        const bqQuery = document.createElement('bq-query');
+        bqQuery.setAttribute('be_id', 'grid-harness');
+        bqQuery.setAttribute('job_id', 'harness-job');
+        bqQuery.setAttribute('project_id', 'harness-project');
+        bqQuery.setAttribute('location', 'US');
+        bqQuery.setAttribute('token', 'harness-token');
+        bqQuery.setAttribute('statement_type', 'SELECT');
+        bqQuery.setAttribute('page_size', '50');
+        bqQuery.setAttribute('page_start_index', '0');
+        document.getElementById('q1').appendChild(bqQuery);
+        setTimeout(() => bqQuery.dispatchEvent(new Event('render_table')), 50);
+    </script>
+</body>
+</html>
