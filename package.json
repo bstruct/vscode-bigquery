@@ -2,7 +2,7 @@
 	"name": "vscode-bigquery",
 	"displayName": "Bigquery Data View",
 	"description": "Google BigQuery extension for Visual Studio Code. List datasets and tables, view table contents, and run queries.",
-	"version": "0.5.1",
+	"version": "0.6.0",
 	"publisher": "bstruct",
 	"icon": "logo.png",
 	"repository": {
@@ -50,6 +50,23 @@
 					"title": "Table full name",
 					"description": "Tables that need to be listed, but there's no explicit permission to the project nor dataset, only the table"
 				},
+				"vscode-bigquery.format.keyword-case": {
+					"type": "string",
+					"enum": [
+						"upper",
+						"lower",
+						"preserve"
+					],
+					"default": "upper",
+					"title": "Format: keyword case",
+					"description": "Letter case applied to keywords, data types and built-in functions by \"Format Document\" in .bqsql files"
+				},
+				"vscode-bigquery.suggest-on-new-line": {
+					"type": "boolean",
+					"default": true,
+					"title": "Suggest columns on new line",
+					"description": "Open the column suggestions automatically after pressing Enter inside a SELECT list of a .bqsql file"
+				},
 				"vscode-bigquery.my-jobs-only": {
 					"type": "boolean",
 					"default": true,
@@ -89,7 +106,14 @@
 		],
 		"configurationDefaults": {
 			"[bqsql]": {
-				"editor.semanticHighlighting.enabled": true
+				"editor.semanticHighlighting.enabled": true,
+				"editor.inlineSuggest.enabled": false,
+				"editor.quickSuggestions": {
+					"other": "on",
+					"comments": "off",
+					"strings": "on"
+				},
+				"editor.suggest.showWords": false
 			}
 		},
 		"chatParticipants": [
@@ -454,6 +478,7 @@
 		"@vscode/webview-ui-toolkit": "^1.2.2",
 		"chart.js": "^4.5.1",
 		"csv-writer": "^1.6.0",
-		"grid_render": "file://.//grid_render/pkg"
+		"grid_render": "file://.//grid_render/pkg",
+		"sql-formatter": "^15.8.2"
 	}
 }

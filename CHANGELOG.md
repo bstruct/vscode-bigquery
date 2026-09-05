@@ -4,12 +4,16 @@ All notable changes to the **BigQuery Data View** extension are documented here.
 
 ---
 
-## Unreleased
+## 0.6.0
 
 - **Fix** - Nested arrays (arrays inside arrays of structs, repeated records inside structs) now line up with their column headers. Inner-table cells carry explicit widths derived from the header columns, including cells that span several columns.
 - **Fix** - Column widths take nested-table content into account, so values inside arrays of structs are no longer squeezed into header-only widths.
 - **Fix** - The CSV / JSONL / Pub/Sub buttons in the results panel triggered all three actions at once (missing `break` in the command dispatcher).
 - **New** - Hovering a text cell whose value is clipped shows a small toolbar: **Copy** puts the full value on the clipboard, **Open** opens it in a new editor tab (JSON values get JSON highlighting). Works in the results panel, table preview and notebook outputs, including cells of nested tables.
+- **New** - **Format Document** / **Format Selection** for `.bqsql` files (BigQuery dialect via sql-formatter). Keyword case is configurable with `vscode-bigquery.format.keyword-case` (default `upper`).
+- **New** - Typing `*` (or `alias.*`) in a SELECT list offers to expand it into the explicit column list of the FROM/JOIN sources; accept with Tab or Enter, Escape keeps the star.
+- **New** - Pressing Enter inside a SELECT list opens the column suggestions automatically (`vscode-bigquery.suggest-on-new-line`, default on), so no Ctrl+Space is needed. On macOS, VS Code's built-in alternative shortcut for Trigger Suggest is `⌥Esc`.
+- **Change** - Default editor settings for `.bqsql`: inline (AI ghost-text) suggestions are off so the schema-aware suggest widget is what you see, quick suggestions are on inside backtick identifiers, and word-based suggestions are off. Override any of these under `[bqsql]` in your settings.
 - **Dev** - `grid_render/harness/index.html` renders the wasm grid against the JSON fixtures with a mocked BigQuery endpoint (see the file header for how to run it).
 - **Dev** - The table renderer crate is now a patched local copy under `grid_render/website_component_table` (Cargo `[patch]`), so the grid builds offline and the nested-array fixes live in this repository until they are upstreamed.
 

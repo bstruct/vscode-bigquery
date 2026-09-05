@@ -32,6 +32,14 @@ export class BqsqlCompletionItemProvider implements CompletionItemProvider<Compl
             // Always warm schemas in the background for table sources.
             this.backgroundLoadSchemas(selectCtx.sources);
 
+            // ── 2a. "*" (or "alias.*") right before the cursor → offer to expand
+            // it into the explicit column list. Accepting with Tab/Enter replaces
+            // the star; Escape keeps it.
+            const star = findStarBeforeCursor(document, position);
+            if (star) {
+                return this.starExpansionList(star, selectCtx.sources, document, position, token);
+            }
+
             let columnItems = this.columnItemsFromCache(selectCtx.sources);
 
             // Fast path for the common case: a single table source with cold cache.
@@ -158,6 +166,68 @@ export class BqsqlCompletionItemProvider implements CompletionItemProvider<Compl
         }
 
         return items;
+    }
+
+    // -----------------------------------------------------------------------
+    // "*" expansion – replace the star with the explicit column list
+    // -----------------------------------------------------------------------
+
+    private async starExpansionList(
+        star: StarMatch,
+        sources: SelectSource[],
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+    ): Promise<CompletionList> {
+        let targets = star.qualifier
+            ? sources.filter(s => sourceMatchesQualifier(s, star.qualifier as string))
+            : sources;
+
+        let columns = columnNamesFromCache(targets, !star.qualifier && targets.length > 1);
+
+        // Cold cache: try one direct load so the first "*" already expands.
+        if (columns.length === 0 && !token.isCancellationRequested) {
+            const tables = targets.filter(s => s.kind === 'table');
+            if (tables.length === 1) {
+                try {
+                    await bigqueryTableSchemaService.preLoadSchemaByFullName(tables[0].fullName);
+                    columns = columnNamesFromCache(targets, !star.qualifier && targets.length > 1);
+                } catch {
+                    // fall through to the hint below
+                }
+            }
+        }
+        if (token.isCancellationRequested) { return new CompletionList([], false); }
+
+        if (columns.length === 0) {
+            const hint = new CompletionItem('(schema loading... type * again to expand)', CompletionItemKind.Text);
+            hint.detail = targets.length === 0
+                ? `No source matches "${star.qualifier}"`
+                : 'Table schema is loading or unavailable';
+            hint.insertText = '';
+            hint.filterText = star.text;
+            hint.sortText = '00000';
+            return new CompletionList([hint], true);
+        }
+
+        const sourceNames = targets.map(s => s.alias ?? s.fullName).join(', ');
+
+        const item = new CompletionItem(
+            { label: `${star.text}  → all columns`, description: `${columns.length} columns` },
+            CompletionItemKind.Snippet,
+        );
+        item.detail = `Expand ${star.text} into the columns of ${sourceNames}`;
+        item.documentation = new vscode.MarkdownString(
+            '```sql\n' + columns.join(',\n') + '\n```'
+        );
+        // VS Code indents every inserted line to the current line's indentation.
+        item.insertText = columns.join(',\n');
+        item.range = star.range;
+        item.filterText = star.text;
+        item.sortText = '00000';
+        item.preselect = true;
+
+        return new CompletionList([item], false);
     }
 
     /** Fire-and-forget: load schemas for any uncached real tables. */
@@ -1302,4 +1372,60 @@ function buildColumnDoc(
         (isPartition ? '\n\n🔑 *Partition column*' : '') +
         (description ? `\n\n${description}` : '')
     );
+}
+
+// ---------------------------------------------------------------------------
+// "*" expansion helpers
+// ---------------------------------------------------------------------------
+
+interface StarMatch {
+    /** "*" or "alias.*" as typed */
+    text: string;
+    qualifier: string | null;
+    range: vscode.Range;
+}
+
+/**
+ * Match a "*" or "alias.*" that ends exactly at the cursor and starts a
+ * select-list item (after SELECT / DISTINCT / a comma, or at the start of the
+ * line). Stars inside expressions such as COUNT(*) or a * b are ignored.
+ */
+function findStarBeforeCursor(document: TextDocument, position: Position): StarMatch | null {
+    const before = document.lineAt(position.line).text.substring(0, position.character);
+    const match = /(?:([A-Za-z_][A-Za-z0-9_]*)\.)?\*$/.exec(before);
+    if (!match) { return null; }
+
+    const preceding = before.substring(0, before.length - match[0].length).trim().toLowerCase();
+    const startsListItem = preceding === ''
+        || preceding.endsWith(',')
+        || /(^|\s)(select|distinct|except|replace)$/.test(preceding);
+    if (!startsListItem) { return null; }
+    const start = new Position(position.line, position.character - match[0].length);
+    return {
+        text: match[0],
+        qualifier: match[1] ?? null,
+        range: new vscode.Range(start, position),
+    };
+}
+
+function sourceMatchesQualifier(source: SelectSource, qualifier: string): boolean {
+    const q = qualifier.toLowerCase();
+    if (source.alias && source.alias.toLowerCase() === q) { return true; }
+    const last = source.fullName.split('.').pop() ?? source.fullName;
+    return last.toLowerCase() === q || source.fullName.toLowerCase() === q;
+}
+
+/** Column names for the sources, read from the cache (never blocks). */
+function columnNamesFromCache(sources: SelectSource[], qualify: boolean): string[] {
+    const names: string[] = [];
+    for (const source of sources) {
+        const qualifier = source.alias ?? source.fullName.split('.').pop() ?? source.fullName;
+        const columns = source.kind === 'cte'
+            ? source.cteColumns
+            : dedupeByName(bigqueryTableSchemaService.getSchemaByFullName(source.fullName)).map(c => c.column_name);
+        for (const column of columns) {
+            names.push(qualify ? `${qualifier}.${column}` : column);
+        }
+    }
+    return names;
 }
